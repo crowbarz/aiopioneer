@@ -298,8 +298,8 @@ class PioneerAVR:
 
     async def reconnect_schedule(self):
         """Schedule reconnection to the AVR."""
-        _LOGGER.debug(">> PioneerAVR.reconnect_schedule()")
         if self._reconnect:
+            _LOGGER.debug(">> PioneerAVR.reconnect_schedule()")
             reconnect_task = self._reconnect_task
             if reconnect_task:
                 if reconnect_task.done():
@@ -376,6 +376,15 @@ class PioneerAVR:
         await cancel_task(self._listener_task, "listener")
         self._listener_task = None
 
+    ## Reader co-routine
+    async def reader_readuntil(self):
+        """Read from reader with cancel detection."""
+        try:
+            return await self._reader.readuntil(b"\n")
+        except asyncio.CancelledError:
+            _LOGGER.debug("reader: readuntil() was cancelled")
+            return None
+
     ## Read responses from AVR
     async def read_response(self, timeout=None):
         """Wait for a response from AVR and return to all readers."""
@@ -387,7 +396,8 @@ class PioneerAVR:
             if responder_task.done():
                 responder_task = None  ## trigger new task creation
         if responder_task is None:
-            responder_task = asyncio.create_task(self._reader.readuntil(b"\n"))
+            responder_task = asyncio.create_task(self.reader_readuntil())
+            # responder_task = asyncio.create_task(self._reader.readuntil(b"\n"))
             self._responder_task = responder_task
             # _LOGGER.debug("Created responder task %s", responder_task)
         else:
@@ -417,6 +427,8 @@ class PioneerAVR:
             return None
         except Exception as exc:  # pylint: disable=broad-except
             _LOGGER.debug("%s: exception: %s", task_name, str(exc))
+            return None
+        if raw_response is None:  ## task cancelled
             return None
         response = raw_response.decode().strip()
         # _LOGGER.debug("%s: received response: %s", task_name, response)
