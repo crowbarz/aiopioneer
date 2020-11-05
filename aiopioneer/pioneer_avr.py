@@ -198,6 +198,7 @@ class PioneerAVR:
             await self.listener_schedule()
             await asyncio.sleep(0)  # yield to listener task
             await self.updater_schedule()
+            await asyncio.sleep(0)  # yield to updater task
 
         _LOGGER.debug(">> PioneerAVR.connect() completed")
 
@@ -947,7 +948,7 @@ class PioneerAVR:
         if self.volume_steps:
             current_volume = self.volume.get(zone)
             steps = abs(round((volume - current_volume) / 2))
-            for x in range(steps):
+            for _ in range(steps):
                 if volume > current_volume:
                     await self.volume_up(zone)
                 elif volume < current_volume:
