@@ -5,7 +5,7 @@
 import asyncio
 import logging
 
-from pioneer_avr import PioneerAVR
+from aiopioneer import PioneerAVR
 
 _LOGGER = logging.getLogger(__name__)
 
