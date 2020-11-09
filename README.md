@@ -10,7 +10,8 @@ Tested on a VSX-930 (Main Zone and HDZone outputs).
 - Maintains single continuous telnet session to AVR, with automatic reconnect.
 - Eliminates status polling where AVR sends keepalive responses (on port 8102).
 - Auto-detects Zones 1, 2, 3 and HDZONE.
-- Automatically polls AVR for source names - no longer need to manually code them in your config any more if your AVR supports their retrieval.
+- Automatically polls AVR for source names - no longer need to manually code them in your config any more if your AVR supports their retrieval. Can also set source names manually.
+- Ignore specific zones, for AVRs that report phantom zones.
 - Queries device parameters: MAC address, software version, model.
 - Ability to set internal parameters to change the API functionality, eg. maximum volume, volume step change delta.
 - Includes workaround for AVRs with an initial volume set on the Main Zone (eg. VSX-930).
