@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="aiopioneer",
-    version="0.0.4",
+    version="0.1",
     author="Crowbar Z",
     author_email="crowbarz@outlook.com",
     description="Asyncio Python library for controlling a Pioneer AVR via its API",
