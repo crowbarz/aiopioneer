@@ -13,6 +13,7 @@ PARAM_VOLUME_STEP_DELTA = "volume_step_delta"
 PARAM_DEBUG_LISTENER = "debug_listener"
 PARAM_DEBUG_RESPONDER = "debug_responder"
 PARAM_DEBUG_UPDATER = "debug_updater"
+PARAM_DEBUG_COMMAND = "debug_command"
 
 PARAM_DEFAULTS = {
     PARAM_IGNORED_ZONES: [],
@@ -26,6 +27,7 @@ PARAM_DEFAULTS = {
     PARAM_DEBUG_LISTENER: False,
     PARAM_DEBUG_RESPONDER: False,
     PARAM_DEBUG_UPDATER: False,
+    PARAM_DEBUG_COMMAND: False,
 }
 
 PARAMS_ALL = PARAM_DEFAULTS.keys()

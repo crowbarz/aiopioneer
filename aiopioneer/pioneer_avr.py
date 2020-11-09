@@ -18,6 +18,7 @@ from .param import (
     PARAM_DEBUG_LISTENER,
     PARAM_DEBUG_RESPONDER,
     PARAM_DEBUG_UPDATER,
+    PARAM_DEBUG_COMMAND,
     PARAM_DEFAULTS,
     PARAM_MODEL_DEFAULTS,
 )
@@ -165,7 +166,7 @@ class PioneerAVR:
         self._source_name_to_id = {}
         self._source_id_to_name = {}
         self._zone_callback = {}
-        self._update_callback = None
+        # self._update_callback = None
 
     def __del__(self):
         _LOGGER.debug(">> PioneerAVR.__del__()")
@@ -184,15 +185,17 @@ class PioneerAVR:
             self._user_params = params
         self._set_params()
 
-    def _set_model_params(self):
+    def _set_default_params_model(self):
         """Set default parameters based on device model."""
         model = self.model
         self._default_params = PARAM_DEFAULTS
         if model is not None and model != "unknown":
             for model_regex, model_params in PARAM_MODEL_DEFAULTS.items():
                 if re.search(model_regex, model):
-                    _LOGGER.debug(
-                        "applying default parameters for matched model %s", model
+                    _LOGGER.info(
+                        "Applying default parameters for model %s (%s)",
+                        model,
+                        model_regex,
                     )
                     merge(self._default_params, model_params)
         self._set_params()
@@ -204,6 +207,10 @@ class PioneerAVR:
     def get_user_params(self):
         """Get user parameters."""
         return self._user_params
+
+    def get_default_params(self):
+        """Get default parameters."""
+        return self._default_params
 
     ## Connection/disconnection
     async def connect(self, from_reconnect=False):
@@ -233,10 +240,10 @@ class PioneerAVR:
             self.available = True
             self._set_socket_options()
 
-            await self.responder_cancel()
-            await self.listener_schedule()
+            await self._responder_cancel()
+            await self._listener_schedule()
             await asyncio.sleep(0)  # yield to listener task
-            await self.updater_schedule()
+            await self._updater_schedule()
             await asyncio.sleep(0)  # yield to updater task
 
         _LOGGER.debug(">> PioneerAVR.connect() completed")
@@ -258,7 +265,7 @@ class PioneerAVR:
     async def set_scan_interval(self, scan_interval):
         """Set scan interval and restart updater."""
         self.scan_interval = scan_interval
-        await self.updater_schedule()
+        await self._updater_schedule()
 
     async def disconnect(self):
         """Shutdown and close telnet connection to AVR."""
@@ -276,12 +283,12 @@ class PioneerAVR:
         async with self._disconnect_lock:
             _LOGGER.debug("Disconnecting AVR connection")
             self.available = False
-            self.call_zone_callbacks()
+            self._call_zone_callbacks()
 
-            await self.listener_cancel()
-            await self.responder_cancel()
-            await self.updater_cancel()
-            await self.bouncer_cancel()
+            await self._listener_cancel()
+            await self._responder_cancel()
+            await self._updater_cancel()
+            await self._bouncer_cancel()
 
             writer = self._writer
             if writer:
@@ -296,7 +303,7 @@ class PioneerAVR:
             self._writer = None
             _LOGGER.info("AVR connection closed")
 
-            await self.reconnect_schedule()
+            await self._reconnect_schedule()
 
         _LOGGER.debug(">> PioneerAVR.disconnect() completed")
 
@@ -304,6 +311,7 @@ class PioneerAVR:
         """Shutdown the client."""
         _LOGGER.debug(">> PioneerAVR.shutdown()")
         self._reconnect = False
+        await self._reconnect_cancel()
         await self.disconnect()
 
     async def reconnect(self):
@@ -339,10 +347,10 @@ class PioneerAVR:
 
         _LOGGER.debug(">> PioneerAVR.reconnect() completed")
 
-    async def reconnect_schedule(self):
+    async def _reconnect_schedule(self):
         """Schedule reconnection to the AVR."""
         if self._reconnect:
-            _LOGGER.debug(">> PioneerAVR.reconnect_schedule()")
+            _LOGGER.debug(">> PioneerAVR._reconnect_schedule()")
             reconnect_task = self._reconnect_task
             if reconnect_task:
                 if reconnect_task.done():
@@ -354,17 +362,17 @@ class PioneerAVR:
             else:
                 _LOGGER.error("AVR listener reconnection already running")
 
-    async def reconnect_cancel(self):
+    async def _reconnect_cancel(self):
         """Cancel any active reconnect task."""
         await cancel_task(self._reconnect_task, "reconnect")
         self._reconnect_task = None
 
-    async def connection_listener(self):
+    async def _connection_listener(self):
         """AVR connection listener. Parse responses and update state."""
-        _LOGGER.debug(">> PioneerAVR.connection_listener() started")
+        _LOGGER.debug(">> PioneerAVR._connection_listener() started")
         try:
             while self.available:
-                response = await self.read_response()
+                response = await self._read_response()
                 if response is None:
                     ## Connection closed or exception, exit task
                     break
@@ -381,7 +389,7 @@ class PioneerAVR:
                     _LOGGER.debug("AVR listener received response: %s", response)
 
                 ## Parse response, update cached properties
-                updated_zones = self.parse_response(response)
+                updated_zones = self._parse_response(response)
 
                 ## Detect Main Zone power on for volume workaround
                 volume_bounce_workaround = self._params[PARAM_VOLUME_BOUNCE_WORKAROUND]
@@ -389,7 +397,7 @@ class PioneerAVR:
                     if not self._power_zone_1 and self.power["1"]:
                         ## Main zone powered on, schedule bounce task
                         _LOGGER.info("Scheduling main zone volume workaround")
-                        await self.bouncer_schedule()
+                        await self._bouncer_schedule()
                 self._power_zone_1 = self.power.get("1")  ## cache value
 
                 ## NOTE: to avoid deadlocks, do not run any operations that
@@ -398,7 +406,7 @@ class PioneerAVR:
 
                 if updated_zones:
                     ## Call zone callbacks for updated zones
-                    self.call_zone_callbacks(updated_zones)
+                    self._call_zone_callbacks(updated_zones)
                     ## NOTE: updating zone 1 does not reset its scan interval -
                     ##       scan interval is set to a regular timer
 
@@ -407,23 +415,23 @@ class PioneerAVR:
                 await self.disconnect()
 
         except asyncio.CancelledError:
-            _LOGGER.debug(">> PioneerAVR.connection_listener() cancelled")
+            _LOGGER.debug(">> PioneerAVR._connection_listener() cancelled")
 
-        _LOGGER.debug(">> PioneerAVR.connection_listener() completed")
+        _LOGGER.debug(">> PioneerAVR._connection_listener() completed")
 
-    async def listener_schedule(self):
+    async def _listener_schedule(self):
         """Schedule the listener task."""
-        _LOGGER.debug(">> PioneerAVR.listener_schedule()")
-        await self.listener_cancel()
-        self._listener_task = asyncio.create_task(self.connection_listener())
+        _LOGGER.debug(">> PioneerAVR._listener_schedule()")
+        await self._listener_cancel()
+        self._listener_task = asyncio.create_task(self._connection_listener())
 
-    async def listener_cancel(self):
+    async def _listener_cancel(self):
         """Cancel the listener task."""
         await cancel_task(self._listener_task, "listener")
         self._listener_task = None
 
     ## Reader co-routine
-    async def reader_readuntil(self):
+    async def _reader_readuntil(self):
         """Read from reader with cancel detection."""
         try:
             return await self._reader.readuntil(b"\n")
@@ -432,12 +440,12 @@ class PioneerAVR:
             return None
 
     ## Read responses from AVR
-    async def read_response(self, timeout=None):
+    async def _read_response(self, timeout=None):
         """Wait for a response from AVR and return to all readers."""
         debug_responder = self._params[PARAM_DEBUG_RESPONDER]
 
         if debug_responder:
-            _LOGGER.debug(">> PioneerAVR.read_response(timeout=%s)", timeout)
+            _LOGGER.debug(">> PioneerAVR._read_response(timeout=%s)", timeout)
 
         ## Schedule responder task if not already created
         responder_task = self._responder_task
@@ -445,7 +453,7 @@ class PioneerAVR:
             if responder_task.done():
                 responder_task = None  ## trigger new task creation
         if responder_task is None:
-            responder_task = asyncio.create_task(self.reader_readuntil())
+            responder_task = asyncio.create_task(self._reader_readuntil())
             # responder_task = asyncio.create_task(self._reader.readuntil(b"\n"))
             self._responder_task = responder_task
             if debug_responder:
@@ -489,7 +497,7 @@ class PioneerAVR:
             _LOGGER.debug("%s: received response: %s", task_name, response)
         return response
 
-    async def responder_cancel(self):
+    async def _responder_cancel(self):
         """Cancel any active responder task."""
         await cancel_task(self._responder_task, "responder")
         self._responder_task = None
@@ -497,9 +505,13 @@ class PioneerAVR:
     ## Send commands and requests to AVR
     async def send_raw_command(self, command, rate_limit=True):
         """Send a raw command to the AVR."""
-        # _LOGGER.debug(
-        #     '>> PioneerAVR.send_raw_command("%s", rate_limit=%s)', command, rate_limit
-        # )
+        debug_command = self._params[PARAM_DEBUG_COMMAND]
+        if debug_command:
+            _LOGGER.debug(
+                '>> PioneerAVR.send_raw_command("%s", rate_limit=%s)',
+                command,
+                rate_limit,
+            )
         if not self.available:
             raise RuntimeError("AVR connection not available")
 
@@ -520,17 +532,19 @@ class PioneerAVR:
         self, command, response_prefix, ignore_error=None, rate_limit=True
     ):
         """Send a raw command to the AVR and return the response."""
-        # _LOGGER.debug(
-        #     '>> PioneerAVR.send_raw_request("%s", %s, ignore_error=%s, rate_limit=%s)',
-        #     command,
-        #     response_prefix,
-        #     ignore_error,
-        #     rate_limit,
-        # )
+        debug_command = self._params[PARAM_DEBUG_COMMAND]
+        if debug_command:
+            _LOGGER.debug(
+                '>> PioneerAVR.send_raw_request("%s", %s, ignore_error=%s, rate_limit=%s)',
+                command,
+                response_prefix,
+                ignore_error,
+                rate_limit,
+            )
         async with self._request_lock:
             await self.send_raw_command(command, rate_limit=rate_limit)
             while True:
-                response = await self.read_response(timeout=self._timeout)
+                response = await self._read_response(timeout=self._timeout)
 
                 ## Check response
                 if response is None:
@@ -557,14 +571,16 @@ class PioneerAVR:
     ):
         """Send a command or request to the device."""
         # pylint: disable=unidiomatic-typecheck
-        # _LOGGER.debug(
-        #     '>> PioneerAVR.send_command("%s", zone="%s", prefix="%s", ignore_error=%s, rate_limit=%s)',
-        #     command,
-        #     zone,
-        #     prefix,
-        #     ignore_error,
-        #     rate_limit,
-        # )
+        debug_command = self._params[PARAM_DEBUG_COMMAND]
+        if debug_command:
+            _LOGGER.debug(
+                '>> PioneerAVR.send_command("%s", zone="%s", prefix="%s", ignore_error=%s, rate_limit=%s)',
+                command,
+                zone,
+                prefix,
+                ignore_error,
+                rate_limit,
+            )
         raw_command = PIONEER_COMMANDS.get(command, {}).get(zone)
         try:
             if type(raw_command) is list:
@@ -578,7 +594,8 @@ class PioneerAVR:
                         ignore_error,
                         rate_limit,
                     )
-                    # _LOGGER.debug("send_command received response: %s", response)
+                    if debug_command:
+                        _LOGGER.debug("send_command received response: %s", response)
                     return response
                 else:
                     _LOGGER.error("Invalid request %s for zone %s", raw_command, zone)
@@ -694,7 +711,7 @@ class PioneerAVR:
             self.model = model
 
         ## Update default params for this model
-        self._set_model_params()
+        self._set_default_params_model()
         self.mac_addr = mac_addr if mac_addr else "unknown"
         self.software_version = software_version if software_version else "unknown"
 
@@ -712,7 +729,7 @@ class PioneerAVR:
             else:
                 self._zone_callback.pop(zone)
 
-    def call_zone_callbacks(self, zones=None):
+    def _call_zone_callbacks(self, zones=None):
         """Call callbacks to signal updated zone(s)."""
         if zones is None:
             zones = self.zones
@@ -723,21 +740,22 @@ class PioneerAVR:
                     _LOGGER.debug("Calling callback for zone %s", zone)
                     callback()
 
-    def set_update_callback(self, callback):
-        """Register a callback to trigger update."""
-        if callback:
-            self._update_callback = callback
-        else:
-            self._update_callback = None
+    ## update_callback deprecated, use zone callback
+    # def set_update_callback(self, callback):
+    #     """Register a callback to trigger update."""
+    #     if callback:
+    #         self._update_callback = callback
+    #     else:
+    #         self._update_callback = None
 
-    def call_update_callback(self):
-        """Trigger update."""
-        if self._update_callback:
-            _LOGGER.debug("Calling update callback")
-            self._update_callback()
+    # def _call_update_callback(self):
+    #     """Trigger update."""
+    #     if self._update_callback:
+    #         _LOGGER.debug("Calling update callback")
+    #         self._update_callback()
 
     ## Update functions
-    def parse_response(self, response):
+    def _parse_response(self, response):
         """Parse response and update cached parameters."""
         updated_zones = set()
         if response.startswith("PWR"):
@@ -845,34 +863,34 @@ class PioneerAVR:
                 _LOGGER.info("HDZone: Source: %s", value)
         return updated_zones
 
-    async def updater(self):
+    async def _updater(self):
         """Perform update every scan_interval."""
-        _LOGGER.debug(">> PioneerAVR.updater() started")
+        _LOGGER.debug(">> PioneerAVR._updater() started")
         while True:
             try:
                 await asyncio.sleep(self.scan_interval)
                 await self.update()
             except asyncio.CancelledError:
-                _LOGGER.debug(">> PioneerAVR.updater() cancelled")
+                _LOGGER.debug(">> PioneerAVR._updater() cancelled")
                 break
             except Exception as exc:  # pylint: disable=broad-except
-                _LOGGER.debug(">> PioneerAVR.updater() exception: %s", str(exc))
+                _LOGGER.debug(">> PioneerAVR._updater() exception: %s", str(exc))
                 break
-        _LOGGER.debug(">> PioneerAVR.updater() completed")
+        _LOGGER.debug(">> PioneerAVR._updater() completed")
 
-    async def updater_schedule(self):
+    async def _updater_schedule(self):
         """Schedule/reschedule the update task."""
-        _LOGGER.debug(">> PioneerAVR.updater_schedule()")
-        await self.updater_cancel()
+        _LOGGER.debug(">> PioneerAVR._updater_schedule()")
+        await self._updater_cancel()
         if self.scan_interval:
-            self._updater_task = asyncio.create_task(self.updater())
+            self._updater_task = asyncio.create_task(self._updater())
 
-    async def updater_cancel(self):
+    async def _updater_cancel(self):
         """Cancel the updater task."""
         await cancel_task(self._updater_task, "updater")
         self._updater_task = None
 
-    async def update_zone(self, zone):
+    async def _update_zone(self, zone):
         """Update an AVR zone."""
         ## Check for timeouts, but ignore errors (eg. ?V will
         ## return E02 immediately after power on)
@@ -911,10 +929,10 @@ class PioneerAVR:
                 self._full_update = False
                 try:
                     for zone in self.zones:
-                        await self.update_zone(zone)
+                        await self._update_zone(zone)
                     if full_update:
                         ## Trigger updates to all zones on full update
-                        self.call_zone_callbacks()
+                        self._call_zone_callbacks()
                 except Exception as exc:  # pylint: disable=broad-except
                     _LOGGER.error(
                         "Could not update AVR status: %s: %s",
@@ -991,13 +1009,13 @@ class PioneerAVR:
         else:
             return False
 
-    async def bouncer_schedule(self):
+    async def _bouncer_schedule(self):
         """Schedule volume bounce task. Run when zone 0 power on is detected."""
-        _LOGGER.debug(">> PioneerAVR.bouncer_schedule()")
-        await self.bouncer_cancel()
+        _LOGGER.debug(">> PioneerAVR._bouncer_schedule()")
+        await self._bouncer_cancel()
         self._bouncer_task = asyncio.create_task(self.bounce_volume())
 
-    async def bouncer_cancel(self):
+    async def _bouncer_cancel(self):
         """Cancel volume bounce task."""
         await cancel_task(self._bouncer_task, "bouncer")
         self._bouncer_task = None
