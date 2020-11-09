@@ -8,7 +8,32 @@ RECONNECT_DELAY_MAX = 64
 
 _LOGGER = logging.getLogger(__name__)
 
-## https://stackoverflow.com/questions/12248132/how-to-change-tcp-keepalive-timer-using-python-script
+## Source: https://stackoverflow.com/a/7205107
+## Modified so b overwrites a where there is a conflict
+def merge(a, b, path=None):  # pylint: disable=invalid-name
+    """ Recursively merges dict b into dict a. """
+    if path is None:
+        path = []
+    for key in b:
+        if key in a:
+            if isinstance(a[key], dict) and isinstance(b[key], dict):
+                merge(a[key], b[key], path + [str(key)])
+            elif a[key] == b[key]:
+                pass  # same leaf value
+            elif a[key] is None and isinstance(b[key], dict):
+                a[key] = b[key]  # copy key from b to a
+            elif b[key] is None and isinstance(a[key], dict):
+                pass  # leave key in a alone
+            elif isinstance(a[key], list) and isinstance(b[key], list):
+                a[key].extend(b[key])  # append list b to list a
+            else:
+                a[key] = b[key]  # b overwrites a
+        else:
+            a[key] = b[key]
+    return a
+
+
+## Source: https://stackoverflow.com/questions/12248132/how-to-change-tcp-keepalive-timer-using-python-script
 def sock_set_keepalive(sock, after_idle_sec=1, interval_sec=3, max_fails=5):
     """Set TCP keepalive on an open socket.
 

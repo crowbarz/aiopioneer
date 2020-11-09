@@ -5,13 +5,24 @@ import asyncio
 import time
 import logging
 import re
-from .util import sock_set_keepalive, get_backoff_delay, cancel_task
+from .util import merge, sock_set_keepalive, get_backoff_delay, cancel_task
+from .param import (
+    PARAM_IGNORED_ZONES,
+    PARAM_COMMAND_DELAY,
+    PARAM_MAX_SOURCE_ID,
+    PARAM_MAX_VOLUME,
+    PARAM_MAX_VOLUME_ZONEX,
+    PARAM_VOLUME_BOUNCE_WORKAROUND,
+    PARAM_VOLUME_STEP_ONLY,
+    PARAM_VOLUME_STEP_DELTA,
+    PARAM_DEBUG_LISTENER,
+    PARAM_DEBUG_RESPONDER,
+    PARAM_DEBUG_UPDATER,
+    PARAM_DEFAULTS,
+    PARAM_MODEL_DEFAULTS,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-MAX_VOLUME = 185
-MAX_VOLUME_ZONEX = 81
-MAX_SOURCE_NUMBERS = 60
 
 PIONEER_COMMANDS = {
     "turn_on": {
@@ -101,27 +112,20 @@ class PioneerAVR:
         port=8102,
         timeout=2,
         scan_interval=60,
-        command_delay=0.1,
-        volume_workaround=False,
-        volume_steps=False,
+        params=None,
     ):
         """Initialize the Pioneer AVR interface."""
         _LOGGER.debug(
-            '>> PioneerAVR.__init__(host="%s", port=%s, timeout=%s, command_delay=%s, volume_workaround=%s, volume_steps=%s)',
+            '>> PioneerAVR.__init__(host="%s", port=%s, timeout=%s, params=%s)',
             host,
             port,
             timeout,
-            command_delay,
-            volume_workaround,
-            volume_steps,
+            params,
         )
         self._host = host
         self._port = port
         self._timeout = timeout
         self.scan_interval = scan_interval
-        self.command_delay = command_delay
-        self.volume_workaround = volume_workaround
-        self.volume_steps = volume_steps
 
         ## Public properties
         self.model = None
@@ -134,6 +138,12 @@ class PioneerAVR:
         self.max_volume = {}
         self.mute = {}
         self.source = {}
+
+        ## Parameters
+        self._default_params = PARAM_DEFAULTS
+        self._user_params = None
+        self._params = None
+        self.set_user_params(params)
 
         ## Internal state
         self._connect_lock = asyncio.Lock()
@@ -152,7 +162,6 @@ class PioneerAVR:
         self._updater_task = None
         self._bouncer_task = None
         self._power_zone_1 = None
-        # self._response_commands = []
         self._source_name_to_id = {}
         self._source_id_to_name = {}
         self._zone_callback = {}
@@ -160,6 +169,41 @@ class PioneerAVR:
 
     def __del__(self):
         _LOGGER.debug(">> PioneerAVR.__del__()")
+
+    ## Parameter management functions
+    def _set_params(self):
+        """Set current parameters."""
+        self._params = {}
+        merge(self._params, self._default_params)
+        merge(self._params, self._user_params)
+
+    def set_user_params(self, params=None):
+        """Set parameters and merge with defaults."""
+        self._user_params = {}
+        if params is not None:
+            self._user_params = params
+        self._set_params()
+
+    def _set_model_params(self):
+        """Set default parameters based on device model."""
+        model = self.model
+        self._default_params = PARAM_DEFAULTS
+        if model is not None and model != "unknown":
+            for model_regex, model_params in PARAM_MODEL_DEFAULTS.items():
+                if re.search(model_regex, model):
+                    _LOGGER.debug(
+                        "applying default parameters for matched model %s", model
+                    )
+                    merge(self._default_params, model_params)
+        self._set_params()
+
+    def get_params(self):
+        """Get all current parameters."""
+        return self._params
+
+    def get_user_params(self):
+        """Get user parameters."""
+        return self._user_params
 
     ## Connection/disconnection
     async def connect(self, from_reconnect=False):
@@ -178,11 +222,6 @@ class PioneerAVR:
             _LOGGER.debug("Opening AVR connection")
             if self._writer is not None:
                 raise RuntimeError("AVR connection already established")
-
-            ## Cancel any active reconnect task
-            ## 20201030 no longer cancel, connect called from reconnection task
-            # if not from_reconnect:
-            #     await self.reconnect_cancel()
 
             ## Open new connection
             reader, writer = await asyncio.wait_for(  # pylint: disable=unused-variable
@@ -331,19 +370,22 @@ class PioneerAVR:
                     break
 
                 ## Check for empty response
+                debug_listener = self._params[PARAM_DEBUG_LISTENER]
                 self._last_updated = time.time()  ## include empty responses
                 if not response:
-                    ## TODO: re-enable after reconnect debugging finished
-                    # _LOGGER.debug("Ignoring empty response")
-                    ## Skip processing empty responses (keepalives?)
+                    ## Skip processing empty responses (keepalives)
+                    if debug_listener:
+                        _LOGGER.debug("Ignoring empty response")
                     continue
-                # _LOGGER.debug("AVR listener received response: %s", response)
+                if debug_listener:
+                    _LOGGER.debug("AVR listener received response: %s", response)
 
                 ## Parse response, update cached properties
                 updated_zones = self.parse_response(response)
 
                 ## Detect Main Zone power on for volume workaround
-                if self.volume_workaround and self._power_zone_1 is not None:
+                volume_bounce_workaround = self._params[PARAM_VOLUME_BOUNCE_WORKAROUND]
+                if volume_bounce_workaround and self._power_zone_1 is not None:
                     if not self._power_zone_1 and self.power["1"]:
                         ## Main zone powered on, schedule bounce task
                         _LOGGER.info("Scheduling main zone volume workaround")
@@ -392,7 +434,10 @@ class PioneerAVR:
     ## Read responses from AVR
     async def read_response(self, timeout=None):
         """Wait for a response from AVR and return to all readers."""
-        # _LOGGER.debug(">> PioneerAVR.read_response(timeout=%s)", timeout)
+        debug_responder = self._params[PARAM_DEBUG_RESPONDER]
+
+        if debug_responder:
+            _LOGGER.debug(">> PioneerAVR.read_response(timeout=%s)", timeout)
 
         ## Schedule responder task if not already created
         responder_task = self._responder_task
@@ -403,17 +448,21 @@ class PioneerAVR:
             responder_task = asyncio.create_task(self.reader_readuntil())
             # responder_task = asyncio.create_task(self._reader.readuntil(b"\n"))
             self._responder_task = responder_task
-            # _LOGGER.debug("Created responder task %s", responder_task)
+            if debug_responder:
+                _LOGGER.debug("Created responder task %s", responder_task)
         else:
             ## Wait on existing responder task
-            # _LOGGER.debug("Using existing responder task %s", responder_task)
-            pass  # pylint: disable=unnecessary-pass
+            if debug_responder:
+                _LOGGER.debug("Using existing responder task %s", responder_task)
 
         ## Wait for result and process
         task_name = asyncio.current_task().get_name()
         try:
             if timeout:
-                # _LOGGER.debug("%s: waiting for data (timeout=%s)", task_name, timeout)
+                if debug_responder:
+                    _LOGGER.debug(
+                        "%s: waiting for data (timeout=%s)", task_name, timeout
+                    )
                 done, pending = await asyncio.wait(  # pylint: disable=unused-variable
                     [responder_task], timeout=timeout
                 )
@@ -423,7 +472,8 @@ class PioneerAVR:
                     _LOGGER.debug("%s: timed out waiting for data", task_name)
                     return None
             else:
-                # _LOGGER.debug("%s: waiting for data", task_name)
+                if debug_responder:
+                    _LOGGER.debug("%s: waiting for data", task_name)
                 raw_response = await responder_task
         except (EOFError, TimeoutError):
             ## Connection closed
@@ -435,7 +485,8 @@ class PioneerAVR:
         if raw_response is None:  ## task cancelled
             return None
         response = raw_response.decode().strip()
-        # _LOGGER.debug("%s: received response: %s", task_name, response)
+        if debug_responder:
+            _LOGGER.debug("%s: received response: %s", task_name, response)
         return response
 
     async def responder_cancel(self):
@@ -455,10 +506,11 @@ class PioneerAVR:
         if rate_limit:
             ## Rate limit commands
             since_command = time.time() - self._last_command
-            if since_command < self.command_delay:
-                delay = self.command_delay - since_command
+            command_delay = self._params[PARAM_COMMAND_DELAY]
+            if since_command < command_delay:
+                delay = command_delay - since_command
                 _LOGGER.debug("Delaying command for %.3f s", delay)
-                await asyncio.sleep(self.command_delay - since_command)
+                await asyncio.sleep(command_delay - since_command)
         _LOGGER.debug("Sending AVR command: %s", command)
         self._writer.write(command.encode("ASCII") + b"\r")
         await self._writer.drain()
@@ -545,28 +597,29 @@ class PioneerAVR:
         """Query zones on Pioneer AVR by querying power status."""
         if not self.zones:
             _LOGGER.info("Querying available zones on AVR")
+            ignored_zones = self._params[PARAM_IGNORED_ZONES]
             if await self.send_command("query_power", "1", ignore_error=True):
-                _LOGGER.info("Zone 1 discovered")
-                if "1" not in self.zones:
+                if "1" not in self.zones and "1" not in ignored_zones:
+                    _LOGGER.info("Zone 1 discovered")
                     self.zones.append("1")
-                    self.max_volume["1"] = MAX_VOLUME
+                    self.max_volume["1"] = self._params[PARAM_MAX_VOLUME]
             else:
                 raise RuntimeError("Main Zone not found on AVR")
             if await self.send_command("query_power", "2", ignore_error=True):
-                _LOGGER.info("Zone 2 discovered")
-                if "2" not in self.zones:
+                if "2" not in self.zones and "2" not in ignored_zones:
+                    _LOGGER.info("Zone 2 discovered")
                     self.zones.append("2")
-                    self.max_volume["2"] = MAX_VOLUME_ZONEX
+                    self.max_volume["2"] = self._params[PARAM_MAX_VOLUME_ZONEX]
             if await self.send_command("query_power", "3", ignore_error=True):
-                _LOGGER.info("Zone 3 discovered")
-                if "3" not in self.zones:
+                if "3" not in self.zones and "3" not in ignored_zones:
+                    _LOGGER.info("Zone 3 discovered")
                     self.zones.append("3")
-                    self.max_volume["3"] = MAX_VOLUME_ZONEX
+                    self.max_volume["3"] = self._params[PARAM_MAX_VOLUME_ZONEX]
             if await self.send_command("query_power", "Z", ignore_error=True):
-                _LOGGER.info("HDZone discovered")
-                if "Z" not in self.zones:
+                if "Z" not in self.zones and "Z" not in ignored_zones:
+                    _LOGGER.info("HDZone discovered")
                     self.zones.append("Z")
-                    self.max_volume["Z"] = MAX_VOLUME_ZONEX
+                    self.max_volume["Z"] = self._params[PARAM_MAX_VOLUME_ZONEX]
 
     def set_source_dict(self, sources):
         """Manually set source id<->name translation tables."""
@@ -578,21 +631,22 @@ class PioneerAVR:
         timeouts = 0
         if not self._source_name_to_id:
             _LOGGER.info("Querying AVR source names")
-            for src in range(MAX_SOURCE_NUMBERS):
+            max_source_id = self._params[PARAM_MAX_SOURCE_ID]
+            for src_id in range(max_source_id):
                 response = await self.send_raw_request(
-                    "?RGB" + str(src).zfill(2),
+                    "?RGB" + str(src_id).zfill(2),
                     "RGB",
                     ignore_error=True,
                     rate_limit=False,
                 )
                 if response is None:
                     timeouts += 1
-                    _LOGGER.debug("Timeout %d retrieving source %s", timeouts, src)
+                    _LOGGER.debug("Timeout %d retrieving source %s", timeouts, src_id)
                 elif response is not False:
                     timeouts = 0
                     source_name = response[6:]
                     source_active = response[5] == "1"
-                    source_number = str(src).zfill(2)
+                    source_number = str(src_id).zfill(2)
                     if source_active:
                         self._source_name_to_id[source_name] = source_number
                         self._source_id_to_name[source_number] = source_name
@@ -635,7 +689,12 @@ class PioneerAVR:
             if matches:
                 software_version = matches.group(1)
 
-        self.model = model if model else "unknown"
+        self.model = "unknown"
+        if model:
+            self.model = model
+
+        ## Update default params for this model
+        self._set_model_params()
         self.mac_addr = mac_addr if mac_addr else "unknown"
         self.software_version = software_version if software_version else "unknown"
 
@@ -658,7 +717,7 @@ class PioneerAVR:
         if zones is None:
             zones = self.zones
         for zone in zones:
-            if zone in self._zone_callback:
+            if zone in self.zones and zone in self._zone_callback:
                 callback = self._zone_callback[zone]
                 if callback:
                     _LOGGER.debug("Calling callback for zone %s", zone)
@@ -873,31 +932,35 @@ class PioneerAVR:
                 ## Keepalives may be sent by the AVR (every 30 seconds on the
                 ## VSX-930) when connected to port 8102, but are not sent when
                 ## connected to port 23.
-                ## TODO: re-enable after reconnect debugging finished
-                # _LOGGER.debug("Skipping update: last updated %.3f s ago", since_updated)
-                pass  # pylint: disable=unnecessary-pass
+                debug_updater = self._params[PARAM_DEBUG_UPDATER]
+                if debug_updater:
+                    _LOGGER.debug(
+                        "Skipping update: last updated %.3f s ago", since_updated
+                    )
         if _rc is False:
             ## Disconnect on error
             await self.disconnect()
         return _rc
 
     ## State change functions
+    def _check_zone(self, zone):
+        """Check that specified zone is valid."""
+        if zone not in self.zones:
+            raise ValueError(f"zone {zone} does not exist on AVR")
+
     async def turn_on(self, zone="1"):
         """Turn on the Pioneer AVR."""
+        self._check_zone(zone)
         await self.send_command("turn_on", zone)
-        ## 20201030 disabled volume workaround, need to trigger on any on event
-        ##          and not just when turned on via this module
-        # response = await self.send_command("turn_on", zone)
-        # if self.volume_workaround and zone == "1" and response == "PWR0":
-        #     await self.volume_up()
-        #     await self.volume_down()
 
     async def turn_off(self, zone="1"):
         """Turn off the Pioneer AVR."""
+        self._check_zone(zone)
         await self.send_command("turn_off", zone)
 
     async def select_source(self, source, zone="1"):
         """Select input source."""
+        self._check_zone(zone)
         source_id = self._source_name_to_id.get(source)
         if source_id:
             return await self.send_command(
@@ -909,10 +972,12 @@ class PioneerAVR:
 
     async def volume_up(self, zone="1"):
         """Volume up media player."""
+        self._check_zone(zone)
         return await self.send_command("volume_up", zone, ignore_error=False)
 
     async def volume_down(self, zone="1"):
         """Volume down media player."""
+        self._check_zone(zone)
         return await self.send_command("volume_down", zone, ignore_error=False)
 
     async def bounce_volume(self):
@@ -939,20 +1004,23 @@ class PioneerAVR:
 
     async def set_volume_level(self, volume, zone="1"):
         """Set volume level (0..185 for Zone 1, 0..81 for other Zones)."""
-        if (
-            volume < 0
-            or (zone == "1" and volume > MAX_VOLUME)
-            or (zone != "1" and volume > MAX_VOLUME_ZONEX)
-        ):
+        self._check_zone(zone)
+        max_volume = self.max_volume[zone]
+        if volume < 0 or volume > max_volume:
             raise ValueError(f"volume {volume} out of range for zone {zone}")
-        if self.volume_steps:
-            current_volume = self.volume.get(zone)
-            steps = abs(round((volume - current_volume) / 2))
-            for _ in range(steps):
-                if volume > current_volume:
-                    await self.volume_up(zone)
-                elif volume < current_volume:
-                    await self.volume_down(zone)
+        volume_step_only = self._params[PARAM_VOLUME_STEP_ONLY]
+        volume_step_delta = self._params[PARAM_VOLUME_STEP_DELTA]
+        if volume_step_only:
+            try:
+                current_volume = self.volume.get(zone)
+                steps = abs(round((volume - current_volume) / volume_step_delta))
+                for _ in range(steps):
+                    if volume > current_volume:
+                        await self.volume_up(zone)
+                    elif volume < current_volume:
+                        await self.volume_down(zone)
+            except Exception as exc:  # pylint: disable=broad-except
+                raise ValueError(f"volume unknown for zone {zone}") from exc
         else:
             vol_len = 3 if zone == "1" else 2
             vol_prefix = str(volume).zfill(vol_len)
@@ -962,8 +1030,10 @@ class PioneerAVR:
 
     async def mute_on(self, zone="1"):
         """Mute AVR."""
+        self._check_zone(zone)
         return await self.send_command("mute_on", zone, ignore_error=False)
 
     async def mute_off(self, zone="1"):
         """Unmute AVR."""
+        self._check_zone(zone)
         return await self.send_command("mute_off", zone, ignore_error=False)
