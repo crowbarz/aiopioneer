@@ -14,6 +14,7 @@ Tested on a VSX-930 (Main Zone and HDZone outputs).
 - Ignore specific zones, for AVRs that report phantom zones.
 - Queries device parameters: MAC address, software version, model.
 - Ability to set internal parameters to change the API functionality, eg. maximum volume, volume step change delta.
+- Defaults for internal parameters can be changed based on custom profiles based on AVR model.
 - Includes workaround for AVRs with an initial volume set on the Main Zone (eg. VSX-930).
 - Supports AVRs that do not support setting the volume level by emulating using up/down commands (eg. VSX-S510).
 
@@ -22,7 +23,7 @@ Tested on a VSX-930 (Main Zone and HDZone outputs).
 - Document PioneerAVR API
 - Implement a command line to send commands and receive responses from the AVR, though this appears to be tricky as console I/O isn't well supported in asyncio.
 
-## Major breaking changes
+## Breaking changes
 
 - **0.1**\
   `_PioneerAVR.__init__()` no longer accepts `command_delay`, `volume_workaround` and `volume_steps` arguments. Configure these parameters using the equivalent `PARAM_*` keys in the `params` dict, passed in via the constructure or set via `set_user_params()`.
