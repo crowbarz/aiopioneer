@@ -7,7 +7,7 @@ PARAM_COMMAND_DELAY = "command_delay"
 PARAM_MAX_SOURCE_ID = "max_source_id"
 PARAM_MAX_VOLUME = "max_volume"
 PARAM_MAX_VOLUME_ZONEX = "max_volume_zonex"
-PARAM_VOLUME_BOUNCE_WORKAROUND = "volume_bounce_workaround"
+PARAM_POWER_ON_VOLUME_BOUNCE = "power_on_volume_bounce"
 PARAM_VOLUME_STEP_ONLY = "volume_step_only"
 PARAM_VOLUME_STEP_DELTA = "volume_step_delta"
 PARAM_DEBUG_LISTENER = "debug_listener"
@@ -21,7 +21,7 @@ PARAM_DEFAULTS = {
     PARAM_MAX_SOURCE_ID: 60,
     PARAM_MAX_VOLUME: 185,
     PARAM_MAX_VOLUME_ZONEX: 81,
-    PARAM_VOLUME_BOUNCE_WORKAROUND: False,
+    PARAM_POWER_ON_VOLUME_BOUNCE: False,
     PARAM_VOLUME_STEP_ONLY: False,
     PARAM_VOLUME_STEP_DELTA: 1,
     PARAM_DEBUG_LISTENER: False,
@@ -37,7 +37,7 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^VSX-930",
             {
-                PARAM_VOLUME_BOUNCE_WORKAROUND: True,
+                PARAM_POWER_ON_VOLUME_BOUNCE: True,
             },
         ),
         (

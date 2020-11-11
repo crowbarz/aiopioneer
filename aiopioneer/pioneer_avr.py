@@ -12,7 +12,7 @@ from .param import (
     PARAM_MAX_SOURCE_ID,
     PARAM_MAX_VOLUME,
     PARAM_MAX_VOLUME_ZONEX,
-    PARAM_VOLUME_BOUNCE_WORKAROUND,
+    PARAM_POWER_ON_VOLUME_BOUNCE,
     PARAM_VOLUME_STEP_ONLY,
     PARAM_VOLUME_STEP_DELTA,
     PARAM_DEBUG_LISTENER,
@@ -392,8 +392,8 @@ class PioneerAVR:
                 updated_zones = self._parse_response(response)
 
                 ## Detect Main Zone power on for volume workaround
-                volume_bounce_workaround = self._params[PARAM_VOLUME_BOUNCE_WORKAROUND]
-                if volume_bounce_workaround and self._power_zone_1 is not None:
+                power_on_volume_bounce = self._params[PARAM_POWER_ON_VOLUME_BOUNCE]
+                if power_on_volume_bounce and self._power_zone_1 is not None:
                     if not self._power_zone_1 and self.power["1"]:
                         ## Main zone powered on, schedule bounce task
                         _LOGGER.info("Scheduling main zone volume workaround")
