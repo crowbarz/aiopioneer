@@ -193,7 +193,7 @@ class PioneerAVR:
             for model_regex, model_params in PARAM_MODEL_DEFAULTS.items():
                 if re.search(model_regex, model):
                     _LOGGER.info(
-                        "Applying default parameters for model %s (%s)",
+                        "applying default parameters for model %s (%s)",
                         model,
                         model_regex,
                     )
@@ -213,11 +213,9 @@ class PioneerAVR:
         return self._default_params
 
     ## Connection/disconnection
-    async def connect(self, from_reconnect=False):
+    async def connect(self):
         """Open connection to AVR and start listener thread."""
-        _LOGGER.debug(
-            ">> PioneerAVR.connect(from_reconnect=%s) started", from_reconnect
-        )
+        _LOGGER.debug(">> PioneerAVR.connect() started")
         if self._connect_lock.locked():
             _LOGGER.warning("AVR connection is already connecting, skipping connect")
             return
@@ -226,7 +224,7 @@ class PioneerAVR:
             return
 
         async with self._connect_lock:
-            _LOGGER.debug("Opening AVR connection")
+            _LOGGER.debug("opening AVR connection")
             if self._writer is not None:
                 raise RuntimeError("AVR connection already established")
 
@@ -243,6 +241,7 @@ class PioneerAVR:
             await self._responder_cancel()
             await self._listener_schedule()
             await asyncio.sleep(0)  # yield to listener task
+            self._full_update = True
             await self._updater_schedule()
             await asyncio.sleep(0)  # yield to updater task
 
@@ -281,7 +280,7 @@ class PioneerAVR:
             return
 
         async with self._disconnect_lock:
-            _LOGGER.debug("Disconnecting AVR connection")
+            _LOGGER.debug("disconnecting AVR connection")
             self.available = False
             self._call_zone_callbacks()
 
@@ -293,7 +292,7 @@ class PioneerAVR:
             writer = self._writer
             if writer:
                 ## Close AVR connection
-                _LOGGER.debug("Closing AVR connection")
+                _LOGGER.debug("closing AVR connection")
                 self._writer.close()
                 try:
                     await self._writer.wait_closed()
@@ -319,24 +318,26 @@ class PioneerAVR:
         _LOGGER.debug(">> PioneerAVR.reconnect() started")
         retry = 0
         try:
-            while True:
+            while not self.available:
                 delay = get_backoff_delay(retry)
-                _LOGGER.debug("Waiting %ds before retrying connection", delay)
+                _LOGGER.debug("waiting %ds before retrying connection", delay)
                 await asyncio.sleep(delay)
 
                 retry += 1
                 try:
-                    await self.connect(from_reconnect=True)
-                    _LOGGER.debug("Scheduling full AVR status update")
-                    self._full_update = True
-                    await self.update()
-                    break
+                    await self.connect()
+                    ## 20201212 removed as connect already schedules full update
+                    # _LOGGER.debug("Scheduling full AVR status update")
+                    # self._full_update = True
+                    # await self.update()
+                    if self.available:
+                        break
                 except asyncio.CancelledError as exc:  # pylint: disable=try-except-raise
                     ## pass through to outer except
                     raise
                 except Exception as exc:  # pylint: disable=broad-except
                     _LOGGER.debug(
-                        "Could not reconnect to AVR: %s: %s", type(exc).__name__, exc
+                        "could not reconnect to AVR: %s: %s", type(exc).__name__, exc
                     )
                     ## fall through to reconnect outside try block
 
@@ -353,10 +354,11 @@ class PioneerAVR:
             _LOGGER.debug(">> PioneerAVR._reconnect_schedule()")
             reconnect_task = self._reconnect_task
             if reconnect_task:
+                asyncio.sleep(0)  ## yield to reconnect task if running
                 if reconnect_task.done():
                     reconnect_task = None  ## trigger new task creation
             if reconnect_task is None:
-                _LOGGER.info("Reconnecting to AVR")
+                _LOGGER.info("reconnecting to AVR")
                 reconnect_task = asyncio.create_task(self.reconnect())
                 self._reconnect_task = reconnect_task
             else:
@@ -383,7 +385,7 @@ class PioneerAVR:
                 if not response:
                     ## Skip processing empty responses (keepalives)
                     if debug_listener:
-                        _LOGGER.debug("Ignoring empty response")
+                        _LOGGER.debug("ignoring empty response")
                     continue
                 if debug_listener:
                     _LOGGER.debug("AVR listener received response: %s", response)
@@ -396,7 +398,7 @@ class PioneerAVR:
                 if power_on_volume_bounce and self._power_zone_1 is not None:
                     if not self._power_zone_1 and self.power["1"]:
                         ## Main zone powered on, schedule bounce task
-                        _LOGGER.info("Scheduling main zone volume workaround")
+                        _LOGGER.info("scheduling main zone volume workaround")
                         await self._bouncer_schedule()
                 self._power_zone_1 = self.power.get("1")  ## cache value
 
@@ -457,11 +459,11 @@ class PioneerAVR:
             # responder_task = asyncio.create_task(self._reader.readuntil(b"\n"))
             self._responder_task = responder_task
             if debug_responder:
-                _LOGGER.debug("Created responder task %s", responder_task)
+                _LOGGER.debug("created responder task %s", responder_task)
         else:
             ## Wait on existing responder task
             if debug_responder:
-                _LOGGER.debug("Using existing responder task %s", responder_task)
+                _LOGGER.debug("using existing responder task %s", responder_task)
 
         ## Wait for result and process
         task_name = asyncio.current_task().get_name()
@@ -521,9 +523,9 @@ class PioneerAVR:
             command_delay = self._params[PARAM_COMMAND_DELAY]
             if since_command < command_delay:
                 delay = command_delay - since_command
-                _LOGGER.debug("Delaying command for %.3f s", delay)
+                _LOGGER.debug("delaying command for %.3f s", delay)
                 await asyncio.sleep(command_delay - since_command)
-        _LOGGER.debug("Sending AVR command: %s", command)
+        _LOGGER.debug("sending AVR command: %s", command)
         self._writer.write(command.encode("ASCII") + b"\r")
         await self._writer.drain()
         self._last_command = time.time()
@@ -598,22 +600,22 @@ class PioneerAVR:
                         _LOGGER.debug("send_command received response: %s", response)
                     return response
                 else:
-                    _LOGGER.error("Invalid request %s for zone %s", raw_command, zone)
+                    _LOGGER.error("invalid request %s for zone %s", raw_command, zone)
                     return None
             elif type(raw_command) is str:
                 return await self.send_raw_command(prefix + raw_command, rate_limit)
             else:
-                _LOGGER.warning("Invalid command %s for zone %s", command, zone)
+                _LOGGER.warning("invalid command %s for zone %s", command, zone)
                 return None
-        except RuntimeError:
-            _LOGGER.error("Cannot execute %s command: AVR not connected", command)
+        except RuntimeError as exc:
+            _LOGGER.error("cannot execute %s command: %s", command, exc)
             return False
 
     ## Initialisation functions
     async def query_zones(self):
         """Query zones on Pioneer AVR by querying power status."""
         if not self.zones:
-            _LOGGER.info("Querying available zones on AVR")
+            _LOGGER.info("querying available zones on AVR")
             ignored_zones = self._params[PARAM_IGNORED_ZONES]
             if await self.send_command("query_power", "1", ignore_error=True):
                 if "1" not in self.zones and "1" not in ignored_zones:
@@ -647,7 +649,7 @@ class PioneerAVR:
         """Generate source id<->name translation tables."""
         timeouts = 0
         if not self._source_name_to_id:
-            _LOGGER.info("Querying AVR source names")
+            _LOGGER.info("querying AVR source names")
             max_source_id = self._params[PARAM_MAX_SOURCE_ID]
             for src_id in range(max_source_id):
                 response = await self.send_raw_request(
@@ -658,7 +660,7 @@ class PioneerAVR:
                 )
                 if response is None:
                     timeouts += 1
-                    _LOGGER.debug("Timeout %d retrieving source %s", timeouts, src_id)
+                    _LOGGER.debug("timeout %d retrieving source %s", timeouts, src_id)
                 elif response is not False:
                     timeouts = 0
                     source_name = response[6:]
@@ -667,8 +669,8 @@ class PioneerAVR:
                     if source_active:
                         self._source_name_to_id[source_name] = source_number
                         self._source_id_to_name[source_number] = source_name
-            _LOGGER.debug("Source name->id: %s", self._source_name_to_id)
-            _LOGGER.debug("Source id->name: %s", self._source_id_to_name)
+            _LOGGER.debug("source name->id: %s", self._source_name_to_id)
+            _LOGGER.debug("source id->name: %s", self._source_id_to_name)
         if not self._source_name_to_id:
             _LOGGER.warning("no input sources found on AVR")
 
@@ -681,7 +683,7 @@ class PioneerAVR:
         if self.model or self.mac_addr or self.software_version:
             return
 
-        _LOGGER.info("Querying device information from Pioneer AVR")
+        _LOGGER.info("querying device information from Pioneer AVR")
         model = None
         mac_addr = None
         software_version = None
@@ -737,7 +739,7 @@ class PioneerAVR:
             if zone in self.zones and zone in self._zone_callback:
                 callback = self._zone_callback[zone]
                 if callback:
-                    _LOGGER.debug("Calling callback for zone %s", zone)
+                    _LOGGER.debug("calling callback for zone %s", zone)
                     callback()
 
     ## update_callback deprecated, use zone callback
@@ -921,7 +923,7 @@ class PioneerAVR:
             full_update = self._full_update
             if full_update or since_updated > self.scan_interval:
                 _LOGGER.info(
-                    "Updating AVR status (full=%s, last updated %.3f s ago)",
+                    "updating AVR status (full=%s, last updated %.3f s ago)",
                     full_update,
                     since_updated,
                 )
@@ -935,7 +937,7 @@ class PioneerAVR:
                         self._call_zone_callbacks()
                 except Exception as exc:  # pylint: disable=broad-except
                     _LOGGER.error(
-                        "Could not update AVR status: %s: %s",
+                        "could not update AVR status: %s: %s",
                         type(exc).__name__,
                         str(exc),
                     )
@@ -953,7 +955,7 @@ class PioneerAVR:
                 debug_updater = self._params[PARAM_DEBUG_UPDATER]
                 if debug_updater:
                     _LOGGER.debug(
-                        "Skipping update: last updated %.3f s ago", since_updated
+                        "skipping update: last updated %.3f s ago", since_updated
                     )
         if _rc is False:
             ## Disconnect on error
@@ -985,7 +987,7 @@ class PioneerAVR:
                 "select_source", zone, prefix=source_id, ignore_error=False
             )
         else:
-            _LOGGER.error("Invalid source %s for zone %s", source, zone)
+            _LOGGER.error("invalid source %s for zone %s", source, zone)
             return False
 
     async def volume_up(self, zone="1"):
