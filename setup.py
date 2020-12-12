@@ -23,5 +23,11 @@ setuptools.setup(
         "Topic :: Home Automation",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
+    keywords="pioneer avr asyncio",
+    entry_points={
+        "console_scripts": [
+            "aiopioneer=aiopioneer.cli:main",
+        ]
+    },
     python_requires=">=3.6",
 )

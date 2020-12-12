@@ -1,3 +1,3 @@
-"""The Pioneer AVR integration."""
+"""Pioneer AVR asyncio API."""
 
 from .pioneer_avr import PioneerAVR
