@@ -151,6 +151,7 @@ class PioneerAVR:
         self._disconnect_lock = asyncio.Lock()
         self._update_lock = asyncio.Lock()
         self._request_lock = asyncio.Lock()
+        self._update_event = asyncio.Event()
         self._reconnect = True
         self._full_update = True
         self._last_updated = 0.0
@@ -180,6 +181,7 @@ class PioneerAVR:
 
     def set_user_params(self, params=None):
         """Set parameters and merge with defaults."""
+        _LOGGER.debug(">> PioneerAVR.set_user_params(%s)", params)
         self._user_params = {}
         if params is not None:
             self._user_params = params
@@ -241,7 +243,6 @@ class PioneerAVR:
             await self._responder_cancel()
             await self._listener_schedule()
             await asyncio.sleep(0)  # yield to listener task
-            self._full_update = True
             await self._updater_schedule()
             await asyncio.sleep(0)  # yield to updater task
 
@@ -354,7 +355,7 @@ class PioneerAVR:
             _LOGGER.debug(">> PioneerAVR._reconnect_schedule()")
             reconnect_task = self._reconnect_task
             if reconnect_task:
-                asyncio.sleep(0)  ## yield to reconnect task if running
+                await asyncio.sleep(0)  ## yield to reconnect task if running
                 if reconnect_task.done():
                     reconnect_task = None  ## trigger new task creation
             if reconnect_task is None:
@@ -639,6 +640,7 @@ class PioneerAVR:
                     _LOGGER.info("HDZone discovered")
                     self.zones.append("Z")
                     self.max_volume["Z"] = self._params[PARAM_MAX_VOLUME_ZONEX]
+            await self.update(full=True)
 
     def set_source_dict(self, sources):
         """Manually set source id<->name translation tables."""
@@ -868,10 +870,15 @@ class PioneerAVR:
     async def _updater(self):
         """Perform update every scan_interval."""
         _LOGGER.debug(">> PioneerAVR._updater() started")
+        event = self._update_event
         while True:
             try:
-                await asyncio.sleep(self.scan_interval)
-                await self.update()
+                await self._updater_update()
+                event.clear()
+                # await asyncio.sleep(self.scan_interval)
+                await asyncio.wait_for(event.wait(), timeout=self.scan_interval)
+            except asyncio.TimeoutError:  ## update timer expired
+                continue
             except asyncio.CancelledError:
                 _LOGGER.debug(">> PioneerAVR._updater() cancelled")
                 break
@@ -884,6 +891,7 @@ class PioneerAVR:
         """Schedule/reschedule the update task."""
         _LOGGER.debug(">> PioneerAVR._updater_schedule()")
         await self._updater_cancel()
+        self._full_update = True  ## always perform full update on schedule
         if self.scan_interval:
             self._updater_task = asyncio.create_task(self._updater())
 
@@ -906,8 +914,11 @@ class PioneerAVR:
             ## Timeout occurred, indicates AVR disconnected
             raise TimeoutError("Timeout waiting for data")
 
-    async def update(self):
+    async def _updater_update(self):
         """Update AVR cached status."""
+        debug_updater = self._params[PARAM_DEBUG_UPDATER]
+        if debug_updater:
+            _LOGGER.debug(">> PioneerAVR._updater_update() started")
         if self._update_lock.locked():
             _LOGGER.warning("AVR update already running, skipping")
             return False
@@ -952,7 +963,7 @@ class PioneerAVR:
                 ## Keepalives may be sent by the AVR (every 30 seconds on the
                 ## VSX-930) when connected to port 8102, but are not sent when
                 ## connected to port 23.
-                debug_updater = self._params[PARAM_DEBUG_UPDATER]
+                _rc = None
                 if debug_updater:
                     _LOGGER.debug(
                         "skipping update: last updated %.3f s ago", since_updated
@@ -960,7 +971,15 @@ class PioneerAVR:
         if _rc is False:
             ## Disconnect on error
             await self.disconnect()
+        if debug_updater:
+            _LOGGER.debug(">> PioneerAVR._updater_update() completed")
         return _rc
+
+    async def update(self, full=False):
+        """Schedule AVR cached status update."""
+        if full:
+            self._full_update = True
+        self._update_event.set()
 
     ## State change functions
     def _check_zone(self, zone):
