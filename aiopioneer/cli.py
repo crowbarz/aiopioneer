@@ -6,6 +6,12 @@ import sys
 import json
 
 from aiopioneer import PioneerAVR
+from aiopioneer.param import (
+    PARAM_DEBUG_LISTENER,
+    PARAM_DEBUG_RESPONDER,
+    PARAM_DEBUG_UPDATER,
+    PARAM_DEBUG_COMMAND,
+)
 from aiopioneer.pioneer_avr import PIONEER_COMMANDS
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,11 +29,32 @@ async def connect_stdin_stdout():
     return reader, writer
 
 
+def set_log_level(arg):
+    """Set root logging level."""
+    level = {
+        "debug": logging.DEBUG,
+        "info": logging.INFO,
+        "warning": logging.WARNING,
+        "error": logging.ERROR,
+        "critical": logging.CRITICAL,
+    }.get(arg)
+    if level:
+        print(f"Setting log level to {arg}")
+        logging.getLogger().setLevel(level)
+    else:
+        print(f"ERROR: Unknown log level {arg}")
+
+
+def get_bool_arg(arg):
+    """Parse boolean argument."""
+    return arg in ["true", "True", "TRUE", "on", "On", "ON", "1"]
+
+
 async def cli_main():
     pioneer = PioneerAVR("avr")
 
     try:
-        await pioneer.connect()
+        await pioneer.connect(reconnect=False)
     except Exception as exc:
         _LOGGER.error("could not connect to AVR: %s: %s", type(exc).__name__, exc.args)
         return False
@@ -56,10 +83,12 @@ async def cli_main():
                 zone = zone_new
                 print(f"Setting current zone to {zone}")
             else:
-                print(f"Unknown zone {zone_new}")
+                print(f"ERROR: Unknown zone {zone_new}")
         elif cmd == "exit" or cmd == "quit":
             print("Exiting")
             break
+        elif cmd == "log_level":
+            set_log_level(arg)
         elif cmd == "update":
             await pioneer.update()
         elif cmd == "update_full":
@@ -73,17 +102,17 @@ async def cli_main():
         elif cmd == "query_zones":
             await pioneer.query_zones()
             print(f"Zones discovered: {pioneer.zones}")
-        elif cmd == "get_source_list":
-            print(f"Source list: {json.dumps(pioneer.get_source_list())}")
         elif cmd == "build_source_dict":
             await pioneer.build_source_dict()
         elif cmd == "set_source_dict":
             try:
                 source_dict = json.loads(arg)
-                print("Set source dict: %s" % json.dumps(source_dict))
+                print("Setting source dict to: %s" % json.dumps(source_dict))
                 pioneer.set_source_dict(source_dict)
             except json.JSONDecodeError:
-                print(f'Invalid JSON source dict: "{arg}""')
+                print(f'ERROR: Invalid JSON source dict: "{arg}""')
+        elif cmd == "get_source_list":
+            print(f"Source list: {json.dumps(pioneer.get_source_list())}")
         elif cmd == "get_params":
             print(f"Params: {json.dumps(pioneer.get_params())}")
         elif cmd == "get_user_params":
@@ -94,24 +123,55 @@ async def cli_main():
                 print("Set user params: %s" % json.dumps(params))
                 pioneer.set_user_params(params)
             except json.JSONDecodeError:
-                print(f'Invalid JSON params: "{arg}""')
-        elif cmd == "get_scan_interval":
-            print(f"Scan interval: {pioneer.scan_interval}")
+                print(f'ERROR: Invalid JSON params: "{arg}""')
+        elif cmd == "debug_listener":
+            arg_bool = get_bool_arg(arg)
+            params = pioneer.get_user_params()
+            params[PARAM_DEBUG_LISTENER] = arg_bool
+            print(f"Setting debug_listener to: {arg_bool}")
+            pioneer.set_user_params(params)
+        elif cmd == "debug_responder":
+            arg_bool = get_bool_arg(arg)
+            params = pioneer.get_user_params()
+            params[PARAM_DEBUG_RESPONDER] = arg_bool
+            print(f"Setting debug_responder to: {arg_bool}")
+            pioneer.set_user_params(params)
+        elif cmd == "debug_updater":
+            arg_bool = get_bool_arg(arg)
+            params = pioneer.get_user_params()
+            params[PARAM_DEBUG_UPDATER] = arg_bool
+            print(f"Setting debug_updater to: {arg_bool}")
+            pioneer.set_user_params(params)
+        elif cmd == "debug_command":
+            arg_bool = get_bool_arg(arg)
+            params = pioneer.get_user_params()
+            params[PARAM_DEBUG_COMMAND] = arg_bool
+            print(f"Setting debug_command to: {arg_bool}")
+            pioneer.set_user_params(params)
         elif cmd == "set_scan_interval":
             try:
                 scan_interval = float(arg)
+                print(f"Setting scan interval to {scan_interval}")
                 await pioneer.set_scan_interval(scan_interval)
             except Exception as exc:
-                print(f'Invalid scan interval "{arg}"')
+                print(f'ERROR: Invalid scan interval "{arg}"')
+        elif cmd == "get_scan_interval":
+            print(f"Scan interval: {pioneer.scan_interval}")
         elif cmd == "set_volume_level":
             try:
                 volume_level = int(arg)
                 await pioneer.set_volume_level(volume_level, zone=zone)
             except Exception as exc:
-                print(f'Invalid volume level "{arg}"')
+                print(f'ERROR: Invalid volume level "{arg}": {exc}')
         elif cmd == "select_source":
             source = arg if arg else ""
             await pioneer.select_source(source, zone=zone)
+        elif cmd == "send_raw_command":
+            if arg:
+                print(f"Sending raw command {arg}")
+                await pioneer.send_raw_command(arg)
+            else:
+                print(f"ERROR: No raw command specified")
         elif cmd in PIONEER_COMMANDS:
             print(f"Executing command {cmd}")
             cur_zone = zone
@@ -123,7 +183,7 @@ async def cli_main():
             prefix = arg if arg else ""
             await pioneer.send_command(cmd, zone=cur_zone, prefix=prefix)
         else:
-            print(f"Unknown command {cmd}")
+            print(f"ERROR: Unknown command {cmd}")
 
     await pioneer.shutdown()
     return True
@@ -133,10 +193,22 @@ def main():
     import asyncio
     import logging
 
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="%(asctime)s %(levelname)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    rc = asyncio.run(cli_main())
+    debug_level = logging.WARNING
+    log_format = "%(asctime)s %(levelname)s: %(message)s"
+    log_format_color = "%(log_color)s" + log_format
+    date_format = "%Y-%m-%d %H:%M:%S"
+    try:
+        import colorlog
+
+        colorlog.basicConfig(
+            level=debug_level, format=log_format_color, datefmt=date_format
+        )
+    except:
+        logging.basicConfig(level=debug_level, format=log_format, datefmt=date_format)
+
+    rc = False
+    try:
+        rc = asyncio.run(cli_main())
+    except KeyboardInterrupt:
+        _LOGGER.info("KeyboardInterrupt")
     exit(0 if rc else 1)

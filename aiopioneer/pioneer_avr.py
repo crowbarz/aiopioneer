@@ -203,19 +203,25 @@ class PioneerAVR:
         self._set_params()
 
     def get_params(self):
-        """Get all current parameters."""
-        return self._params
+        """Get a copy of all current parameters."""
+        params = {}
+        merge(params, self._params)
+        return params
 
     def get_user_params(self):
-        """Get user parameters."""
-        return self._user_params
+        """Get a copy of user parameters."""
+        params = {}
+        merge(params, self._user_params)
+        return params
 
     def get_default_params(self):
-        """Get default parameters."""
-        return self._default_params
+        """Get a copy of current default parameters."""
+        params = {}
+        merge(params, self._default_params)
+        return params
 
     ## Connection/disconnection
-    async def connect(self):
+    async def connect(self, reconnect=True):
         """Open connection to AVR and start listener thread."""
         _LOGGER.debug(">> PioneerAVR.connect() started")
         if self._connect_lock.locked():
@@ -238,6 +244,7 @@ class PioneerAVR:
             self._reader = reader
             self._writer = writer
             self.available = True
+            self._reconnect = reconnect
             self._set_socket_options()
 
             await self._responder_cancel()
@@ -264,6 +271,7 @@ class PioneerAVR:
 
     async def set_scan_interval(self, scan_interval):
         """Set scan interval and restart updater."""
+        await self._updater_cancel()
         self.scan_interval = scan_interval
         await self._updater_schedule()
 
@@ -719,10 +727,14 @@ class PioneerAVR:
         self.mac_addr = mac_addr if mac_addr else "unknown"
         self.software_version = software_version if software_version else "unknown"
 
-        # TODO: Query via HTML page if all info is not available from command
-        # http://avr/1000/system_information.asp
+        # It is possible to query via HTML page if all info is not available
+        # via API commands: http://avr/1000/system_information.asp
+        # However, this is not compliant with Home Assistant ADR-0004:
+        #
+        # https://github.com/home-assistant/architecture/blob/master/adr/0004-webscraping.md
+        #
         # VSX-930 will report model and software version, but not MAC address.
-        # Unknown how iControlAV5 determines this on a routed network.
+        # It is unknown how iControlAV5 determines this on a routed network.
 
     ## Callback functions
     def set_zone_callback(self, zone, callback):
@@ -889,10 +901,10 @@ class PioneerAVR:
 
     async def _updater_schedule(self):
         """Schedule/reschedule the update task."""
-        _LOGGER.debug(">> PioneerAVR._updater_schedule()")
-        await self._updater_cancel()
-        self._full_update = True  ## always perform full update on schedule
         if self.scan_interval:
+            _LOGGER.debug(">> PioneerAVR._updater_schedule()")
+            await self._updater_cancel()
+            self._full_update = True  ## always perform full update on schedule
             self._updater_task = asyncio.create_task(self._updater())
 
     async def _updater_cancel(self):
@@ -932,7 +944,8 @@ class PioneerAVR:
             now = time.time()
             since_updated = now - self._last_updated
             full_update = self._full_update
-            if full_update or since_updated > self.scan_interval:
+            scan_interval = self.scan_interval
+            if full_update or not scan_interval or since_updated > scan_interval:
                 _LOGGER.info(
                     "updating AVR status (full=%s, last updated %.3f s ago)",
                     full_update,
@@ -976,10 +989,14 @@ class PioneerAVR:
         return _rc
 
     async def update(self, full=False):
-        """Schedule AVR cached status update."""
+        """Update AVR cached status update. Schedule if updater is running."""
         if full:
             self._full_update = True
-        self._update_event.set()
+        if self._updater_task:
+            self._update_event.set()
+        else:
+            ## scan_interval not set, execute update synchronously
+            await self._updater_update()
 
     ## State change functions
     def _check_zone(self, zone):

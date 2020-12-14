@@ -26,8 +26,12 @@ def merge(a, b, path=None):  # pylint: disable=invalid-name
                 pass  # leave key in a alone
             elif isinstance(a[key], list) and isinstance(b[key], list):
                 a[key].extend(b[key])  # append list b to list a
+            elif isinstance(b[key], list):
+                a[key] = b[key][:]  # replace a[key] with shallow copy of b[key]
             else:
                 a[key] = b[key]  # b overwrites a
+        elif isinstance(b[key], list):
+            a[key] = b[key][:]  # replace a[key] with shallow copy of b[key]
         else:
             a[key] = b[key]
     return a
