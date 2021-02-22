@@ -47,5 +47,12 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
                 PARAM_VOLUME_STEP_DELTA: 2,
             },
         ),
+        (
+            r"^VSX-528",
+            {
+                PARAM_VOLUME_STEP_ONLY: True,
+                PARAM_VOLUME_STEP_DELTA: 2,
+            },
+        ),
     ]
 )
