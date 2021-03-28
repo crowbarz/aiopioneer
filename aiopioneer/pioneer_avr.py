@@ -658,29 +658,30 @@ class PioneerAVR:
     async def build_source_dict(self):
         """Generate source id<->name translation tables."""
         timeouts = 0
-        if not self._source_name_to_id:
-            _LOGGER.info("querying AVR source names")
-            max_source_id = self._params[PARAM_MAX_SOURCE_ID]
-            for src_id in range(max_source_id):
-                response = await self.send_raw_request(
-                    "?RGB" + str(src_id).zfill(2),
-                    "RGB",
-                    ignore_error=True,
-                    rate_limit=False,
-                )
-                if response is None:
-                    timeouts += 1
-                    _LOGGER.debug("timeout %d retrieving source %s", timeouts, src_id)
-                elif response is not False:
-                    timeouts = 0
-                    source_name = response[6:]
-                    source_active = response[5] == "1"
-                    source_number = str(src_id).zfill(2)
-                    if source_active:
-                        self._source_name_to_id[source_name] = source_number
-                        self._source_id_to_name[source_number] = source_name
-            _LOGGER.debug("source name->id: %s", self._source_name_to_id)
-            _LOGGER.debug("source id->name: %s", self._source_id_to_name)
+        self._source_name_to_id = {}
+        self._source_id_to_name = {}
+        _LOGGER.info("querying AVR source names")
+        max_source_id = self._params[PARAM_MAX_SOURCE_ID]
+        for src_id in range(max_source_id):
+            response = await self.send_raw_request(
+                "?RGB" + str(src_id).zfill(2),
+                "RGB",
+                ignore_error=True,
+                rate_limit=False,
+            )
+            if response is None:
+                timeouts += 1
+                _LOGGER.debug("timeout %d retrieving source %s", timeouts, src_id)
+            elif response is not False:
+                timeouts = 0
+                source_name = response[6:]
+                source_active = response[5] == "1"
+                source_number = str(src_id).zfill(2)
+                if source_active:
+                    self._source_name_to_id[source_name] = source_number
+                    self._source_id_to_name[source_number] = source_name
+        _LOGGER.debug("source name->id: %s", self._source_name_to_id)
+        _LOGGER.debug("source id->name: %s", self._source_id_to_name)
         if not self._source_name_to_id:
             _LOGGER.warning("no input sources found on AVR")
 
