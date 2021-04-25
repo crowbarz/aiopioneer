@@ -694,9 +694,7 @@ class PioneerAVR:
         if not self._source_name_to_id:
             return source_id
         else:
-            source_name = self._source_id_to_name.get(source_id, source_id)
-            _LOGGER.debug("translate source: %s -> %s", source_id, source_name)
-            return source_name
+            return self._source_id_to_name.get(source_id, source_id)
 
     async def query_device_info(self):
         """Query device information from Pioneer AVR."""
