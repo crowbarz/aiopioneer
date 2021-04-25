@@ -689,6 +689,15 @@ class PioneerAVR:
         """Return list of available input sources."""
         return list(self._source_name_to_id.keys())
 
+    def get_source_name(self, source_id):
+        """Return name for given source ID."""
+        if not self._source_name_to_id:
+            return source_id
+        else:
+            source_name = self._source_id_to_name.get(source_id, source_id)
+            _LOGGER.debug("translate source: %s -> %s", source_id, source_name)
+            return source_name
+
     async def query_device_info(self):
         """Query device information from Pioneer AVR."""
         if self.model or self.mac_addr or self.software_version:
@@ -851,33 +860,29 @@ class PioneerAVR:
                 _LOGGER.info("HDZone: Mute: %s", value)
 
         elif response.startswith("FN"):
-            raw_id = response[2:]
-            value = self._source_id_to_name.get(raw_id, raw_id)
-            if self.source.get("1") != value:
-                self.source["1"] = value
+            id = response[2:]
+            if self.source.get("1") != id:
+                self.source["1"] = id
                 updated_zones.add("1")
-                _LOGGER.info("Zone 1: Source: %s", value)
+                _LOGGER.info("Zone 1: Source: %s (%s)", id, self.get_source_name(id))
         elif response.startswith("Z2F"):
-            raw_id = response[3:]
-            value = self._source_id_to_name.get(raw_id, raw_id)
-            if self.source.get("2") != value:
-                self.source["2"] = value
+            id = response[3:]
+            if self.source.get("2") != id:
+                self.source["2"] = id
                 updated_zones.add("2")
-                _LOGGER.info("Zone 2: Source: %s", value)
+                _LOGGER.info("Zone 2: Source: %s (%s)", id, self.get_source_name(id))
         elif response.startswith("Z3F"):
-            raw_id = response[3:]
-            value = self._source_id_to_name.get(raw_id, raw_id)
-            if self.source.get("3") != value:
-                value = self.source["3"]
+            id = response[3:]
+            if self.source.get("3") != id:
+                self.source["3"] = id
                 updated_zones.add("3")
-                _LOGGER.info("Zone 3: Source: %s", value)
+                _LOGGER.info("Zone 3: Source: %s (%s)", id, self.get_source_name(id))
         elif response.startswith("ZEA"):
-            raw_id = response[3:]
-            value = self._source_id_to_name.get(raw_id, raw_id)
-            if self.source.get("Z") != value:
-                self.source["Z"] = value
+            id = response[3:]
+            if self.source.get("Z") != id:
+                self.source["Z"] = id
                 updated_zones.add("Z")
-                _LOGGER.info("HDZone: Source: %s", value)
+                _LOGGER.info("HDZone: Source: %s (%s)", id, self.get_source_name(id))
         return updated_zones
 
     async def _updater(self):
