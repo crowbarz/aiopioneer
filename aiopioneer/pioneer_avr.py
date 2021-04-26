@@ -633,24 +633,32 @@ class PioneerAVR:
         if not self.zones:
             _LOGGER.info("querying available zones on AVR")
             ignored_zones = self._params[PARAM_IGNORED_ZONES]
-            if await self.send_command("query_power", "1", ignore_error=True):
+            if await self.send_command(
+                "query_power", "1", ignore_error=True
+            ) and await self.send_command("query_volume", "1", ignore_error=True):
                 if "1" not in self.zones and "1" not in ignored_zones:
                     _LOGGER.info("Zone 1 discovered")
                     self.zones.append("1")
                     self.max_volume["1"] = self._params[PARAM_MAX_VOLUME]
             else:
                 raise RuntimeError("Main Zone not found on AVR")
-            if await self.send_command("query_power", "2", ignore_error=True):
+            if await self.send_command(
+                "query_power", "2", ignore_error=True
+            ) and await self.send_command("query_volume", "2", ignore_error=True):
                 if "2" not in self.zones and "2" not in ignored_zones:
                     _LOGGER.info("Zone 2 discovered")
                     self.zones.append("2")
                     self.max_volume["2"] = self._params[PARAM_MAX_VOLUME_ZONEX]
-            if await self.send_command("query_power", "3", ignore_error=True):
+            if await self.send_command(
+                "query_power", "3", ignore_error=True
+            ) and await self.send_command("query_volume", "3", ignore_error=True):
                 if "3" not in self.zones and "3" not in ignored_zones:
                     _LOGGER.info("Zone 3 discovered")
                     self.zones.append("3")
                     self.max_volume["3"] = self._params[PARAM_MAX_VOLUME_ZONEX]
-            if await self.send_command("query_power", "Z", ignore_error=True):
+            if await self.send_command(
+                "query_power", "Z", ignore_error=True
+            ) and await self.send_command("query_volume", "Z", ignore_error=True):
                 if "Z" not in self.zones and "Z" not in ignored_zones:
                     _LOGGER.info("HDZone discovered")
                     self.zones.append("Z")
