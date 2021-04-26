@@ -175,6 +175,10 @@ class PioneerAVR:
     def __del__(self):
         _LOGGER.debug(">> PioneerAVR.__del__()")
 
+    def get_unique_id(self):
+        """Get unique identifier for this instance."""
+        return self._host + ":" + str(self._port)
+
     ## Parameter management functions
     def _set_params(self):
         """Set current parameters."""
@@ -678,11 +682,9 @@ class PioneerAVR:
             elif response is not False:
                 timeouts = 0
                 source_name = response[6:]
-                source_active = response[5] == "1"
                 source_number = str(src_id).zfill(2)
-                if source_active:
-                    self._source_name_to_id[source_name] = source_number
-                    self._source_id_to_name[source_number] = source_name
+                self._source_name_to_id[source_name] = source_number
+                self._source_id_to_name[source_number] = source_name
         _LOGGER.debug("source name->id: %s", self._source_name_to_id)
         _LOGGER.debug("source id->name: %s", self._source_id_to_name)
         if not self._source_name_to_id:
