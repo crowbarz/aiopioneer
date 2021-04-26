@@ -25,6 +25,8 @@ from .param import (
 
 _LOGGER = logging.getLogger(__name__)
 
+VERSION = "0.1.3"
+
 PIONEER_COMMANDS = {
     "turn_on": {
         "1": ["PO", "PWR"],
@@ -115,7 +117,8 @@ class PioneerAVR:
         scan_interval=60,
         params=None,
     ):
-        """Initialize the Pioneer AVR interface."""
+        """Initialise the Pioneer AVR interface."""
+        _LOGGER.info("Starting aiopioneer %s", VERSION)
         _LOGGER.debug(
             '>> PioneerAVR.__init__(host="%s", port=%s, timeout=%s, params=%s)',
             host,

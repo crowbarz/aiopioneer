@@ -1,13 +1,14 @@
 """Pioneer AVR API (async) setup.py."""
 
 import setuptools
+from aiopioneer.pioneer_avr import VERSION
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="aiopioneer",
-    version="0.1.3",
+    version=VERSION,
     author="Crowbar Z",
     author_email="crowbarz@outlook.com",
     description="Asyncio Python library for controlling a Pioneer AVR via its API",
