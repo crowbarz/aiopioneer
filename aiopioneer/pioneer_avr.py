@@ -388,8 +388,9 @@ class PioneerAVR:
     async def _connection_listener(self):
         """AVR connection listener. Parse responses and update state."""
         _LOGGER.debug(">> PioneerAVR._connection_listener() started")
-        try:
-            while self.available:
+        running = True
+        while self.available:
+            try:
                 response = await self._read_response()
                 if response is None:
                     ## Connection closed or exception, exit task
@@ -428,12 +429,19 @@ class PioneerAVR:
                     ## NOTE: updating zone 1 does not reset its scan interval -
                     ##       scan interval is set to a regular timer
 
-            if self.available:
-                ## Trigger disconnection if not already disconnected
-                await self.disconnect()
+            except asyncio.CancelledError:
+                _LOGGER.debug(">> PioneerAVR._connection_listener() cancelled")
+                running = False
+                break
+            except Exception as exc:  # pylint: disable=broad-except
+                _LOGGER.error(
+                    ">> PioneerAVR._connection_listener() exception: %s", str(exc)
+                )
+                # continue listening on exception
 
-        except asyncio.CancelledError:
-            _LOGGER.debug(">> PioneerAVR._connection_listener() cancelled")
+        if running and self.available:
+            ## Trigger disconnection if not already disconnected
+            await self.disconnect()
 
         _LOGGER.debug(">> PioneerAVR._connection_listener() completed")
 
@@ -506,7 +514,7 @@ class PioneerAVR:
             _LOGGER.debug("%s: connection closed", task_name)
             return None
         except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.debug("%s: exception: %s", task_name, str(exc))
+            _LOGGER.error("%s: exception: %s", task_name, str(exc))
             return None
         if raw_response is None:  ## task cancelled
             return None
@@ -912,7 +920,7 @@ class PioneerAVR:
                 _LOGGER.debug(">> PioneerAVR._updater() cancelled")
                 break
             except Exception as exc:  # pylint: disable=broad-except
-                _LOGGER.debug(">> PioneerAVR._updater() exception: %s", str(exc))
+                _LOGGER.error(">> PioneerAVR._updater() exception: %s", str(exc))
                 break
         _LOGGER.debug(">> PioneerAVR._updater() completed")
 
