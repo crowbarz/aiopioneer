@@ -5,7 +5,13 @@ import asyncio
 import time
 import logging
 import re
-from .util import merge, sock_set_keepalive, get_backoff_delay, cancel_task
+from .util import (
+    merge,
+    sock_set_keepalive,
+    get_backoff_delay,
+    cancel_task,
+    safe_wait_for,
+)
 from .param import (
     PARAM_IGNORED_ZONES,
     PARAM_COMMAND_DELAY,
@@ -273,14 +279,17 @@ class PioneerAVR:
 
     async def set_timeout(self, timeout):
         """Set timeout and update socket keepalive options."""
+        _LOGGER.debug(">> PioneerAVR.set_timeout(%d)", timeout)
         self._timeout = timeout
         self._set_socket_options()
 
     async def set_scan_interval(self, scan_interval):
         """Set scan interval and restart updater."""
-        await self._updater_cancel()
-        self.scan_interval = scan_interval
-        await self._updater_schedule()
+        _LOGGER.debug(">> PioneerAVR.set_scan_interval(%d)", scan_interval)
+        if self.scan_interval != scan_interval:
+            await self._updater_cancel()
+            self.scan_interval = scan_interval
+            await self._updater_schedule()
 
     async def disconnect(self):
         """Shutdown and close telnet connection to AVR."""
@@ -915,23 +924,31 @@ class PioneerAVR:
 
     async def _updater(self):
         """Perform update every scan_interval."""
-        _LOGGER.debug(">> PioneerAVR._updater() started")
+        debug_updater = self._params[PARAM_DEBUG_UPDATER]
+        if debug_updater:
+            _LOGGER.debug(">> PioneerAVR._updater() started")
         event = self._update_event
         while True:
             try:
-                await self._updater_update()
                 event.clear()
-                # await asyncio.sleep(self.scan_interval)
-                await asyncio.wait_for(event.wait(), timeout=self.scan_interval)
+                await self._updater_update()
+                # await asyncio.wait_for(event.wait(), timeout=self.scan_interval)
+                await safe_wait_for(event.wait(), timeout=self.scan_interval)
+                if debug_updater:
+                    _LOGGER.debug(">> PioneerAVR._updater() signalled")
             except asyncio.TimeoutError:  ## update timer expired
+                if debug_updater:
+                    _LOGGER.debug(">> PioneerAVR._updater() timeout")
                 continue
             except asyncio.CancelledError:
-                _LOGGER.debug(">> PioneerAVR._updater() cancelled")
+                if debug_updater:
+                    _LOGGER.debug(">> PioneerAVR._updater() cancelled")
                 break
             except Exception as exc:  # pylint: disable=broad-except
                 _LOGGER.error(">> PioneerAVR._updater() exception: %s", str(exc))
                 break
-        _LOGGER.debug(">> PioneerAVR._updater() completed")
+        if debug_updater:
+            _LOGGER.debug(">> PioneerAVR._updater() completed")
 
     async def _updater_schedule(self):
         """Schedule/reschedule the update task."""
@@ -1027,7 +1044,9 @@ class PioneerAVR:
         if full:
             self._full_update = True
         if self._updater_task:
+            _LOGGER.debug(">> PioneerAVR.update(): signalling updater task")
             self._update_event.set()
+            await asyncio.sleep(0)  # yield to updater task
         else:
             ## scan_interval not set, execute update synchronously
             await self._updater_update()
