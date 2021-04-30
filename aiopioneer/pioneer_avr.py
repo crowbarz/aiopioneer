@@ -736,6 +736,10 @@ class PioneerAVR:
         """Return list of available input sources."""
         return list(self._source_name_to_id.keys())
 
+    def get_source_dict(self):
+        """Return source id<->name translation tables."""
+        return self._source_name_to_id
+
     def get_source_name(self, source_id):
         """Return name for given source ID."""
         if not self._source_name_to_id:
