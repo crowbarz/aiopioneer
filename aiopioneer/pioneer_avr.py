@@ -1121,28 +1121,48 @@ class PioneerAVR:
         await cancel_task(self._bouncer_task, "bouncer")
         self._bouncer_task = None
 
-    async def set_volume_level(self, volume, zone="1"):
+    async def set_volume_level(self, target_volume, zone="1"):
         """Set volume level (0..185 for Zone 1, 0..81 for other Zones)."""
         self._check_zone(zone)
+        current_volume = self.volume.get(zone)
         max_volume = self.max_volume[zone]
-        if volume < 0 or volume > max_volume:
-            raise ValueError(f"volume {volume} out of range for zone {zone}")
+        if target_volume < 0 or target_volume > max_volume:
+            raise ValueError(f"volume {target_volume} out of range for zone {zone}")
         volume_step_only = self._params[PARAM_VOLUME_STEP_ONLY]
-        volume_step_delta = self._params[PARAM_VOLUME_STEP_DELTA]
         if volume_step_only:
-            try:
-                current_volume = self.volume.get(zone)
-                steps = abs(round((volume - current_volume) / volume_step_delta))
-                for _ in range(steps):
-                    if volume > current_volume:
-                        await self.volume_up(zone)
-                    elif volume < current_volume:
-                        await self.volume_down(zone)
-            except Exception as exc:  # pylint: disable=broad-except
-                raise ValueError(f"volume unknown for zone {zone}") from exc
+            # volume_step_delta = self._params[PARAM_VOLUME_STEP_DELTA]
+            start_volume = current_volume
+            volume_step_count = 0
+            if target_volume > start_volume:  # step up
+                while current_volume < target_volume:
+                    _LOGGER.debug("current volume: %d", current_volume)
+                    await self.volume_up(zone)
+                    await asyncio.sleep(0)  # yield to listener task
+                    volume_step_count += 1
+                    new_volume = self.volume.get(zone)
+                    if new_volume <= current_volume:  # going wrong way
+                        _LOGGER.warning("set_volume_level stopped stepping up")
+                        break
+                    if volume_step_count > (target_volume - start_volume):
+                        _LOGGER.warning("set_volume_level exceed max steps")
+                    current_volume = new_volume
+            else:  # step down
+                while current_volume > target_volume:
+                    _LOGGER.debug("current volume: %d", current_volume)
+                    await self.volume_down(zone)
+                    await asyncio.sleep(0)  # yield to listener task
+                    volume_step_count += 1
+                    new_volume = self.volume.get(zone)
+                    if new_volume >= current_volume:  # going wrong way
+                        _LOGGER.warning("set_volume_level stopped stepping down")
+                        break
+                    if volume_step_count > (start_volume - target_volume):
+                        _LOGGER.warning("set_volume_level exceed max steps")
+                    current_volume = self.volume.get(zone)
+
         else:
             vol_len = 3 if zone == "1" else 2
-            vol_prefix = str(volume).zfill(vol_len)
+            vol_prefix = str(target_volume).zfill(vol_len)
             return await self.send_command(
                 "set_volume_level", zone, prefix=vol_prefix, ignore_error=False
             )
