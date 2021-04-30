@@ -1053,7 +1053,8 @@ class PioneerAVR:
         if full:
             self._full_update = True
         if self._updater_task:
-            _LOGGER.debug(">> PioneerAVR.update(): signalling updater task")
+            if self._params[PARAM_DEBUG_UPDATER]:
+                _LOGGER.debug(">> PioneerAVR.update(): signalling updater task")
             self._update_event.set()
             await asyncio.sleep(0)  # yield to updater task
         else:
