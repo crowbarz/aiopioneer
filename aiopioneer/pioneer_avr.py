@@ -180,7 +180,7 @@ class PioneerAVR:
         return self._host + ":" + str(self._port)
 
     ## Parameter management functions
-    def _set_params(self):
+    def _update_params(self):
         """Set current parameters."""
         self._params = {}
         merge(self._params, self._default_params)
@@ -192,7 +192,7 @@ class PioneerAVR:
         self._user_params = {}
         if params is not None:
             self._user_params = params
-        self._set_params()
+        self._update_params()
 
     def _set_default_params_model(self):
         """Set default parameters based on device model."""
@@ -207,7 +207,7 @@ class PioneerAVR:
                         model_regex,
                     )
                     merge(self._default_params, model_params)
-        self._set_params()
+        self._update_params()
 
     def get_params(self):
         """Get a copy of all current parameters."""
@@ -413,7 +413,7 @@ class PioneerAVR:
                 ## Detect Main Zone power on for volume workaround
                 power_on_volume_bounce = self._params[PARAM_POWER_ON_VOLUME_BOUNCE]
                 if power_on_volume_bounce and self._power_zone_1 is not None:
-                    if not self._power_zone_1 and self.power["1"]:
+                    if not self._power_zone_1 and self.power.get("1"):
                         ## Main zone powered on, schedule bounce task
                         _LOGGER.info("scheduling main zone volume workaround")
                         await self._bouncer_schedule()
@@ -638,40 +638,49 @@ class PioneerAVR:
     ## Initialisation functions
     async def query_zones(self):
         """Query zones on Pioneer AVR by querying power status."""
-        if not self.zones:
-            _LOGGER.info("querying available zones on AVR")
-            ignored_zones = self._params[PARAM_IGNORED_ZONES]
-            if await self.send_command(
-                "query_power", "1", ignore_error=True
-            ) and await self.send_command("query_volume", "1", ignore_error=True):
-                if "1" not in self.zones and "1" not in ignored_zones:
-                    _LOGGER.info("Zone 1 discovered")
-                    self.zones.append("1")
-                    self.max_volume["1"] = self._params[PARAM_MAX_VOLUME]
-            else:
-                raise RuntimeError("Main Zone not found on AVR")
-            if await self.send_command(
-                "query_power", "2", ignore_error=True
-            ) and await self.send_command("query_volume", "2", ignore_error=True):
-                if "2" not in self.zones and "2" not in ignored_zones:
-                    _LOGGER.info("Zone 2 discovered")
-                    self.zones.append("2")
-                    self.max_volume["2"] = self._params[PARAM_MAX_VOLUME_ZONEX]
-            if await self.send_command(
-                "query_power", "3", ignore_error=True
-            ) and await self.send_command("query_volume", "3", ignore_error=True):
-                if "3" not in self.zones and "3" not in ignored_zones:
-                    _LOGGER.info("Zone 3 discovered")
-                    self.zones.append("3")
-                    self.max_volume["3"] = self._params[PARAM_MAX_VOLUME_ZONEX]
-            if await self.send_command(
-                "query_power", "Z", ignore_error=True
-            ) and await self.send_command("query_volume", "Z", ignore_error=True):
-                if "Z" not in self.zones and "Z" not in ignored_zones:
-                    _LOGGER.info("HDZone discovered")
-                    self.zones.append("Z")
-                    self.max_volume["Z"] = self._params[PARAM_MAX_VOLUME_ZONEX]
-            await self.update(full=True)
+        _LOGGER.info("querying available zones on AVR")
+        ignored_zones = self._params[PARAM_IGNORED_ZONES]
+        if await self.send_command(
+            "query_power", "1", ignore_error=True
+        ) and await self.send_command("query_volume", "1", ignore_error=True):
+            if "1" not in self.zones and "1" not in ignored_zones:
+                _LOGGER.info("Zone 1 discovered")
+                self.zones.append("1")
+                self.max_volume["1"] = self._params[PARAM_MAX_VOLUME]
+        else:
+            raise RuntimeError("Main Zone not found on AVR")
+        if await self.send_command(
+            "query_power", "2", ignore_error=True
+        ) and await self.send_command("query_volume", "2", ignore_error=True):
+            if "2" not in self.zones and "2" not in ignored_zones:
+                _LOGGER.info("Zone 2 discovered")
+                self.zones.append("2")
+                self.max_volume["2"] = self._params[PARAM_MAX_VOLUME_ZONEX]
+        if await self.send_command(
+            "query_power", "3", ignore_error=True
+        ) and await self.send_command("query_volume", "3", ignore_error=True):
+            if "3" not in self.zones and "3" not in ignored_zones:
+                _LOGGER.info("Zone 3 discovered")
+                self.zones.append("3")
+                self.max_volume["3"] = self._params[PARAM_MAX_VOLUME_ZONEX]
+        if await self.send_command(
+            "query_power", "Z", ignore_error=True
+        ) and await self.send_command("query_volume", "Z", ignore_error=True):
+            if "Z" not in self.zones and "Z" not in ignored_zones:
+                _LOGGER.info("HDZone discovered")
+                self.zones.append("Z")
+                self.max_volume["Z"] = self._params[PARAM_MAX_VOLUME_ZONEX]
+        await self.update(full=True)
+
+    async def update_zones(self):
+        """Update zones from ignored_zones and re-query zones."""
+        for zone in self._params[PARAM_IGNORED_ZONES]:
+            if zone in self.zones:
+                zone_name = "HDZone" if zone == "Z" else zone
+                _LOGGER.info("Removing zone %s", zone_name)
+                self.zones.remove(zone)
+                self._call_zone_callbacks([zone])  ## update availability
+        await self.query_zones()
 
     def set_source_dict(self, sources):
         """Manually set source id<->name translation tables."""
@@ -779,7 +788,7 @@ class PioneerAVR:
         if zones is None:
             zones = self.zones
         for zone in zones:
-            if zone in self.zones and zone in self._zone_callback:
+            if zone in self._zone_callback:
                 callback = self._zone_callback[zone]
                 if callback:
                     _LOGGER.debug("calling callback for zone %s", zone)
