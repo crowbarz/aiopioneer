@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 ## Source: https://stackoverflow.com/a/7205107
 ## Modified so b overwrites a where there is a conflict
 def merge(a, b, path=None):  # pylint: disable=invalid-name
-    """ Recursively merges dict b into dict a. """
+    """Recursively merges dict b into dict a."""
     if path is None:
         path = []
     for key in b:
@@ -56,7 +56,7 @@ def sock_set_keepalive(sock, after_idle_sec=1, interval_sec=3, max_fails=5):
 
 
 def get_backoff_delay(retry_count):
-    """ Calculate exponential backoff with random jitter delay. """
+    """Calculate exponential backoff with random jitter delay."""
     delay = round(
         min(RECONNECT_DELAY_MAX, (2 ** max(retry_count, 2)))
         + (random.randint(0, 1000) / 1000),
@@ -92,7 +92,12 @@ async def cancel_task(task, task_name=None):
     if task:
         if task_name is None:
             task_name = task.get_name()
-        current_task = asyncio.Task.current_task()
+        ## Trap exception if not called from a task
+        current_task = None
+        try:
+            current_task = asyncio.Task.current_task()
+        except AttributeError:
+            pass
         if current_task is not None and task == current_task:
             _LOGGER.debug(
                 ">> cancel_task(%s): ignoring cancellation of current task", task_name
