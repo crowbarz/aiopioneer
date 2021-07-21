@@ -804,6 +804,10 @@ class PioneerAVR:
             else:
                 self._zone_callback.pop(zone)
 
+    def clear_zone_callbacks(self):
+        """Clear all callbacks for a zone."""
+        self._zone_callback = {}
+
     def _call_zone_callbacks(self, zones=None):
         """Call callbacks to signal updated zone(s)."""
         if zones is None:
