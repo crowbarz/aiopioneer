@@ -32,7 +32,7 @@ from .param import (
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.1.7"
+VERSION = "0.1.8"
 
 PIONEER_COMMANDS = {
     "turn_on": {
