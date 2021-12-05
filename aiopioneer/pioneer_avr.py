@@ -1,5 +1,5 @@
 """Pioneer AVR API (async)."""
-# pylint: disable=relative-beyond-top-level
+# pylint: disable=relative-beyond-top-level disable=too-many-lines
 
 import asyncio
 import time
@@ -20,7 +20,7 @@ from .param import (
     PARAM_MAX_VOLUME_ZONEX,
     PARAM_POWER_ON_VOLUME_BOUNCE,
     PARAM_VOLUME_STEP_ONLY,
-    PARAM_VOLUME_STEP_DELTA,
+    # PARAM_VOLUME_STEP_DELTA,
     PARAM_IGNORE_VOLUME_CHECK,
     PARAM_DEBUG_LISTENER,
     PARAM_DEBUG_RESPONDER,
@@ -358,7 +358,7 @@ class PioneerAVR:
                     # await self.update()
                     if self.available:
                         break
-                except asyncio.CancelledError as exc:  # pylint: disable=try-except-raise
+                except asyncio.CancelledError:  # pylint: disable=try-except-raise
                     ## pass through to outer except
                     raise
                 except Exception as exc:  # pylint: disable=broad-except
@@ -606,11 +606,12 @@ class PioneerAVR:
         self, command, zone="1", prefix="", ignore_error=None, rate_limit=True
     ):
         """Send a command or request to the device."""
-        # pylint: disable=unidiomatic-typecheck
+        # pylint: disable=unidiomatic-typecheck disable=logging-not-lazy
         debug_command = self._params[PARAM_DEBUG_COMMAND]
         if debug_command:
             _LOGGER.debug(
-                '>> PioneerAVR.send_command("%s", zone="%s", prefix="%s", ignore_error=%s, rate_limit=%s)',
+                '>> PioneerAVR.send_command("%s", zone="%s", prefix="%s", '
+                + "ignore_error=%s, rate_limit=%s)",
                 command,
                 zone,
                 prefix,
@@ -919,29 +920,29 @@ class PioneerAVR:
                 _LOGGER.info("HDZone: Mute: %s", value)
 
         elif response.startswith("FN"):
-            id = response[2:]
-            if self.source.get("1") != id:
-                self.source["1"] = id
+            zid = response[2:]
+            if self.source.get("1") != zid:
+                self.source["1"] = zid
                 updated_zones.add("1")
-                _LOGGER.info("Zone 1: Source: %s (%s)", id, self.get_source_name(id))
+                _LOGGER.info("Zone 1: Source: %s (%s)", zid, self.get_source_name(zid))
         elif response.startswith("Z2F"):
-            id = response[3:]
-            if self.source.get("2") != id:
-                self.source["2"] = id
+            zid = response[3:]
+            if self.source.get("2") != zid:
+                self.source["2"] = zid
                 updated_zones.add("2")
-                _LOGGER.info("Zone 2: Source: %s (%s)", id, self.get_source_name(id))
+                _LOGGER.info("Zone 2: Source: %s (%s)", zid, self.get_source_name(zid))
         elif response.startswith("Z3F"):
-            id = response[3:]
-            if self.source.get("3") != id:
-                self.source["3"] = id
+            zid = response[3:]
+            if self.source.get("3") != zid:
+                self.source["3"] = zid
                 updated_zones.add("3")
-                _LOGGER.info("Zone 3: Source: %s (%s)", id, self.get_source_name(id))
+                _LOGGER.info("Zone 3: Source: %s (%s)", zid, self.get_source_name(zid))
         elif response.startswith("ZEA"):
-            id = response[3:]
-            if self.source.get("Z") != id:
-                self.source["Z"] = id
+            zid = response[3:]
+            if self.source.get("Z") != zid:
+                self.source["Z"] = zid
                 updated_zones.add("Z")
-                _LOGGER.info("HDZone: Source: %s (%s)", id, self.get_source_name(id))
+                _LOGGER.info("HDZone: Source: %s (%s)", zid, self.get_source_name(zid))
         return updated_zones
 
     async def _updater(self):
