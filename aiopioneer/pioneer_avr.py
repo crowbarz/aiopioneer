@@ -718,7 +718,7 @@ class PioneerAVR:
         self._source_id_to_name = {}
         _LOGGER.info("querying AVR source names")
         max_source_id = self._params[PARAM_MAX_SOURCE_ID]
-        for src_id in range(max_source_id):
+        for src_id in range(max_source_id + 1):
             response = await self.send_raw_request(
                 "?RGB" + str(src_id).zfill(2),
                 "RGB",
