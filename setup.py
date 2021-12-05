@@ -3,7 +3,7 @@
 import setuptools
 from aiopioneer.pioneer_avr import VERSION
 
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding="utf8", errors="surrogateescape") as fh:
     long_description = fh.read()
 
 setuptools.setup(
