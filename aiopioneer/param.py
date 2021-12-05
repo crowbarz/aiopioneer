@@ -56,5 +56,17 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
                 PARAM_VOLUME_STEP_DELTA: 2,
             },
         ),
+        (
+            r"^SC-LX57",
+            {
+                PARAM_IGNORE_VOLUME_CHECK: True,
+            },
+        ),
+        (
+            r"^VSX-1123",
+            {
+                PARAM_IGNORE_VOLUME_CHECK: True,
+            },
+        ),
     ]
 )
