@@ -20,6 +20,28 @@ Tested on a VSX-930 (Main Zone and HDZone outputs).
 - Supports AVRs that do not support setting the volume level by emulating using up/down commands (eg. VSX-S510).
 - Command line client for sending commands and testing
 
+## Params
+
+A `params` object may be passed to the library that modifies its functionality.
+
+The default parameters listed below are for AVR models that do not match any custom profile. Custom profiles apply additional default parameters based on the model identifier retrieved from the AVR, and are defined in [`aiopioneer/param.py`](https://github.com/crowbarz/aiopioneer/blob/main/aiopioneer/param.py). If you need to modify parameters for the library to work for your AVR model, then please create a PR to add a custom profile for your AVR model, or log an issue containing your model number and the parameters that were modified requesting a custom profile to be created.
+
+| Name | Type | Default | Description
+| ---- | ---- | ------- | -----------
+| `ignored_zones` | list | `[]` | List of zones to ignore even if they are auto-discovered. Specify Zone IDs as strings: "1", "2", "3" and "Z".
+| `command_delay` | float | `0.1` | Insert a delay between sequential commands that are sent to the AVR. This appears to make the AVR behave more reliably during status polls. Increase this value if debug logging shows that your AVR times out between commands.
+| `max_source_id` | int | `60` | Maximum source ID that the source discovery queries. Reduce this if your AVR returns errors.
+| `max_volume` | int | `185` | Maximum volume for the Main Zone.
+| `max_volume_zonex` | int | `185` | Maximum volume for zones other than the Main Zone.
+| `power_on_volume_bounce` | bool | `false` | On some AVRs (eg. VSX-930) where a power-on is set, the initial volume is not reported by the AVR correctly until a volume change is made. This option enables a workaround that sends a volume up and down command to the AVR on power-on to correct the reported volume without affecting the power-on volume.
+| `volume_step_only` | bool | `false` | On some AVRs (eg. VSX-S510), setting the volume level is not supported natively by the API. This option emulates setting the volume level using volume up and down commands.
+| `volume_step_delta` | int | `1` | _Deprecated in 0.5._ The number of units that each volume up/down commands changes the volume by. Used when `volume_step_only` is `true`.
+| `ignore_volume_check` | bool | `false` | Don't check volume when determining whether a zone exists on the AVR. Useful for AVRs with an HDZone that passes through audio.
+| `debug_listener` | bool | `false` | Enables additional debug logging for the listener task. See [Enabling debugging](#enabling-debugging) for details.
+| `debug_responder` | bool | `false` | Enables additional debug logging for the responder task. See [Enabling debugging](#enabling-debugging) for details.
+| `debug_updater` | bool | `false` | Enables additional debug logging for the updater task. See [Enabling debugging](#enabling-debugging) for details.
+| `debug_command` | bool | `false` | Enables additional debug logging for commands sent and responses received. See [Enabling debugging](#enabling-debugging) for details.
+
 ## Command line interface (CLI) (>= 0.1.3)
 
 A very simple command line interface `aiopioneer` is available to connect to the AVR, send commands and receive responses. It can be used to test the capabilities of the library against your specific AVR.
@@ -55,6 +77,7 @@ The CLI accepts all API commands, as well as the following:
 ## Known issues and future plans
 
 - Document PioneerAVR API
+- Remove param `volume_step_delta` in next major version
 
 ## Breaking changes
 
