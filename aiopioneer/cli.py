@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def connect_stdin_stdout():
+    """Set up stdin/out for asyncio."""
     loop = asyncio.get_event_loop()
     reader = asyncio.StreamReader()
     protocol = asyncio.StreamReaderProtocol(reader)
@@ -51,19 +52,26 @@ def get_bool_arg(arg):
 
 
 async def cli_main():
+    """Main async entrypoint."""
     pioneer = PioneerAVR("avr")
 
     try:
         await pioneer.connect(reconnect=False)
-    except Exception as exc:
+    except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.error("could not connect to AVR: %s: %s", type(exc).__name__, exc.args)
         return False
+
+    set_log_level("debug")
+    params = pioneer.get_user_params()
+    params[PARAM_DEBUG_LISTENER] = True
+    print(f"Setting default params to: {params}")
+    pioneer.set_user_params(params)
 
     # await pioneer.query_device_info()
     # await pioneer.query_zones()
     # _LOGGER.info("AVR zones discovered: %s", pioneer.zones)
 
-    reader, writer = await connect_stdin_stdout()
+    reader, _writer = await connect_stdin_stdout()
     zone = "1"
     while True:
         print(f"Current zone is {zone}")
@@ -96,8 +104,9 @@ async def cli_main():
         elif cmd == "query_device_info":
             await pioneer.query_device_info()
             print(
-                "Device info: model=%s, mac_addr=%s, software_version=%s"
-                % (pioneer.model, pioneer.mac_addr, pioneer.software_version)
+                f"Device info: model={pioneer.model}, "
+                f"mac_addr={pioneer.mac_addr}, "
+                f"software_version={pioneer.software_version}"
             )
         elif cmd == "query_zones":
             await pioneer.query_zones()
@@ -107,7 +116,7 @@ async def cli_main():
         elif cmd == "set_source_dict":
             try:
                 source_dict = json.loads(arg)
-                print("Setting source dict to: %s" % json.dumps(source_dict))
+                print(f"Setting source dict to: {json.dumps(source_dict)}")
                 pioneer.set_source_dict(source_dict)
             except json.JSONDecodeError:
                 print(f'ERROR: Invalid JSON source dict: "{arg}""')
@@ -120,7 +129,7 @@ async def cli_main():
         elif cmd == "set_user_params":
             try:
                 params = json.loads(arg)
-                print("Set user params: %s" % json.dumps(params))
+                print(f"Set user params: {json.dumps(params)}")
                 pioneer.set_user_params(params)
             except json.JSONDecodeError:
                 print(f'ERROR: Invalid JSON params: "{arg}""')
@@ -153,7 +162,7 @@ async def cli_main():
                 scan_interval = float(arg)
                 print(f"Setting scan interval to {scan_interval}")
                 await pioneer.set_scan_interval(scan_interval)
-            except Exception as exc:
+            except Exception:  # pylint: disable=broad-except
                 print(f'ERROR: Invalid scan interval "{arg}"')
         elif cmd == "get_scan_interval":
             print(f"Scan interval: {pioneer.scan_interval}")
@@ -161,17 +170,17 @@ async def cli_main():
             try:
                 volume_level = int(arg)
                 await pioneer.set_volume_level(volume_level, zone=zone)
-            except Exception as exc:
+            except Exception as exc:  # pylint: disable=broad-except
                 print(f'ERROR: Invalid volume level "{arg}": {exc}')
         elif cmd == "select_source":
             source = arg if arg else ""
             await pioneer.select_source(source, zone=zone)
-        elif cmd == "send_raw_command":
+        elif cmd == "send_raw_command" or cmd == ">":
             if arg:
                 print(f"Sending raw command {arg}")
                 await pioneer.send_raw_command(arg)
             else:
-                print(f"ERROR: No raw command specified")
+                print("ERROR: No raw command specified")
         elif cmd in PIONEER_COMMANDS:
             print(f"Executing command {cmd}")
             cur_zone = zone
@@ -190,25 +199,26 @@ async def cli_main():
 
 
 def main():
-    import asyncio
-    import logging
+    """Main entry point."""
+    # import asyncio
+    # import logging
 
     debug_level = logging.WARNING
     log_format = "%(asctime)s %(levelname)s: %(message)s"
     log_format_color = "%(log_color)s" + log_format
     date_format = "%Y-%m-%d %H:%M:%S"
     try:
-        import colorlog
+        import colorlog  # pylint: disable=import-outside-toplevel
 
         colorlog.basicConfig(
             level=debug_level, format=log_format_color, datefmt=date_format
         )
-    except:
+    except:  # pylint: disable=bare-except
         logging.basicConfig(level=debug_level, format=log_format, datefmt=date_format)
 
-    rc = False
+    rcode = False
     try:
-        rc = asyncio.run(cli_main())
+        rcode = asyncio.run(cli_main())
     except KeyboardInterrupt:
         _LOGGER.info("KeyboardInterrupt")
-    exit(0 if rc else 1)
+    exit(0 if rcode else 1)
