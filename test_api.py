@@ -14,7 +14,7 @@ async def main():
     """ Main loop. """
     _LOGGER.debug(">> main()")
 
-    pioneer = PioneerAVR("avr")
+    pioneer = PioneerAVR("10.10.2.218")
 
     try:
         await pioneer.connect()
@@ -28,16 +28,34 @@ async def main():
     )
     await pioneer.query_zones()
     print(f"AVR zones discovered: {pioneer.zones}")
-    # await pioneer.update()
-    # await asyncio.sleep(5)
+    print("Discovering zones")
+    #await pioneer.build_source_dict()
+    
+    
+    await pioneer.update()
+    await asyncio.sleep(15)
+    ## Turn on main zone for tests
+    # await pioneer.turn_on("1")
+
+    for z in pioneer.zones:
+        print(f"Power for zone - {z} {pioneer.power.get(z)}")
+        print(f"Volume for zone - {z} {pioneer.volume.get(z)}")
+        print(f"Source for zone - {z} {pioneer.source.get(z)}")
+
+    #await pioneer.select_source("TUNER", "1")
+    await pioneer.set_tuner_frequency("AM", 580, "1")
+    
+    
     # print("...")
     # await pioneer.disconnect()
 
-    # while True:
-    #     print("Update ...")
-    #     await pioneer.update()
-    #     print("...")
-    #     await asyncio.sleep(60)
+    while True:
+        for property, value in vars(pioneer).items():
+            print(property, ":", value)
+        await asyncio.sleep(60)
+        print("Update ...")
+        await pioneer.update()
+        
 
     # if not pioneer.available:
     #     try:

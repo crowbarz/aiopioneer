@@ -19,6 +19,15 @@ Tested on a VSX-930 (Main Zone and HDZone outputs).
 - Includes workaround for AVRs with an initial volume set on the Main Zone (eg. VSX-930).
 - Supports AVRs that do not support setting the volume level by emulating using up/down commands (eg. VSX-S510).
 - Command line client for sending commands and testing
+- Supports all listening mode functions
+- Supports all video related functions
+- Supports panel and remote locking
+- Supports most AMP related functions
+- Supports all tone functions
+- Supports most zone power functions
+- Supports all zone input functions
+- Supports all zone volumne and mute functions
+- Supports some basic tuner functions
 
 ## Params
 
@@ -77,7 +86,6 @@ The CLI accepts all API commands, as well as the following:
 ## Known issues and future plans
 
 - Document PioneerAVR API
-- Remove param `volume_step_delta` in next major version
 
 ## Breaking changes
 
