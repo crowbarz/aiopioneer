@@ -43,6 +43,7 @@ from .param import (
     PARAM_VIDEO_STREAM_SMOOTHER_MODES,
     PARAM_VIDEO_ASPECT_MODES,
     PARAM_CHANNEL_LEVELS_OBJ,
+    PARAM_DSP_OBJ,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -330,6 +331,186 @@ PIONEER_COMMANDS = {
         "1": ["CLV", "CLV"],
         "2": ["ZGE", "ZGE"],
         "3": ["ZHE", "ZHE"]
+    },
+    "set_mcacc_memory_set": {
+        "1": ["MC", "MC"]
+    },
+    "set_phase_control": {
+        "1": ["IS", "IS"]
+    },
+    "set_virtual_sb": {
+        "1": ["VSB", "VSB"]
+    },
+    "set_virtual_height": {
+        "1": ["VHT", "VHT"]
+    },
+    "set_sound_retriever": {
+        "1": ["ATA", "ATA"]
+    },
+    "set_signal_select": {
+        "1": ["SDA", "SDA"]
+    },
+    "set_analog_input_att": {
+        "1": ["SDB", "SDB"]
+    },
+    "set_eq": {
+        "1": ["ATC", "ATC"]
+    },
+    "set_standing_wave": {
+        "1": ["ATD", "ATD"]
+    },
+    "set_phase_control_plus": {
+        "1": ["ATE", "ATE"]
+    },
+    "set_sound_delay": {
+        "1": ["ATF", "ATF"]
+    },
+    "set_digital_noise_reduction": {
+        "1": ["ATG", "ATG"]
+    },
+    "set_digital_dialog_enhancement": {
+        "1": ["ATH", "ATH"]
+    },
+    "set_hi_bit": {
+        "1": ["ATI", "ATI"]
+    },
+    "set_dual_mono": {
+        "1": ["ATJ", "ATJ"]
+    },
+    "set_fixed_pcm": {
+        "1": ["ATK", "ATK"]
+    },
+    "set_drc": {
+        "1": ["ATL", "ATL"]
+    },
+    "set_lfe_att": {
+        "1": ["ATM", "ATM"]
+    },
+    "set_sacd_gain": {
+        "1": ["ATN", "ATN"]
+    },
+    "set_auto_delay": {
+        "1": ["ATO", "ATO"]
+    },
+    "set_center_width": {
+        "1": ["ATP", "ATP"]
+    },
+    "set_panorama": {
+        "1": ["ATQ", "ATQ"]
+    },
+    "set_dimension": {
+        "1": ["ATR", "ATR"]
+    },
+    "set_center_image": {
+        "1": ["ATS", "ATS"]
+    },
+    "set_effect": {
+        "1": ["ATT", "ATT"]
+    },
+    "set_height_gain": {
+        "1": ["ATU", "ATU"]
+    },
+    "set_virtual_depth": {
+        "1": ["VDP", "VDP"]
+    },
+    "set_digital_filter": {
+        "1": ["ATV", "ATV"]
+    },
+    "set_loudness_management": {
+        "1": ["ATW", "ATW"]
+    },
+    "set_virtual_wide": {
+        "1": ["VWD", "VWD"]
+    },
+    "query_mcacc_memory_query": {
+        "1": ["?MC", "MC"]
+    },
+    "query_phase_control": {
+        "1": ["?IS", "IS"]
+    },
+    "query_virtual_sb": {
+        "1": ["?VSB", "VSB"]
+    },
+    "query_virtual_height": {
+        "1": ["?VHT", "VHT"]
+    },
+    "query_sound_retriever": {
+        "1": ["?ATA", "ATA"]
+    },
+    "query_signal_select": {
+        "1": ["?SDA", "SDA"]
+    },
+    "query_analog_input_att": {
+        "1": ["?SDB", "SDB"]
+    },
+    "query_eq": {
+        "1": ["?ATC", "ATC"]
+    },
+    "query_standing_wave": {
+        "1": ["?ATD", "ATD"]
+    },
+    "query_phase_control_plus": {
+        "1": ["?ATE", "ATE"]
+    },
+    "query_sound_delay": {
+        "1": ["?ATF", "ATF"]
+    },
+    "query_digital_noise_reduction": {
+        "1": ["?ATG", "ATG"]
+    },
+    "query_digital_dialog_enhancement": {
+        "1": ["?ATH", "ATH"]
+    },
+    "query_hi_bit": {
+        "1": ["?ATI", "ATI"]
+    },
+    "query_dual_mono": {
+        "1": ["?ATJ", "ATJ"]
+    },
+    "query_fixed_pcm": {
+        "1": ["?ATK", "ATK"]
+    },
+    "query_drc": {
+        "1": ["?ATL", "ATL"]
+    },
+    "query_lfe_att": {
+        "1": ["?ATM", "ATM"]
+    },
+    "query_sacd_gain": {
+        "1": ["?ATN", "ATN"]
+    },
+    "query_auto_delay": {
+        "1": ["?ATO", "ATO"]
+    },
+    "query_center_width": {
+        "1": ["?ATP", "ATP"]
+    },
+    "query_panorama": {
+        "1": ["?ATQ", "ATQ"]
+    },
+    "query_dimension": {
+        "1": ["?ATR", "ATR"]
+    },
+    "query_center_image": {
+        "1": ["?ATS", "ATS"]
+    },
+    "query_effect": {
+        "1": ["?ATT", "ATT"]
+    },
+    "query_height_gain": {
+        "1": ["?ATU", "ATU"]
+    },
+    "query_virtual_depth": {
+        "1": ["?VDP", "VDP"]
+    },
+    "query_digital_filter": {
+        "1": ["?ATV", "ATV"]
+    },
+    "query_loudness_management": {
+        "1": ["?ATW", "ATW"]
+    },
+    "query_virtual_wide": {
+        "1": ["?VWD", "VWD"]
     }
 }
 
@@ -370,9 +551,13 @@ class PioneerAVR:
         self.mute = {}
         self.source = {}
         self.listening_mode = {}
+
+        ## FUNC: TONE
         self.tone = {}
         self.tone_bass = {}
         self.tone_treble = {}
+
+        ## FUNC: AMP
         self.speakers = {}
         self.hdmi_out = {}
         self.hdmi_audio = {}
@@ -382,9 +567,13 @@ class PioneerAVR:
         self.amp = {}
         self.panel_lock = {}
         self.remote_lock = {}
+
+        ## FUNC: TUNER
         self.tuner_frequency = {}
         self.tuner_band = {}
         self.tuner_preset = {}
+
+        ## FUNC: VIDEO
         self.video_converter = {}
         self.video_resolution = {}
         self.video_pure_cinema = {}
@@ -404,9 +593,9 @@ class PioneerAVR:
         self.video_black_setup = {}
         self.video_aspect = {}
 
-        
-        ## Complex object that holds multiple different props for the CHANNEL functions
+        ## Complex object that holds multiple different props for the CHANNEL/DSP functions
         self.channel_levels = {}
+        self.dsp = {}
 
         ## Parameters
         self._default_params = PARAM_DEFAULTS
@@ -1564,7 +1753,8 @@ class PioneerAVR:
             ## Timeout occurred, indicates AVR disconnected
             raise TimeoutError("Timeout waiting for data")
 
-        ## Zone 1 updates only, we loop through this to allow us to add commands to read without needing to add it here, also only do this if the zone is powered on
+        ## Zone 1 updates only, we loop through this to allow us to add commands to read without 
+        ## needing to add it here, also only do this if the zone is powered on
         if (zone == "1" and self.power.get("1") == True):
             for comm in query_commands:
                 if len(PIONEER_COMMANDS.get(comm)) == 1:
@@ -1576,8 +1766,9 @@ class PioneerAVR:
                 if (len(PIONEER_COMMANDS.get(comm)) == 2):
                     await self.send_command(comm, zone, ignore_error=True)
 
-        ## CHANNEL updates are handled differently as it requires more complex logic to send the commands, we use the set_channel_levels command and prefix the query to it
-        ## Also only run this if the main zone is on
+        ## CHANNEL updates are handled differently as it requires more complex logic to send the commands
+        ## we use the set_channel_levels command and prefix the query to it
+        ## Only run this if the main zone is on
         if self.power.get("1") == True:
             for k in PARAM_CHANNEL_LEVELS_OBJ.keys():
                 if len(k) == 1:
