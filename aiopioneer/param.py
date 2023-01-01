@@ -280,3 +280,18 @@ PARAM_ADVANCED_VIDEO_ADJUST_MODES = {
     "3": "Professional",
     "4": "Memory",
 }
+
+PARAM_CHANNEL_LEVELS_OBJ = {
+    "C": 0,
+    "L": 0,
+    "R": 0,
+    "SL": 0,
+    "SR": 0,
+    "SBL": 0,
+    "SBR": 0,
+    "SW": 0,
+    "LH": 0,
+    "RH": 0,
+    "LW": 0,
+    "RW": 0,
+}

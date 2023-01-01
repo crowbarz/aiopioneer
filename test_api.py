@@ -43,7 +43,7 @@ async def main():
         print(f"Source for zone - {z} {pioneer.source.get(z)}")
 
     #await pioneer.select_source("TUNER", "1")
-    await pioneer.set_tuner_frequency("AM", 580, "1")
+    #await pioneer.set_tuner_frequency("AM", 580, "1")
     
     
     # print("...")
