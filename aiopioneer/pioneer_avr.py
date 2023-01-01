@@ -327,7 +327,9 @@ PIONEER_COMMANDS = {
         "1": ["VTS", "VTS"]
     },
     "set_channel_levels": {
-        "1": ["CLV", "CLV"]
+        "1": ["CLV", "CLV"],
+        "2": ["ZGE", "ZGE"],
+        "3": ["ZHE", "ZHE"]
     }
 }
 
@@ -1467,15 +1469,40 @@ class PioneerAVR:
             value = float((int(response[6:])-50)/2)
             speaker = str(response[3:6]).strip("_").upper()
             if (self.channel_levels.get("1") is None):
-                ## Define a new channel_levels object for that zone
-                _LOGGER.debug("setting channel_levels object as its missing")
+                ## Define a new channel_levels object for zone 1
                 self.channel_levels["1"] = PARAM_CHANNEL_LEVELS_OBJ
 
             if (self.channel_levels.get("1").get(speaker) is not value):
-                _LOGGER.debug("Setting channel level for speaker %s to %s", str(speaker), str(value))
+                _LOGGER.debug("Zone 1: Speaker %s Channel Level %s", str(speaker), str(value))
                 self.channel_levels["1"][speaker] = value
 
             updated_zones.add("1")
+
+        elif response.startswith("ZGE"):
+            value = float((int(response[6:])-50)/2)
+            speaker = str(response[3:6]).strip("_").upper()
+            if self.channel_levels.get("2") is None:
+                ## Define a new channel_levels object for zone 2
+                self.channel_levels["2"] = PARAM_CHANNEL_LEVELS_OBJ
+
+            if self.channel_levels.get("2").get(speaker) is not value:
+                _LOGGER.debug("Zone 2: Speaker %s Channel Level %s", str(speaker), str(value))
+                self.channel_levels["2"][speaker] = value
+
+            updated_zones.add("2")
+
+        elif response.startswith("ZHE"):
+            value = float((int(response[6:])-50)/2)
+            speaker = str(response[3:6]).strip("_").upper()
+            if self.channel_levels.get("3") is None:
+                ## Define a new channel_levels object for zone 2
+                self.channel_levels["3"] = PARAM_CHANNEL_LEVELS_OBJ
+
+            if self.channel_levels.get("3").get(speaker) is not value:
+                _LOGGER.debug("Zone 3: Speaker %s Channel Level %s", str(speaker), str(value))
+                self.channel_levels["3"][speaker] = value
+
+            updated_zones.add("3")
 
         return updated_zones
 
@@ -1543,7 +1570,15 @@ class PioneerAVR:
                 if len(PIONEER_COMMANDS.get(comm)) == 1:
                     await self.send_command(comm, zone, ignore_error=True)
 
-            ## CHANNEL updates are handled differently as it requires more complex logic to send the commands
+        ## Zone 1 or 2 updates only, only availble if zone 1 or 2 is on
+        if ((zone == "1") or (zone == "2")) and self.power.get(zone) == True:
+            for comm in query_commands:
+                if (len(PIONEER_COMMANDS.get(comm)) == 2):
+                    await self.send_command(comm, zone, ignore_error=True)
+
+        ## CHANNEL updates are handled differently as it requires more complex logic to send the commands, we use the set_channel_levels command and prefix the query to it
+        ## Also only run this if the main zone is on
+        if self.power.get("1") == True:
             for k in PARAM_CHANNEL_LEVELS_OBJ.keys():
                 if len(k) == 1:
                     ## Add two underscores
@@ -1552,12 +1587,6 @@ class PioneerAVR:
                     ## Add one underscore
                     k = k + "_"
                 await self.send_command("set_channel_levels", zone, "?" + str(k), ignore_error=True)
-
-        ## Zone 1 or 2 updates only, only availble if zone 1 or 2 is on
-        if ((zone == "1") or (zone == "2")) and self.power.get(zone) == True:
-            for comm in query_commands:
-                if (len(PIONEER_COMMANDS.get(comm)) == 2):
-                    await self.send_command(comm, zone, ignore_error=True)
 
     async def _updater_update(self):
         """Update AVR cached status."""
@@ -1657,9 +1686,9 @@ class PioneerAVR:
         """Turn on the Pioneer AVR."""
         self._check_zone(zone)
         await self.send_command("turn_on", zone)
-        ## Now update the entire zone if zone 1 and listening mode is None
+        ## Now schedule a full update of all zones if listening_mode is None (this means that the library connected to the AVR while the AVR was off)
         if (zone == "1" and self.listening_mode.get("1") is None):
-            await self._update_zone(zone)
+            await self.update(full=True)
 
     async def turn_off(self, zone="1"):
         """Turn off the Pioneer AVR."""
@@ -1993,6 +2022,6 @@ class PioneerAVR:
                 level = int((level*2)+50)
                 return await self.send_command("set_channel_levels", zone, channel + str(level), ignore_error=False)
             else:
-                raise ValueError(f"The provided channel is invalid ({channel}, {str(level)}")
+                raise ValueError(f"The provided channel is invalid ({channel}, {str(level)} for zone {zone}")
         else:
-            raise ValueError(f"Invalid zone {zone}, this action is only supported on Main Zone")
+            raise ValueError(f"Invalid zone {zone}")
