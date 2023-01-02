@@ -1421,21 +1421,21 @@ class PioneerAVR:
                 _LOGGER.info("Zone 1: Treble Level: %s (%s)", self.tone_treble.get("1"), value)
 
         elif response.startswith("ZGA"):
-            value = response[2:]
+            value = response[3:]
             if self.tone.get("2") != value:
                 self.tone["2"] = PARAM_TONE_MODES.get(value)
                 updated_zones.add("2")
                 _LOGGER.info("Zone 2: Tone: %s (%s)", self.tone.get("2"), value)
         elif response.startswith("ZGB"):
-            value = response[2:]
+            value = int(response[3:])-50
             if self.tone_bass.get("2") != value:
-                self.tone_bass["2"] = PARAM_TONE_DB_VALUES.get(value)
+                self.tone_bass["2"] = value
                 updated_zones.add("2")
                 _LOGGER.info("Zone 2: Bass Level: %s (%s)", self.tone_bass.get("2"), value)
         elif response.startswith("ZGC"):
-            value = response[2:]
+            value = int(response[3:])-50
             if self.tone_treble.get("2") != value:
-                self.tone_treble["2"] = PARAM_TONE_DB_VALUES.get(value)
+                self.tone_treble["2"] = value
                 updated_zones.add("2")
                 _LOGGER.info("Zone 2: Treble Level: %s (%s)", self.tone_treble.get("2"), value)
 
@@ -2040,8 +2040,8 @@ class PioneerAVR:
                 if len(PIONEER_COMMANDS.get(comm)) == 1:
                     await self.send_command(comm, zone, ignore_error=True)
 
-        ## Zone 1 or 2 updates only, only availble if zone 1 or 2 is on
-        if ((zone == "1") or (zone == "2")) and self.power.get(zone) == True:
+        ## Zone 1 or 2 updates only, only availble if zone 1 is on
+        if ((zone == "1") or (zone == "2")) and self.power.get("1") == True:
             for comm in query_commands:
                 if (len(PIONEER_COMMANDS.get(comm)) == 2):
                     await self.send_command(comm, zone, ignore_error=True)
@@ -2049,7 +2049,8 @@ class PioneerAVR:
         ## CHANNEL updates are handled differently as it requires more complex logic to send the commands
         ## we use the set_channel_levels command and prefix the query to it
         ## Only run this if the main zone is on
-        if self.power.get("1") == True:
+        ## HDZone does not have any channels
+        if (self.power.get("1") == True) and zone != "Z":
             for k in PARAM_CHANNEL_LEVELS_OBJ.keys():
                 if len(k) == 1:
                     ## Add two underscores
