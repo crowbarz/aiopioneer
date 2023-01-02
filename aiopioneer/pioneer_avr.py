@@ -1675,7 +1675,7 @@ class PioneerAVR:
                 self.channel_levels["1"] = PARAM_CHANNEL_LEVELS_OBJ
 
             if (self.channel_levels.get("1").get(speaker) is not value):
-                _LOGGER.debug("Zone 1: Speaker %s Channel Level %s", str(speaker), str(value))
+                _LOGGER.info("Zone 1: Speaker %s Channel Level %s", str(speaker), str(value))
                 self.channel_levels["1"][speaker] = value
 
             updated_zones.add("1")
@@ -1688,7 +1688,7 @@ class PioneerAVR:
                 self.channel_levels["2"] = PARAM_CHANNEL_LEVELS_OBJ
 
             if self.channel_levels.get("2").get(speaker) is not value:
-                _LOGGER.debug("Zone 2: Speaker %s Channel Level %s", str(speaker), str(value))
+                _LOGGER.info("Zone 2: Speaker %s Channel Level %s", str(speaker), str(value))
                 self.channel_levels["2"][speaker] = value
 
             updated_zones.add("2")
@@ -1701,7 +1701,7 @@ class PioneerAVR:
                 self.channel_levels["3"] = PARAM_CHANNEL_LEVELS_OBJ
 
             if self.channel_levels.get("3").get(speaker) is not value:
-                _LOGGER.debug("Zone 3: Speaker %s Channel Level %s", str(speaker), str(value))
+                _LOGGER.info("Zone 3: Speaker %s Channel Level %s", str(speaker), str(value))
                 self.channel_levels["3"][speaker] = value
 
             updated_zones.add("3")
@@ -1710,6 +1710,7 @@ class PioneerAVR:
         elif response.startswith("MC"):
             value = int(response[2:])
             if self.dsp.get("1").get("mcacc_memory_set") is not value:
+                _LOGGER.info("Zone 1: MCACC MEMORY SET %s", str(value))
                 self.dsp["1"]["mcacc_memory_set"] = value
             
             updated_zones.add("1")
@@ -1717,6 +1718,7 @@ class PioneerAVR:
         elif response.startswith("IS"):
             value = response[2:]
             if self.dsp.get("1").get("phase_control") is not PARAM_DSP_PHASE_CONTROL.get(value):
+                _LOGGER.info("Zone 1: PHASE CONTROL %s", str(value))
                 self.dsp["1"]["phase_control"] = PARAM_DSP_PHASE_CONTROL.get(value)
 
             updated_zones.add("1")
@@ -1724,6 +1726,7 @@ class PioneerAVR:
         elif response.startswith("VSB"):
             value = bool(response[3:])
             if self.dsp.get("1").get("virtual_sb") is not value:
+                _LOGGER.info("Zone 1: VIRTUAL SB %s", str(value))
                 self.dsp["1"]["virtual_sb"] = value
 
             updated_zones.add("1")
@@ -1731,6 +1734,7 @@ class PioneerAVR:
         elif response.startswith("VHT"):
             value = bool(response[3:])
             if self.dsp.get("1").get("virtual_height") is not value:
+                _LOGGER.info("Zone 1: VIRTUAL HEIGHT %s", str(value))
                 self.dsp["1"]["virtual_height"] = value
 
             updated_zones.add("1")
@@ -1738,6 +1742,7 @@ class PioneerAVR:
         elif response.startswith("ATA"):
             value = bool(response[3:])
             if self.dsp.get("1").get("sound_retriever") is not value:
+                _LOGGER.info("Zone 1: SOUND RETRIEVER %s", str(value))
                 self.dsp["1"]["sound_retriever"] = value
 
             updated_zones.add("1")
@@ -1746,6 +1751,7 @@ class PioneerAVR:
             value = response[3:]
             value = PARAM_DSP_SIGNAL_SELECT.get(value)
             if self.dsp.get("1").get("signal_select") is not value:
+                _LOGGER.info("Zone 1: SIGNAL SELECT %s", str(value))
                 self.dsp["1"]["signal_select"] = value
 
             updated_zones.add("1")
@@ -1753,6 +1759,7 @@ class PioneerAVR:
         elif response.startswith("SDB"):
             value = bool(response[3:])
             if self.dsp.get("1").get("analog_input_att") is not value:
+                _LOGGER.info("Zone 1: ANALOG INPUT ATT %s", str(value))
                 self.dsp["1"]["analog_input_att"] = value
 
             updated_zones.add("1")
@@ -1760,6 +1767,7 @@ class PioneerAVR:
         elif response.startswith("ATC"):
             value = bool(response[3:])
             if self.dsp.get("1").get("eq") is not value:
+                _LOGGER.info("Zone 1: EQ %s", str(value))
                 self.dsp["1"]["eq"] = value
 
             updated_zones.add("1")
@@ -1767,6 +1775,7 @@ class PioneerAVR:
         elif response.startswith("ATD"):
             value = bool(response[3:])
             if self.dsp.get("1").get("standing_wave") is not value:
+                _LOGGER.info("Zone 1: STANDING WAVE %s", str(value))
                 self.dsp["1"]["standing_wave"] = value
 
             updated_zones.add("1")
@@ -1777,6 +1786,7 @@ class PioneerAVR:
                 value = "AUTO"
             
             if self.dsp.get("1").get("phase_control_plus") is not value:
+                _LOGGER.info("Zone 1: PHASE CONTROL PLUS %s", str(value))
                 self.dsp["1"]["phase_control_plus"] = value
 
             updated_zones.add("1")
@@ -1784,6 +1794,7 @@ class PioneerAVR:
         elif response.startswith("ATF"):
             value = float(response[3:])/10
             if self.dsp.get("1").get("sound_delay") is not value:
+                _LOGGER.info("Zone 1: SOUND DELAY %s", str(value))
                 self.dsp["1"]["sound_delay"] = value
 
             updated_zones.add("1")
@@ -1791,6 +1802,7 @@ class PioneerAVR:
         elif response.startswith("ATG"):
             value = bool(response[3:])
             if self.dsp.get("1").get("digital_noise_reduction") is not value:
+                _LOGGER.info("Zone 1: DIGITAL NOISE REDUCTION %s", str(value))
                 self.dsp["1"]["digital_noise_reduction"] = value
 
             updated_zones.add("1")
@@ -1799,6 +1811,7 @@ class PioneerAVR:
             value = response[3:]
             value = PARAM_DSP_DIGITAL_DIALOG_ENHANCEMENT.get(value)
             if self.dsp.get("1").get("digital_dialog_enhancement") is not value:
+                _LOGGER.info("Zone 1: DIGITAL DIALOG ENHANCEMENT %s", str(value))
                 self.dsp["1"]["digital_dialog_enhancement"] = value
 
             updated_zones.add("1")
@@ -1806,6 +1819,7 @@ class PioneerAVR:
         elif response.startswith("ATI"):
             value = bool(response[3:])
             if self.dsp.get("1").get("hi_bit") is not value:
+                _LOGGER.info("Zone 1: HI-BIT %s", str(value))
                 self.dsp["1"]["hi_bit"] = value
 
             updated_zones.add("1")
@@ -1813,6 +1827,7 @@ class PioneerAVR:
         elif response.startswith("ATJ"):
             value = PARAM_DSP_DUAL_MONO.get(response[3:])
             if self.dsp.get("1").get("dual_mono") is not value:
+                _LOGGER.info("Zone 1: DUAL MONO %s", str(value))
                 self.dsp["1"]["dual_mono"] = value
 
             updated_zones.add("1")
@@ -1820,6 +1835,7 @@ class PioneerAVR:
         elif response.startswith("ATK"):
             value = bool(response[3:])
             if self.dsp.get("1").get("fixed_pcm") is not value:
+                _LOGGER.info("Zone 1: FIXED PCM %s", str(value))
                 self.dsp["1"]["fixed_pcm"] = value
 
             updated_zones.add("1")
@@ -1827,6 +1843,7 @@ class PioneerAVR:
         elif response.startswith("ATL"):
             value = PARAM_DSP_DRC.get(response[3:])
             if self.dsp.get("1").get("drc") is not value:
+                _LOGGER.info("Zone 1: DRC %s", str(value))
                 self.dsp["1"]["drc"] = value
 
             updated_zones.add("1")
@@ -1836,6 +1853,7 @@ class PioneerAVR:
             if value < -20:
                 value = "off"
             if self.dsp.get("1").get("lfe_att") is not value:
+                _LOGGER.info("Zone 1: LFE ATT %s", str(value))
                 self.dsp["1"]["lfe_att"] = value
 
             updated_zones.add("1")
@@ -1843,6 +1861,7 @@ class PioneerAVR:
         elif response.startswith("ATN"):
             value = 6 if bool(response[3:]) == True else 0
             if self.dsp.get("1").get("sacd_gain") is not value:
+                _LOGGER.info("Zone 1: SACD GAIN %s", str(value))
                 self.dsp["1"]["sacd_gain"] = value
 
             updated_zones.add("1")
@@ -1850,6 +1869,7 @@ class PioneerAVR:
         elif response.startswith("ATO"):
             value = bool(response[3:])
             if self.dsp.get("1").get("auto_delay") is not value:
+                _LOGGER.info("Zone 1: AUTO DELAY %s", str(value))
                 self.dsp["1"]["auto_delay"] = value
 
             updated_zones.add("1")
@@ -1857,6 +1877,7 @@ class PioneerAVR:
         elif response.startswith("ATP"):
             value = int(response[3:])
             if self.dsp.get("1").get("center_width") is not value:
+                _LOGGER.info("Zone 1: CENTER WIDTH %s", str(value))
                 self.dsp["1"]["center_width"] = value
 
             updated_zones.add("1")
@@ -1864,6 +1885,7 @@ class PioneerAVR:
         elif response.startswith("ATQ"):
             value = bool(response[3:])
             if self.dsp.get("1").get("panorama") is not value:
+                _LOGGER.info("Zone 1: PANORAMA %s", str(value))
                 self.dsp["1"]["panorama"] = value
 
             updated_zones.add("1")
@@ -1871,6 +1893,7 @@ class PioneerAVR:
         elif response.startswith("ATR"):
             value = int(response[3:])-50
             if self.dsp.get("1").get("dimension") is not value:
+                _LOGGER.info("Zone 1: DIMENSION %s", str(value))
                 self.dsp["1"]["dimension"] = value
 
             updated_zones.add("1")
@@ -1878,6 +1901,7 @@ class PioneerAVR:
         elif response.startswith("ATS"):
             value = float(response[3:])/10
             if self.dsp.get("1").get("center_image") is not value:
+                _LOGGER.info("Zone 1: CENTER IMAGE %s", str(value))
                 self.dsp["1"]["center_image"] = value
 
             updated_zones.add("1")
@@ -1885,6 +1909,7 @@ class PioneerAVR:
         elif response.startswith("ATT"):
             value = int(response[3:])*10
             if self.dsp.get("1").get("effect") is not value:
+                _LOGGER.info("Zone 1: EFFECT %s", str(value))
                 self.dsp["1"]["effect"] = value
 
             updated_zones.add("1")
@@ -1892,6 +1917,7 @@ class PioneerAVR:
         elif response.startswith("ATU"):
             value = PARAM_DSP_HEIGHT_GAIN.get(response[3:])
             if self.dsp.get("1").get("height_gain") is not value:
+                _LOGGER.info("Zone 1: HEIGHT GAIN %s", str(value))
                 self.dsp["1"]["height_gain"] = value
 
             updated_zones.add("1")
@@ -1899,6 +1925,7 @@ class PioneerAVR:
         elif response.startswith("VDP"):
             value = PARAM_DSP_VIRTUAL_DEPTH.get(response[3:])
             if self.dsp.get("1").get("virtual_depth") is not value:
+                _LOGGER.info("Zone 1: VIRTUAL DEPTH %s", str(value))
                 self.dsp["1"]["virtual_depth"] = value
 
             updated_zones.add("1")
@@ -1906,6 +1933,7 @@ class PioneerAVR:
         elif response.startswith("ATV"):
             value = PARAM_DSP_DIGITAL_FILTER.get(response[3:])
             if self.dsp.get("1").get("digital_filter") is not value:
+                _LOGGER.info("Zone 1: DIGITAL FILTER %s", str(value))
                 self.dsp["1"]["digital_filter"] = value
 
             updated_zones.add("1")
@@ -1913,6 +1941,7 @@ class PioneerAVR:
         elif response.startswith("ATW"):
             value = bool(response[3:])
             if self.dsp.get("1").get("loudness_management") is not value:
+                _LOGGER.info("Zone 1: LOUDNESS MANAGEMENT %s", str(value))
                 self.dsp["1"]["loudness_management"] = value
 
             updated_zones.add("1")
@@ -1920,6 +1949,7 @@ class PioneerAVR:
         elif response.startswith("VWD"):
             value = bool(response[3:])
             if self.dsp.get("1").get("virtual_wide") is not value:
+                _LOGGER.info("Zone 1: VIRTUAL WIDE %s", str(value))
                 self.dsp["1"]["virtual_wide"] = value
 
             updated_zones.add("1")
