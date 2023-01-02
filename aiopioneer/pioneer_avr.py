@@ -54,6 +54,11 @@ from .param import (
     PARAM_DSP_DIGITAL_FILTER,
     PARAM_VIDEO_OBJ,
     PARAM_MULTI_CH_SOURCES,
+    PARAM_HDZONE_SOURCES,
+    PARAM_ZONE_2_SOURCES,
+    PARAM_ZONE_3_SOURCES,
+    PARAM_SPEAKER_SYSTEM_MODES,
+    PARAM_HDZONE_VOLUME_REQUIREMENTS
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -521,6 +526,12 @@ PIONEER_COMMANDS = {
     },
     "query_virtual_wide": {
         "1": ["?VWD", "VWD"]
+    },
+    "query_speaker_system": {
+        "1": ["?SSF", "SSF"]
+    },
+    "set_speaker_system": {
+        "1": ["?SSF", "SSF"]
     }
 }
 
@@ -587,6 +598,7 @@ class PioneerAVR:
         self.channel_levels = {}
         self.dsp = {}
         self.video = {}
+        self.system = {}
 
         ## Parameters
         self._default_params = PARAM_DEFAULTS
@@ -651,7 +663,7 @@ class PioneerAVR:
                         model,
                         model_regex,
                     )
-                    merge(self._default_params, model_params)
+                    merge(self._default_params, model_params, forceOverwrite=True)
         self._update_params()
 
     def get_params(self):
@@ -1177,9 +1189,16 @@ class PioneerAVR:
         if not self._source_name_to_id:
             _LOGGER.warning("no input sources found on AVR")
 
-    def get_source_list(self):
+    def get_source_list(self, zone="1"):
         """Return list of available input sources."""
-        return list(self._source_name_to_id.keys())
+        if zone == "1":
+            return list(self._source_name_to_id.keys())
+        elif zone == "2":
+            return list([k for k, v in self._source_name_to_id.items() if v in self._params.get(PARAM_ZONE_2_SOURCES)])
+        elif zone == "3":
+            return list([k for k, v in self._source_name_to_id.items() if v in self._params.get(PARAM_ZONE_3_SOURCES)])
+        elif zone == "Z":
+            return list([k for k, v in self._source_name_to_id.items() if v in self._params.get(PARAM_HDZONE_SOURCES)])
 
     def get_sound_modes(self, zone):
         """Return list of valid sound modes."""
@@ -1187,9 +1206,9 @@ class PioneerAVR:
         if (zone == "1"):
             ## Now check if the current input is multi channel or not
             if (self.source.get(zone) not in self._params.get(PARAM_MULTI_CH_SOURCES)):
-                return list([v for k, v in PARAM_LISTENING_MODES.items() if "MULTI CH" not in v.upper()])
+                return list([v for k, v in self._params.get(PARAM_LISTENING_MODES).items() if "MULTI CH" not in v.upper()])
             else:
-                return list([v for k, v in PARAM_LISTENING_MODES.items() if "MULTI CH" in v.upper() or "DIRECT" in v.upper()])
+                return list([v for k, v in self._params.get(PARAM_LISTENING_MODES).items() if "MULTI CH" in v.upper() or "DIRECT" in v.upper()])
         else:
             return None
 
@@ -1288,6 +1307,10 @@ class PioneerAVR:
         ## Set VIDEO if not already set
         if self.video.get("1") is None:
             self.video["1"] = PARAM_VIDEO_OBJ
+
+        ## Set SYSTEM if not already set
+        if self.system.get("1") is None:
+            self.system["1"] = {}
 
         ## POWER STATUS
         if response.startswith("PWR"):
@@ -1397,7 +1420,7 @@ class PioneerAVR:
         elif response.startswith("SR"):
             value = response[2:]
             if self.listening_mode.get("1") != value:
-                self.listening_mode["1"] = PARAM_LISTENING_MODES.get(value)
+                self.listening_mode["1"] = self._params.get(PARAM_LISTENING_MODES).get(value)
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Listening Mode: %s (%s)", self.listening_mode.get("1"), value)
 
@@ -1751,6 +1774,14 @@ class PioneerAVR:
 
             updated_zones.add("1")
 
+        elif response.startswith("VSP"):
+            value = "auto" if int(response[3:]) == 0 else "manual"
+            if self.dsp.get("1").get("virtual_speakers") is not value:
+                _LOGGER.info("Zone 1: PHASE CONTROL %s", str(value))
+                self.dsp["1"]["virtual_speakers"] = value
+
+            updated_zones.add("1")
+
         elif response.startswith("VSB"):
             value = bool(response[3:])
             if self.dsp.get("1").get("virtual_sb") is not value:
@@ -1844,11 +1875,33 @@ class PioneerAVR:
 
             updated_zones.add("1")
 
+        elif response.startswith("ATY"):
+            value = "off" if int(response[3:]) == "0" else "on"
+            if self.dsp.get("1").get("audio_scaler") is not value:
+                _LOGGER.info("Zone 1: AUDIO SCALER %s", str(value))
+                self.dsp["1"]["audio_scaler"] = value
+
+            updated_zones.add("1")
+
         elif response.startswith("ATI"):
             value = bool(response[3:])
             if self.dsp.get("1").get("hi_bit") is not value:
                 _LOGGER.info("Zone 1: HI-BIT %s", str(value))
                 self.dsp["1"]["hi_bit"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATY"):
+            value = int(response[3:])
+            if value == 0:
+                value = "off"
+            elif value == 1:
+                value = "2 times"
+            elif value == 2:
+                value = "4 times"
+            if self.dsp.get("1").get("up_sampling") is not value:
+                _LOGGER.info("Zone 1: UP SAMPLING %s", str(value))
+                self.dsp["1"]["up_sampling"] = value
 
             updated_zones.add("1")
 
@@ -1980,6 +2033,31 @@ class PioneerAVR:
                 _LOGGER.info("Zone 1: VIRTUAL WIDE %s", str(value))
                 self.dsp["1"]["virtual_wide"] = value
 
+            updated_zones.add("1")
+
+        elif response.startswith("ARA"):
+            value = bool(response[3:])
+            if self.dsp.get("1").get("center_spread") is not value:
+                _LOGGER.info("Zone 1: CENTER SPREAD %s", str(value))
+                self.dsp["1"]["center_spread"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ARA"):
+            value = "object base" if int(response[3:]) == 0 else "channel base"
+            if self.dsp.get("1").get("rendering_mode") is not value:
+                _LOGGER.info("Zone 1: RENDERING MODE %s", str(value))
+                self.dsp["1"]["rendering_mode"] = value
+
+            updated_zones.add("1")
+
+        ## FUNC: SETUP
+        elif response.startswith("SSF"):
+            value = self._params.get(PARAM_SPEAKER_SYSTEM_MODES).get(response[3:])
+            if self.system.get("1").get("speaker_system") is not value:
+                _LOGGER.info("System: Speaker System: %s", value)
+                self.system["1"]["speaker_system"] = value
+            
             updated_zones.add("1")
 
         return updated_zones
@@ -2284,7 +2362,7 @@ class PioneerAVR:
         """Sets the listening mode using the predefnined list of options in params."""
         self._check_zone(zone)
         return await self.send_command(
-            "set_listening_mode", zone, prefix=self._get_parameter_key_from_value(listening_mode, PARAM_LISTENING_MODES), ignore_error=False
+            "set_listening_mode", zone, prefix=self._get_parameter_key_from_value(listening_mode, self._params.get(PARAM_LISTENING_MODES)), ignore_error=False
         )
 
     async def set_panel_lock(self, panel_lock: str, zone="1"):

@@ -29,7 +29,7 @@ async def main():
     await pioneer.query_zones()
     print(f"AVR zones discovered: {pioneer.zones}")
     print("Discovering zones")
-    #await pioneer.build_source_dict()
+    await pioneer.build_source_dict()
     
     
     await pioneer.update()
@@ -52,8 +52,8 @@ async def main():
     # await pioneer.disconnect()
 
     while True:
-        for property, value in vars(pioneer).items():
-            print(property, ":", value)
+        #for property, value in vars(pioneer).items():
+            #print(property, ":", value)
         await asyncio.sleep(60)
         print("Update ...")
         await pioneer.update()
@@ -82,7 +82,7 @@ async def main():
 
 if __name__ == "__main__":
     logging.basicConfig(
-        level=logging.ERROR,
+        level=logging.INFO,
         format="%(asctime)s %(levelname)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )

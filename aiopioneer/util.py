@@ -10,13 +10,13 @@ _LOGGER = logging.getLogger(__name__)
 
 ## Source: https://stackoverflow.com/a/7205107
 ## Modified so b overwrites a where there is a conflict
-def merge(a, b, path=None):  # pylint: disable=invalid-name
+def merge(a, b, path=None, forceOverwrite=False):  # pylint: disable=invalid-name
     """Recursively merges dict b into dict a."""
     if path is None:
         path = []
     for key in b:
         if key in a:
-            if isinstance(a[key], dict) and isinstance(b[key], dict):
+            if isinstance(a[key], dict) and isinstance(b[key], dict) and forceOverwrite == False:
                 merge(a[key], b[key], path + [str(key)])
             elif a[key] == b[key]:
                 pass  # same leaf value
