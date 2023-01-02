@@ -328,3 +328,57 @@ PARAM_DSP_OBJ = {
     "loudness_management": None,
     "virtual_wide": None
 }
+
+PARAM_DSP_PHASE_CONTROL = {
+    "0": "off",
+    "1": "on",
+    "2": "full band on"
+}
+
+PARAM_DSP_SIGNAL_SELECT = {
+    "0": "AUTO",
+    "1": "ANALOG",
+    "2": "DIGITAL",
+    "3": "HDMI"
+}
+
+PARAM_DSP_DIALOG_ENHANCEMENT = {
+    "0": "off",
+    "1": "flat",
+    "2": "+1",
+    "3": "+2",
+    "4": "+3",
+    "5": "+4"
+}
+
+PARAM_DSP_DUAL_MONO = {
+    "0": "CH1+CH2",
+    "1": "CH1",
+    "2": "CH2"
+}
+
+PARAM_DSP_DRC = {
+    "0": "off",
+    "1": "auto",
+    "2": "mid",
+    "3": "max"
+}
+
+PARAM_DSP_HEIGHT_GAIN = {
+    "0": "low",
+    "1": "mid",
+    "2": "high"
+}
+
+PARAM_DSP_VIRTUAL_DEPTH = {
+    "0": "off",
+    "1": "min",
+    "2": "mid",
+    "3": "max"
+}
+
+PARAM_DSP_DIGITAL_FILTER = {
+    "0": "slow",
+    "1": "sharp",
+    "2": "short"
+}

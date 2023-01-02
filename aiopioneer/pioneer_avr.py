@@ -44,11 +44,19 @@ from .param import (
     PARAM_VIDEO_ASPECT_MODES,
     PARAM_CHANNEL_LEVELS_OBJ,
     PARAM_DSP_OBJ,
+    PARAM_DSP_PHASE_CONTROL,
+    PARAM_DSP_SIGNAL_SELECT,
+    PARAM_DSP_DIALOG_ENHANCEMENT,
+    PARAM_DSP_DUAL_MONO,
+    PARAM_DSP_DRC,
+    PARAM_DSP_HEIGHT_GAIN,
+    PARAM_DSP_VIRTUAL_DEPTH,
+    PARAM_DSP_DIGITAL_FILTER,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.2.8"
+VERSION = "0.3.0"
 
 PIONEER_COMMANDS = {
     "system_query_mac_addr": {"1": ["?SVB", "SVB"]},
@@ -1290,6 +1298,10 @@ class PioneerAVR:
         """Parse response and update cached parameters."""
         updated_zones = set()
 
+        ## Set DSP if not already set
+        if self.dsp.get("1") is None:
+                self.dsp["1"] = PARAM_DSP_OBJ
+
         ## POWER STATUS
         if response.startswith("PWR"):
             value = response == "PWR0"
@@ -1692,6 +1704,224 @@ class PioneerAVR:
                 self.channel_levels["3"][speaker] = value
 
             updated_zones.add("3")
+
+        ## FUNC: DSP
+        elif response.startswith("MC"):
+            value = int(response[2:])
+            if self.dsp.get("1").get("mcacc_memory_set") is not value:
+                self.dsp["1"]["mcacc_memory_set"] = value
+            
+            updated_zones.add("1")
+        
+        elif response.startswith("IS"):
+            value = response[2:]
+            if self.dsp.get("1").get("phase_control") is not PARAM_DSP_PHASE_CONTROL.get(value):
+                self.dsp["1"]["phase_control"] = PARAM_DSP_PHASE_CONTROL.get(value)
+
+            updated_zones.add("1")
+
+        elif response.startswith("VSB"):
+            value = bool(response[3:])
+            if self.dsp.get("1").get("virtual_sb") is not value:
+                self.dsp["1"]["virtual_sb"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("VHT"):
+            value = bool(response[3:])
+            if self.dsp.get("1").get("virtual_height") is not value:
+                self.dsp["1"]["virtual_height"] = value
+
+            updated_zones.add("1")
+        
+        elif response.startswith("ATA"):
+            value = bool(response[3:])
+            if self.dsp.get("1").get("sound_retriever") is not value:
+                self.dsp["1"]["sound_retriever"] = value
+
+            updated_zones.add("1")
+        
+        elif response.startswith("SDA"):
+            value = response[3:]
+            value = PARAM_DSP_SIGNAL_SELECT.get(value)
+            if self.dsp.get("1").get("signal_select") is not value:
+                self.dsp["1"]["signal_select"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("SDB"):
+            value = bool(response[3:])
+            if self.dsp.get("1").get("analog_input_att") is not value:
+                self.dsp["1"]["analog_input_att"] = value
+
+            updated_zones.add("1")
+        
+        elif response.startswith("ATC"):
+            value = bool(response[3:])
+            if self.dsp.get("1").get("eq") is not value:
+                self.dsp["1"]["eq"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATD"):
+            value = bool(response[3:])
+            if self.dsp.get("1").get("standing_wave") is not value:
+                self.dsp["1"]["standing_wave"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATE"):
+            value = int(response[3:])
+            if value == 97:
+                value = "AUTO"
+            
+            if self.dsp.get("1").get("phase_control_plus") is not value:
+                self.dsp["1"]["phase_control_plus"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATF"):
+            value = float(response[3:])/10
+            if self.dsp.get("1").get("sound_delay") is not value:
+                self.dsp["1"]["sound_delay"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATG"):
+            value = bool(response[3:])
+            if self.dsp.get("1").get("digital_noise_reduction") is not value:
+                self.dsp["1"]["digital_noise_reduction"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATH"):
+            value = response[3:]
+            value = PARAM_DSP_DIALOG_ENHANCEMENT.get(value)
+            if self.dsp.get("1").get("digital_dialog_enhancement") is not value:
+                self.dsp["1"]["digital_dialog_enhancement"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATI"):
+            value = bool(response[3:])
+            if self.dsp.get("1").get("hi_bit") is not value:
+                self.dsp["1"]["hi_bit"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATJ"):
+            value = PARAM_DSP_DUAL_MONO.get(response[3:])
+            if self.dsp.get("1").get("dual_mono") is not value:
+                self.dsp["1"]["dual_mono"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATK"):
+            value = bool(response[3:])
+            if self.dsp.get("1").get("fixed_pcm") is not value:
+                self.dsp["1"]["fixed_pcm"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATL"):
+            value = PARAM_DSP_DRC.get(response[3:])
+            if self.dsp.get("1").get("drc") is not value:
+                self.dsp["1"]["drc"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATM"):
+            value = int(response[3:])*-5
+            if value < -20:
+                value = "off"
+            if self.dsp.get("1").get("lfe_att") is not value:
+                self.dsp["1"]["lfe_att"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATN"):
+            value = 6 if bool(response[3:]) == True else 0
+            if self.dsp.get("1").get("sacd_gain") is not value:
+                self.dsp["1"]["sacd_gain"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATO"):
+            value = bool(response[3:])
+            if self.dsp.get("1").get("auto_delay") is not value:
+                self.dsp["1"]["auto_delay"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATP"):
+            value = int(response[3:])
+            if self.dsp.get("1").get("center_width") is not value:
+                self.dsp["1"]["center_width"] = value
+
+            updated_zones.add("1")
+        
+        elif response.startswith("ATQ"):
+            value = bool(response[3:])
+            if self.dsp.get("1").get("panorama") is not value:
+                self.dsp["1"]["panorama"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATR"):
+            value = int(response[3:])-50
+            if self.dsp.get("1").get("dimension") is not value:
+                self.dsp["1"]["dimension"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATS"):
+            value = float(response[3:])/10
+            if self.dsp.get("1").get("center_image") is not value:
+                self.dsp["1"]["center_image"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATT"):
+            value = int(response[3:])*10
+            if self.dsp.get("1").get("effect") is not value:
+                self.dsp["1"]["effect"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATU"):
+            value = PARAM_DSP_HEIGHT_GAIN.get(response[3:])
+            if self.dsp.get("1").get("height_gain") is not value:
+                self.dsp["1"]["height_gain"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("VDP"):
+            value = PARAM_DSP_VIRTUAL_DEPTH.get(response[3:])
+            if self.dsp.get("1").get("virtual_depth") is not value:
+                self.dsp["1"]["virtual_depth"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATV"):
+            value = PARAM_DSP_DIGITAL_FILTER.get(response[3:])
+            if self.dsp.get("1").get("digital_filter") is not value:
+                self.dsp["1"]["digital_filter"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("ATW"):
+            value = bool(response[3:])
+            if self.dsp.get("1").get("loudness_management") is not value:
+                self.dsp["1"]["loudness_management"] = value
+
+            updated_zones.add("1")
+
+        elif response.startswith("VWD"):
+            value = bool(response[3:])
+            if self.dsp.get("1").get("virtual_wide") is not value:
+                self.dsp["1"]["virtual_wide"] = value
+
+            updated_zones.add("1")
 
         return updated_zones
 
