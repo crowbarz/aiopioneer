@@ -1420,6 +1420,25 @@ class PioneerAVR:
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Treble Level: %s (%s)", self.tone_treble.get("1"), value)
 
+        elif response.startswith("ZGA"):
+            value = response[2:]
+            if self.tone.get("2") != value:
+                self.tone["2"] = PARAM_TONE_MODES.get(value)
+                updated_zones.add("2")
+                _LOGGER.info("Zone 2: Tone: %s (%s)", self.tone.get("2"), value)
+        elif response.startswith("ZGB"):
+            value = response[2:]
+            if self.tone_bass.get("2") != value:
+                self.tone_bass["2"] = PARAM_TONE_DB_VALUES.get(value)
+                updated_zones.add("2")
+                _LOGGER.info("Zone 2: Bass Level: %s (%s)", self.tone_bass.get("2"), value)
+        elif response.startswith("ZGC"):
+            value = response[2:]
+            if self.tone_treble.get("2") != value:
+                self.tone_treble["2"] = PARAM_TONE_DB_VALUES.get(value)
+                updated_zones.add("2")
+                _LOGGER.info("Zone 2: Treble Level: %s (%s)", self.tone_treble.get("2"), value)
+
         ## AMP FUNCTIONS
         elif response.startswith("SPK"):
             value = response[3:]
