@@ -58,7 +58,7 @@ from .param import (
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.3.5"
+VERSION = "0.3.6"
 
 PIONEER_COMMANDS = {
     "system_query_mac_addr": {"1": ["?SVB", "SVB"]},
@@ -1545,7 +1545,7 @@ class PioneerAVR:
             if self.video.get("1").get("resolution") != PARAM_VIDEO_RESOLUTION_MODES.get(str(value)):
                 self.video["1"]["resolution"] = PARAM_VIDEO_RESOLUTION_MODES.get(str(value))
                 updated_zones.add("1")
-                _LOGGER.info("Zone 1: Video Resolution: %s (%s)", self.self.video.get("1").get("resolution").get("1"), str(value))
+                _LOGGER.info("Zone 1: Video Resolution: %s (%s)", self.video.get("1").get("resolution"), str(value))
 
         elif response.startswith("VTD"):
             value = int(response[3:])
