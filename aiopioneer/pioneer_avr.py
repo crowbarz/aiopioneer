@@ -52,12 +52,13 @@ from .param import (
     PARAM_DSP_HEIGHT_GAIN,
     PARAM_DSP_VIRTUAL_DEPTH,
     PARAM_DSP_DIGITAL_FILTER,
-    PARAM_VIDEO_OBJ
+    PARAM_VIDEO_OBJ,
+    PARAM_MULTI_CH_SOURCES,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.3.3"
+VERSION = "0.3.4"
 
 PIONEER_COMMANDS = {
     "system_query_mac_addr": {"1": ["?SVB", "SVB"]},
@@ -1185,10 +1186,10 @@ class PioneerAVR:
         ## Check if the zone is the main zone or not, listening modes aren't supported on other zones
         if (zone == "1"):
             ## Now check if the current input is multi channel or not
-            if (self.source.get(zone) != "12"):
+            if (self.source.get(zone) not in self._params.get(PARAM_MULTI_CH_SOURCES)):
                 return list([v for k, v in PARAM_LISTENING_MODES.items() if "MULTI CH" not in v.upper()])
             else:
-                return list([v for k, v in PARAM_LISTENING_MODES.items() if "MULTI CH" in v.upper()])
+                return list([v for k, v in PARAM_LISTENING_MODES.items() if "MULTI CH" in v.upper() or "DIRECT" in v.upper()])
         else:
             return None
 

@@ -41,11 +41,13 @@ async def main():
         print(f"Power for zone - {z} {pioneer.power.get(z)}")
         print(f"Volume for zone - {z} {pioneer.volume.get(z)}")
         print(f"Source for zone - {z} {pioneer.source.get(z)}")
+        print(f"Listening Modes for zone - {z} {pioneer.get_sound_modes(z)}")
 
     #await pioneer.select_source("TUNER", "1")
     #await pioneer.set_tuner_frequency("AM", 580, "1")
     
-    
+    await pioneer.set_dsp_settings(phase_control="off", zone="1")
+
     # print("...")
     # await pioneer.disconnect()
 
