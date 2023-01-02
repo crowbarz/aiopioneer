@@ -57,7 +57,7 @@ from .param import (
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.3.1"
+VERSION = "0.3.2"
 
 PIONEER_COMMANDS = {
     "system_query_mac_addr": {"1": ["?SVB", "SVB"]},
@@ -1606,6 +1606,14 @@ class PioneerAVR:
                 _LOGGER.info("Zone 1: Video CNR: %s", str(value))
 
         elif response.startswith("VTJ"):
+            value = int(response[3:])
+            value = value - 50
+            if (self.video.get("1").get("bnr") != value):
+                self.video["1"]["bnr"] = value
+                updated_zones.add("1")
+                _LOGGER.info("Zone 1: Video BNR: %s", str(value))
+
+        elif response.startswith("VTK"):
             value = int(response[3:])
             value = value - 50
             if (self.video.get("1").get("mnr") != value):
