@@ -246,6 +246,27 @@ PARAM_AMP_MODES = {
     "3": "AMP OFF",
 }
 
+PARAM_VIDEO_OBJ = {
+    "converter": None,
+    "resolution": None,
+    "pure_cinema": None,
+    "prog_motion": None,
+    "stream_smoother": None,
+    "advanced_video_adjust": None,
+    "ynr": None,
+    "cnr": None,
+    "bnr": None,
+    "mnr": None,
+    "detail": None,
+    "sharpness": None,
+    "brightness": None,
+    "contrast": None,
+    "hue": None,
+    "chroma": None,
+    "black_setup": None,
+    "aspect": None,
+}
+
 PARAM_VIDEO_RESOLUTION_MODES = {
     "0": "AUTO",
     "1": "PURE",

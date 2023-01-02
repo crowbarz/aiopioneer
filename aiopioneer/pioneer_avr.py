@@ -52,6 +52,7 @@ from .param import (
     PARAM_DSP_HEIGHT_GAIN,
     PARAM_DSP_VIRTUAL_DEPTH,
     PARAM_DSP_DIGITAL_FILTER,
+    PARAM_VIDEO_OBJ
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -581,29 +582,10 @@ class PioneerAVR:
         self.tuner_band = {}
         self.tuner_preset = {}
 
-        ## FUNC: VIDEO
-        self.video_converter = {}
-        self.video_resolution = {}
-        self.video_pure_cinema = {}
-        self.video_prog_motion = {}
-        self.video_stream_smoother = {}
-        self.video_advanced_video_adjust = {}
-        self.video_ynr = {}
-        self.video_cnr = {}
-        self.video_bnr = {}
-        self.video_mnr = {}
-        self.video_detail = {}
-        self.video_sharpness = {}
-        self.video_brightness = {}
-        self.video_contrast = {}
-        self.video_hue = {}
-        self.video_chroma = {}
-        self.video_black_setup = {}
-        self.video_aspect = {}
-
         ## Complex object that holds multiple different props for the CHANNEL/DSP functions
         self.channel_levels = {}
         self.dsp = {}
+        self.video = {}
 
         ## Parameters
         self._default_params = PARAM_DEFAULTS
@@ -1302,6 +1284,10 @@ class PioneerAVR:
         if self.dsp.get("1") is None:
                 self.dsp["1"] = PARAM_DSP_OBJ
 
+        ## Set VIDEO if not already set
+        if self.video.get("1") is None:
+            self.video["1"] = PARAM_VIDEO_OBJ
+
         ## POWER STATUS
         if response.startswith("PWR"):
             value = response == "PWR0"
@@ -1529,16 +1515,18 @@ class PioneerAVR:
                 value = "on"
             else:
                 value = "off"
-            if self.video_converter.get("1") != value:
-                self.video_converter["1"] = value
+            if self.video.get("1").get("converter") != value:
+                self.video["1"]["converter"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Converter: %s (%s)", value, response[3:])
+
         elif response.startswith("VTC"):
             value = int(response[3:])
-            if self.video_resolution.get("1") != PARAM_VIDEO_RESOLUTION_MODES.get(str(value)):
-                self.video_resolution["1"] = PARAM_VIDEO_RESOLUTION_MODES.get(str(value))
+            if self.video.get("1").get("resolution") != PARAM_VIDEO_RESOLUTION_MODES.get(str(value)):
+                self.video["1"]["resolution"] = PARAM_VIDEO_RESOLUTION_MODES.get(str(value))
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Resolution: %s (%s)", self.video_resolution.get("1"), str(value))
+
         elif response.startswith("VTD"):
             value = int(response[3:])
             ## Override value to auto, on or off
@@ -1548,19 +1536,20 @@ class PioneerAVR:
                 value = "on"
             else:
                 value = "off"
-
-            if self.video_pure_cinema.get("1") != value:
-                self.video_pure_cinema["1"] = value
+            if self.video.get("1").get("pure_cinema") != value:
+                self.video["1"]["pure_cinema"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Pure Cinema: %s (%s)", value, response[3:])
+
         elif response.startswith("VTE"):
             value = int(response[3:])
             if value < 55:
                 value = value - 50
-                if (self.video_prog_motion.get("1") != value):
-                    self.video_prog_motion["1"] = value
+                if (self.video.get("1").get("prog_motion") != value):
+                    self.video["1"]["prog_motion"] = value
                     updated_zones.add("1")
                     _LOGGER.info("Zone 1: Video Prog. Motion: %s", str(value))
+
         elif response.startswith("VTF"):
             value = int(response[3:])
             if value == 0:
@@ -1569,79 +1558,90 @@ class PioneerAVR:
                 value = "on"
             else:
                 value = "auto"
-            if (self.video_stream_smoother.get("1") != value):
-                self.video_stream_smoother["1"] = value
+            if (self.video.get("1").get("stream_smoother") != value):
+                self.video["1"]["stream_smoother"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Stream Smoother: %s", value)
+
         elif response.startswith("VTG"):
             value = int(response[3:])
-            if (self.video_advanced_video_adjust.get("1") != PARAM_ADVANCED_VIDEO_ADJUST_MODES.get(str(value))):
-                self.video_advanced_video_adjust["1"] = PARAM_ADVANCED_VIDEO_ADJUST_MODES.get(str(value))
+            if (self.video.get("1").get("advanced_video_adjust") != PARAM_ADVANCED_VIDEO_ADJUST_MODES.get(str(value))):
+                self.video["1"]["advanced_video_adjust"] = PARAM_ADVANCED_VIDEO_ADJUST_MODES.get(str(value))
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Advanced Video Adjust: %s (%s)", PARAM_ADVANCED_VIDEO_ADJUST_MODES.get(str(value)), value)
+
         elif response.startswith("VTH"):
             value = int(response[3:])
             value = value - 50
-            if (self.video_ynr.get("1") != value):
-                self.video_ynr["1"] = value
+            if (self.video.get("1").get("ynr") != value):
+                self.video["1"]["ynr"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video YNR: %s", str(value))
+
         elif response.startswith("VTI"):
             value = int(response[3:])
             value = value - 50
-            if (self.video_cnr.get("1") != value):
-                self.video_cnr["1"] = value
+            if (self.video.get("1").get("cnr") != value):
+                self.video["1"]["cnr"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video CNR: %s", str(value))
+
         elif response.startswith("VTJ"):
             value = int(response[3:])
             value = value - 50
-            if (self.video_mnr.get("1") != value):
-                self.video_mnr["1"] = value
+            if (self.video.get("1").get("mnr") != value):
+                self.video["1"]["mnr"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video MNR: %s", str(value))
+
         elif response.startswith("VTL"):
             value = int(response[3:])
             value = value - 50
-            if (self.video_detail.get("1") != value):
-                self.video_detail["1"] = value
+            if (self.video.get("1").get("detail") != value):
+                self.video["1"]["detail"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Detail: %s", str(value))
+
         elif response.startswith("VTM"):
             value = int(response[3:])
             value = value - 50
-            if (self.video_sharpness.get("1") != value):
-                self.video_sharpness["1"] = value
+            if (self.video.get("1").get("sharpness") != value):
+                self.video["1"]["sharpness"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Sharpness: %s", str(value))
+
         elif response.startswith("VTN"):
             value = int(response[3:])
             value = value - 50
-            if (self.video_brightness.get("1") != value):
-                self.video_brightness["1"] = value
+            if (self.video.get("1").get("brightness") != value):
+                self.video["1"]["brightness"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Brightness: %s", str(value))
+
         elif response.startswith("VTO"):
             value = int(response[3:])
             value = value - 50
-            if (self.video_contrast.get("1") != value):
-                self.video_contrast["1"] = value
+            if (self.video.get("1").get("contrast") != value):
+                self.video["1"]["contrast"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Contrast: %s", str(value))
+
         elif response.startswith("VTP"):
             value = int(response[3:])
             value = value - 50
-            if (self.video_hue.get("1") != value):
-                self.video_hue["1"] = value
+            if (self.video.get("1").get("hue") != value):
+                self.video["1"]["hue"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Hue: %s", str(value))
+
         elif response.startswith("VTQ"):
             value = int(response[3:])
             value = value - 50
-            if (self.video_chroma.get("1") != value):
-                self.video_chroma["1"] = value
+            if (self.video.get("1").get("chroma") != value):
+                self.video["1"]["chroma"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Chroma: %s", str(value))
+
         elif response.startswith("VTR"):
             value = int(response[3:])
             if value == 0:
@@ -1649,10 +1649,11 @@ class PioneerAVR:
             elif value == 1:
                 value = 7.5
 
-            if (self.video_black_setup.get("1") != value):
-                self.video_black_setup["1"] = value
+            if (self.video.get("1").get("black_setup") != value):
+                self.video["1"]["black_setup"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Black Setup: %s", str(value))
+
         elif response.startswith("VTS"):
             value = int(response[3:])
             if value == 0:
@@ -1660,8 +1661,8 @@ class PioneerAVR:
             elif value == 1:
                 value = "normal"
 
-            if (self.video_aspect.get("1") != value):
-                self.video_aspect["1"] = value
+            if (self.video.get("1").get("aspect") != value):
+                self.video["1"]["aspect"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Aspect: %s", str(value))
 
