@@ -46,7 +46,7 @@ from .param import (
     PARAM_DSP_OBJ,
     PARAM_DSP_PHASE_CONTROL,
     PARAM_DSP_SIGNAL_SELECT,
-    PARAM_DSP_DIALOG_ENHANCEMENT,
+    PARAM_DSP_DIGITAL_DIALOG_ENHANCEMENT,
     PARAM_DSP_DUAL_MONO,
     PARAM_DSP_DRC,
     PARAM_DSP_HEIGHT_GAIN,
@@ -1796,7 +1796,7 @@ class PioneerAVR:
 
         elif response.startswith("ATH"):
             value = response[3:]
-            value = PARAM_DSP_DIALOG_ENHANCEMENT.get(value)
+            value = PARAM_DSP_DIGITAL_DIALOG_ENHANCEMENT.get(value)
             if self.dsp.get("1").get("digital_dialog_enhancement") is not value:
                 self.dsp["1"]["digital_dialog_enhancement"] = value
 
@@ -2446,3 +2446,55 @@ class PioneerAVR:
                 raise ValueError(f"The provided channel is invalid ({channel}, {str(level)} for zone {zone}")
         else:
             raise ValueError(f"Invalid zone {zone}")
+
+    async def set_dsp_settings(self, **arguments):
+        """Sets the DSP settings for the amplifier."""
+        zone = arguments.get("zone")
+        self._check_zone(zone)
+        ## Get current DSP settings
+        zone_dsp_settings: dict = self.dsp.get(zone)
+
+        if zone_dsp_settings == None:
+            raise ValueError(f"Invalid zone {zone}")
+
+        for arg in arguments:
+            if arg != "zone":
+                if zone_dsp_settings.get(arg) is not arguments.get(arg):
+                    if type(arguments.get(arg)) == str:
+                        ## Functions to do a lookup here
+                        if arg == "phase_control":
+                            arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_PHASE_CONTROL)
+                        elif arg == "signal_select":
+                            arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_SIGNAL_SELECT)
+                        elif arg == "digital_dialog_enhancement":
+                            arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_DIGITAL_DIALOG_ENHANCEMENT)
+                        elif arg == "dual_mono":
+                            arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_DUAL_MONO)
+                        elif arg == "drc":
+                            arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_DRC)
+                        elif arg == "height_gain":
+                            arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_HEIGHT_GAIN)
+                        elif arg == "virtual_depth":
+                            arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_VIRTUAL_DEPTH)
+                        elif arg == "digital_filter":
+                            arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_DIGITAL_FILTER)
+                    elif type(arguments.get(arg)) == bool:
+                        arguments[arg] = str(int(arguments.get(arg)))
+                    elif type(arguments.get(arg)) == float:
+                        if arg == "sound_delay":
+                            arguments[arg] = str(int(float(arguments.get(arg)) * 10)).zfill(3)
+                        elif arg == "center_image":
+                            arguments[arg] = str(int(arguments.get(arg)) * 10).zfill(2)
+                    elif type(arguments.get(arg) == int):
+                        if arg == "lfe_att":
+                            arguments[arg] = int((-20/5)*-1)
+                        elif arg == "dimension": 
+                            arguments[arg] = arguments.get(arg)+50
+                        elif arg == "effect":
+                            arguments[arg] = str(arguments.get(arg)/10).zfill(2)
+                        elif arg == "phase_control_plus":
+                            arguments[arg] = str(arguments.get(arg)).zfill(2)
+                        elif arg == "center_width":
+                            arguments[arg] = str(arguments.get(arg)).zfill(2)
+
+                    await self.send_command("set_" + arg, zone, str(arguments.get(arg)), ignore_error=False)

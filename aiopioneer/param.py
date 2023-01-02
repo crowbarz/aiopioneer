@@ -342,7 +342,7 @@ PARAM_DSP_SIGNAL_SELECT = {
     "3": "HDMI"
 }
 
-PARAM_DSP_DIALOG_ENHANCEMENT = {
+PARAM_DSP_DIGITAL_DIALOG_ENHANCEMENT = {
     "0": "off",
     "1": "flat",
     "2": "+1",
