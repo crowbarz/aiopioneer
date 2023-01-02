@@ -57,7 +57,7 @@ from .param import (
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.3.2"
+VERSION = "0.3.3"
 
 PIONEER_COMMANDS = {
     "system_query_mac_addr": {"1": ["?SVB", "SVB"]},
@@ -2518,42 +2518,43 @@ class PioneerAVR:
 
         for arg in arguments:
             if arg != "zone":
-                if zone_dsp_settings.get(arg) is not arguments.get(arg):
-                    if type(arguments.get(arg)) == str:
-                        ## Functions to do a lookup here
-                        if arg == "phase_control":
-                            arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_PHASE_CONTROL)
-                        elif arg == "signal_select":
-                            arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_SIGNAL_SELECT)
-                        elif arg == "digital_dialog_enhancement":
-                            arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_DIGITAL_DIALOG_ENHANCEMENT)
-                        elif arg == "dual_mono":
-                            arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_DUAL_MONO)
-                        elif arg == "drc":
-                            arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_DRC)
-                        elif arg == "height_gain":
-                            arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_HEIGHT_GAIN)
-                        elif arg == "virtual_depth":
-                            arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_VIRTUAL_DEPTH)
-                        elif arg == "digital_filter":
-                            arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_DIGITAL_FILTER)
-                    elif type(arguments.get(arg)) == bool:
-                        arguments[arg] = str(int(arguments.get(arg)))
-                    elif type(arguments.get(arg)) == float:
-                        if arg == "sound_delay":
-                            arguments[arg] = str(int(float(arguments.get(arg)) * 10)).zfill(3)
-                        elif arg == "center_image":
-                            arguments[arg] = str(int(arguments.get(arg)) * 10).zfill(2)
-                    elif type(arguments.get(arg) == int):
-                        if arg == "lfe_att":
-                            arguments[arg] = int((-20/5)*-1)
-                        elif arg == "dimension": 
-                            arguments[arg] = arguments.get(arg)+50
-                        elif arg == "effect":
-                            arguments[arg] = str(arguments.get(arg)/10).zfill(2)
-                        elif arg == "phase_control_plus":
-                            arguments[arg] = str(arguments.get(arg)).zfill(2)
-                        elif arg == "center_width":
-                            arguments[arg] = str(arguments.get(arg)).zfill(2)
+                if arguments.get(arg) is not None:
+                    if zone_dsp_settings.get(arg) is not arguments.get(arg):
+                        if type(arguments.get(arg)) == str:
+                            ## Functions to do a lookup here
+                            if arg == "phase_control":
+                                arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_PHASE_CONTROL)
+                            elif arg == "signal_select":
+                                arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_SIGNAL_SELECT)
+                            elif arg == "digital_dialog_enhancement":
+                                arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_DIGITAL_DIALOG_ENHANCEMENT)
+                            elif arg == "dual_mono":
+                                arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_DUAL_MONO)
+                            elif arg == "drc":
+                                arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_DRC)
+                            elif arg == "height_gain":
+                                arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_HEIGHT_GAIN)
+                            elif arg == "virtual_depth":
+                                arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_VIRTUAL_DEPTH)
+                            elif arg == "digital_filter":
+                                arguments[arg] = self._get_parameter_key_from_value(arguments.get(arg), PARAM_DSP_DIGITAL_FILTER)
+                        elif type(arguments.get(arg)) == bool:
+                            arguments[arg] = str(int(arguments.get(arg)))
+                        elif type(arguments.get(arg)) == float:
+                            if arg == "sound_delay":
+                                arguments[arg] = str(int(float(arguments.get(arg)) * 10)).zfill(3)
+                            elif arg == "center_image":
+                                arguments[arg] = str(int(arguments.get(arg)) * 10).zfill(2)
+                        elif type(arguments.get(arg) == int):
+                            if arg == "lfe_att":
+                                arguments[arg] = int((-20/5)*-1)
+                            elif arg == "dimension": 
+                                arguments[arg] = arguments.get(arg)+50
+                            elif arg == "effect":
+                                arguments[arg] = str(arguments.get(arg)/10).zfill(2)
+                            elif arg == "phase_control_plus":
+                                arguments[arg] = str(arguments.get(arg)).zfill(2)
+                            elif arg == "center_width":
+                                arguments[arg] = str(arguments.get(arg)).zfill(2)
 
-                    await self.send_command("set_" + arg, zone, str(arguments.get(arg)), ignore_error=False)
+                        await self.send_command("set_" + arg, zone, str(arguments.get(arg)), ignore_error=False)
