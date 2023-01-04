@@ -2218,3 +2218,67 @@ PARAM_DSP_DIGITAL_FILTER = {
     "1": "sharp",
     "2": "short"
 }
+
+PARAM_AUDIO_SIGNAL_INPUT_INFO = {
+    "00": "ANALOG",
+    "01": "ANALOG",
+    "02": "ANALOG",
+    "03": "PCM",
+    "04": "PCM",
+    "05": "DOLBY DIGITAL",
+    "06": "DTS",
+    "07": "DTS-ES Matrix",
+    "08": "DTS-ES Discrete",
+    "09": "DTS 96/24",
+    "10": "DTS 96/24 ES Matrix",
+    "11": "DTS 96/24 ES Discrete",
+    "12": "MPEG-2 AAC",
+    "13": "WMA9 Pro",
+    "14": "DSD (HDMI or File via DSP route)",
+    "15": "HDMI THROUGH",
+    "16": "DOLBY DIGITAL PLUS",
+    "17": "DOLBY TrueHD",
+    "18": "DTS EXPRESS",
+    "19": "DTS-HD Master Audio",
+    "20": "DTS-HD High Resolution",
+    "21": "DTS-HD High Resolution",
+    "22": "DTS-HD High Resolution",
+    "23": "DTS-HD High Resolution",
+    "24": "DTS-HD High Resolution",
+    "25": "DTS-HD High Resolution",
+    "26": "DTS-HD High Resolution",
+    "27": "DTS-HD Master Audio",
+    "28": "DSD (HDMI or File via DSD DIRECT route)",
+    "29": "Dolby Atmos",
+    "30": "Dolby Atmos over Dolby Digital Plus",
+    "31": "Dolby Atmos over Dolby TrueHD",
+    "64": "MP3",
+    "65": "WAV",
+    "66": "WMA",
+    "67": "MPEG4-AAC",
+    "68": "FLAC",
+    "69": "ALAC(Apple Lossless)",
+    "70": "AIFF",
+    "71": "DSD (USB-DAC)",
+    "72": "Spotify"
+}
+
+PARAM_AUDIO_SIGNAL_INPUT_FREQ = {
+    "00": "32kHz",
+    "01": "44.1kHz",
+    "02": "48kHz",
+    "03": "88.2kHz",
+    "04": "96kHz",
+    "05": "176.4kHz",
+    "06": "192kHz",
+    "07": "---",
+    "32": "2.8MHz",
+    "33": "5.6MHz"
+}
+
+PARAM_AUDIO_WORKING_PQLS = {
+    "0": "off",
+    "1": "2h",
+    "2": "Multi-channel",
+    "3": "Bitstream"
+}
