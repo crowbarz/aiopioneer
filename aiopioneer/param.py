@@ -2283,6 +2283,15 @@ PARAM_AUDIO_WORKING_PQLS = {
     "3": "Bitstream"
 }
 
+PARAM_VIDEO_SIGNAL_INPUT_TERMINAL = {
+    "0": "---",
+    "1": "VIDEO",
+    "2": "S-VIDEO",
+    "3": "COMPONENT",
+    "4": "HDMI",
+    "5": "Self OSD/JPEG",
+}
+
 PARAM_VIDEO_SIGNAL_FORMATS = {
     "00": "---",
     "01": "480/60i",
@@ -2349,4 +2358,3 @@ PARAM_VIDEO_SIGNAL_3D_MODES = {
     "7": "Top-and-Bottom",
     "8": "Side-by-Side(Half)",
 }
-

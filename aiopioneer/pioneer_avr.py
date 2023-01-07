@@ -61,12 +61,19 @@ from .param import (
     PARAM_HDZONE_VOLUME_REQUIREMENTS,
     PARAM_AUDIO_SIGNAL_INPUT_INFO,
     PARAM_AUDIO_SIGNAL_INPUT_FREQ,
-    PARAM_AUDIO_WORKING_PQLS
+    PARAM_AUDIO_WORKING_PQLS,
+    PARAM_VIDEO_SIGNAL_ASPECTS,
+    PARAM_VIDEO_SIGNAL_3D_MODES,
+    PARAM_VIDEO_SIGNAL_BITS,
+    PARAM_VIDEO_SIGNAL_FORMATS,
+    PARAM_VIDEO_SIGNAL_COLORSPACE,
+    PARAM_VIDEO_SIGNAL_EXT_COLORSPACE,
+    PARAM_VIDEO_SIGNAL_INPUT_TERMINAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.5.0"
+VERSION = "0.5.1"
 
 PIONEER_COMMANDS = {
     "system_query_mac_addr": {"1": ["?SVB", "SVB"]},
@@ -538,6 +545,9 @@ PIONEER_COMMANDS = {
     },
     "query_audio_information": {
         "1": ["?AST", "AST"]
+    },
+    "query_video_information": {
+        "1": ["?VST", "VST"]
     }
 }
 
@@ -2197,6 +2207,86 @@ class PioneerAVR:
             
             updated_zones.add("1")
         
+
+        ## VIDEO INFORMATION
+        elif response.startswith("VST"):
+            value = response[3:]
+            ## INPUT TERMINAL
+            if self.video.get("1").get("signal_input_terminal") is not PARAM_VIDEO_SIGNAL_INPUT_TERMINAL.get(value[0]):
+                _LOGGER.info("Video: Input Terminal: %s (%s)", PARAM_VIDEO_SIGNAL_INPUT_TERMINAL.get(value[0]), value[0])
+                self.video["1"]["signal_input_terminal"] = PARAM_VIDEO_SIGNAL_INPUT_TERMINAL.get(value[0])
+
+            if self.video.get("1").get("signal_input_resolution") is not PARAM_VIDEO_SIGNAL_FORMATS.get(value[2:4]):
+                _LOGGER.info("Video: Signal Input Resolution: %s (%s)", PARAM_VIDEO_SIGNAL_FORMATS.get(value[2:4]), value[2:4])
+                self.video["1"]["signal_input_resolution"] = PARAM_VIDEO_SIGNAL_FORMATS.get(value[2:4])
+
+            if self.video.get("1").get("signal_input_aspect") is not PARAM_VIDEO_SIGNAL_ASPECTS.get(value[3]):
+                _LOGGER.info("Video: Signal Input Aspect: %s (%s)", PARAM_VIDEO_SIGNAL_ASPECTS.get(value[3]), value[3])
+                self.video["1"]["signal_input_aspect"] = PARAM_VIDEO_SIGNAL_ASPECTS.get(value[3])
+
+            if self.video.get("1").get("signal_input_color_format") is not PARAM_VIDEO_SIGNAL_COLORSPACE.get(value[4]):
+                _LOGGER.info("Video: Signal Input Color Format: %s (%s)", PARAM_VIDEO_SIGNAL_COLORSPACE.get(value[4]), value[4])
+                self.video["1"]["signal_input_color_format"] = PARAM_VIDEO_SIGNAL_COLORSPACE.get(value[4])
+
+            if self.video.get("1").get("signal_input_bit") is not PARAM_VIDEO_SIGNAL_BITS.get(value[5]):
+                _LOGGER.info("Video: Signal Input Bits: %s (%s)", PARAM_VIDEO_SIGNAL_BITS.get(value[5]), value[5])
+                self.video["1"]["signal_input_bit"] = PARAM_VIDEO_SIGNAL_BITS.get(value[5])
+
+            if self.video.get("1").get("signal_input_extended_colorspace") is not PARAM_VIDEO_SIGNAL_EXT_COLORSPACE.get(value[6]):
+                _LOGGER.info("Video: Signal Input Extended Colorspace: %s (%s)", PARAM_VIDEO_SIGNAL_EXT_COLORSPACE.get(value[6]), value[6])
+                self.video["1"]["signal_input_extended_colorspace"] = PARAM_VIDEO_SIGNAL_EXT_COLORSPACE.get(value[6])
+
+            if self.video.get("1").get("signal_output_resolution") is not PARAM_VIDEO_SIGNAL_FORMATS.get(value[7:9]):
+                _LOGGER.info("Video: Signal Output Resolution: %s (%s)", PARAM_VIDEO_SIGNAL_FORMATS.get(value[7:9]), value[7:9])
+                self.video["1"]["signal_output_resolution"] = PARAM_VIDEO_SIGNAL_FORMATS.get(value[7:9])
+
+            if self.video.get("1").get("signal_output_aspect") is not PARAM_VIDEO_SIGNAL_ASPECTS.get(value[9]):
+                _LOGGER.info("Video: Signal Output Aspect: %s (%s)", PARAM_VIDEO_SIGNAL_ASPECTS.get(value[9]), value[9])
+                self.video["1"]["signal_output_aspect"] = PARAM_VIDEO_SIGNAL_ASPECTS.get(value[9])
+
+            if self.video.get("1").get("signal_output_color_format") is not PARAM_VIDEO_SIGNAL_COLORSPACE.get(value[10]):
+                _LOGGER.info("Video: Signal Output Color Format: %s (%s)", PARAM_VIDEO_SIGNAL_COLORSPACE.get(value[10]), value[10])
+                self.video["1"]["signal_output_color_format"] = PARAM_VIDEO_SIGNAL_COLORSPACE.get(value[10])
+
+            if self.video.get("1").get("signal_output_bit") is not PARAM_VIDEO_SIGNAL_BITS.get(value[11]):
+                _LOGGER.info("Video: Signal Output Bits: %s (%s)", PARAM_VIDEO_SIGNAL_BITS.get(value[11]), value[11])
+                self.video["1"]["signal_output_bit"] = PARAM_VIDEO_SIGNAL_BITS.get(value[11])
+
+            if self.video.get("1").get("signal_output_extended_colorspace") is not PARAM_VIDEO_SIGNAL_EXT_COLORSPACE.get(value[12]):
+                _LOGGER.info("Video: Signal Output Extended Colorspace: %s (%s)", PARAM_VIDEO_SIGNAL_EXT_COLORSPACE.get(value[12]), value[12])
+                self.video["1"]["signal_output_extended_colorspace"] = PARAM_VIDEO_SIGNAL_EXT_COLORSPACE.get(value[12])
+
+            if self.video.get("1").get("signal_hdmi1_recommended_resolution") is not PARAM_VIDEO_SIGNAL_FORMATS.get(value[13:15]):
+                _LOGGER.info("Video: Signal HDMI1 Recommended Resolution: %s (%s)", PARAM_VIDEO_SIGNAL_FORMATS.get(value[13:15]), value[13:15])
+                self.video["1"]["signal_hdmi1_recommended_resolution"] = PARAM_VIDEO_SIGNAL_FORMATS.get(value[13:15])
+
+            if self.video.get("1").get("signal_hdmi1_deepcolor") is not PARAM_VIDEO_SIGNAL_BITS.get(value[15]):
+                _LOGGER.info("Video: Signal HDMI1 DeepColor: %s (%s)", PARAM_VIDEO_SIGNAL_BITS.get(value[15]), value[15])
+                self.video["1"]["signal_hdmi1_deepcolor"] = PARAM_VIDEO_SIGNAL_BITS.get(value[15])
+
+            if self.video.get("1").get("signal_hdmi2_recommended_resolution") is not PARAM_VIDEO_SIGNAL_FORMATS.get(value[21:23]):
+                _LOGGER.info("Video: Signal HDMI2 Recommended Resolution: %s (%s)", PARAM_VIDEO_SIGNAL_FORMATS.get(value[21:23]), value[21:23])
+                self.video["1"]["signal_hdmi2_recommended_resolution"] = PARAM_VIDEO_SIGNAL_FORMATS.get(value[21:23])
+
+            if self.video.get("1").get("signal_hdmi2_deepcolor") is not PARAM_VIDEO_SIGNAL_BITS.get(value[23]):
+                _LOGGER.info("Video: Signal HDMI2 DeepColor: %s (%s)", PARAM_VIDEO_SIGNAL_BITS.get(value[23]), value[23])
+                self.video["1"]["signal_hdmi2_deepcolor"] = PARAM_VIDEO_SIGNAL_BITS.get(value[23])
+
+            if self.video.get("1").get("signal_hdmi3_recommended_resolution") is not PARAM_VIDEO_SIGNAL_FORMATS.get(value[29:31]):
+                _LOGGER.info("Video: Signal HDMI3 Recommended Resolution: %s (%s)", PARAM_VIDEO_SIGNAL_FORMATS.get(value[29:31]), value[29:31])
+                self.video["1"]["signal_hdmi3_recommended_resolution"] = PARAM_VIDEO_SIGNAL_FORMATS.get(value[29:31])
+
+            if self.video.get("1").get("signal_hdmi3_deepcolor") is not PARAM_VIDEO_SIGNAL_BITS.get(value[31]):
+                _LOGGER.info("Video: Signal HDMI3 DeepColor: %s (%s)", PARAM_VIDEO_SIGNAL_BITS.get(value[31]), value[31])
+                self.video["1"]["signal_hdmi3_deepcolor"] = PARAM_VIDEO_SIGNAL_BITS.get(value[31])
+
+            if self.video.get("1").get("signal_hdmi4_recommended_resolution") is not PARAM_VIDEO_SIGNAL_FORMATS.get(value[41:43]):
+                _LOGGER.info("Video: Signal HDMI4 Recommended Resolution: %s (%s)", PARAM_VIDEO_SIGNAL_FORMATS.get(value[41:43]), value[41:43])
+                self.video["1"]["signal_hdmi4_recommended_resolution"] = PARAM_VIDEO_SIGNAL_FORMATS.get(value[41:43])
+
+            if self.video.get("1").get("signal_hdmi4_deepcolor") is not PARAM_VIDEO_SIGNAL_BITS.get(value[44]):
+                _LOGGER.info("Video: Signal HDMI4 DeepColor: %s (%s)", PARAM_VIDEO_SIGNAL_BITS.get(value[44]), value[44])
+                self.video["1"]["signal_hdmi4_deepcolor"] = PARAM_VIDEO_SIGNAL_BITS.get(value[44])
 
         ## FUNC: SETUP
         elif response.startswith("SSF"):
