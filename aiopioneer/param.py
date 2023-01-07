@@ -2282,3 +2282,71 @@ PARAM_AUDIO_WORKING_PQLS = {
     "2": "Multi-channel",
     "3": "Bitstream"
 }
+
+PARAM_VIDEO_SIGNAL_FORMATS = {
+    "00": "---",
+    "01": "480/60i",
+    "02": "576/50i",
+    "03": "480/60p",
+    "04": "576/50p",
+    "05": "720/60p",
+    "06": "720/50p",
+    "07": "1080/60i",
+    "08": "1080/50i",
+    "09": "1080/60p",
+    "10": "1080/50p",
+    "11": "1080/24p",
+    "12": "4Kx2K/24Hz",
+    "13": "4Kx2K/25Hz",
+    "14": "4Kx2K/30Hz",
+    "15": "4Kx2K/24Hz(SMPTE)",
+    "16": "4Kx2K/50Hz",
+    "17": "4Kx2K/60Hz",
+}
+
+PARAM_VIDEO_SIGNAL_ASPECTS = {
+    "0": "---",
+    "1": "4:3",
+    "2": "16:9",
+    "3": "14:9",
+}
+
+PARAM_VIDEO_SIGNAL_COLORSPACE = {
+    "0": "---",
+    "1": "RGB Limit",
+    "2": "RGB Full",
+    "3": "YcbCr444",
+    "4": "YcbCr422",
+    "5": "YcbCr420",
+}
+
+PARAM_VIDEO_SIGNAL_BITS = {
+    "0": "---",
+    "1": "24bit (8bit*3)",
+    "2": "30bit (10bit*3)",
+    "3": "36bit (12bit*3)",
+    "4": "48bit (16bit*3)",
+}
+
+PARAM_VIDEO_SIGNAL_EXT_COLORSPACE = {
+    "0": "---",
+    "1": "Standard",
+    "2": "xvYCC601",
+    "3": "xvYCC709",
+    "4": "sYCC",
+    "5": "AdobeYCC601",
+    "6": "AdobeRGB",
+}
+
+PARAM_VIDEO_SIGNAL_3D_MODES = {
+    "0": "---",
+    "1": "Frame packing",
+    "2": "Field alternative",
+    "3": "Line alternative",
+    "4": "Side-by-Side(Full)",
+    "5": "L + depth",
+    "6": "L + depth + graphics",
+    "7": "Top-and-Bottom",
+    "8": "Side-by-Side(Half)",
+}
+
