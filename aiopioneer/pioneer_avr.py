@@ -73,7 +73,7 @@ from .param import (
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.6.0"
+VERSION = "0.6.1"
 
 PIONEER_COMMANDS = {
     "system_query_mac_addr": {"1": ["?SVB", "SVB"]},
@@ -1308,11 +1308,11 @@ class PioneerAVR:
         """Return list of valid sound modes."""
         ## Check if the zone is the main zone or not, listening modes aren't supported on other zones
         if (zone == "1"):
-            ## Now check if the current input is multi channel or not
-            if (self.source.get(zone) not in self._params.get(PARAM_MULTI_CH_SOURCES)):
-                return list([v for k, v in self._params.get(PARAM_LISTENING_MODES).items() if "MULTI CH" not in v.upper()])
-            else:
+            ## Now check if the current input info is multi channel or not
+            if (self.audio.get(zone).get("input_multichannel")):
                 return list([v for k, v in self._params.get(PARAM_LISTENING_MODES).items() if "MULTI CH" in v.upper() or "DIRECT" in v.upper()])
+            else:
+                return list([v for k, v in self._params.get(PARAM_LISTENING_MODES).items() if "MULTI CH" not in v.upper()])
         else:
             return None
 
@@ -1435,6 +1435,12 @@ class PioneerAVR:
                 self.power["1"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Power: %s", value)
+                if value:
+                    ## Only request these if we're not doing a full update, if we are doing a full update these will be included anyway
+                    if self._full_update is False:
+                        commands_to_queue.add("query_listening_mode")
+                        commands_to_queue.add("query_audio_information")
+                        commands_to_queue.add("query_video_information")
         elif response.startswith("APR"):
             value = response == "APR0"
             if self.power.get("2") != value:
@@ -2302,6 +2308,14 @@ class PioneerAVR:
             if self.audio.get("1").get("output_reverse_phase") is not bool(value[54:55]):
                 _LOGGER.info("Audio: Output Auto Phase Control Plus Reverse Phase: %s", value[54:55])
                 self.audio["1"]["output_reverse_phase"] = bool(value[54:55])
+
+            ## set multichannel value
+            if bool(int(value[4:5])) and bool(int(value[5:6])) and bool(int(value[6:7])):
+                _LOGGER.info("Audio: Input Multi-Channel: %s", str(True))
+                self.audio["1"]["input_multichannel"] = True
+            else:
+                _LOGGER.info("Audio: Input Multi-Channel: %s", str(False))
+                self.audio["1"]["input_multichannel"] = False
             
             updated_zones.add("1")
         
@@ -2395,6 +2409,16 @@ class PioneerAVR:
                 self.system["1"]["speaker_system_raw"] = response[3:]
             
             updated_zones.add("1")
+
+        ## OTHER FUNCTIONS
+        elif response.startswith("AUB"):
+            ## Queue audio information update
+            commands_to_queue.add("query_listening_mode")
+            commands_to_queue.add("query_audio_information")
+        
+        elif response.startswith("AUA"):
+            ## Queue video information update
+            commands_to_queue.add("query_video_information")
 
         result = {
             "updated_zones": updated_zones,
@@ -2600,14 +2624,9 @@ class PioneerAVR:
         self._check_zone(zone)
         source_id = self._source_name_to_id.get(source)
         if source_id:
-            result = await self.send_command(
+            return await self.send_command(
                 "select_source", zone, prefix=source_id, ignore_error=False
             )
-            ## Refresh listening mode information for zone 1 as this some AVRs can remember different states for different sources
-            if zone == "1":
-                await self.send_command("query_listening_mode", zone, ignore_error=True)
-            
-            return result
         else:
             _LOGGER.error("invalid source %s for zone %s", source, zone)
             return False
