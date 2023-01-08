@@ -73,7 +73,7 @@ from .param import (
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.5.1"
+VERSION = "0.6.0"
 
 PIONEER_COMMANDS = {
     "system_query_mac_addr": {"1": ["?SVB", "SVB"]},
@@ -569,7 +569,64 @@ PIONEER_COMMANDS = {
     },
     "operation_tuner_pty_search": {
         "1": "07TN"
-    }
+    },
+    "operation_ipod_play": {
+        "1": "00IP"
+    },
+    "operation_ipod_pause": {
+        "1": "01IP"
+    },
+    "operation_ipod_stop": {
+        "1": "02IP"
+    },
+    "operation_ipod_previous": {
+        "1": "03IP"
+    },
+    "operation_ipod_next": {
+        "1": "04IP"
+    },
+    "operation_ipod_rewind": {
+        "1": "05IP"
+    },
+    "operation_ipod_fastforward": {
+        "1": "06IP"
+    },
+    "operation_ipod_repeat": {
+        "1": "07IP"
+    },
+    "operation_ipod_shuffle": {
+        "1": "08IP"
+    },
+    "operation_ipod_display": {
+        "1": "09IP"
+    },
+    "operation_ipod_control": {
+        "1": "10IP"
+    },
+    "operation_ipod_cursor_up": {
+        "1": "13IP"
+    },
+    "operation_ipod_cursor_down": {
+        "1": "14IP"
+    },
+    "operation_ipod_cursor_left": {
+        "1": "16IP"
+    },
+    "operation_ipod_cursor_right": {
+        "1": "15IP"
+    },
+    "operation_ipod_enter": {
+        "1": "17IP"
+    },
+    "operation_ipod_return": {
+        "1": "18IP"
+    },
+    "operation_ipod_top_menu": {
+        "1": "19IP"
+    },
+    "operation_ipod_iphone_direct_control": {
+        "1": "20IP"
+    },
 }
 
 class PioneerAVR:
@@ -1258,6 +1315,10 @@ class PioneerAVR:
                 return list([v for k, v in self._params.get(PARAM_LISTENING_MODES).items() if "MULTI CH" in v.upper() or "DIRECT" in v.upper()])
         else:
             return None
+
+    def get_ipod_control_commands(self):
+        """Return a list of all valid iPod control modes."""
+        return list([k.replace("operation_ipod_", "") for k in PIONEER_COMMANDS.keys() if k.startswith("operation_ipod")])
 
     def get_source_dict(self):
         """Return source id<->name translation tables."""
@@ -2943,3 +3004,8 @@ class PioneerAVR:
         """Set the tuner preset to the specified class and number."""
         self._check_zone(zone)
         return await self.send_command("set_tuner_preset", zone, str(tuner_class).upper()+str(tuner_preset).upper().zfill(2), ignore_error=False)
+
+    async def send_ipod_control_command(self, command: str, zone="1"):
+        """Sends a ipod control command to the AVR."""
+        self._check_zone(zone)
+        return await self.send_command("operation_ipod_" + command, zone, ignore_error=False)
