@@ -640,6 +640,8 @@ class PioneerAVR:
         self._reconnect_task = None
         self._updater_task = None
         self._bouncer_task = None
+        self._command_queue_task = None
+        self._command_queue = [] ## Stores a list of commands to run after receiving an event from the AVR
         self._power_zone_1 = None
         self._source_name_to_id = {}
         self._source_id_to_name = {}
@@ -781,6 +783,7 @@ class PioneerAVR:
             await self._responder_cancel()
             await self._updater_cancel()
             await self._bouncer_cancel()
+            await self._command_queue_cancel()
 
             writer = self._writer
             if writer:
@@ -885,7 +888,8 @@ class PioneerAVR:
                     _LOGGER.debug("AVR listener received response: %s", response)
 
                 ## Parse response, update cached properties
-                updated_zones = self._parse_response(response)
+                parse_result = self._parse_response(response)
+                updated_zones = parse_result.get("updated_zones")
 
                 ## Detect Main Zone power on for volume workaround
                 power_on_volume_bounce = self._params[PARAM_POWER_ON_VOLUME_BOUNCE]
@@ -895,6 +899,11 @@ class PioneerAVR:
                         _LOGGER.info("scheduling main zone volume workaround")
                         await self._bouncer_schedule()
                 self._power_zone_1 = self.power.get("1")  ## cache value
+
+                ## Implement a command queue so that we can queue commands if we need to update attributes that only get updated when we request them to change.
+                if len(parse_result.get("commands_to_queue")) > 0:
+                    _LOGGER.info("Scheduling command queue. (%s)", parse_result.get("commands_to_queue"))
+                    await self._command_queue_schedule(parse_result.get("commands_to_queue"))
 
                 ## NOTE: to avoid deadlocks, do not run any operations that
                 ## depend on further responses (returned by the listener) within
@@ -1316,6 +1325,7 @@ class PioneerAVR:
     def _parse_response(self, response):
         """Parse response and update cached parameters."""
         updated_zones = set()
+        commands_to_queue = set()
 
         ## Set DSP if not already set
         if self.dsp.get("1") is None:
@@ -1421,6 +1431,12 @@ class PioneerAVR:
                 self.source["1"] = zid
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Source: %s (%s)", zid, self.get_source_name(zid))
+                ## Only request these if we're not doing a full update, if we are doing a full update these will be included anyway
+                if self._full_update is False:
+                    commands_to_queue.add("query_listening_mode")
+                    commands_to_queue.add("query_audio_information")
+                    commands_to_queue.add("query_video_information")
+
         elif response.startswith("Z2F"):
             zid = response[3:]
             if self.source.get("2") != zid:
@@ -2298,7 +2314,12 @@ class PioneerAVR:
             
             updated_zones.add("1")
 
-        return updated_zones
+        result = {
+            "updated_zones": updated_zones,
+            "commands_to_queue": commands_to_queue
+        }
+
+        return result
 
     async def _updater(self):
         """Perform update every scan_interval."""
@@ -2529,6 +2550,27 @@ class PioneerAVR:
             return await self.volume_down()
         else:
             return False
+
+    async def _execute_command_queue(self, command_queue):
+        """Executes commands from a queue."""
+        _LOGGER.debug(">> PioneerAVR._command_queue")
+        for command in command_queue:
+            _LOGGER.debug("Command Queue Executing: %s", command)
+            await self.send_command(command, ignore_error=True)
+
+        return True
+
+    async def _command_queue_cancel(self):
+        """Cancels any pending commands and the task itself."""
+        await cancel_task(self._command_queue_task, "command_queue")
+        self._command_queue_task = None
+        self._command_queue = None
+
+    async def _command_queue_schedule(self, command_queue):
+        """Schedule commands to queue."""
+        _LOGGER.debug(">> PioneerAVR._command_queue_schedule()")
+        await self._command_queue_cancel()
+        self._command_queue_task = asyncio.create_task(self._execute_command_queue(command_queue))
 
     async def _bouncer_schedule(self):
         """Schedule volume bounce task. Run when zone 0 power on is detected."""
