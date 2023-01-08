@@ -244,6 +244,9 @@ PIONEER_COMMANDS = {
     "query_tuner_preset": {
         "1": ["?PR", "PR"]
     },
+    "set_tuner_preset": {
+        "1": ["PR", "PR"]
+    },
     "query_video_resolution": {
         "1": ["?VTC", "VTC"]
     },
@@ -548,6 +551,24 @@ PIONEER_COMMANDS = {
     },
     "query_video_information": {
         "1": ["?VST", "VST"]
+    },
+    "operation_tuner_edit": {
+        "1": "02TN"
+    },
+    "operation_tuner_enter": {
+        "1": "03TN"
+    },
+    "operation_tuner_return": {
+        "1": "04TN"
+    },
+    "operation_tuner_mpx_noise_cut": {
+        "1": "05TN"
+    },
+    "operation_tuner_display": {
+        "1": "06TN"
+    },
+    "operation_tuner_pty_search": {
+        "1": "07TN"
     }
 }
 
@@ -2917,3 +2938,8 @@ class PioneerAVR:
                                 arguments[arg] = str(arguments.get(arg)).zfill(2)
 
                         await self.send_command("set_" + arg, zone, str(arguments.get(arg)), ignore_error=False)
+
+    async def set_tuner_preset(self, tuner_class: str, tuner_preset: int, zone="1"):
+        """Set the tuner preset to the specified class and number."""
+        self._check_zone(zone)
+        return await self.send_command("set_tuner_preset", zone, str(tuner_class).upper()+str(tuner_preset).upper().zfill(2), ignore_error=False)
