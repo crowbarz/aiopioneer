@@ -14,7 +14,6 @@ PARAM_DEBUG_LISTENER = "debug_listener"
 PARAM_DEBUG_RESPONDER = "debug_responder"
 PARAM_DEBUG_UPDATER = "debug_updater"
 PARAM_DEBUG_COMMAND = "debug_command"
-PARAM_MULTI_CH_SOURCES = "multi_channel_sources"
 PARAM_ZONE_2_SOURCES = "zone_2_sources" ## All possible valid input sources for Zone 2
 PARAM_ZONE_3_SOURCES = "zone_3_sources" ## All possible valid input sources for Zone 3
 PARAM_HDZONE_SOURCES = "zone_h_sources" ## All possible valid input sources for HDZone
@@ -36,7 +35,6 @@ PARAM_DEFAULTS = {
     PARAM_DEBUG_RESPONDER: False,
     PARAM_DEBUG_UPDATER: False,
     PARAM_DEBUG_COMMAND: False,
-    PARAM_MULTI_CH_SOURCES: ["19","20","21", "22", "23", "24", "25", "34", "05"],
     PARAM_ZONE_2_SOURCES: ["04", "06", "15", "26", "38", "53", "41", "44", "45", "17", "13", "05", "01", "02", "33", "46", "47", "99", "10"],
     PARAM_ZONE_3_SOURCES: ["04", "06", "15", "26", "38", "53", "41", "44", "45", "17", "13", "05", "01", "02", "33", "46", "47", "99", "10"],
     PARAM_HDZONE_SOURCES: ["25", "04", "06", "10", "15", "19", "20", "21", "22", "23", "24", "34", "35", "26", "38", "53", "41", "44", "45", "17", "13", "33", "31", "46", "47", "48"],

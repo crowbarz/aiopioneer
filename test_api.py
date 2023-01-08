@@ -37,12 +37,6 @@ async def main():
     ## Turn on main zone for tests
     # await pioneer.turn_on("1")
 
-    for z in pioneer.zones:
-        print(f"Power for zone - {z} {pioneer.power.get(z)}")
-        print(f"Volume for zone - {z} {pioneer.volume.get(z)}")
-        print(f"Source for zone - {z} {pioneer.source.get(z)}")
-        print(f"Listening Modes for zone - {z} {pioneer.get_sound_modes(z)}")
-
     #await pioneer.select_source("TUNER", "1")
     #await pioneer.set_tuner_frequency("AM", 580, "1")
     
@@ -52,8 +46,8 @@ async def main():
     # await pioneer.disconnect()
 
     while True:
-        #for property, value in vars(pioneer).items():
-            #print(property, ":", value)
+        for property, value in vars(pioneer).items():
+            print(property, ":", value)
         await asyncio.sleep(60)
         print("Update ...")
         await pioneer.update()
