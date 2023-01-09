@@ -1319,6 +1319,10 @@ class PioneerAVR:
         """Return a list of all valid iPod control modes."""
         return list([k.replace("operation_ipod_", "") for k in PIONEER_COMMANDS.keys() if k.startswith("operation_ipod")])
 
+    def get_tuner_control_commands(self):
+        """Return a list of all valid tuner control commands."""
+        return list([k.replace("operation_tuner_", "") for k in PIONEER_COMMANDS.keys() if k.startswith("operation_tuner")])
+
     def get_source_dict(self):
         """Return source id<->name translation tables."""
         return self._source_name_to_id
@@ -3027,3 +3031,8 @@ class PioneerAVR:
         """Sends a ipod control command to the AVR."""
         self._check_zone(zone)
         return await self.send_command("operation_ipod_" + command, zone, ignore_error=False)
+
+    async def send_tuner_control_command(self, command: str, zone="1"):
+        """Sends a tuner control command to the AVR."""
+        self._check_zone(zone)
+        return await self.send_command("operation_tuner_" + command, zone, ignore_error=False)
