@@ -70,11 +70,12 @@ from .param import (
     PARAM_VIDEO_SIGNAL_INPUT_TERMINAL,
     PARAM_MEDIA_CONTROL_SOURCES,
     PARAM_MEDIA_CONTROL_COMMANDS,
+    PARAM_MHL_SOURCE,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.6.2"
+VERSION = "0.6.3"
 
 PIONEER_COMMANDS = {
     "system_query_mac_addr": {"1": ["?SVB", "SVB"]},
@@ -687,6 +688,33 @@ PIONEER_COMMANDS = {
     },
     "operation_adapaterport_random": {
         "1": "18BT"
+    },
+    "operation_mhl_play": {
+        "1": "23MHL"
+    },
+    "operation_mhl_pause": {
+        "1": "25MHL"
+    },
+    "operation_mhl_stop": {
+        "1": "24MHL"
+    },
+    "operation_mhl_record": {
+        "1": "26MHL"
+    },
+    "operation_mhl_rewind": {
+        "1": "27MHL"
+    },
+    "operation_mhl_fastforward": {
+        "1": "28MHL"
+    },
+    "operation_mhl_eject": {
+        "1": "29MHL"
+    },
+    "operation_mhl_next": {
+        "1": "30MHL"
+    },
+    "operation_mhl_previous": {
+        "1": "31MHL"
     },
     "operation_amp_status_display": {
         "1": "STS"
@@ -1632,6 +1660,9 @@ class PioneerAVR:
                 if zid in PARAM_MEDIA_CONTROL_SOURCES.keys():
                     ## This source supports media controls
                     self.media_control_mode["1"] = PARAM_MEDIA_CONTROL_SOURCES.get(zid)
+                elif zid is self._params.get(PARAM_MHL_SOURCE):
+                    ## This source is the MHL source
+                    self.media_control_mode["1"] = "MHL"
                 else:
                     self.media_control_mode["1"] = None
 
@@ -3150,7 +3181,8 @@ class PioneerAVR:
         if self.media_control_mode.get(zone) is not None:
             command = PARAM_MEDIA_CONTROL_COMMANDS.get(zone).get(action)
             if command is not None:
-                return await self.send_command(command, zone, ignore_error=False)
+                ## These commands are ALWAYS sent to zone 1 because each zone does not have unique commands
+                return await self.send_command(command, "1", ignore_error=False)
             else:
                 raise NotImplementedError(f"Current source ({self.source.get(zone)} does not support action {action}")
         else:

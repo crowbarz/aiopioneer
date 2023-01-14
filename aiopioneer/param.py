@@ -21,6 +21,7 @@ PARAM_HDZONE_VOLUME_REQUIREMENTS = "hdzone_volume_requirements" ## All possible 
 PARAM_SPEAKER_SYSTEM_MODES = "amplifier_speaker_system_modes" ## All possible speaker system modes. Different AVR models will have different available options
 PARAM_LISTENING_MODES = "amplifier_listening_modes" ## All valid listening modes for a amplifier
 PARAM_VIDEO_RESOLUTION_MODES = "video_resolution_modes" ## All valid video resolution modes
+PARAM_MHL_SOURCE = "mhl_source"
 
 PARAM_DEFAULTS = {
     PARAM_IGNORED_ZONES: [],
@@ -200,7 +201,8 @@ PARAM_DEFAULTS = {
         "7": "1080/24p",
         "8": "4K",
         "9": "4K/24p"
-    }
+    },
+    PARAM_MHL_SOURCE: None
 }
 
 PARAMS_ALL = PARAM_DEFAULTS.keys()
@@ -1090,6 +1092,7 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_ZONE_2_SOURCES: ["04", "06", "15", "26", "38", "53", "44", "45", "17", "05", "01", "02", "33", "46", "47", "99", "10"],
                 PARAM_ZONE_3_SOURCES: ["04", "06", "15", "05", "01", "02", "33", "10", "99"],
+                PARAM_MHL_SOURCE: "23",
                 PARAM_LISTENING_MODES: {
                     "0001": "STEREO",
                     "0003": "Front Stage Surround Advance",
@@ -2055,6 +2058,17 @@ PARAM_MEDIA_CONTROL_COMMANDS = {
         "ff": "operation_adapaterport_fastforward",
         "repeat": "operation_adapaterport_repeat",
         "shuffle": "operation_adapaterport_random",
+    },
+    "MHL": {
+        "play": "operation_mhl_play",
+        "pause": "operation_mhl_pause",
+        "stop": "operation_mhl_stop",
+        "record": "operation_mhl_record",
+        "rw": "operation_mhl_rewind",
+        "ff": "operation_mhl_fastforward",
+        "eject": "operation_mhl_eject",
+        "next": "operation_mhl_next",
+        "previous": "operation_mhl_previous",
     }
 }
 
