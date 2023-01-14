@@ -2413,13 +2413,13 @@ PARAM_VIDEO_SIGNAL_EXT_COLORSPACE = {
 }
 
 PARAM_VIDEO_SIGNAL_3D_MODES = {
-    "0": "---",
-    "1": "Frame packing",
-    "2": "Field alternative",
-    "3": "Line alternative",
-    "4": "Side-by-Side(Full)",
-    "5": "L + depth",
-    "6": "L + depth + graphics",
-    "7": "Top-and-Bottom",
-    "8": "Side-by-Side(Half)",
+    "00": "---",
+    "01": "Frame packing",
+    "02": "Field alternative",
+    "03": "Line alternative",
+    "04": "Side-by-Side(Full)",
+    "05": "L + depth",
+    "06": "L + depth + graphics",
+    "07": "Top-and-Bottom",
+    "08": "Side-by-Side(Half)",
 }
