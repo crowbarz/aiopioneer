@@ -1453,6 +1453,14 @@ class PioneerAVR:
         """Return a list of all valid tuner control commands."""
         return list([k.replace("operation_tuner_", "") for k in PIONEER_COMMANDS.keys() if k.startswith("operation_tuner")])
 
+    def get_supported_media_controls(self, zone):
+        """Return a list of all valid media control actions for a given zone.
+        If the provided zone source is not currently compatible with media controls, the null will be returned."""
+        if self.media_control_mode.get(zone) is not None:
+            return list([k for k in PARAM_MEDIA_CONTROL_COMMANDS.get(self.media_control_mode.get(zone)).keys()])
+        else:
+            return None
+
     def get_source_dict(self):
         """Return source id<->name translation tables."""
         return self._source_name_to_id
