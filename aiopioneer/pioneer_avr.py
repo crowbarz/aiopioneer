@@ -57,7 +57,6 @@ from .param import (
     PARAM_ZONE_2_SOURCES,
     PARAM_ZONE_3_SOURCES,
     PARAM_SPEAKER_SYSTEM_MODES,
-    PARAM_HDZONE_VOLUME_REQUIREMENTS,
     PARAM_AUDIO_SIGNAL_INPUT_INFO,
     PARAM_AUDIO_SIGNAL_INPUT_FREQ,
     PARAM_AUDIO_WORKING_PQLS,
@@ -2555,6 +2554,14 @@ class PioneerAVR:
             if self.video.get("1").get("signal_hdmi3_deepcolor") is not PARAM_VIDEO_SIGNAL_BITS.get(value[31]):
                 _LOGGER.info("Video: Signal HDMI3 DeepColor: %s (%s)", PARAM_VIDEO_SIGNAL_BITS.get(value[31]), value[31])
                 self.video["1"]["signal_hdmi3_deepcolor"] = PARAM_VIDEO_SIGNAL_BITS.get(value[31])
+
+            if self.video.get("1").get("input_3d_format") is not PARAM_VIDEO_SIGNAL_3D_MODES.get(value[37:39]):
+                _LOGGER.info("Video: Input 3D Format: %s (%s)", PARAM_VIDEO_SIGNAL_3D_MODES.get(value[37:39]), value[37:39])
+                self.video["1"]["input_3d_format"] = PARAM_VIDEO_SIGNAL_3D_MODES.get(value[37:39])
+            
+            if self.video.get("1").get("output_3d_format") is not PARAM_VIDEO_SIGNAL_3D_MODES.get(value[39:41]):
+                _LOGGER.info("Video: Output 3D Format: %s (%s)", PARAM_VIDEO_SIGNAL_3D_MODES.get(value[39:41]), value[39:41])
+                self.video["1"]["output_3d_format"] = PARAM_VIDEO_SIGNAL_3D_MODES.get(value[39:41])
 
             if self.video.get("1").get("signal_hdmi4_recommended_resolution") is not PARAM_VIDEO_SIGNAL_FORMATS.get(value[41:43]):
                 _LOGGER.info("Video: Signal HDMI4 Recommended Resolution: %s (%s)", PARAM_VIDEO_SIGNAL_FORMATS.get(value[41:43]), value[41:43])
