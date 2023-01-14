@@ -74,7 +74,7 @@ from .param import (
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.6.3"
+VERSION = "0.6.4"
 
 PIONEER_COMMANDS = {
     "system_query_mac_addr": {"1": ["?SVB", "SVB"]},
@@ -3201,7 +3201,7 @@ class PioneerAVR:
         """Perform media control activities such as play, pause, stop, fast forward or rewind."""
         self._check_zone(zone)
         if self.media_control_mode.get(zone) is not None:
-            command = PARAM_MEDIA_CONTROL_COMMANDS.get(zone).get(action)
+            command = PARAM_MEDIA_CONTROL_COMMANDS.get(self.media_control_mode.get(zone)).get(action)
             if command is not None:
                 ## These commands are ALWAYS sent to zone 1 because each zone does not have unique commands
                 return await self.send_command(command, "1", ignore_error=False)
