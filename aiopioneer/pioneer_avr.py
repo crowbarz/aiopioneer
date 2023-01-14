@@ -687,6 +687,45 @@ PIONEER_COMMANDS = {
     },
     "operation_adapaterport_random": {
         "1": "18BT"
+    },
+    "operation_amp_status_display": {
+        "1": "STS"
+    },
+    "operation_amp_cursor_up": {
+        "1": "CUP"
+    },
+    "operation_amp_cursor_down": {
+        "1": "CDN"
+    },
+    "operation_amp_cursor_right": {
+        "1": "CRI"
+    },
+    "operation_amp_cursor_left": {
+        "1": "CLE"
+    },
+    "operation_amp_cursor_enter": {
+        "1": "CEN"
+    },
+    "operation_amp_cursor_return": {
+        "1": "CRT"
+    },
+    "operation_amp_audio_parameter": {
+        "1": "ATA"
+    },
+    "operation_amp_output_parameter": {
+        "1": "HPA"
+    },
+    "operation_amp_video_parameter": {
+        "1": "VPA"
+    },
+    "operation_amp_channel_select": {
+        "1": "CLC"
+    },
+    "operation_amp_home_menu": {
+        "1": "HM"
+    },
+    "operation_amp_key_off": {
+        "1": "KOF"
     }
 }
 
