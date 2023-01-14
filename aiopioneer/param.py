@@ -2005,6 +2005,59 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
     ]
 )
 
+PARAM_MEDIA_CONTROL_SOURCES = {
+    "26": "NETWORK",
+    "38": "NETWORK",
+    "44": "NETWORK",
+    "02": "TUNER",
+    "13": "ADAPTERPORT",
+    "41": "NETWORK",
+    "53": "NETWORK",
+    "17": "IPOD",
+}
+
+PARAM_MEDIA_CONTROL_COMMANDS = {
+    "NETWORK": {
+        "play": "operation_network_play",
+        "pause": "operation_network_pause",
+        "stop": "operation_network_stop",
+        "ff": "operation_network_fastforward",
+        "rw": "operation_network_rewind",
+        "next": "operation_network_next",
+        "previous": "operation_network_previous",
+        "repeat": "operation_network_repeat",
+        "shuffle": "operation_network_random",
+    },
+    "IPOD": {
+        "play": "operation_ipod_play",
+        "pause": "operation_ipod_pause",
+        "stop": "operation_ipod_stop",
+        "ff": "operation_ipod_fastforward",
+        "rw": "operation_ipod_rewind",
+        "next": "operation_ipod_next",
+        "previous": "operation_ipod_previous",
+        "repeat": "operation_ipod_repeat",
+        "shuffle": "operation_ipod_shuffle",
+    },
+    "TUNER": {
+        "ff": "increase_tuner_frequency",
+        "rw": "decrease_tuner_frequency",
+        "next": "increase_tuner_preset",
+        "previous": "decrease_tuner_preset",
+    },
+    "ADAPTERPORT": {
+        "play": "operation_adapaterport_play",
+        "pause": "operation_adapaterport_pause",
+        "stop": "operation_adapaterport_stop",
+        "previous": "operation_adapaterport_previous",
+        "next": "operation_adapaterport_next",
+        "rw": "operation_adapaterport_rewind",
+        "ff": "operation_adapaterport_fastforward",
+        "repeat": "operation_adapaterport_repeat",
+        "shuffle": "operation_adapaterport_random",
+    }
+}
+
 PARAM_TONE_MODES = {
     "0": "Bypass",
     "1": "ON",

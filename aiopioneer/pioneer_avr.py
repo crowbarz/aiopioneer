@@ -68,11 +68,13 @@ from .param import (
     PARAM_VIDEO_SIGNAL_COLORSPACE,
     PARAM_VIDEO_SIGNAL_EXT_COLORSPACE,
     PARAM_VIDEO_SIGNAL_INPUT_TERMINAL,
+    PARAM_MEDIA_CONTROL_SOURCES,
+    PARAM_MEDIA_CONTROL_COMMANDS,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.6.1"
+VERSION = "0.6.2"
 
 PIONEER_COMMANDS = {
     "system_query_mac_addr": {"1": ["?SVB", "SVB"]},
@@ -245,6 +247,12 @@ PIONEER_COMMANDS = {
     },
     "set_tuner_preset": {
         "1": ["PR", "PR"]
+    },
+    "increase_tuner_preset": {
+        "1": ["TPI", "PR"]
+    },
+    "decrease_tuner_preset": {
+        "1": ["TPD", "PR"]
     },
     "query_video_resolution": {
         "1": ["?VTC", "VTC"]
@@ -626,6 +634,60 @@ PIONEER_COMMANDS = {
     "operation_ipod_iphone_direct_control": {
         "1": "20IP"
     },
+    "operation_network_play": {
+        "1": "10NW"
+    },
+    "operation_network_pause": {
+        "1": "11NW"
+    },
+    "operation_network_stop": {
+        "1": "20NW"
+    },
+    "operation_network_fastforward": {
+        "1": "15NW"
+    },
+    "operation_network_rewind": {
+        "1": "14NW"
+    },
+    "operation_network_next": {
+        "1": "13NW"
+    },
+    "operation_network_previous": {
+        "1": "12NW"
+    },
+    "operation_network_repeat": {
+        "1": "34NW"
+    },
+    "operation_network_random": {
+        "1": "35NW"
+    },
+    "operation_adapaterport_play": {
+        "1": "10BT"
+    },
+    "operation_adapaterport_pause": {
+        "1": "11BT"
+    },
+    "operation_adapaterport_stop": {
+        "1": "12BT"
+    },
+    "operation_adapaterport_previous": {
+        "1": "13BT"
+    },
+    "operation_adapaterport_next": {
+        "1": "14BT"
+    },
+    "operation_adapaterport_rewind": {
+        "1": "15BT"
+    },
+    "operation_adapaterport_fastforward": {
+        "1": "16BT"
+    },
+    "operation_adapaterport_repeat": {
+        "1": "17BT"
+    },
+    "operation_adapaterport_random": {
+        "1": "18BT"
+    }
 }
 
 class PioneerAVR:
@@ -665,6 +727,7 @@ class PioneerAVR:
         self.mute = {}
         self.source = {}
         self.listening_mode = {}
+        self.media_control_mode = {}
 
         ## FUNC: TONE
         self.tone = {}
@@ -1527,6 +1590,11 @@ class PioneerAVR:
                     commands_to_queue.add("query_listening_mode")
                     commands_to_queue.add("query_audio_information")
                     commands_to_queue.add("query_video_information")
+                if zid in PARAM_MEDIA_CONTROL_SOURCES.keys():
+                    ## This source supports media controls
+                    self.media_control_mode["1"] = PARAM_MEDIA_CONTROL_SOURCES.get(zid)
+                else:
+                    self.media_control_mode["1"] = None
 
         elif response.startswith("Z2F"):
             zid = response[3:]
@@ -1534,18 +1602,33 @@ class PioneerAVR:
                 self.source["2"] = zid
                 updated_zones.add("2")
                 _LOGGER.info("Zone 2: Source: %s (%s)", zid, self.get_source_name(zid))
+                if zid in PARAM_MEDIA_CONTROL_SOURCES.keys():
+                    ## This source supports media controls
+                    self.media_control_mode["2"] = PARAM_MEDIA_CONTROL_SOURCES.get(zid)
+                else:
+                    self.media_control_mode["2"] = None
         elif response.startswith("Z3F"):
             zid = response[3:]
             if self.source.get("3") != zid:
                 self.source["3"] = zid
                 updated_zones.add("3")
                 _LOGGER.info("Zone 3: Source: %s (%s)", zid, self.get_source_name(zid))
+                if zid in PARAM_MEDIA_CONTROL_SOURCES.keys():
+                    ## This source supports media controls
+                    self.media_control_mode["3"] = PARAM_MEDIA_CONTROL_SOURCES.get(zid)
+                else:
+                    self.media_control_mode["3"] = None
         elif response.startswith("ZEA"):
             zid = response[3:]
             if self.source.get("Z") != zid:
                 self.source["Z"] = zid
                 updated_zones.add("Z")
                 _LOGGER.info("HDZone: Source: %s (%s)", zid, self.get_source_name(zid))
+                if zid in PARAM_MEDIA_CONTROL_SOURCES.keys():
+                    ## This source supports media controls
+                    self.media_control_mode["Z"] = PARAM_MEDIA_CONTROL_SOURCES.get(zid)
+                else:
+                    self.media_control_mode["Z"] = None
         
         ## LISTENING MODES
         elif response.startswith("SR"):
@@ -3022,17 +3105,19 @@ class PioneerAVR:
 
                         await self.send_command("set_" + arg, zone, str(arguments.get(arg)), ignore_error=False)
 
+    async def media_control(self, action: str, zone="1"):
+        """Perform media control activities such as play, pause, stop, fast forward or rewind."""
+        self._check_zone(zone)
+        if self.media_control_mode.get(zone) is not None:
+            command = PARAM_MEDIA_CONTROL_COMMANDS.get(zone).get(action)
+            if command is not None:
+                return await self.send_command(command, zone, ignore_error=False)
+            else:
+                raise NotImplementedError(f"Current source ({self.source.get(zone)} does not support action {action}")
+        else:
+            raise NotImplementedError(f"Current source ({self.source.get(zone)}) does not support media_control activities.")
+
     async def set_tuner_preset(self, tuner_class: str, tuner_preset: int, zone="1"):
         """Set the tuner preset to the specified class and number."""
         self._check_zone(zone)
         return await self.send_command("set_tuner_preset", zone, str(tuner_class).upper()+str(tuner_preset).upper().zfill(2), ignore_error=False)
-
-    async def send_ipod_control_command(self, command: str, zone="1"):
-        """Sends a ipod control command to the AVR."""
-        self._check_zone(zone)
-        return await self.send_command("operation_ipod_" + command, zone, ignore_error=False)
-
-    async def send_tuner_control_command(self, command: str, zone="1"):
-        """Sends a tuner control command to the AVR."""
-        self._check_zone(zone)
-        return await self.send_command("operation_tuner_" + command, zone, ignore_error=False)
