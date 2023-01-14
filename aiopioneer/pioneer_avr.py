@@ -1577,10 +1577,14 @@ class PioneerAVR:
                 _LOGGER.info("Zone 1: Power: %s", value)
                 if value:
                     ## Only request these if we're not doing a full update, if we are doing a full update these will be included anyway
-                    if self._full_update is False:
+                    if (self._full_update is False) and (self.tone.get("1") is not None):
                         commands_to_queue.add("query_listening_mode")
                         commands_to_queue.add("query_audio_information")
                         commands_to_queue.add("query_video_information")
+                    ## Queue a full update
+                    if self.tone.get("1") is None:
+                        commands_to_queue.add("FULL_UPDATE")
+
         elif response.startswith("APR"):
             value = response == "APR0"
             if self.power.get("2") != value:
@@ -1660,7 +1664,7 @@ class PioneerAVR:
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Source: %s (%s)", zid, self.get_source_name(zid))
                 ## Only request these if we're not doing a full update, if we are doing a full update these will be included anyway
-                if self._full_update is False:
+                if (self._full_update is False) and (self.tone.get("1") is not None):
                     commands_to_queue.add("query_listening_mode")
                     commands_to_queue.add("query_audio_information")
                     commands_to_queue.add("query_video_information")
@@ -2582,12 +2586,12 @@ class PioneerAVR:
             updated_zones.add("1")
 
         ## OTHER FUNCTIONS
-        elif response.startswith("AUB"):
+        elif response.startswith("AUB") and (self.tone.get("1") is not None):
             ## Queue audio information update
             commands_to_queue.add("query_listening_mode")
             commands_to_queue.add("query_audio_information")
         
-        elif response.startswith("AUA"):
+        elif response.startswith("AUA") and (self.tone.get("1") is not None):
             ## Queue video information update
             commands_to_queue.add("query_video_information")
 
@@ -2828,7 +2832,10 @@ class PioneerAVR:
         _LOGGER.debug(">> PioneerAVR._command_queue")
         for command in command_queue:
             _LOGGER.debug("Command Queue Executing: %s", command)
-            await self.send_command(command, ignore_error=True)
+            if command is "FULL_UPDATE":
+                await self.update(full=True)
+            else:
+                await self.send_command(command, ignore_error=True)
 
         return True
 
