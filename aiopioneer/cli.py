@@ -133,6 +133,46 @@ async def cli_main():
                 pioneer.set_user_params(params)
             except json.JSONDecodeError:
                 print(f'ERROR: Invalid JSON params: "{arg}""')
+
+        elif cmd == "get_tone":
+            audio_attrs = {
+                "listening_mode": pioneer.listening_mode,
+                "media_control_mode": pioneer.media_control_mode,
+                "tone": pioneer.tone,
+                "tone_bass": pioneer.tone_bass,
+                "tone_treble": pioneer.tone_treble,
+            }
+            print(json.dumps(audio_attrs))
+        elif cmd == "get_amp":
+            amp_attrs = {
+                "speakers": pioneer.speakers,
+                "hdmi_out": pioneer.hdmi_out,
+                "hdmi_audio": pioneer.hdmi_audio,
+                "pqls": pioneer.pqls,
+                "sleep_remain": pioneer.sleep_remain,
+                "dimmer": pioneer.amp,
+                "amp": pioneer.panel_lock,
+                "panel_lock": pioneer.remote_lock,
+            }
+            print(json.dumps(amp_attrs))
+        elif cmd == "get_tuner":
+            tuner_attrs = {
+                "frequency": pioneer.tuner_frequency,
+                "band": pioneer.tuner_band,
+                "preset": pioneer.tuner_preset,
+            }
+            print(json.dumps(tuner_attrs))
+        elif cmd == "get_channel_levels":
+            print(json.dumps(pioneer.channel_levels))
+        elif cmd == "get_dsp":
+            print(json.dumps(pioneer.dsp))
+        elif cmd == "get_video":
+            print(json.dumps(pioneer.video))
+        elif cmd == "get_audio":
+            print(json.dumps(pioneer.audio))
+        elif cmd == "get_system":
+            print(json.dumps(pioneer.system))
+
         elif cmd == "debug_listener":
             arg_bool = get_bool_arg(arg)
             params = pioneer.get_user_params()
