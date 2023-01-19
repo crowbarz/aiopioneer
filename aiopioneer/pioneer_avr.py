@@ -2661,7 +2661,7 @@ class PioneerAVR:
         ## we use the set_channel_levels command and prefix the query to it
         ## Only run this if the main zone is on
         ## HDZone does not have any channels
-        if ("channels" in self._params.get(PARAM_ENABLED_FUNCTIONS)):
+        if ("channels" in self._params.get(PARAM_ENABLED_FUNCTIONS)) and (self._params.get(PARAM_DISABLE_AUTO_QUERY) == False):
             if (self.power.get("1") == True) and zone != "Z":
                 for k in CHANNEL_LEVELS_OBJ.keys():
                     if len(k) == 1:
