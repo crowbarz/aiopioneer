@@ -57,6 +57,8 @@ The default parameters listed below are for AVR models that do not match any cus
 | `amplifier_listening_modes` | dict | `....` | Sets the available listening modes. Not all AVRs support the same listening modes. This defaults to all of the latest listening modes from FY16.
 | `video_resolution_modes` | dict | `....` | Sets the available video resolutions. Not all AVRs support the same resolution settings. This defaults to all of the latest resolutions from FY16.
 | `mhl_source` | string | `None` | Sets the MHL source ID. This is used for media controls. This information cannot be queried automatically
+| `enabled_functions` | list | `["amp", "dsp", "tuner", "tone", "channels", "video", "system", "audio"]` | Change the functions that are enabled by the API, adding more functions will increase the amount of time it takes to complete a full init and update.
+| `disable_autoquery` | bool | `false` | Setting to `true` will disable auto queries on init for all functions apart from basic functionality (power, source, volume and mute). If you only need those functions, you can set this to `true`
 
 ## Command line interface (CLI) (>= 0.1.3)
 
