@@ -2008,7 +2008,7 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
     ]
 )
 
-PARAM_MEDIA_CONTROL_SOURCES = {
+MEDIA_CONTROL_SOURCES = {
     "26": "NETWORK",
     "38": "NETWORK",
     "44": "NETWORK",
@@ -2019,7 +2019,7 @@ PARAM_MEDIA_CONTROL_SOURCES = {
     "17": "IPOD",
 }
 
-PARAM_MEDIA_CONTROL_COMMANDS = {
+MEDIA_CONTROL_COMMANDS = {
     "NETWORK": {
         "play": "operation_network_play",
         "pause": "operation_network_pause",
@@ -2072,13 +2072,13 @@ PARAM_MEDIA_CONTROL_COMMANDS = {
     }
 }
 
-PARAM_TONE_MODES = {
+TONE_MODES = {
     "0": "Bypass",
     "1": "ON",
     "9": "TONE (Cyclic)",
 }
 
-PARAM_TONE_DB_VALUES = {
+TONE_DB_VALUES = {
     "00": "6db",
     "01": "5db",
     "02": "4db",
@@ -2094,44 +2094,44 @@ PARAM_TONE_DB_VALUES = {
     "12": "-6db",
 }
 
-PARAM_SPEAKER_MODES = {
+SPEAKER_MODES = {
     "0": "OFF",
     "1": "A",
     "2": "B",
     "3": "A+B",
 }
 
-PARAM_HDMI_OUT_MODES = {
+HDMI_OUT_MODES = {
     "0": "ALL",
     "1": "HDMI 1",
     "2": "HDMI 2",
     "3": "HDMI (cyclic)",
 }
 
-PARAM_HDMI_AUDIO_MODES = {
+HDMI_AUDIO_MODES = {
     "0": "AMP",
     "1": "PASSTHROUGH",
 }
 
-PARAM_PANEL_LOCK = {
+PANEL_LOCK = {
     "0": "OFF",
     "1": "PANEL ONLY",
     "2": "PANEL + VOLUME",
 }
 
-PARAM_PQLS_MODES = {
+PQLS_MODES = {
     "0": "OFF",
     "1": "AUTO",
 }
 
-PARAM_AMP_MODES = {
+AMP_MODES = {
     "0": "AMP ON",
     "1": "AMP Front OFF",
     "2": "AMP Front & Center OFF",
     "3": "AMP OFF",
 }
 
-PARAM_VIDEO_OBJ = {
+VIDEO_OBJ = {
     "converter": None,
     "resolution": None,
     "pure_cinema": None,
@@ -2152,24 +2152,24 @@ PARAM_VIDEO_OBJ = {
     "aspect": None,
 }
 
-PARAM_VIDEO_PURE_CINEMA_MODES = {
+VIDEO_PURE_CINEMA_MODES = {
     "0": "AUTO",
     "1": "ON",
     "2": "OFF",
 }
 
-PARAM_VIDEO_STREAM_SMOOTHER_MODES = {
+VIDEO_STREAM_SMOOTHER_MODES = {
     "0": "OFF",
     "1": "ON",
     "2": "AUTO"
 }
 
-PARAM_VIDEO_ASPECT_MODES = {
+VIDEO_ASPECT_MODES = {
     "0": "PASSTHROUGH",
     "1": "NORMAL",
 }
 
-PARAM_ADVANCED_VIDEO_ADJUST_MODES = {
+ADVANCED_VIDEO_ADJUST_MODES = {
     "0": "PDP",
     "1": "LCD",
     "2": "FPJ",
@@ -2177,7 +2177,7 @@ PARAM_ADVANCED_VIDEO_ADJUST_MODES = {
     "4": "Memory",
 }
 
-PARAM_CHANNEL_LEVELS_OBJ = {
+CHANNEL_LEVELS_OBJ = {
     "C": 0,
     "L": 0,
     "R": 0,
@@ -2192,7 +2192,7 @@ PARAM_CHANNEL_LEVELS_OBJ = {
     "RW": 0,
 }
 
-PARAM_DSP_OBJ = {
+DSP_OBJ = {
     "mcacc_memory_set": None,
     "phase_control": None,
     "phase_control_plus": None,
@@ -2230,20 +2230,20 @@ PARAM_DSP_OBJ = {
     "rendering_mode": None
 }
 
-PARAM_DSP_PHASE_CONTROL = {
+DSP_PHASE_CONTROL = {
     "0": "off",
     "1": "on",
     "2": "full band on"
 }
 
-PARAM_DSP_SIGNAL_SELECT = {
+DSP_SIGNAL_SELECT = {
     "0": "AUTO",
     "1": "ANALOG",
     "2": "DIGITAL",
     "3": "HDMI"
 }
 
-PARAM_DSP_DIGITAL_DIALOG_ENHANCEMENT = {
+DSP_DIGITAL_DIALOG_ENHANCEMENT = {
     "0": "off",
     "1": "flat",
     "2": "+1",
@@ -2252,39 +2252,39 @@ PARAM_DSP_DIGITAL_DIALOG_ENHANCEMENT = {
     "5": "+4"
 }
 
-PARAM_DSP_DUAL_MONO = {
+DSP_DUAL_MONO = {
     "0": "CH1+CH2",
     "1": "CH1",
     "2": "CH2"
 }
 
-PARAM_DSP_DRC = {
+DSP_DRC = {
     "0": "off",
     "1": "auto",
     "2": "mid",
     "3": "max"
 }
 
-PARAM_DSP_HEIGHT_GAIN = {
+DSP_HEIGHT_GAIN = {
     "0": "low",
     "1": "mid",
     "2": "high"
 }
 
-PARAM_DSP_VIRTUAL_DEPTH = {
+DSP_VIRTUAL_DEPTH = {
     "0": "off",
     "1": "min",
     "2": "mid",
     "3": "max"
 }
 
-PARAM_DSP_DIGITAL_FILTER = {
+DSP_DIGITAL_FILTER = {
     "0": "slow",
     "1": "sharp",
     "2": "short"
 }
 
-PARAM_AUDIO_SIGNAL_INPUT_INFO = {
+AUDIO_SIGNAL_INPUT_INFO = {
     "00": "ANALOG",
     "01": "ANALOG",
     "02": "ANALOG",
@@ -2328,7 +2328,7 @@ PARAM_AUDIO_SIGNAL_INPUT_INFO = {
     "72": "Spotify"
 }
 
-PARAM_AUDIO_SIGNAL_INPUT_FREQ = {
+AUDIO_SIGNAL_INPUT_FREQ = {
     "00": "32kHz",
     "01": "44.1kHz",
     "02": "48kHz",
@@ -2341,14 +2341,14 @@ PARAM_AUDIO_SIGNAL_INPUT_FREQ = {
     "33": "5.6MHz"
 }
 
-PARAM_AUDIO_WORKING_PQLS = {
+AUDIO_WORKING_PQLS = {
     "0": "off",
     "1": "2h",
     "2": "Multi-channel",
     "3": "Bitstream"
 }
 
-PARAM_VIDEO_SIGNAL_INPUT_TERMINAL = {
+VIDEO_SIGNAL_INPUT_TERMINAL = {
     "0": "---",
     "1": "VIDEO",
     "2": "S-VIDEO",
@@ -2357,7 +2357,7 @@ PARAM_VIDEO_SIGNAL_INPUT_TERMINAL = {
     "5": "Self OSD/JPEG",
 }
 
-PARAM_VIDEO_SIGNAL_FORMATS = {
+VIDEO_SIGNAL_FORMATS = {
     "00": "---",
     "01": "480/60i",
     "02": "576/50i",
@@ -2378,14 +2378,14 @@ PARAM_VIDEO_SIGNAL_FORMATS = {
     "17": "4Kx2K/60Hz",
 }
 
-PARAM_VIDEO_SIGNAL_ASPECTS = {
+VIDEO_SIGNAL_ASPECTS = {
     "0": "---",
     "1": "4:3",
     "2": "16:9",
     "3": "14:9",
 }
 
-PARAM_VIDEO_SIGNAL_COLORSPACE = {
+VIDEO_SIGNAL_COLORSPACE = {
     "0": "---",
     "1": "RGB Limit",
     "2": "RGB Full",
@@ -2394,7 +2394,7 @@ PARAM_VIDEO_SIGNAL_COLORSPACE = {
     "5": "YcbCr420",
 }
 
-PARAM_VIDEO_SIGNAL_BITS = {
+VIDEO_SIGNAL_BITS = {
     "0": "---",
     "1": "24bit (8bit*3)",
     "2": "30bit (10bit*3)",
@@ -2402,7 +2402,7 @@ PARAM_VIDEO_SIGNAL_BITS = {
     "4": "48bit (16bit*3)",
 }
 
-PARAM_VIDEO_SIGNAL_EXT_COLORSPACE = {
+VIDEO_SIGNAL_EXT_COLORSPACE = {
     "0": "---",
     "1": "Standard",
     "2": "xvYCC601",
@@ -2412,7 +2412,7 @@ PARAM_VIDEO_SIGNAL_EXT_COLORSPACE = {
     "6": "AdobeRGB",
 }
 
-PARAM_VIDEO_SIGNAL_3D_MODES = {
+VIDEO_SIGNAL_3D_MODES = {
     "00": "---",
     "01": "Frame packing",
     "02": "Field alternative",
