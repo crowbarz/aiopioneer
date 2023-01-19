@@ -2661,15 +2661,16 @@ class PioneerAVR:
         ## we use the set_channel_levels command and prefix the query to it
         ## Only run this if the main zone is on
         ## HDZone does not have any channels
-        if (self.power.get("1") == True) and zone != "Z":
-            for k in CHANNEL_LEVELS_OBJ.keys():
-                if len(k) == 1:
-                    ## Add two underscores
-                    k = k + "__"
-                elif len(k) == 2:
-                    ## Add one underscore
-                    k = k + "_"
-                await self.send_command("set_channel_levels", zone, "?" + str(k), ignore_error=True)
+        if ("channels" in self._params.get(PARAM_ENABLED_FUNCTIONS)):
+            if (self.power.get("1") == True) and zone != "Z":
+                for k in CHANNEL_LEVELS_OBJ.keys():
+                    if len(k) == 1:
+                        ## Add two underscores
+                        k = k + "__"
+                    elif len(k) == 2:
+                        ## Add one underscore
+                        k = k + "_"
+                    await self.send_command("set_channel_levels", zone, "?" + str(k), ignore_error=True)
 
     async def _updater_update(self):
         """Update AVR cached status."""
