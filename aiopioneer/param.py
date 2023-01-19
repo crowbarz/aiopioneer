@@ -22,6 +22,8 @@ PARAM_SPEAKER_SYSTEM_MODES = "amplifier_speaker_system_modes" ## All possible sp
 PARAM_LISTENING_MODES = "amplifier_listening_modes" ## All valid listening modes for a amplifier
 PARAM_VIDEO_RESOLUTION_MODES = "video_resolution_modes" ## All valid video resolution modes
 PARAM_MHL_SOURCE = "mhl_source"
+PARAM_ENABLED_FUNCTIONS = "enabled_functions" ## Stores all the enabled high level categories for the AVR.
+PARAM_DISABLE_AUTO_QUERY = "disable_autoquery" ## If set to True, the AVR won't auto query additional attributes in high level categories, instead we rely on the AVR returning them as they are changed.
 
 PARAM_DEFAULTS = {
     PARAM_IGNORED_ZONES: [],
@@ -36,6 +38,8 @@ PARAM_DEFAULTS = {
     PARAM_DEBUG_RESPONDER: False,
     PARAM_DEBUG_UPDATER: False,
     PARAM_DEBUG_COMMAND: False,
+    PARAM_ENABLED_FUNCTIONS: ["amp", "dsp", "tuner", "tone", "channels", "video", "system", "audio"],
+    PARAM_DISABLE_AUTO_QUERY: False,
     PARAM_ZONE_2_SOURCES: ["04", "06", "15", "26", "38", "53", "41", "44", "45", "17", "13", "05", "01", "02", "33", "46", "47", "99", "10"],
     PARAM_ZONE_3_SOURCES: ["04", "06", "15", "26", "38", "53", "41", "44", "45", "17", "13", "05", "01", "02", "33", "46", "47", "99", "10"],
     PARAM_HDZONE_SOURCES: ["25", "04", "06", "10", "15", "19", "20", "21", "22", "23", "24", "34", "35", "26", "38", "53", "41", "44", "45", "17", "13", "33", "31", "46", "47", "48"],

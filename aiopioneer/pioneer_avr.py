@@ -68,6 +68,8 @@ from .param import (
     MEDIA_CONTROL_SOURCES,
     MEDIA_CONTROL_COMMANDS,
     PARAM_MHL_SOURCE,
+    PARAM_ENABLED_FUNCTIONS,
+    PARAM_DISABLE_AUTO_QUERY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -156,15 +158,15 @@ PIONEER_COMMANDS = {
     "set_listening_mode": {
         "1": ["SR", "SR"]
     },
-    "query_tone_mode": {
+    "query_tone_status": {
         "1": ["?TO", "TO"],
         "2": ["?ZGA", "ZGA"]
     },
-    "query_bass_status": {
+    "query_tone_bass": {
         "1": ["?BA", "BA"],
         "2": ["?ZGB", "ZGB"]
     },
-    "query_treble_status": {
+    "query_tone_treble": {
         "1": ["?TR", "TR"],
         "2": ["?ZGC", "ZGC"]
     },
@@ -180,37 +182,37 @@ PIONEER_COMMANDS = {
         "1": ["TR", "TR"],
         "2": ["ZGC", "ZGC"],
     },
-    "query_speaker_status": {
+    "query_amp_speaker_status": {
         "1": ["?SPK", "SPK"]
     },
-    "set_speaker_status": {
+    "set_amp_speaker_status": {
         "1": ["SPK", "SPK"]
     },
-    "query_hdmi_out_status": {
+    "query_amp_hdmi_out_status": {
         "1": ["?HO", "HO"]
     },
-    "set_hdmi_out_status": {
+    "set_amp_hdmi_out_status": {
         "1": ["HO", "HO"]
     },
-    "query_hdmi_audio_status": {
+    "query_amp_hdmi_audio_status": {
         "1": ["?HA", "HA"]
     },
-    "set_hdmi_audio_status": {
+    "set_amp_hdmi_audio_status": {
         "1": ["HA", "HA"]
     },
-    "query_pqls_status": {
+    "query_amp_pqls_status": {
         "1": ["?PQ", "PQ"]
     },
-    "set_pqls_status": {
+    "set_amp_pqls_status": {
         "1": ["PQ", "PQ"]
     },
-    "set_dimmer": {
+    "set_amp_dimmer": {
         "1": ["SAA", "SAA"]
     },
-    "query_sleep_remain_time": {
+    "query_amp_sleep_remain_time": {
         "1": ["?SAB", "SAB"]
     },
-    "set_sleep_remain_time": {
+    "set_amp_sleep_remain_time": {
         "1": ["SAB", "SAB"]
     },
     "query_tuner_frequency": {
@@ -228,16 +230,16 @@ PIONEER_COMMANDS = {
     "decrease_tuner_frequency": {
         "1": ["TFD", "FR"]
     },
-    "query_panel_lock": {
+    "query_amp_panel_lock": {
         "1": ["?PKL", "PKL"]
     },
-    "query_remote_lock": {
+    "query_amp_remote_lock": {
         "1": ["?RML", "RML"]
     },
-    "set_panel_lock": {
+    "set_amp_panel_lock": {
         "1": ["PKL", "PKL"]
     },
-    "set_remote_lock": {
+    "set_amp_remote_lock": {
         "1": ["RML", "RML"]
     },
     "query_tuner_preset": {
@@ -264,100 +266,100 @@ PIONEER_COMMANDS = {
     "set_video_converter": {
         "1": ["VTB", "VTB"]
     },
-    "query_pure_cinema_status": {
+    "query_video_pure_cinema_status": {
         "1": ["?VTD", "VTD"]
     },
-    "set_pure_cinema_status": {
+    "set_video_pure_cinema_status": {
         "1": ["VTD", "VTD"]
     },
-    "query_prog_motion_status": {
+    "query_video_prog_motion_status": {
         "1": ["?VTE", "VTE"]
     }, 
-    "set_prog_motion_status": {
+    "set_video_prog_motion_status": {
         "1": ["VTE", "VTE"]
     },
-    "query_stream_smoother": {
+    "query_video_stream_smoother": {
         "1": ["?VTF", "VTF"]
     },
-    "set_stream_smoother": {
+    "set_video_stream_smoother": {
         "1": ["VTF", "VTF"]
     },
-    "query_advanced_video_adjust": {
+    "query_video_advanced_video_adjust": {
         "1": ["?VTG", "VTG"]
     },
-    "set_advanced_video_adjust": {
+    "set_video_advanced_video_adjust": {
         "1": ["VTG", "VTG"]
     },
-    "query_ynr": {
+    "query_video_ynr": {
         "1": ["?VTH", "VTH"]
     },
-    "set_ynr": {
+    "set_video_ynr": {
         "1": ["VTH", "VTH"]
     },
-    "query_cnr": {
+    "query_video_cnr": {
         "1": ["?VTI", "VTI"]
     },
-    "set_cnr": {
+    "set_video_cnr": {
         "1": ["VTI", "VTI"]
     },
-    "query_bnr": {
+    "query_video_bnr": {
         "1": ["?VTJ", "VTJ"]
     },
-    "set_bnr": {
+    "set_video_bnr": {
         "1": ["VTJ", "VTJ"]
     },
-    "query_mnr": {
+    "query_video_mnr": {
         "1": ["?VTK", "VTK"]
     },
-    "set_mnr": {
+    "set_video_mnr": {
         "1": ["VTK", "VTK"]
     },
-    "query_detail": {
+    "query_video_detail": {
         "1": ["?VTL", "VTL"]
     },
-    "set_detail": {
+    "set_video_detail": {
         "1": ["VTL", "VTL"]
     },
-    "query_sharpness": {
+    "query_video_sharpness": {
         "1": ["?VTM", "VTM"]
     },
-    "set_sharpness": {
+    "set_video_sharpness": {
         "1": ["VTM", "VTM"]
     },
-    "query_brightness": {
+    "query_video_brightness": {
         "1": ["?VTN", "VTN"]
     },
-    "set_brightness": {
+    "set_video_brightness": {
         "1": ["VTN", "VTN"]
     },
-    "query_contrast": {
+    "query_video_contrast": {
         "1": ["?VTO", "VTO"]
     },
-    "set_contrast": {
+    "set_video_contrast": {
         "1": ["VTO", "VTO"]
     },
-    "query_hue": {
+    "query_video_hue": {
         "1": ["?VTP", "VTP"]
     },
-    "set_hue": {
+    "set_video_hue": {
         "1": ["VTP", "VTP"]
     },
-    "query_chroma": {
+    "query_video_chroma": {
         "1": ["?VTQ", "VTQ"]
     },
-    "set_chroma": {
+    "set_video_chroma": {
         "1": ["VTQ", "VTQ"]
     },
-    "query_black_setup": {
+    "query_video_black_setup": {
         "1": ["?VTR", "VTR"]
     },
-    "set_black_setup": {
+    "set_video_black_setup": {
         "1": ["VTR", "VTR"]
     },
-    "query_aspect": {
+    "query_video_aspect": {
         "1": ["?VTS", "VTS"]
     },
-    "set_aspect": {
+    "set_video_aspect": {
         "1": ["VTS", "VTS"]
     },
     "set_channel_levels": {
@@ -365,190 +367,190 @@ PIONEER_COMMANDS = {
         "2": ["ZGE", "ZGE"],
         "3": ["ZHE", "ZHE"]
     },
-    "set_mcacc_memory_set": {
+    "set_dsp_mcacc_memory_set": {
         "1": ["MC", "MC"]
     },
-    "set_phase_control": {
+    "set_dsp_phase_control": {
         "1": ["IS", "IS"]
     },
-    "set_virtual_sb": {
+    "set_dsp_virtual_sb": {
         "1": ["VSB", "VSB"]
     },
-    "set_virtual_height": {
+    "set_dsp_virtual_height": {
         "1": ["VHT", "VHT"]
     },
-    "set_sound_retriever": {
+    "set_dsp_sound_retriever": {
         "1": ["ATA", "ATA"]
     },
-    "set_signal_select": {
+    "set_dsp_signal_select": {
         "1": ["SDA", "SDA"]
     },
-    "set_analog_input_att": {
+    "set_dsp_analog_input_att": {
         "1": ["SDB", "SDB"]
     },
-    "set_eq": {
+    "set_dsp_eq": {
         "1": ["ATC", "ATC"]
     },
-    "set_standing_wave": {
+    "set_dsp_standing_wave": {
         "1": ["ATD", "ATD"]
     },
-    "set_phase_control_plus": {
+    "set_dsp_phase_control_plus": {
         "1": ["ATE", "ATE"]
     },
-    "set_sound_delay": {
+    "set_dsp_sound_delay": {
         "1": ["ATF", "ATF"]
     },
-    "set_digital_noise_reduction": {
+    "set_dsp_digital_noise_reduction": {
         "1": ["ATG", "ATG"]
     },
-    "set_digital_dialog_enhancement": {
+    "set_dsp_digital_dialog_enhancement": {
         "1": ["ATH", "ATH"]
     },
-    "set_hi_bit": {
+    "set_dsp_hi_bit": {
         "1": ["ATI", "ATI"]
     },
-    "set_dual_mono": {
+    "set_dsp_dual_mono": {
         "1": ["ATJ", "ATJ"]
     },
-    "set_fixed_pcm": {
+    "set_dsp_fixed_pcm": {
         "1": ["ATK", "ATK"]
     },
-    "set_drc": {
+    "set_dsp_drc": {
         "1": ["ATL", "ATL"]
     },
-    "set_lfe_att": {
+    "set_dsp_lfe_att": {
         "1": ["ATM", "ATM"]
     },
-    "set_sacd_gain": {
+    "set_dsp_sacd_gain": {
         "1": ["ATN", "ATN"]
     },
-    "set_auto_delay": {
+    "set_dsp_auto_delay": {
         "1": ["ATO", "ATO"]
     },
-    "set_center_width": {
+    "set_dsp_center_width": {
         "1": ["ATP", "ATP"]
     },
-    "set_panorama": {
+    "set_dsp_panorama": {
         "1": ["ATQ", "ATQ"]
     },
-    "set_dimension": {
+    "set_dsp_dimension": {
         "1": ["ATR", "ATR"]
     },
-    "set_center_image": {
+    "set_dsp_center_image": {
         "1": ["ATS", "ATS"]
     },
-    "set_effect": {
+    "set_dsp_effect": {
         "1": ["ATT", "ATT"]
     },
-    "set_height_gain": {
+    "set_dsp_height_gain": {
         "1": ["ATU", "ATU"]
     },
-    "set_virtual_depth": {
+    "set_dsp_virtual_depth": {
         "1": ["VDP", "VDP"]
     },
-    "set_digital_filter": {
+    "set_dsp_digital_filter": {
         "1": ["ATV", "ATV"]
     },
-    "set_loudness_management": {
+    "set_dsp_loudness_management": {
         "1": ["ATW", "ATW"]
     },
-    "set_virtual_wide": {
+    "set_dsp_virtual_wide": {
         "1": ["VWD", "VWD"]
     },
-    "query_mcacc_memory_query": {
+    "query_dsp_mcacc_memory_query": {
         "1": ["?MC", "MC"]
     },
-    "query_phase_control": {
+    "query_dsp_phase_control": {
         "1": ["?IS", "IS"]
     },
-    "query_virtual_sb": {
+    "query_dsp_virtual_sb": {
         "1": ["?VSB", "VSB"]
     },
-    "query_virtual_height": {
+    "query_dsp_virtual_height": {
         "1": ["?VHT", "VHT"]
     },
-    "query_sound_retriever": {
+    "query_dsp_sound_retriever": {
         "1": ["?ATA", "ATA"]
     },
-    "query_signal_select": {
+    "query_dsp_signal_select": {
         "1": ["?SDA", "SDA"]
     },
-    "query_analog_input_att": {
+    "query_dsp_analog_input_att": {
         "1": ["?SDB", "SDB"]
     },
-    "query_eq": {
+    "query_dsp_eq": {
         "1": ["?ATC", "ATC"]
     },
-    "query_standing_wave": {
+    "query_dsp_standing_wave": {
         "1": ["?ATD", "ATD"]
     },
-    "query_phase_control_plus": {
+    "query_dsp_phase_control_plus": {
         "1": ["?ATE", "ATE"]
     },
-    "query_sound_delay": {
+    "query_dsp_sound_delay": {
         "1": ["?ATF", "ATF"]
     },
-    "query_digital_noise_reduction": {
+    "query_dsp_digital_noise_reduction": {
         "1": ["?ATG", "ATG"]
     },
-    "query_digital_dialog_enhancement": {
+    "query_dsp_digital_dialog_enhancement": {
         "1": ["?ATH", "ATH"]
     },
-    "query_hi_bit": {
+    "query_dsp_hi_bit": {
         "1": ["?ATI", "ATI"]
     },
-    "query_dual_mono": {
+    "query_dsp_dual_mono": {
         "1": ["?ATJ", "ATJ"]
     },
-    "query_fixed_pcm": {
+    "query_dsp_fixed_pcm": {
         "1": ["?ATK", "ATK"]
     },
-    "query_drc": {
+    "query_dsp_drc": {
         "1": ["?ATL", "ATL"]
     },
-    "query_lfe_att": {
+    "query_dsp_lfe_att": {
         "1": ["?ATM", "ATM"]
     },
-    "query_sacd_gain": {
+    "query_dsp_sacd_gain": {
         "1": ["?ATN", "ATN"]
     },
-    "query_auto_delay": {
+    "query_dsp_auto_delay": {
         "1": ["?ATO", "ATO"]
     },
-    "query_center_width": {
+    "query_dsp_center_width": {
         "1": ["?ATP", "ATP"]
     },
-    "query_panorama": {
+    "query_dsp_panorama": {
         "1": ["?ATQ", "ATQ"]
     },
-    "query_dimension": {
+    "query_dsp_dimension": {
         "1": ["?ATR", "ATR"]
     },
-    "query_center_image": {
+    "query_dsp_center_image": {
         "1": ["?ATS", "ATS"]
     },
-    "query_effect": {
+    "query_dsp_effect": {
         "1": ["?ATT", "ATT"]
     },
-    "query_height_gain": {
+    "query_dsp_height_gain": {
         "1": ["?ATU", "ATU"]
     },
-    "query_virtual_depth": {
+    "query_dsp_virtual_depth": {
         "1": ["?VDP", "VDP"]
     },
-    "query_digital_filter": {
+    "query_dsp_digital_filter": {
         "1": ["?ATV", "ATV"]
     },
-    "query_loudness_management": {
+    "query_dsp_loudness_management": {
         "1": ["?ATW", "ATW"]
     },
-    "query_virtual_wide": {
+    "query_dsp_virtual_wide": {
         "1": ["?VWD", "VWD"]
     },
-    "query_speaker_system": {
+    "query_system_speaker_system": {
         "1": ["?SSF", "SSF"]
     },
-    "set_speaker_system": {
+    "set_system_speaker_system": {
         "1": ["?SSF", "SSF"]
     },
     "query_audio_information": {
@@ -2626,7 +2628,11 @@ class PioneerAVR:
         """Update an AVR zone."""
         ## Check for timeouts, but ignore errors (eg. ?V will
         ## return E02 immediately after power on)
-        query_commands = [k for k in PIONEER_COMMANDS.keys() if k.startswith("query")]
+
+        if (self._params.get(PARAM_DISABLE_AUTO_QUERY)):
+            query_commands = []
+        else:
+            query_commands = [k for k in PIONEER_COMMANDS.keys() if (k.startswith("query")) and (k.split("_")[1] in self._params.get(PARAM_ENABLED_FUNCTIONS))]
 
         ## All zone updates
         if (
@@ -2905,17 +2911,17 @@ class PioneerAVR:
     async def set_panel_lock(self, panel_lock: str, zone="1"):
         """Sets the panel lock."""
         self._check_zone(zone)
-        return await self.send_command("set_panel_lock", zone, self._get_parameter_key_from_value(panel_lock, PANEL_LOCK), ignore_error=False)
+        return await self.send_command("set_amp_panel_lock", zone, self._get_parameter_key_from_value(panel_lock, PANEL_LOCK), ignore_error=False)
 
     async def set_remote_lock(self, remote_lock: bool, zone="1"):
         """Sets the remote lock."""
         self._check_zone(zone)
-        return await self.send_command("set_remote_lock", zone, ignore_error=False, prefix=str(int(remote_lock)))
+        return await self.send_command("set_amp_remote_lock", zone, ignore_error=False, prefix=str(int(remote_lock)))
 
     async def set_dimmer(self, dimmer, zone="1"):
         """Set the display dimmer."""
         self._check_zone(zone)
-        return await self.send_command("set_dimmer", zone, ignore_error=False, prefix=dimmer)
+        return await self.send_command("set_amp_dimmer", zone, ignore_error=False, prefix=dimmer)
 
     async def set_tone_settings(self, tone: str=None, treble: int=None, bass: int=None, zone="1"):
         """Set the tone settings of a given zone."""
@@ -2952,79 +2958,79 @@ class PioneerAVR:
 
         ## FUNC: PURE CINEMA
         if (self.video.get(zone).get("pure_cinema") is not None and pure_cinema is not None):
-            await self.send_command("set_pure_cinema_status", zone, self._get_parameter_key_from_value(pure_cinema, VIDEO_PURE_CINEMA_MODES), ignore_error=False)
+            await self.send_command("set_video_pure_cinema_status", zone, self._get_parameter_key_from_value(pure_cinema, VIDEO_PURE_CINEMA_MODES), ignore_error=False)
 
         ## FUNC: PROG. MOTION
         if (self.video.get(zone).get("prog_motion") is not None and prog_motion is not None):
             ## parameter 0 = 50, so add 50
             prog_motion += 50
-            await self.send_command("set_prog_motion_status", zone, str(prog_motion), ignore_error=False)
+            await self.send_command("set_video_prog_motion_status", zone, str(prog_motion), ignore_error=False)
 
         ## FUNC: STREAM SMOOTHER (use PARAM_VIDEO_STREAM_SMOOTHER_MODES)
         if (self.video.get(zone).get("stream_smoother") is not None and stream_smoother is not None):
-            await self.send_command("set_stream_smoother", zone, self._get_parameter_key_from_value(stream_smoother, VIDEO_STREAM_SMOOTHER_MODES), ignore_error=False)
+            await self.send_command("set_video_stream_smoother", zone, self._get_parameter_key_from_value(stream_smoother, VIDEO_STREAM_SMOOTHER_MODES), ignore_error=False)
         
         ## FUNC: ADVANCED VIDEO ADJUST (use PARAM_ADVANCED_VIDEO_ADJUST_MODES)
         if (self.video.get(zone).get("advanced_video_adjust") is not None and advanced_video_adjust is not None):
-            await self.send_command("set_advanced_video_adjust", zone, self._get_parameter_key_from_value(advanced_video_adjust, ADVANCED_VIDEO_ADJUST_MODES), ignore_error=False)
+            await self.send_command("set_video_advanced_video_adjust", zone, self._get_parameter_key_from_value(advanced_video_adjust, ADVANCED_VIDEO_ADJUST_MODES), ignore_error=False)
 
         ## FUNC: YNR
         if (self.video.get(zone).get("ynr") is not None and ynr is not None):
             ## parameter 0 = 50, so add 50
-            await self.send_command("set_ynr", zone, str(ynr + 50), ignore_error=False)
+            await self.send_command("set_video_ynr", zone, str(ynr + 50), ignore_error=False)
 
         ## FUNC: CNR
         if (self.video.get(zone).get("cnr") is not None and cnr is not None):
             ## parameter 0 = 50, so add 50
-            await self.send_command("set_cnr", zone, str(cnr + 50), ignore_error=False)
+            await self.send_command("set_video_cnr", zone, str(cnr + 50), ignore_error=False)
 
         ## FUNC: BNR
         if (self.video.get(zone).get("bnr") is not None and bnr is not None):
             ## parameter 0 = 50, so add 50
-            await self.send_command("set_bnr", zone, str(bnr + 50), ignore_error=False)
+            await self.send_command("set_video_bnr", zone, str(bnr + 50), ignore_error=False)
 
         ## FUNC: MNR
         if (self.video.get(zone).get("mnr") is not None and mnr is not None):
             ## parameter 0 = 50, so add 50
-            await self.send_command("set_mnr", zone, str(mnr + 50), ignore_error=False)
+            await self.send_command("set_video_mnr", zone, str(mnr + 50), ignore_error=False)
 
         ## FUNC: DETAIL
         if (self.video.get(zone).get("detail") is not None and detail is not None):
             ## parameter 0 = 50, so add 50
-            await self.send_command("set_detail", zone, str(detail + 50), ignore_error=False)
+            await self.send_command("set_video_detail", zone, str(detail + 50), ignore_error=False)
 
         ## FUNC: SHARPNESS
         if (self.video.get(zone).get("sharpness") is not None and sharpness is not None):
             ## parameter 0 = 50, so add 50
-            await self.send_command("set_sharpness", zone, str(sharpness + 50), ignore_error=False)
+            await self.send_command("set_video_sharpness", zone, str(sharpness + 50), ignore_error=False)
 
         ## FUNC: BRIGHTNESS
         if (self.video.get(zone).get("brightness") is not None and brightness is not None):
             ## parameter 0 = 50, so add 50
-            await self.send_command("set_brightness", zone, str(brightness + 50), ignore_error=False)
+            await self.send_command("set_video_brightness", zone, str(brightness + 50), ignore_error=False)
 
         ## FUNC: CONTRAST
         if (self.video.get(zone).get("contrast") is not None and contrast is not None):
             ## parameter 0 = 50, so add 50
-            await self.send_command("set_contrast", zone, str(contrast + 50), ignore_error=False)
+            await self.send_command("set_video_contrast", zone, str(contrast + 50), ignore_error=False)
 
         ## FUNC: HUE
         if (self.video.get(zone).get("hue") is not None and hue is not None):
             ## parameter 0 = 50, so add 50
-            await self.send_command("set_hue", zone, str(hue + 50), ignore_error=False)
+            await self.send_command("set_video_hue", zone, str(hue + 50), ignore_error=False)
 
         ## FUNC: CHROMA
         if (self.video.get(zone).get("chroma") is not None and chroma is not None):
             ## parameter 0 = 50, so add 50
-            await self.send_command("set_chroma", zone, str(chroma + 50), ignore_error=False)
+            await self.send_command("set_video_chroma", zone, str(chroma + 50), ignore_error=False)
 
         ## FUNC: BLACK SETUP (0 = 0, 1 = 7.5)
         if (self.video.get(zone).get("black_setup") is not None and black is not None):
-            await self.send_command("set_chroma", zone, str(int(black)), ignore_error=False)
+            await self.send_command("set_video_chroma", zone, str(int(black)), ignore_error=False)
 
         ## FUNC: ASPECT (use PARAM_VIDEO_ASPECT_MODES)
         if (self.video.get(zone).get("aspect") is not None and aspect is not None):
-            await self.send_command("set_aspect", zone, str(self._get_parameter_key_from_value(aspect, VIDEO_ASPECT_MODES)), ignore_error=False)
+            await self.send_command("set_video_aspect", zone, str(self._get_parameter_key_from_value(aspect, VIDEO_ASPECT_MODES)), ignore_error=False)
 
         return True
 
@@ -3034,23 +3040,23 @@ class PioneerAVR:
 
         ## FUNC: SPEAKERS (use PARAM_SPEAKER_MODES)
         if (self.amp.get("speakers") is not None and speaker_config is not None):
-            await self.send_command("set_speaker_status", zone, self._get_parameter_key_from_value(speaker_config, SPEAKER_MODES), ignore_error=False)
+            await self.send_command("set_amp_speaker_status", zone, self._get_parameter_key_from_value(speaker_config, SPEAKER_MODES), ignore_error=False)
 
         ## FUNC: HDMI OUTPUT SELECT (use PARAM_HDMI_OUT_MODES)
         if (self.amp.get("hdmi_out") is not None and hdmi_out is not None):
-            await self.send_command("set_hdmi_out_status", zone, self._get_parameter_key_from_value(hdmi_out, HDMI_OUT_MODES), ignore_error=False)
+            await self.send_command("set_amp_hdmi_out_status", zone, self._get_parameter_key_from_value(hdmi_out, HDMI_OUT_MODES), ignore_error=False)
 
         ## FUNC: HDMI AUDIO (simple bool, True is on, otherwise audio only goes to amp)
         if (self.amp.get("hdmi_audio") is not None and hdmi_audio_output is not None):
-            await self.send_command("set_hdmi_audio_status", zone, str(int(hdmi_audio_output)), ignore_error=False)
+            await self.send_command("set_amp_hdmi_audio_status", zone, str(int(hdmi_audio_output)), ignore_error=False)
 
         ## FUNC: PQLS (simple bool, True is auto, False is off)
         if (self.amp.get("pqls") is not None and pqls is not None):
-            await self.send_command("set_pqls_status", zone, str(int(pqls)), ignore_error=False)
+            await self.send_command("set_amp_pqls_status", zone, str(int(pqls)), ignore_error=False)
 
         ## FUNC: AMP (use PARAM_AMP_MODES)
         if (self.amp.get("status") is not None and amp is not None):
-            await self.send_command("set_amp", zone, self._get_parameter_key_from_value(amp, AMP_MODES), ignore_error=False)
+            await self.send_command("set_amp_status", zone, self._get_parameter_key_from_value(amp, AMP_MODES), ignore_error=False)
 
     async def set_tuner_frequency(self, band: str, frequency: float, zone: str="1"):
         """Sets the tuner frequency and band."""
@@ -3171,7 +3177,7 @@ class PioneerAVR:
                             elif arg == "center_width":
                                 arguments[arg] = str(arguments.get(arg)).zfill(2)
 
-                        await self.send_command("set_" + arg, zone, str(arguments.get(arg)), ignore_error=False)
+                        await self.send_command("set_dsp_" + arg, zone, str(arguments.get(arg)), ignore_error=False)
 
     async def media_control(self, action: str, zone="1"):
         """Perform media control activities such as play, pause, stop, fast forward or rewind."""
