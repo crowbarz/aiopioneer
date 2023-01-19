@@ -139,29 +139,12 @@ async def cli_main():
                 "listening_mode": pioneer.listening_mode,
                 "media_control_mode": pioneer.media_control_mode,
                 "tone": pioneer.tone,
-                "tone_bass": pioneer.tone_bass,
-                "tone_treble": pioneer.tone_treble,
             }
             print(json.dumps(audio_attrs))
         elif cmd == "get_amp":
-            amp_attrs = {
-                "speakers": pioneer.speakers,
-                "hdmi_out": pioneer.hdmi_out,
-                "hdmi_audio": pioneer.hdmi_audio,
-                "pqls": pioneer.pqls,
-                "sleep_remain": pioneer.sleep_remain,
-                "dimmer": pioneer.amp,
-                "amp": pioneer.panel_lock,
-                "panel_lock": pioneer.remote_lock,
-            }
-            print(json.dumps(amp_attrs))
+            print(json.dumps(pioneer.amp))
         elif cmd == "get_tuner":
-            tuner_attrs = {
-                "frequency": pioneer.tuner_frequency,
-                "band": pioneer.tuner_band,
-                "preset": pioneer.tuner_preset,
-            }
-            print(json.dumps(tuner_attrs))
+            print(json.dumps(pioneer.tuner))
         elif cmd == "get_channel_levels":
             print(json.dumps(pioneer.channel_levels))
         elif cmd == "get_dsp":

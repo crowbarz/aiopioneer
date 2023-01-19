@@ -2131,27 +2131,6 @@ AMP_MODES = {
     "3": "AMP OFF",
 }
 
-VIDEO_OBJ = {
-    "converter": None,
-    "resolution": None,
-    "pure_cinema": None,
-    "prog_motion": None,
-    "stream_smoother": None,
-    "advanced_video_adjust": None,
-    "ynr": None,
-    "cnr": None,
-    "bnr": None,
-    "mnr": None,
-    "detail": None,
-    "sharpness": None,
-    "brightness": None,
-    "contrast": None,
-    "hue": None,
-    "chroma": None,
-    "black_setup": None,
-    "aspect": None,
-}
-
 VIDEO_PURE_CINEMA_MODES = {
     "0": "AUTO",
     "1": "ON",
@@ -2190,44 +2169,6 @@ CHANNEL_LEVELS_OBJ = {
     "RH": 0,
     "LW": 0,
     "RW": 0,
-}
-
-DSP_OBJ = {
-    "mcacc_memory_set": None,
-    "phase_control": None,
-    "phase_control_plus": None,
-    "virtual_speakers": None,
-    "virtual_sb": None,
-    "virtual_height": None,
-    "sound_retriever": None,
-    "signal_select": None,
-    "analog_input_att": None,
-    "eq": None,
-    "standing_wave": None,
-    "sound_delay": None,
-    "digital_noise_reduction": None,
-    "digital_dialog_enhancement": None,
-    "audio_scaler": None,
-    "hi_bit": None,
-    "up_sampling": None,
-    "dual_mono": None,
-    "fixed_pcm": None,
-    "drc": None,
-    "lfe_att": None,
-    "sacd_gain": None,
-    "auto_delay": None,
-    "center_width": None,
-    "panorama": None,
-    "dimension": None,
-    "center_image": None,
-    "effect": None,
-    "height_gain": None,
-    "virtual_depth": None,
-    "digital_filter": None,
-    "loudness_management": None,
-    "virtual_wide": None,
-    "center_spread": None,
-    "rendering_mode": None
 }
 
 DSP_PHASE_CONTROL = {

@@ -43,7 +43,6 @@ from .param import (
     VIDEO_STREAM_SMOOTHER_MODES,
     VIDEO_ASPECT_MODES,
     CHANNEL_LEVELS_OBJ,
-    DSP_OBJ,
     DSP_PHASE_CONTROL,
     DSP_SIGNAL_SELECT,
     DSP_DIGITAL_DIALOG_ENHANCEMENT,
@@ -52,7 +51,6 @@ from .param import (
     DSP_HEIGHT_GAIN,
     DSP_VIRTUAL_DEPTH,
     DSP_DIGITAL_FILTER,
-    VIDEO_OBJ,
     PARAM_HDZONE_SOURCES,
     PARAM_ZONE_2_SOURCES,
     PARAM_ZONE_3_SOURCES,
@@ -797,24 +795,12 @@ class PioneerAVR:
 
         ## FUNC: TONE
         self.tone = {}
-        self.tone_bass = {}
-        self.tone_treble = {}
 
         ## FUNC: AMP
-        self.speakers = {}
-        self.hdmi_out = {}
-        self.hdmi_audio = {}
-        self.pqls = {}
-        self.sleep_remain = {}
-        self.dimmer = {}
         self.amp = {}
-        self.panel_lock = {}
-        self.remote_lock = {}
 
         ## FUNC: TUNER
-        self.tuner_frequency = {}
-        self.tuner_band = {}
-        self.tuner_preset = {}
+        self.tuner = {}
 
         ## Complex object that holds multiple different props for the CHANNEL/DSP functions
         self.channel_levels = {}
@@ -1341,6 +1327,14 @@ class PioneerAVR:
         ):
             if "1" not in self.zones and "1" not in ignored_zones:
                 _LOGGER.info("Zone 1 discovered")
+                ## Set high level categories if not already set
+                self.audio["1"] = {
+                    "input_channels": {},
+                    "output_channels": {},
+                }
+                self.tone["1"] = {}
+                self.amp = {}
+                self.tuner = {}
                 self.zones.append("1")
                 added_zones = True
                 self.max_volume["1"] = self._params[PARAM_MAX_VOLUME]
@@ -1355,6 +1349,9 @@ class PioneerAVR:
                 self.zones.append("2")
                 added_zones = True
                 self.max_volume["2"] = self._params[PARAM_MAX_VOLUME_ZONEX]
+
+                self.tone["2"] = {}
+
         if await self.send_command("query_power", "3", ignore_error=True) and (
             ignore_volume_check
             or await self.send_command("query_volume", "3", ignore_error=True)
@@ -1549,25 +1546,6 @@ class PioneerAVR:
         updated_zones = set()
         commands_to_queue = set()
 
-        ## Set DSP if not already set
-        if self.dsp.get("1") is None:
-                self.dsp["1"] = DSP_OBJ
-
-        ## Set VIDEO if not already set
-        if self.video.get("1") is None:
-            self.video["1"] = VIDEO_OBJ
-
-        ## Set SYSTEM if not already set
-        if self.system.get("1") is None:
-            self.system["1"] = {}
-        
-        ## Set AUDIO if not already set
-        if self.audio.get("1") is None:
-            self.audio["1"] = {
-                "input_channels": {},
-                "output_channels": {},
-            }
-
         ## POWER STATUS
         if response.startswith("PWR"):
             value = response == "PWR0"
@@ -1722,105 +1700,105 @@ class PioneerAVR:
         ## TONE CONTROL
         elif response.startswith("TO"):
             value = response[2:]
-            if self.tone.get("1") != value:
-                self.tone["1"] = TONE_MODES.get(value)
+            if self.tone.get("1").get("status") != value:
+                self.tone["1"]["status"] = TONE_MODES.get(value)
                 updated_zones.add("1")
-                _LOGGER.info("Zone 1: Tone: %s (%s)", self.tone.get("1"), value)
+                _LOGGER.info("Zone 1: Tone: %s (%s)", self.tone.get("1").get("status"), value)
         elif response.startswith("BA"):
             value = response[2:]
-            if self.tone_bass.get("1") != value:
-                self.tone_bass["1"] = TONE_DB_VALUES.get(value)
+            if self.tone.get("1").get("bass") != value:
+                self.tone["1"]["bass"] = TONE_DB_VALUES.get(value)
                 updated_zones.add("1")
-                _LOGGER.info("Zone 1: Bass Level: %s (%s)", self.tone_bass.get("1"), value)
+                _LOGGER.info("Zone 1: Bass Level: %s (%s)", self.tone.get("1").get("bass"), value)
         elif response.startswith("TR"):
             value = response[2:]
-            if self.tone_treble.get("1") != value:
-                self.tone_treble["1"] = TONE_DB_VALUES.get(value)
+            if self.tone.get("1").get("treble") != value:
+                self.tone["1"]["treble"] = TONE_DB_VALUES.get(value)
                 updated_zones.add("1")
-                _LOGGER.info("Zone 1: Treble Level: %s (%s)", self.tone_treble.get("1"), value)
+                _LOGGER.info("Zone 1: Treble Level: %s (%s)", self.tone.get("1").get("treble"), value)
 
         elif response.startswith("ZGA"):
             value = response[3:]
-            if self.tone.get("2") != value:
-                self.tone["2"] = TONE_MODES.get(value)
+            if self.tone.get("2").get("status") != value:
+                self.tone["2"]["status"] = TONE_MODES.get(value)
                 updated_zones.add("2")
-                _LOGGER.info("Zone 2: Tone: %s (%s)", self.tone.get("2"), value)
+                _LOGGER.info("Zone 2: Tone: %s (%s)", self.tone.get("2").get("status"), value)
         elif response.startswith("ZGB"):
             value = int(response[3:])-50
-            if self.tone_bass.get("2") != value:
-                self.tone_bass["2"] = value
+            if self.tone.get("2").get("bass") != value:
+                self.tone["2"]["bass"] = value
                 updated_zones.add("2")
-                _LOGGER.info("Zone 2: Bass Level: %s (%s)", self.tone_bass.get("2"), value)
+                _LOGGER.info("Zone 2: Bass Level: %s (%s)", self.tone.get("2").get("bass"), value)
         elif response.startswith("ZGC"):
             value = int(response[3:])-50
-            if self.tone_treble.get("2") != value:
-                self.tone_treble["2"] = value
+            if self.tone.get("2").get("treble") != value:
+                self.tone["2"]["treble"] = value
                 updated_zones.add("2")
-                _LOGGER.info("Zone 2: Treble Level: %s (%s)", self.tone_treble.get("2"), value)
+                _LOGGER.info("Zone 2: Treble Level: %s (%s)", self.tone.get("2").get("treble"), value)
 
-        ## AMP FUNCTIONS
+        ## AMP FUNCTIONS (no zone here as responses apply globally to the AVR regardless of zone)
         elif response.startswith("SPK"):
             value = response[3:]
-            if self.speakers.get("1") != value:
-                self.speakers["1"] = SPEAKER_MODES.get(value)
+            if self.amp.get("speakers") != value:
+                self.amp["speakers"] = SPEAKER_MODES.get(value)
                 updated_zones.add("1")
-                _LOGGER.info("Zone 1: Speakers: %s (%s)", self.speakers.get("1"), value)
+                _LOGGER.info("Zone 1: Speakers: %s (%s)", self.amp.get("speakers"), value)
         elif response.startswith("HO"):
             value = response[2:]
-            if self.hdmi_out.get("1") != value:
-                self.hdmi_out["1"] = HDMI_OUT_MODES.get(value)
+            if self.amp.get("hdmi_out") != value:
+                self.amp["hdmi_out"] = HDMI_OUT_MODES.get(value)
                 updated_zones.add("1")
-                _LOGGER.info("Zone 1: HDMI OUT: %s (%s)", self.hdmi_out.get("1"), value)
+                _LOGGER.info("Zone 1: HDMI OUT: %s (%s)", self.amp.get("hdmi_out"), value)
         elif response.startswith("HA"):
             value = response[2:]
-            if self.hdmi_audio.get("1") != value:
-                self.hdmi_audio["1"] = HDMI_AUDIO_MODES.get(value)
+            if self.amp.get("hdmi_audio") != value:
+                self.amp["hdmi_audio"] = HDMI_AUDIO_MODES.get(value)
                 updated_zones.add("1")
-                _LOGGER.info("Zone 1: HDMI AUDIO: %s (%s)", self.hdmi_audio.get("1"), value)
+                _LOGGER.info("Zone 1: HDMI AUDIO: %s (%s)", self.amp.get("hdmi_audio"), value)
         elif response.startswith("PQ"):
             value = response[2:]
-            if self.pqls.get("1") != value:
-                self.pqls["1"] = PQLS_MODES.get(value)
+            if self.amp.get("pqls") != value:
+                self.amp["pqls"] = PQLS_MODES.get(value)
                 updated_zones.add("1")
-                _LOGGER.info("Zone 1: PQLS: %s (%s)", self.pqls.get("1"), value)
+                _LOGGER.info("Zone 1: PQLS: %s (%s)", self.amp.get("pqls"), value)
         elif response.startswith("SAA"):
             value = int(response[3:])
-            if self.dimmer.get("1") != value:
-                self.dimmer["1"] = value
+            if self.amp.get("dimmer") != value:
+                self.amp["dimmer"] = value
                 updated_zones.add("1")
-                _LOGGER.info("Zone 1: Dimmer: %s", self.dimmer.get("1"))
+                _LOGGER.info("Zone 1: Dimmer: %s", self.amp.get("dimmer"))
         elif response.startswith("SAB"):
             sleep_remaining = int(response[3:])
             if (sleep_remaining == 0):
                 sleep_remaining = None
 
-            if self.sleep_remain.get("1") != sleep_remaining:
-                self.sleep_remain["1"] = sleep_remaining
+            if self.amp.get("sleep_remain") != sleep_remaining:
+                self.amp["sleep_remain"] = sleep_remaining
                 updated_zones.add("1")
-                _LOGGER.info("Zone 1: Sleep Remaining: %sm", str(sleep_remaining))
+                _LOGGER.info("Zone 1: Sleep Remaining: %sm", str(self.amp.get("sleep_remain")))
         elif response.startswith("SAC"):
             value = int(response[3:])
             value = AMP_MODES.get(str(value))
-            if self.amp.get("1") != value:
-                self.amp["1"] = value
+            if self.amp.get("status") != value:
+                self.amp["status"] = value
                 updated_zones.add("1")
-                _LOGGER.info("Zone 1: AMP Status: %s (%s)", value, response[3:])
+                _LOGGER.info("Zone 1: AMP Status: %s (%s)", self.amp.get("status"), response[3:])
         
         ## KEY LOCK
         elif response.startswith("PKL"):
             value = response[3:]
-            if self.panel_lock.get("1") != value:
-                self.panel_lock["1"] = PANEL_LOCK.get(value)
+            if self.amp.get("panel_lock") != value:
+                self.amp["panel_lock"] = PANEL_LOCK.get(value)
                 updated_zones.add("1")
-                _LOGGER.info("Zone 1: Panel Lock: %s (%s)", self.panel_lock.get("1"), value)
+                _LOGGER.info("Zone 1: Panel Lock: %s (%s)", self.amp.get("panel_lock"), value)
         elif response.startswith("RML"):
             value = (int(response[3:]))
-            if self.remote_lock.get("1") != value:
-                self.remote_lock["1"] = value
+            if self.amp.get("remote_lock") != value:
+                self.amp["remote_lock"] = value
                 updated_zones.add("1")
-                _LOGGER.info("Zone 1: Remote Lock: %s", self.remote_lock.get("1"))
+                _LOGGER.info("Zone 1: Remote Lock: %s", self.amp.get("remote_lock"))
 
-        ## TUNER
+        ## TUNER (AVRs only have one tuner, so no logic of zones here as the tuner state will apply across all zones)
         elif response.startswith("FR"):
             value = response[2:]
             ## Split the value up here, first char is band
@@ -1830,9 +1808,9 @@ class PioneerAVR:
             else:
                 freq = float(value[1:])
 
-            if (self.tuner_band.get("1") != band) or (self.tuner_frequency.get("1") != freq):
-                self.tuner_band["1"] = band
-                self.tuner_frequency["1"] = freq
+            if (self.tuner.get("band") != band) or (self.tuner.get("frequency") != freq):
+                self.tuner["band"] = band
+                self.tuner["frequency"] = freq
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Tuner Frequency: %s, Band: %s (%s)", str(freq), str(band), value)
 
@@ -1841,8 +1819,8 @@ class PioneerAVR:
             t_class = value[:1]
             t_preset = int(value[1:])
             value = t_class+str(t_preset)
-            if (self.tuner_preset.get("1") != value):
-                self.tuner_preset["1"] = value
+            if (self.tuner.get("preset") != value):
+                self.tuner["preset"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Tuner Preset: %s (%s)", value, response[2:])
 
@@ -1853,17 +1831,17 @@ class PioneerAVR:
                 value = "on"
             else:
                 value = "off"
-            if self.video.get("1").get("converter") != value:
-                self.video["1"]["converter"] = value
+            if self.video.get("converter") != value:
+                self.video["converter"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Converter: %s (%s)", value, response[3:])
 
         elif response.startswith("VTC"):
             value = int(response[3:])
-            if self.video.get("1").get("resolution") is not self._params.get(PARAM_VIDEO_RESOLUTION_MODES).get(str(value)):
-                self.video["1"]["resolution"] = self._params.get(PARAM_VIDEO_RESOLUTION_MODES).get(str(value))
+            if self.video.get("resolution") is not self._params.get(PARAM_VIDEO_RESOLUTION_MODES).get(str(value)):
+                self.video["resolution"] = self._params.get(PARAM_VIDEO_RESOLUTION_MODES).get(str(value))
                 updated_zones.add("1")
-                _LOGGER.info("Zone 1: Video Resolution: %s (%s)", self.video.get("1").get("resolution"), str(value))
+                _LOGGER.info("Zone 1: Video Resolution: %s (%s)", self.video.get("resolution"), str(value))
 
         elif response.startswith("VTD"):
             value = int(response[3:])
@@ -1874,8 +1852,8 @@ class PioneerAVR:
                 value = "on"
             else:
                 value = "off"
-            if self.video.get("1").get("pure_cinema") != value:
-                self.video["1"]["pure_cinema"] = value
+            if self.video.get("pure_cinema") != value:
+                self.video["pure_cinema"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Pure Cinema: %s (%s)", value, response[3:])
 
@@ -1883,8 +1861,8 @@ class PioneerAVR:
             value = int(response[3:])
             if value < 55:
                 value = value - 50
-                if (self.video.get("1").get("prog_motion") != value):
-                    self.video["1"]["prog_motion"] = value
+                if (self.video.get("prog_motion") != value):
+                    self.video["prog_motion"] = value
                     updated_zones.add("1")
                     _LOGGER.info("Zone 1: Video Prog. Motion: %s", str(value))
 
@@ -1896,95 +1874,95 @@ class PioneerAVR:
                 value = "on"
             else:
                 value = "auto"
-            if (self.video.get("1").get("stream_smoother") != value):
-                self.video["1"]["stream_smoother"] = value
+            if (self.video.get("stream_smoother") != value):
+                self.video["stream_smoother"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Stream Smoother: %s", value)
 
         elif response.startswith("VTG"):
             value = int(response[3:])
-            if (self.video.get("1").get("advanced_video_adjust") != ADVANCED_VIDEO_ADJUST_MODES.get(str(value))):
-                self.video["1"]["advanced_video_adjust"] = ADVANCED_VIDEO_ADJUST_MODES.get(str(value))
+            if (self.video.get("advanced_video_adjust") != ADVANCED_VIDEO_ADJUST_MODES.get(str(value))):
+                self.video["advanced_video_adjust"] = ADVANCED_VIDEO_ADJUST_MODES.get(str(value))
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Advanced Video Adjust: %s (%s)", ADVANCED_VIDEO_ADJUST_MODES.get(str(value)), value)
 
         elif response.startswith("VTH"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("1").get("ynr") != value):
-                self.video["1"]["ynr"] = value
+            if (self.video.get("ynr") != value):
+                self.video["ynr"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video YNR: %s", str(value))
 
         elif response.startswith("VTI"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("1").get("cnr") != value):
-                self.video["1"]["cnr"] = value
+            if (self.video.get("cnr") != value):
+                self.video["cnr"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video CNR: %s", str(value))
 
         elif response.startswith("VTJ"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("1").get("bnr") != value):
-                self.video["1"]["bnr"] = value
+            if (self.video.get("bnr") != value):
+                self.video["bnr"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video BNR: %s", str(value))
 
         elif response.startswith("VTK"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("1").get("mnr") != value):
-                self.video["1"]["mnr"] = value
+            if (self.video.get("mnr") != value):
+                self.video["mnr"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video MNR: %s", str(value))
 
         elif response.startswith("VTL"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("1").get("detail") != value):
-                self.video["1"]["detail"] = value
+            if (self.video.get("detail") != value):
+                self.video["detail"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Detail: %s", str(value))
 
         elif response.startswith("VTM"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("1").get("sharpness") != value):
-                self.video["1"]["sharpness"] = value
+            if (self.video.get("sharpness") != value):
+                self.video["sharpness"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Sharpness: %s", str(value))
 
         elif response.startswith("VTN"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("1").get("brightness") != value):
-                self.video["1"]["brightness"] = value
+            if (self.video.get("brightness") != value):
+                self.video["brightness"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Brightness: %s", str(value))
 
         elif response.startswith("VTO"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("1").get("contrast") != value):
-                self.video["1"]["contrast"] = value
+            if (self.video.get("contrast") != value):
+                self.video["contrast"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Contrast: %s", str(value))
 
         elif response.startswith("VTP"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("1").get("hue") != value):
-                self.video["1"]["hue"] = value
+            if (self.video.get("hue") != value):
+                self.video["hue"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Hue: %s", str(value))
 
         elif response.startswith("VTQ"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("1").get("chroma") != value):
-                self.video["1"]["chroma"] = value
+            if (self.video.get("chroma") != value):
+                self.video["chroma"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Chroma: %s", str(value))
 
@@ -1995,8 +1973,8 @@ class PioneerAVR:
             elif value == 1:
                 value = 7.5
 
-            if (self.video.get("1").get("black_setup") != value):
-                self.video["1"]["black_setup"] = value
+            if (self.video.get("black_setup") != value):
+                self.video["black_setup"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Black Setup: %s", str(value))
 
@@ -2007,8 +1985,8 @@ class PioneerAVR:
             elif value == 1:
                 value = "normal"
 
-            if (self.video.get("1").get("aspect") != value):
-                self.video["1"]["aspect"] = value
+            if (self.video.get("aspect") != value):
+                self.video["aspect"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Aspect: %s", str(value))
 
@@ -2055,82 +2033,82 @@ class PioneerAVR:
         ## FUNC: DSP
         elif response.startswith("MC"):
             value = int(response[2:])
-            if self.dsp.get("1").get("mcacc_memory_set") is not value:
+            if self.dsp.get("mcacc_memory_set") is not value:
                 _LOGGER.info("Zone 1: MCACC MEMORY SET %s", str(value))
-                self.dsp["1"]["mcacc_memory_set"] = value
+                self.dsp["mcacc_memory_set"] = value
             
             updated_zones.add("1")
         
         elif response.startswith("IS"):
             value = response[2:]
-            if self.dsp.get("1").get("phase_control") is not DSP_PHASE_CONTROL.get(value):
+            if self.dsp.get("phase_control") is not DSP_PHASE_CONTROL.get(value):
                 _LOGGER.info("Zone 1: PHASE CONTROL %s", str(value))
-                self.dsp["1"]["phase_control"] = DSP_PHASE_CONTROL.get(value)
+                self.dsp["phase_control"] = DSP_PHASE_CONTROL.get(value)
 
             updated_zones.add("1")
 
         elif response.startswith("VSP"):
             value = "auto" if int(response[3:]) == 0 else "manual"
-            if self.dsp.get("1").get("virtual_speakers") is not value:
+            if self.dsp.get("virtual_speakers") is not value:
                 _LOGGER.info("Zone 1: PHASE CONTROL %s", str(value))
-                self.dsp["1"]["virtual_speakers"] = value
+                self.dsp["virtual_speakers"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("VSB"):
             value = bool(response[3:])
-            if self.dsp.get("1").get("virtual_sb") is not value:
+            if self.dsp.get("virtual_sb") is not value:
                 _LOGGER.info("Zone 1: VIRTUAL SB %s", str(value))
-                self.dsp["1"]["virtual_sb"] = value
+                self.dsp["virtual_sb"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("VHT"):
             value = bool(response[3:])
-            if self.dsp.get("1").get("virtual_height") is not value:
+            if self.dsp.get("virtual_height") is not value:
                 _LOGGER.info("Zone 1: VIRTUAL HEIGHT %s", str(value))
-                self.dsp["1"]["virtual_height"] = value
+                self.dsp["virtual_height"] = value
 
             updated_zones.add("1")
         
         elif response.startswith("ATA"):
             value = bool(response[3:])
-            if self.dsp.get("1").get("sound_retriever") is not value:
+            if self.dsp.get("sound_retriever") is not value:
                 _LOGGER.info("Zone 1: SOUND RETRIEVER %s", str(value))
-                self.dsp["1"]["sound_retriever"] = value
+                self.dsp["sound_retriever"] = value
 
             updated_zones.add("1")
         
         elif response.startswith("SDA"):
             value = response[3:]
             value = DSP_SIGNAL_SELECT.get(value)
-            if self.dsp.get("1").get("signal_select") is not value:
+            if self.dsp.get("signal_select") is not value:
                 _LOGGER.info("Zone 1: SIGNAL SELECT %s", str(value))
-                self.dsp["1"]["signal_select"] = value
+                self.dsp["signal_select"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("SDB"):
             value = bool(response[3:])
-            if self.dsp.get("1").get("analog_input_att") is not value:
+            if self.dsp.get("analog_input_att") is not value:
                 _LOGGER.info("Zone 1: ANALOG INPUT ATT %s", str(value))
-                self.dsp["1"]["analog_input_att"] = value
+                self.dsp["analog_input_att"] = value
 
             updated_zones.add("1")
         
         elif response.startswith("ATC"):
             value = bool(response[3:])
-            if self.dsp.get("1").get("eq") is not value:
+            if self.dsp.get("eq") is not value:
                 _LOGGER.info("Zone 1: EQ %s", str(value))
-                self.dsp["1"]["eq"] = value
+                self.dsp["eq"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATD"):
             value = bool(response[3:])
-            if self.dsp.get("1").get("standing_wave") is not value:
+            if self.dsp.get("standing_wave") is not value:
                 _LOGGER.info("Zone 1: STANDING WAVE %s", str(value))
-                self.dsp["1"]["standing_wave"] = value
+                self.dsp["standing_wave"] = value
 
             updated_zones.add("1")
 
@@ -2139,50 +2117,50 @@ class PioneerAVR:
             if value == 97:
                 value = "AUTO"
             
-            if self.dsp.get("1").get("phase_control_plus") is not value:
+            if self.dsp.get("phase_control_plus") is not value:
                 _LOGGER.info("Zone 1: PHASE CONTROL PLUS %s", str(value))
-                self.dsp["1"]["phase_control_plus"] = value
+                self.dsp["phase_control_plus"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATF"):
             value = float(response[3:])/10
-            if self.dsp.get("1").get("sound_delay") is not value:
+            if self.dsp.get("sound_delay") is not value:
                 _LOGGER.info("Zone 1: SOUND DELAY %s", str(value))
-                self.dsp["1"]["sound_delay"] = value
+                self.dsp["sound_delay"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATG"):
             value = bool(response[3:])
-            if self.dsp.get("1").get("digital_noise_reduction") is not value:
+            if self.dsp.get("digital_noise_reduction") is not value:
                 _LOGGER.info("Zone 1: DIGITAL NOISE REDUCTION %s", str(value))
-                self.dsp["1"]["digital_noise_reduction"] = value
+                self.dsp["digital_noise_reduction"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATH"):
             value = response[3:]
             value = DSP_DIGITAL_DIALOG_ENHANCEMENT.get(value)
-            if self.dsp.get("1").get("digital_dialog_enhancement") is not value:
+            if self.dsp.get("digital_dialog_enhancement") is not value:
                 _LOGGER.info("Zone 1: DIGITAL DIALOG ENHANCEMENT %s", str(value))
-                self.dsp["1"]["digital_dialog_enhancement"] = value
+                self.dsp["digital_dialog_enhancement"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATY"):
             value = "off" if int(response[3:]) == "0" else "on"
-            if self.dsp.get("1").get("audio_scaler") is not value:
+            if self.dsp.get("audio_scaler") is not value:
                 _LOGGER.info("Zone 1: AUDIO SCALER %s", str(value))
-                self.dsp["1"]["audio_scaler"] = value
+                self.dsp["audio_scaler"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATI"):
             value = bool(response[3:])
-            if self.dsp.get("1").get("hi_bit") is not value:
+            if self.dsp.get("hi_bit") is not value:
                 _LOGGER.info("Zone 1: HI-BIT %s", str(value))
-                self.dsp["1"]["hi_bit"] = value
+                self.dsp["hi_bit"] = value
 
             updated_zones.add("1")
 
@@ -2194,33 +2172,33 @@ class PioneerAVR:
                 value = "2 times"
             elif value == 2:
                 value = "4 times"
-            if self.dsp.get("1").get("up_sampling") is not value:
+            if self.dsp.get("up_sampling") is not value:
                 _LOGGER.info("Zone 1: UP SAMPLING %s", str(value))
-                self.dsp["1"]["up_sampling"] = value
+                self.dsp["up_sampling"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATJ"):
             value = DSP_DUAL_MONO.get(response[3:])
-            if self.dsp.get("1").get("dual_mono") is not value:
+            if self.dsp.get("dual_mono") is not value:
                 _LOGGER.info("Zone 1: DUAL MONO %s", str(value))
-                self.dsp["1"]["dual_mono"] = value
+                self.dsp["dual_mono"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATK"):
             value = bool(response[3:])
-            if self.dsp.get("1").get("fixed_pcm") is not value:
+            if self.dsp.get("fixed_pcm") is not value:
                 _LOGGER.info("Zone 1: FIXED PCM %s", str(value))
-                self.dsp["1"]["fixed_pcm"] = value
+                self.dsp["fixed_pcm"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATL"):
             value = DSP_DRC.get(response[3:])
-            if self.dsp.get("1").get("drc") is not value:
+            if self.dsp.get("drc") is not value:
                 _LOGGER.info("Zone 1: DRC %s", str(value))
-                self.dsp["1"]["drc"] = value
+                self.dsp["drc"] = value
 
             updated_zones.add("1")
 
@@ -2228,121 +2206,121 @@ class PioneerAVR:
             value = int(response[3:])*-5
             if value < -20:
                 value = "off"
-            if self.dsp.get("1").get("lfe_att") is not value:
+            if self.dsp.get("lfe_att") is not value:
                 _LOGGER.info("Zone 1: LFE ATT %s", str(value))
-                self.dsp["1"]["lfe_att"] = value
+                self.dsp["lfe_att"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATN"):
             value = 6 if bool(response[3:]) == True else 0
-            if self.dsp.get("1").get("sacd_gain") is not value:
+            if self.dsp.get("sacd_gain") is not value:
                 _LOGGER.info("Zone 1: SACD GAIN %s", str(value))
-                self.dsp["1"]["sacd_gain"] = value
+                self.dsp["sacd_gain"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATO"):
             value = bool(response[3:])
-            if self.dsp.get("1").get("auto_delay") is not value:
+            if self.dsp.get("auto_delay") is not value:
                 _LOGGER.info("Zone 1: AUTO DELAY %s", str(value))
-                self.dsp["1"]["auto_delay"] = value
+                self.dsp["auto_delay"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATP"):
             value = int(response[3:])
-            if self.dsp.get("1").get("center_width") is not value:
+            if self.dsp.get("center_width") is not value:
                 _LOGGER.info("Zone 1: CENTER WIDTH %s", str(value))
-                self.dsp["1"]["center_width"] = value
+                self.dsp["center_width"] = value
 
             updated_zones.add("1")
         
         elif response.startswith("ATQ"):
             value = bool(response[3:])
-            if self.dsp.get("1").get("panorama") is not value:
+            if self.dsp.get("panorama") is not value:
                 _LOGGER.info("Zone 1: PANORAMA %s", str(value))
-                self.dsp["1"]["panorama"] = value
+                self.dsp["panorama"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATR"):
             value = int(response[3:])-50
-            if self.dsp.get("1").get("dimension") is not value:
+            if self.dsp.get("dimension") is not value:
                 _LOGGER.info("Zone 1: DIMENSION %s", str(value))
-                self.dsp["1"]["dimension"] = value
+                self.dsp["dimension"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATS"):
             value = float(response[3:])/10
-            if self.dsp.get("1").get("center_image") is not value:
+            if self.dsp.get("center_image") is not value:
                 _LOGGER.info("Zone 1: CENTER IMAGE %s", str(value))
-                self.dsp["1"]["center_image"] = value
+                self.dsp["center_image"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATT"):
             value = int(response[3:])*10
-            if self.dsp.get("1").get("effect") is not value:
+            if self.dsp.get("effect") is not value:
                 _LOGGER.info("Zone 1: EFFECT %s", str(value))
-                self.dsp["1"]["effect"] = value
+                self.dsp["effect"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATU"):
             value = DSP_HEIGHT_GAIN.get(response[3:])
-            if self.dsp.get("1").get("height_gain") is not value:
+            if self.dsp.get("height_gain") is not value:
                 _LOGGER.info("Zone 1: HEIGHT GAIN %s", str(value))
-                self.dsp["1"]["height_gain"] = value
+                self.dsp["height_gain"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("VDP"):
             value = DSP_VIRTUAL_DEPTH.get(response[3:])
-            if self.dsp.get("1").get("virtual_depth") is not value:
+            if self.dsp.get("virtual_depth") is not value:
                 _LOGGER.info("Zone 1: VIRTUAL DEPTH %s", str(value))
-                self.dsp["1"]["virtual_depth"] = value
+                self.dsp["virtual_depth"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATV"):
             value = DSP_DIGITAL_FILTER.get(response[3:])
-            if self.dsp.get("1").get("digital_filter") is not value:
+            if self.dsp.get("digital_filter") is not value:
                 _LOGGER.info("Zone 1: DIGITAL FILTER %s", str(value))
-                self.dsp["1"]["digital_filter"] = value
+                self.dsp["digital_filter"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ATW"):
             value = bool(response[3:])
-            if self.dsp.get("1").get("loudness_management") is not value:
+            if self.dsp.get("loudness_management") is not value:
                 _LOGGER.info("Zone 1: LOUDNESS MANAGEMENT %s", str(value))
-                self.dsp["1"]["loudness_management"] = value
+                self.dsp["loudness_management"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("VWD"):
             value = bool(response[3:])
-            if self.dsp.get("1").get("virtual_wide") is not value:
+            if self.dsp.get("virtual_wide") is not value:
                 _LOGGER.info("Zone 1: VIRTUAL WIDE %s", str(value))
-                self.dsp["1"]["virtual_wide"] = value
+                self.dsp["virtual_wide"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ARA"):
             value = bool(response[3:])
-            if self.dsp.get("1").get("center_spread") is not value:
+            if self.dsp.get("center_spread") is not value:
                 _LOGGER.info("Zone 1: CENTER SPREAD %s", str(value))
-                self.dsp["1"]["center_spread"] = value
+                self.dsp["center_spread"] = value
 
             updated_zones.add("1")
 
         elif response.startswith("ARA"):
             value = "object base" if int(response[3:]) == 0 else "channel base"
-            if self.dsp.get("1").get("rendering_mode") is not value:
+            if self.dsp.get("rendering_mode") is not value:
                 _LOGGER.info("Zone 1: RENDERING MODE %s", str(value))
-                self.dsp["1"]["rendering_mode"] = value
+                self.dsp["rendering_mode"] = value
 
             updated_zones.add("1")
 
@@ -2491,97 +2469,97 @@ class PioneerAVR:
         elif response.startswith("VST"):
             value = response[3:]
             ## INPUT TERMINAL
-            if self.video.get("1").get("signal_input_terminal") is not VIDEO_SIGNAL_INPUT_TERMINAL.get(value[0]):
+            if self.video.get("signal_input_terminal") is not VIDEO_SIGNAL_INPUT_TERMINAL.get(value[0]):
                 _LOGGER.info("Video: Input Terminal: %s (%s)", VIDEO_SIGNAL_INPUT_TERMINAL.get(value[0]), value[0])
-                self.video["1"]["signal_input_terminal"] = VIDEO_SIGNAL_INPUT_TERMINAL.get(value[0])
+                self.video["signal_input_terminal"] = VIDEO_SIGNAL_INPUT_TERMINAL.get(value[0])
 
-            if self.video.get("1").get("signal_input_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[2:4]):
+            if self.video.get("signal_input_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[2:4]):
                 _LOGGER.info("Video: Signal Input Resolution: %s (%s)", VIDEO_SIGNAL_FORMATS.get(value[2:4]), value[2:4])
-                self.video["1"]["signal_input_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[2:4])
+                self.video["signal_input_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[2:4])
 
-            if self.video.get("1").get("signal_input_aspect") is not VIDEO_SIGNAL_ASPECTS.get(value[3]):
+            if self.video.get("signal_input_aspect") is not VIDEO_SIGNAL_ASPECTS.get(value[3]):
                 _LOGGER.info("Video: Signal Input Aspect: %s (%s)", VIDEO_SIGNAL_ASPECTS.get(value[3]), value[3])
-                self.video["1"]["signal_input_aspect"] = VIDEO_SIGNAL_ASPECTS.get(value[3])
+                self.video["signal_input_aspect"] = VIDEO_SIGNAL_ASPECTS.get(value[3])
 
-            if self.video.get("1").get("signal_input_color_format") is not VIDEO_SIGNAL_COLORSPACE.get(value[4]):
+            if self.video.get("signal_input_color_format") is not VIDEO_SIGNAL_COLORSPACE.get(value[4]):
                 _LOGGER.info("Video: Signal Input Color Format: %s (%s)", VIDEO_SIGNAL_COLORSPACE.get(value[4]), value[4])
-                self.video["1"]["signal_input_color_format"] = VIDEO_SIGNAL_COLORSPACE.get(value[4])
+                self.video["signal_input_color_format"] = VIDEO_SIGNAL_COLORSPACE.get(value[4])
 
-            if self.video.get("1").get("signal_input_bit") is not VIDEO_SIGNAL_BITS.get(value[5]):
+            if self.video.get("signal_input_bit") is not VIDEO_SIGNAL_BITS.get(value[5]):
                 _LOGGER.info("Video: Signal Input Bits: %s (%s)", VIDEO_SIGNAL_BITS.get(value[5]), value[5])
-                self.video["1"]["signal_input_bit"] = VIDEO_SIGNAL_BITS.get(value[5])
+                self.video["signal_input_bit"] = VIDEO_SIGNAL_BITS.get(value[5])
 
-            if self.video.get("1").get("signal_input_extended_colorspace") is not VIDEO_SIGNAL_EXT_COLORSPACE.get(value[6]):
+            if self.video.get("signal_input_extended_colorspace") is not VIDEO_SIGNAL_EXT_COLORSPACE.get(value[6]):
                 _LOGGER.info("Video: Signal Input Extended Colorspace: %s (%s)", VIDEO_SIGNAL_EXT_COLORSPACE.get(value[6]), value[6])
-                self.video["1"]["signal_input_extended_colorspace"] = VIDEO_SIGNAL_EXT_COLORSPACE.get(value[6])
+                self.video["signal_input_extended_colorspace"] = VIDEO_SIGNAL_EXT_COLORSPACE.get(value[6])
 
-            if self.video.get("1").get("signal_output_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[7:9]):
+            if self.video.get("signal_output_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[7:9]):
                 _LOGGER.info("Video: Signal Output Resolution: %s (%s)", VIDEO_SIGNAL_FORMATS.get(value[7:9]), value[7:9])
-                self.video["1"]["signal_output_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[7:9])
+                self.video["signal_output_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[7:9])
 
-            if self.video.get("1").get("signal_output_aspect") is not VIDEO_SIGNAL_ASPECTS.get(value[9]):
+            if self.video.get("signal_output_aspect") is not VIDEO_SIGNAL_ASPECTS.get(value[9]):
                 _LOGGER.info("Video: Signal Output Aspect: %s (%s)", VIDEO_SIGNAL_ASPECTS.get(value[9]), value[9])
-                self.video["1"]["signal_output_aspect"] = VIDEO_SIGNAL_ASPECTS.get(value[9])
+                self.video["signal_output_aspect"] = VIDEO_SIGNAL_ASPECTS.get(value[9])
 
-            if self.video.get("1").get("signal_output_color_format") is not VIDEO_SIGNAL_COLORSPACE.get(value[10]):
+            if self.video.get("signal_output_color_format") is not VIDEO_SIGNAL_COLORSPACE.get(value[10]):
                 _LOGGER.info("Video: Signal Output Color Format: %s (%s)", VIDEO_SIGNAL_COLORSPACE.get(value[10]), value[10])
-                self.video["1"]["signal_output_color_format"] = VIDEO_SIGNAL_COLORSPACE.get(value[10])
+                self.video["signal_output_color_format"] = VIDEO_SIGNAL_COLORSPACE.get(value[10])
 
-            if self.video.get("1").get("signal_output_bit") is not VIDEO_SIGNAL_BITS.get(value[11]):
+            if self.video.get("signal_output_bit") is not VIDEO_SIGNAL_BITS.get(value[11]):
                 _LOGGER.info("Video: Signal Output Bits: %s (%s)", VIDEO_SIGNAL_BITS.get(value[11]), value[11])
-                self.video["1"]["signal_output_bit"] = VIDEO_SIGNAL_BITS.get(value[11])
+                self.video["signal_output_bit"] = VIDEO_SIGNAL_BITS.get(value[11])
 
-            if self.video.get("1").get("signal_output_extended_colorspace") is not VIDEO_SIGNAL_EXT_COLORSPACE.get(value[12]):
+            if self.video.get("signal_output_extended_colorspace") is not VIDEO_SIGNAL_EXT_COLORSPACE.get(value[12]):
                 _LOGGER.info("Video: Signal Output Extended Colorspace: %s (%s)", VIDEO_SIGNAL_EXT_COLORSPACE.get(value[12]), value[12])
-                self.video["1"]["signal_output_extended_colorspace"] = VIDEO_SIGNAL_EXT_COLORSPACE.get(value[12])
+                self.video["signal_output_extended_colorspace"] = VIDEO_SIGNAL_EXT_COLORSPACE.get(value[12])
 
-            if self.video.get("1").get("signal_hdmi1_recommended_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[13:15]):
+            if self.video.get("signal_hdmi1_recommended_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[13:15]):
                 _LOGGER.info("Video: Signal HDMI1 Recommended Resolution: %s (%s)", VIDEO_SIGNAL_FORMATS.get(value[13:15]), value[13:15])
-                self.video["1"]["signal_hdmi1_recommended_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[13:15])
+                self.video["signal_hdmi1_recommended_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[13:15])
 
-            if self.video.get("1").get("signal_hdmi1_deepcolor") is not VIDEO_SIGNAL_BITS.get(value[15]):
+            if self.video.get("signal_hdmi1_deepcolor") is not VIDEO_SIGNAL_BITS.get(value[15]):
                 _LOGGER.info("Video: Signal HDMI1 DeepColor: %s (%s)", VIDEO_SIGNAL_BITS.get(value[15]), value[15])
-                self.video["1"]["signal_hdmi1_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[15])
+                self.video["signal_hdmi1_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[15])
 
-            if self.video.get("1").get("signal_hdmi2_recommended_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[21:23]):
+            if self.video.get("signal_hdmi2_recommended_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[21:23]):
                 _LOGGER.info("Video: Signal HDMI2 Recommended Resolution: %s (%s)", VIDEO_SIGNAL_FORMATS.get(value[21:23]), value[21:23])
-                self.video["1"]["signal_hdmi2_recommended_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[21:23])
+                self.video["signal_hdmi2_recommended_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[21:23])
 
-            if self.video.get("1").get("signal_hdmi2_deepcolor") is not VIDEO_SIGNAL_BITS.get(value[23]):
+            if self.video.get("signal_hdmi2_deepcolor") is not VIDEO_SIGNAL_BITS.get(value[23]):
                 _LOGGER.info("Video: Signal HDMI2 DeepColor: %s (%s)", VIDEO_SIGNAL_BITS.get(value[23]), value[23])
-                self.video["1"]["signal_hdmi2_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[23])
+                self.video["signal_hdmi2_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[23])
 
-            if self.video.get("1").get("signal_hdmi3_recommended_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[29:31]):
+            if self.video.get("signal_hdmi3_recommended_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[29:31]):
                 _LOGGER.info("Video: Signal HDMI3 Recommended Resolution: %s (%s)", VIDEO_SIGNAL_FORMATS.get(value[29:31]), value[29:31])
-                self.video["1"]["signal_hdmi3_recommended_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[29:31])
+                self.video["signal_hdmi3_recommended_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[29:31])
 
-            if self.video.get("1").get("signal_hdmi3_deepcolor") is not VIDEO_SIGNAL_BITS.get(value[31]):
+            if self.video.get("signal_hdmi3_deepcolor") is not VIDEO_SIGNAL_BITS.get(value[31]):
                 _LOGGER.info("Video: Signal HDMI3 DeepColor: %s (%s)", VIDEO_SIGNAL_BITS.get(value[31]), value[31])
-                self.video["1"]["signal_hdmi3_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[31])
+                self.video["signal_hdmi3_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[31])
 
-            if self.video.get("1").get("input_3d_format") is not VIDEO_SIGNAL_3D_MODES.get(value[37:39]):
+            if self.video.get("input_3d_format") is not VIDEO_SIGNAL_3D_MODES.get(value[37:39]):
                 _LOGGER.info("Video: Input 3D Format: %s (%s)", VIDEO_SIGNAL_3D_MODES.get(value[37:39]), value[37:39])
-                self.video["1"]["input_3d_format"] = VIDEO_SIGNAL_3D_MODES.get(value[37:39])
+                self.video["input_3d_format"] = VIDEO_SIGNAL_3D_MODES.get(value[37:39])
             
-            if self.video.get("1").get("output_3d_format") is not VIDEO_SIGNAL_3D_MODES.get(value[39:41]):
+            if self.video.get("output_3d_format") is not VIDEO_SIGNAL_3D_MODES.get(value[39:41]):
                 _LOGGER.info("Video: Output 3D Format: %s (%s)", VIDEO_SIGNAL_3D_MODES.get(value[39:41]), value[39:41])
-                self.video["1"]["output_3d_format"] = VIDEO_SIGNAL_3D_MODES.get(value[39:41])
+                self.video["output_3d_format"] = VIDEO_SIGNAL_3D_MODES.get(value[39:41])
 
-            if self.video.get("1").get("signal_hdmi4_recommended_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[41:43]):
+            if self.video.get("signal_hdmi4_recommended_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[41:43]):
                 _LOGGER.info("Video: Signal HDMI4 Recommended Resolution: %s (%s)", VIDEO_SIGNAL_FORMATS.get(value[41:43]), value[41:43])
-                self.video["1"]["signal_hdmi4_recommended_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[41:43])
+                self.video["signal_hdmi4_recommended_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[41:43])
 
-            if self.video.get("1").get("signal_hdmi4_deepcolor") is not VIDEO_SIGNAL_BITS.get(value[44]):
+            if self.video.get("signal_hdmi4_deepcolor") is not VIDEO_SIGNAL_BITS.get(value[44]):
                 _LOGGER.info("Video: Signal HDMI4 DeepColor: %s (%s)", VIDEO_SIGNAL_BITS.get(value[44]), value[44])
-                self.video["1"]["signal_hdmi4_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[44])
+                self.video["signal_hdmi4_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[44])
 
         ## FUNC: SETUP
         elif response.startswith("SSF"):
             value = self._params.get(PARAM_SPEAKER_SYSTEM_MODES).get(response[3:])
-            if self.system.get("1").get("speaker_system") is not value:
+            if self.system.get("speaker_system") is not value:
                 _LOGGER.info("System: Speaker System: %s", value)
-                self.system["1"]["speaker_system"] = value
-                self.system["1"]["speaker_system_raw"] = response[3:]
+                self.system["speaker_system"] = value
+                self.system["speaker_system_raw"] = response[3:]
             
             updated_zones.add("1")
 
@@ -3055,39 +3033,39 @@ class PioneerAVR:
         self._check_zone(zone)
 
         ## FUNC: SPEAKERS (use PARAM_SPEAKER_MODES)
-        if (self.speakers.get(zone) is not None and speaker_config is not None):
+        if (self.amp.get("speakers") is not None and speaker_config is not None):
             await self.send_command("set_speaker_status", zone, self._get_parameter_key_from_value(speaker_config, SPEAKER_MODES), ignore_error=False)
 
         ## FUNC: HDMI OUTPUT SELECT (use PARAM_HDMI_OUT_MODES)
-        if (self.hdmi_out.get(zone) is not None and hdmi_out is not None):
+        if (self.amp.get("hdmi_out") is not None and hdmi_out is not None):
             await self.send_command("set_hdmi_out_status", zone, self._get_parameter_key_from_value(hdmi_out, HDMI_OUT_MODES), ignore_error=False)
 
         ## FUNC: HDMI AUDIO (simple bool, True is on, otherwise audio only goes to amp)
-        if (self.hdmi_audio.get(zone) is not None and hdmi_audio_output is not None):
+        if (self.amp.get("hdmi_audio") is not None and hdmi_audio_output is not None):
             await self.send_command("set_hdmi_audio_status", zone, str(int(hdmi_audio_output)), ignore_error=False)
 
         ## FUNC: PQLS (simple bool, True is auto, False is off)
-        if (self.pqls.get(zone) is not None and pqls is not None):
+        if (self.amp.get("pqls") is not None and pqls is not None):
             await self.send_command("set_pqls_status", zone, str(int(pqls)), ignore_error=False)
 
         ## FUNC: AMP (use PARAM_AMP_MODES)
-        if (self.amp.get(zone) is not None and amp is not None):
+        if (self.amp.get("status") is not None and amp is not None):
             await self.send_command("set_amp", zone, self._get_parameter_key_from_value(amp, AMP_MODES), ignore_error=False)
 
-    async def set_tuner_frequency(self, band: str, frequency: float, zone="1"):
+    async def set_tuner_frequency(self, band: str, frequency: float, zone: str="1"):
         """Sets the tuner frequency and band."""
 
-        if ((self.tuner_band.get(zone) is None) or (self.power.get(zone) == False)):
-            raise SystemError(f"Tuner functions are currently not available. Ensure Main Zone is on and source is set to tuner.")
+        if ((self.tuner.get("band") is None) or (self.power.get(zone) == False)):
+            raise SystemError(f"Tuner functions are currently not available. Ensure Zone is on and source is set to tuner.")
         
         if (band.upper() != "AM" and band.upper() != "FM"):
             raise ValueError(f"The provided band is invalid")
 
-        if (band.upper() == "AM" and self.tuner_band.get(zone) == "F"):
+        if (band.upper() == "AM" and self.tuner.get("band") == "F"):
             band = "A"
             ## Set the tuner band
             await self.send_command("set_tuner_band_am", zone, ignore_error=False)
-        elif (band.upper() == "FM" and self.tuner_band.get(zone) == "A"):
+        elif (band.upper() == "FM" and self.tuner.get("band") == "A"):
             band = "F"
             ## Set the tuner band
             await self.send_command("set_tuner_band_fm", zone, ignore_error=False)
@@ -3103,16 +3081,16 @@ class PioneerAVR:
         ## Continue adjusting until frequency is set
         while (True):
             to_freq = (str(frequency))
-            current_freq = (str(self.tuner_frequency.get(zone)))
+            current_freq = (str(self.tuner.get("frequency")))
 
             if to_freq == current_freq:
                 break
 
             ## Decrease frequency
-            if (self.tuner_frequency.get(zone) > frequency):
+            if (self.tuner.get("frequency") > frequency):
                 resp = await self.send_command("decrease_tuner_frequency", ignore_error=False)
             else:
-                resp = await self.send_command("increase_tuner_frequency")
+                resp = await self.send_command("increase_tuner_frequency", ignore_error=False)
 
             if (resp == False):
                 ## On error, exit loop
@@ -3148,16 +3126,14 @@ class PioneerAVR:
         """Sets the DSP settings for the amplifier."""
         zone = arguments.get("zone")
         self._check_zone(zone)
-        ## Get current DSP settings
-        zone_dsp_settings: dict = self.dsp.get(zone)
 
-        if zone_dsp_settings == None:
+        if zone != "1":
             raise ValueError(f"Invalid zone {zone}")
 
         for arg in arguments:
             if arg != "zone":
                 if arguments.get(arg) is not None:
-                    if zone_dsp_settings.get(arg) is not arguments.get(arg):
+                    if self.dsp.get(arg) is not arguments.get(arg):
                         if type(arguments.get(arg)) == str:
                             ## Functions to do a lookup here
                             if arg == "phase_control":
