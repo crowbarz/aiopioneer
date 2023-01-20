@@ -48,6 +48,9 @@ async def main():
     while True:
         for property, value in vars(pioneer).items():
             print(property, ":", value)
+
+        print(pioneer.get_sound_modes("1"))
+
         await asyncio.sleep(60)
         print("Update ...")
         await pioneer.update()

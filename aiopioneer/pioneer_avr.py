@@ -28,7 +28,8 @@ from .param import (
     PARAM_DEBUG_COMMAND,
     PARAM_DEFAULTS,
     PARAM_MODEL_DEFAULTS,
-    PARAM_LISTENING_MODES,
+    PARAM_DISABLED_LISTENING_MODES,
+    LISTENING_MODES,
     TONE_MODES,
     TONE_DB_VALUES,
     SPEAKER_MODES,
@@ -38,6 +39,7 @@ from .param import (
     PANEL_LOCK,
     AMP_MODES,
     PARAM_VIDEO_RESOLUTION_MODES,
+    VIDEO_RESOLUTION_MODES,
     ADVANCED_VIDEO_ADJUST_MODES,
     VIDEO_PURE_CINEMA_MODES,
     VIDEO_STREAM_SMOOTHER_MODES,
@@ -1437,9 +1439,9 @@ class PioneerAVR:
         if (zone == "1"):
             ## Now check if the current input info is multi channel or not
             if (self.audio.get(zone).get("input_multichannel")):
-                return list([v for k, v in self._params.get(PARAM_LISTENING_MODES).items() if "MULTI CH" in v.upper() or "DIRECT" in v.upper()])
+                return list([v for k, v in LISTENING_MODES.items() if ("MULTI CH" in v.upper() or "DIRECT" in v.upper()) and k not in self._params.get(PARAM_DISABLED_LISTENING_MODES)])
             else:
-                return list([v for k, v in self._params.get(PARAM_LISTENING_MODES).items() if "MULTI CH" not in v.upper()])
+                return list([v for k, v in LISTENING_MODES.items() if ("MULTI CH" not in v.upper()) and k not in self._params.get(PARAM_DISABLED_LISTENING_MODES)])
         else:
             return None
 
@@ -1695,7 +1697,7 @@ class PioneerAVR:
         elif response.startswith("SR"):
             value = response[2:]
             if self.listening_mode.get("1") != value:
-                self.listening_mode["1"] = self._params.get(PARAM_LISTENING_MODES).get(value)
+                self.listening_mode["1"] = LISTENING_MODES.get(value)
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Listening Mode: %s (%s)", self.listening_mode.get("1"), value)
 
@@ -1840,8 +1842,8 @@ class PioneerAVR:
 
         elif response.startswith("VTC"):
             value = int(response[3:])
-            if self.video.get("resolution") is not self._params.get(PARAM_VIDEO_RESOLUTION_MODES).get(str(value)):
-                self.video["resolution"] = self._params.get(PARAM_VIDEO_RESOLUTION_MODES).get(str(value))
+            if self.video.get("resolution") is not self._params.get(VIDEO_RESOLUTION_MODES).get(str(value)):
+                self.video["resolution"] = self._params.get(VIDEO_RESOLUTION_MODES).get(str(value))
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Resolution: %s (%s)", self.video.get("resolution"), str(value))
 
@@ -2906,7 +2908,7 @@ class PioneerAVR:
         """Sets the listening mode using the predefnined list of options in params."""
         self._check_zone(zone)
         return await self.send_command(
-            "set_listening_mode", zone, prefix=self._get_parameter_key_from_value(listening_mode, self._params.get(PARAM_LISTENING_MODES)), ignore_error=False
+            "set_listening_mode", zone, prefix=self._get_parameter_key_from_value(listening_mode, LISTENING_MODES), ignore_error=False
         )
 
     async def set_panel_lock(self, panel_lock: str, zone="1"):
@@ -2955,7 +2957,11 @@ class PioneerAVR:
 
         ## FUNC: RESOLUTION (use PARAM_VIDEO_RESOLUTIONS)
         if (self.video.get(zone).get("resolution") is not None and resolution is not None):
-            await self.send_command("set_video_resolution", zone, self._get_parameter_key_from_value(resolution, PARAM_VIDEO_RESOLUTION_MODES), ignore_error=False)
+            key = self._get_parameter_key_from_value(resolution, VIDEO_RESOLUTION_MODES)
+            if key in self._params.get(PARAM_VIDEO_RESOLUTION_MODES):
+                await self.send_command("set_video_resolution", zone, key, ignore_error=False)
+            else:
+                raise ValueError(f"Resolution {resolution} is not supported by current configuration.")
 
         ## FUNC: PURE CINEMA
         if (self.video.get(zone).get("pure_cinema") is not None and pure_cinema is not None):
