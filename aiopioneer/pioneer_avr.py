@@ -1097,9 +1097,10 @@ class PioneerAVR:
                 self._power_zone_1 = self.power.get("1")  ## cache value
 
                 ## Implement a command queue so that we can queue commands if we need to update attributes that only get updated when we request them to change.
-                if len(parse_result.get("commands_to_queue")) > 0:
-                    _LOGGER.info("Scheduling command queue. (%s)", parse_result.get("commands_to_queue"))
-                    await self._command_queue_schedule(parse_result.get("commands_to_queue"))
+                if len(self._command_queue) > 0 and (self._command_queue_task == None or self._command_queue_task._state == "FINISHED"):
+                    _LOGGER.info("Scheduling command queue. (%s)", str(self._command_queue))
+                    await self._command_queue_schedule()
+
 
                 ## NOTE: to avoid deadlocks, do not run any operations that
                 ## depend on further responses (returned by the listener) within
@@ -1548,7 +1549,6 @@ class PioneerAVR:
     def _parse_response(self, response):
         """Parse response and update cached parameters."""
         updated_zones = set()
-        commands_to_queue = set()
 
         ## POWER STATUS
         if response.startswith("PWR"):
@@ -1560,12 +1560,12 @@ class PioneerAVR:
                 if value:
                     ## Only request these if we're not doing a full update, if we are doing a full update these will be included anyway
                     if (self._full_update is False) and (self.tone.get("1") is not None):
-                        commands_to_queue.add("query_listening_mode")
-                        commands_to_queue.add("query_audio_information")
-                        commands_to_queue.add("query_video_information")
+                        self._command_queue.append("query_listening_mode")
+                        self._command_queue.append("query_audio_information")
+                        self._command_queue.append("query_video_information")
                     ## Queue a full update
                     if self.tone.get("1") is None:
-                        commands_to_queue.add("FULL_UPDATE")
+                        self._command_queue.append("FULL_UPDATE")
 
         elif response.startswith("APR"):
             value = response == "APR0"
@@ -1647,9 +1647,9 @@ class PioneerAVR:
                 _LOGGER.info("Zone 1: Source: %s (%s)", zid, self.get_source_name(zid))
                 ## Only request these if we're not doing a full update, if we are doing a full update these will be included anyway
                 if (self._full_update is False) and (self.tone.get("1") is not None):
-                    commands_to_queue.add("query_listening_mode")
-                    commands_to_queue.add("query_audio_information")
-                    commands_to_queue.add("query_video_information")
+                    self._command_queue.append("query_listening_mode")
+                    self._command_queue.append("query_audio_information")
+                    self._command_queue.append("query_video_information")
                 if zid in MEDIA_CONTROL_SOURCES.keys():
                     ## This source supports media controls
                     self.media_control_mode["1"] = MEDIA_CONTROL_SOURCES.get(zid)
@@ -2570,16 +2570,15 @@ class PioneerAVR:
         ## OTHER FUNCTIONS
         elif response.startswith("AUB") and (self.tone.get("1") is not None):
             ## Queue audio information update
-            commands_to_queue.add("query_listening_mode")
-            commands_to_queue.add("query_audio_information")
+            self._command_queue.append("query_listening_mode")
+            self._command_queue.append("query_audio_information")
         
         elif response.startswith("AUA") and (self.tone.get("1") is not None):
             ## Queue video information update
-            commands_to_queue.add("query_video_information")
+            self._command_queue.append("query_video_information")
 
         result = {
-            "updated_zones": updated_zones,
-            "commands_to_queue": commands_to_queue
+            "updated_zones": updated_zones
         }
 
         return result
@@ -2814,29 +2813,31 @@ class PioneerAVR:
         else:
             return False
 
-    async def _execute_command_queue(self, command_queue):
+    async def _execute_command_queue(self):
         """Executes commands from a queue."""
         _LOGGER.debug(">> PioneerAVR._command_queue")
-        for command in command_queue:
-            _LOGGER.debug("Command Queue Executing: %s", command)
-            if command is "FULL_UPDATE":
+        while len(self._command_queue) > 0:
+            command = self._command_queue.pop(0)
+            _LOGGER.info("Command Queue Executing: %s", command)
+            if command == "FULL_UPDATE":
                 await self.update(full=True)
             else:
                 await self.send_command(command, ignore_error=True)
 
+        _LOGGER.debug("Command Queue Finished.")
         return True
 
     async def _command_queue_cancel(self):
         """Cancels any pending commands and the task itself."""
         await cancel_task(self._command_queue_task, "command_queue")
         self._command_queue_task = None
-        self._command_queue = None
+        self._command_queue = []
 
-    async def _command_queue_schedule(self, command_queue):
+    async def _command_queue_schedule(self):
         """Schedule commands to queue."""
         _LOGGER.debug(">> PioneerAVR._command_queue_schedule()")
         await self._command_queue_cancel()
-        self._command_queue_task = asyncio.create_task(self._execute_command_queue(command_queue))
+        self._command_queue_task = asyncio.create_task(self._execute_command_queue())
 
     async def _bouncer_schedule(self):
         """Schedule volume bounce task. Run when zone 0 power on is detected."""
