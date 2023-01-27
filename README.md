@@ -59,6 +59,7 @@ The default parameters listed below are for AVR models that do not match any cus
 | `mhl_source` | string | `None` | Sets the MHL source ID. This is used for media controls. This information cannot be queried automatically
 | `enabled_functions` | list | `["amp", "dsp", "tuner", "tone", "channels", "video", "system", "audio"]` | Change the functions that are enabled by the API, adding more functions will increase the amount of time it takes to complete a full init and update.
 | `disable_autoquery` | bool | `false` | Setting to `true` will disable auto queries on init for all functions apart from basic functionality (power, source, volume and mute). If you only need those functions, you can set this to `true`
+| `am_frequency_step` | int | `None` | Optional setting to configure the AM frequency step. If this is set to None, a function is queued to detect this information by stepping up and down the frequency when the tuner is first used while set to AM.
 
 ## Command line interface (CLI) (>= 0.1.3)
 
