@@ -1651,6 +1651,12 @@ class PioneerAVR:
                     self._command_queue.append("query_listening_mode")
                     self._command_queue.append("query_audio_information")
                     self._command_queue.append("query_video_information")
+                    ## request tuner information if input is tuner. 
+                    if (zid == "02"):
+                        self._command_queue.append("query_tuner_frequency")
+                        self._command_queue.append("query_tuner_preset")
+                        if (self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None):
+                            self._command_queue.append("_calculate_am_frequency_step")
                 if zid in MEDIA_CONTROL_SOURCES.keys():
                     ## This source supports media controls
                     self.media_control_mode["1"] = MEDIA_CONTROL_SOURCES.get(zid)
@@ -1666,6 +1672,12 @@ class PioneerAVR:
                 self.source["2"] = zid
                 updated_zones.add("2")
                 _LOGGER.info("Zone 2: Source: %s (%s)", zid, self.get_source_name(zid))
+                ## request tuner information if input is tuner. 
+                if (zid == "02"):
+                    self._command_queue.append("query_tuner_frequency")
+                    self._command_queue.append("query_tuner_preset")
+                    if (self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None):
+                            self._command_queue.append("_calculate_am_frequency_step")
                 if zid in MEDIA_CONTROL_SOURCES.keys():
                     ## This source supports media controls
                     self.media_control_mode["2"] = MEDIA_CONTROL_SOURCES.get(zid)
@@ -1677,6 +1689,12 @@ class PioneerAVR:
                 self.source["3"] = zid
                 updated_zones.add("3")
                 _LOGGER.info("Zone 3: Source: %s (%s)", zid, self.get_source_name(zid))
+                ## request tuner information if input is tuner. 
+                if (zid == "02"):
+                    self._command_queue.append("query_tuner_frequency")
+                    self._command_queue.append("query_tuner_preset")
+                    if (self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None):
+                            self._command_queue.append("_calculate_am_frequency_step")
                 if zid in MEDIA_CONTROL_SOURCES.keys():
                     ## This source supports media controls
                     self.media_control_mode["3"] = MEDIA_CONTROL_SOURCES.get(zid)
@@ -1688,6 +1706,12 @@ class PioneerAVR:
                 self.source["Z"] = zid
                 updated_zones.add("Z")
                 _LOGGER.info("HDZone: Source: %s (%s)", zid, self.get_source_name(zid))
+                ## request tuner information if input is tuner. 
+                if (zid == "02"):
+                    self._command_queue.append("query_tuner_frequency")
+                    self._command_queue.append("query_tuner_preset")
+                    if (self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None):
+                            self._command_queue.append("_calculate_am_frequency_step")
                 if zid in MEDIA_CONTROL_SOURCES.keys():
                     ## This source supports media controls
                     self.media_control_mode["Z"] = MEDIA_CONTROL_SOURCES.get(zid)
@@ -2857,10 +2881,20 @@ class PioneerAVR:
     async def _calculate_am_frequency_step(self):
         """Automatically calculate the AM frequency step by stepping the frequency up and then down."""
         _LOGGER.debug(">> PioneerAVR._calculate_am_frequency_step() ")
-        if self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None and self.tuner.get("band") == "A":
+        ## Check if freq step is None, band is set to AM and current source is set to tuner for at least one zone. This function otherwise does not work.
+        if self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None and self.tuner.get("band") == "A" and ("02" in list([v for k,v in self.source.items()])):
             current_f = self.tuner.get("frequency")
             await self.send_command("increase_tuner_frequency", ignore_error=False)
+            await asyncio.sleep(1) ## Sleep for 1s to allow for other updates and the responses to be parsed
             new_f = self.tuner.get("frequency")
+
+            while new_f == current_f:
+                _LOGGER.warning(f"Frequency increment has not changed value, {new_f} old {current_f}")
+                ## Wait until new_f != current_f
+                await self.send_command("increase_tuner_frequency", ignore_error=False)
+                await asyncio.sleep(1) ## Sleep for 1s to allow for other updates and the responses to be parsed
+                new_f = self.tuner.get("frequency")
+
             self._params[PARAM_TUNER_AM_FREQ_STEP] = new_f - current_f
             await self.send_command("decrease_tuner_frequency", ignore_error=True)
 

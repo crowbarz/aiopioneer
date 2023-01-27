@@ -4,17 +4,32 @@
 
 import asyncio
 import logging
+import sys
+import getopt
 
 from aiopioneer import PioneerAVR
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def main():
+async def main(argv):
     """ Main loop. """
     _LOGGER.debug(">> main()")
 
-    pioneer = PioneerAVR("10.10.2.218")
+    host = ""
+    try:
+        opts, _ = getopt.getopt(argv, "h:", ["host="])
+    except getopt.GetoptError:
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in ("-h", "--host"):
+            host = arg
+
+    if host == "":
+        _LOGGER.fatal(f"Host not specified.")
+        sys.exit(2)
+
+    pioneer = PioneerAVR(host)
 
     try:
         await pioneer.connect()
@@ -83,5 +98,5 @@ if __name__ == "__main__":
         format="%(asctime)s %(levelname)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-    rc = asyncio.run(main())  ## pylint: disable=invalid-name
+    rc = asyncio.run(main(sys.argv[1:]))  ## pylint: disable=invalid-name
     exit(0 if rc else 1)
