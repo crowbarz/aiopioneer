@@ -24,6 +24,7 @@ PARAM_MHL_SOURCE = "mhl_source"
 PARAM_ENABLED_FUNCTIONS = "enabled_functions" ## Stores all the enabled high level categories for the AVR.
 PARAM_DISABLE_AUTO_QUERY = "disable_autoquery" ## If set to True, the AVR won't auto query additional attributes in high level categories, instead we rely on the AVR returning them as they are changed.
 PARAM_DISABLED_LISTENING_MODES = "disabled_amplifier_listening_modes" ## A list containing all the IDs of listening modes that should be disabled
+PARAM_TUNER_AM_FREQ_STEP = "am_frequency_step" ## A int that contains the tuner step for AM frequencies. If set to None, this is calculated automatically when tuner is first used.
 
 PARAM_DEFAULTS = {
     PARAM_IGNORED_ZONES: [],
@@ -78,7 +79,8 @@ PARAM_DEFAULTS = {
     },
     PARAM_DISABLED_LISTENING_MODES: [],
     PARAM_VIDEO_RESOLUTION_MODES: ['0', '1', '3', '4', '5', '6', '7', '8', '9'],
-    PARAM_MHL_SOURCE: None
+    PARAM_MHL_SOURCE: None,
+    PARAM_TUNER_AM_FREQ_STEP: None
 }
 
 PARAMS_ALL = PARAM_DEFAULTS.keys()

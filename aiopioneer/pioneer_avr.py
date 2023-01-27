@@ -72,6 +72,7 @@ from .param import (
     PARAM_MHL_SOURCE,
     PARAM_ENABLED_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY,
+    PARAM_TUNER_AM_FREQ_STEP,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -1815,6 +1816,8 @@ class PioneerAVR:
             if (self.tuner.get("band") != band) or (self.tuner.get("frequency") != freq):
                 self.tuner["band"] = band
                 self.tuner["frequency"] = freq
+                if self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None and band == "A":
+                    self._command_queue.append("_calculate_am_frequency_step")
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Tuner Frequency: %s, Band: %s (%s)", str(freq), str(band), value)
 
@@ -2821,6 +2824,8 @@ class PioneerAVR:
             _LOGGER.info("Command Queue Executing: %s", command)
             if command == "FULL_UPDATE":
                 await self.update(full=True)
+            elif command == "_calculate_am_frequency_step":
+                await self._calculate_am_frequency_step()
             else:
                 await self.send_command(command, ignore_error=True)
 
@@ -2831,7 +2836,6 @@ class PioneerAVR:
         """Cancels any pending commands and the task itself."""
         await cancel_task(self._command_queue_task, "command_queue")
         self._command_queue_task = None
-        self._command_queue = []
 
     async def _command_queue_schedule(self):
         """Schedule commands to queue."""
@@ -2849,6 +2853,18 @@ class PioneerAVR:
         """Cancel volume bounce task."""
         await cancel_task(self._bouncer_task, "bouncer")
         self._bouncer_task = None
+
+    async def _calculate_am_frequency_step(self):
+        """Automatically calculate the AM frequency step by stepping the frequency up and then down."""
+        _LOGGER.debug(">> PioneerAVR._calculate_am_frequency_step() ")
+        if self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None and self.tuner.get("band") == "A":
+            current_f = self.tuner.get("frequency")
+            await self.send_command("increase_tuner_frequency", ignore_error=False)
+            new_f = self.tuner.get("frequency")
+            self._params[PARAM_TUNER_AM_FREQ_STEP] = new_f - current_f
+            await self.send_command("decrease_tuner_frequency", ignore_error=True)
+
+        return True
 
     async def set_volume_level(self, target_volume: int, zone="1"):
         """Set volume level (0..185 for Zone 1, 0..81 for other Zones)."""
@@ -3072,6 +3088,9 @@ class PioneerAVR:
         if ((self.tuner.get("band") is None) or (self.power.get(zone) == False)):
             raise SystemError(f"Tuner functions are currently not available. Ensure Zone is on and source is set to tuner.")
         
+        if (band.upper() == "AM" and self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None):
+            raise ValueError(f"AM Tuner functions are currently not available. Ensure 'am_frequency_step' is set.")
+        
         if (band.upper() != "AM" and band.upper() != "FM"):
             raise ValueError(f"The provided band is invalid")
 
@@ -3088,23 +3107,29 @@ class PioneerAVR:
         if (band.upper() == "FM"):
             frequency = round(0.05 * round(frequency/0.05), 2)
         elif (band.upper() == "AM"):
-            frequency = (math.modf(frequency/9)[1])*9
+            frequency = (math.modf(frequency/self._params.get(PARAM_TUNER_AM_FREQ_STEP))[1])*self._params.get(PARAM_TUNER_AM_FREQ_STEP)
 
         resp = True
-
+        increasing = False
         ## Continue adjusting until frequency is set
         while (True):
             to_freq = (str(frequency))
             current_freq = (str(self.tuner.get("frequency")))
 
-            if to_freq == current_freq:
-                break
+            if increasing:
+                if current_freq >= to_freq:
+                    break
+            else:
+                if current_freq <= to_freq:
+                    break
 
             ## Decrease frequency
             if (self.tuner.get("frequency") > frequency):
                 resp = await self.send_command("decrease_tuner_frequency", ignore_error=False)
+                increasing = False
             else:
                 resp = await self.send_command("increase_tuner_frequency", ignore_error=False)
+                increasing = True
 
             if (resp == False):
                 ## On error, exit loop
