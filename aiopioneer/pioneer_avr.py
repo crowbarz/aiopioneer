@@ -277,7 +277,7 @@ PIONEER_COMMANDS = {
     },
     "query_video_prog_motion_status": {
         "1": ["?VTE", "VTE"]
-    }, 
+    },
     "set_video_prog_motion_status": {
         "1": ["VTE", "VTE"]
     },
@@ -836,7 +836,6 @@ class PioneerAVR:
         self._responder_task = None
         self._reconnect_task = None
         self._updater_task = None
-        self._bouncer_task = None
         self._command_queue_task = None
         self._command_queue = [] ## Stores a list of commands to run after receiving an event from the AVR
         self._power_zone_1 = None
@@ -979,7 +978,6 @@ class PioneerAVR:
             await self._listener_cancel()
             await self._responder_cancel()
             await self._updater_cancel()
-            await self._bouncer_cancel()
             await self._command_queue_cancel()
 
             writer = self._writer
@@ -1094,7 +1092,8 @@ class PioneerAVR:
                     if not self._power_zone_1 and self.power.get("1"):
                         ## Main zone powered on, schedule bounce task
                         _LOGGER.info("scheduling main zone volume workaround")
-                        await self._bouncer_schedule()
+                        self.queue_command("volume_up", skip_if_queued=False, insert_at=0)
+                        self.queue_command("volume_down", skip_if_queued=False, insert_at=1)
                 self._power_zone_1 = self.power.get("1")  ## cache value
 
                 ## Implement a command queue so that we can queue commands if we need to update attributes that only get updated when we request them to change.
@@ -1327,55 +1326,57 @@ class PioneerAVR:
         ignored_zones = self._params[PARAM_IGNORED_ZONES]
         ignore_volume_check = self._params[PARAM_IGNORE_VOLUME_CHECK]
         added_zones = False
-        if await self.send_command("query_power", "1", ignore_error=True) and (
-            ignore_volume_check
-            or await self.send_command("query_volume", "1", ignore_error=True)
-        ):
-            if "1" not in self.zones and "1" not in ignored_zones:
-                _LOGGER.info("Zone 1 discovered")
-                ## Set high level categories if not already set
-                self.audio["1"] = {
-                    "input_channels": {},
-                    "output_channels": {},
-                }
-                self.tone["1"] = {}
-                self.amp = {}
-                self.tuner = {}
-                self.zones.append("1")
-                added_zones = True
-                self.max_volume["1"] = self._params[PARAM_MAX_VOLUME]
-        else:
-            raise RuntimeError("Main Zone not found on AVR")
-        if await self.send_command("query_power", "2", ignore_error=True) and (
-            ignore_volume_check
-            or await self.send_command("query_volume", "2", ignore_error=True)
-        ):
-            if "2" not in self.zones and "2" not in ignored_zones:
-                _LOGGER.info("Zone 2 discovered")
-                self.zones.append("2")
-                added_zones = True
-                self.max_volume["2"] = self._params[PARAM_MAX_VOLUME_ZONEX]
+        ## Defer updates to after query_zones has completed
+        async with self._update_lock:
+            if await self.send_command("query_power", "1", ignore_error=True) and (
+                ignore_volume_check
+                or await self.send_command("query_volume", "1", ignore_error=True)
+            ):
+                if "1" not in self.zones and "1" not in ignored_zones:
+                    _LOGGER.info("Zone 1 discovered")
+                    ## Set high level categories if not already set
+                    self.audio["1"] = {
+                        "input_channels": {},
+                        "output_channels": {},
+                    }
+                    self.tone["1"] = {}
+                    self.amp = {}
+                    self.tuner = {}
+                    self.zones.append("1")
+                    added_zones = True
+                    self.max_volume["1"] = self._params[PARAM_MAX_VOLUME]
+            else:
+                raise RuntimeError("Main Zone not found on AVR")
+            if await self.send_command("query_power", "2", ignore_error=True) and (
+                ignore_volume_check
+                or await self.send_command("query_volume", "2", ignore_error=True)
+            ):
+                if "2" not in self.zones and "2" not in ignored_zones:
+                    _LOGGER.info("Zone 2 discovered")
+                    self.zones.append("2")
+                    added_zones = True
+                    self.max_volume["2"] = self._params[PARAM_MAX_VOLUME_ZONEX]
 
-                self.tone["2"] = {}
+                    self.tone["2"] = {}
 
-        if await self.send_command("query_power", "3", ignore_error=True) and (
-            ignore_volume_check
-            or await self.send_command("query_volume", "3", ignore_error=True)
-        ):
-            if "3" not in self.zones and "3" not in ignored_zones:
-                _LOGGER.info("Zone 3 discovered")
-                self.zones.append("3")
-                added_zones = True
-                self.max_volume["3"] = self._params[PARAM_MAX_VOLUME_ZONEX]
-        if await self.send_command("query_power", "Z", ignore_error=True) and (
-            ignore_volume_check
-            or await self.send_command("query_volume", "Z", ignore_error=True)
-        ):
-            if "Z" not in self.zones and "Z" not in ignored_zones:
-                _LOGGER.info("HDZone discovered")
-                self.zones.append("Z")
-                added_zones = True
-                self.max_volume["Z"] = self._params[PARAM_MAX_VOLUME_ZONEX]
+            if await self.send_command("query_power", "3", ignore_error=True) and (
+                ignore_volume_check
+                or await self.send_command("query_volume", "3", ignore_error=True)
+            ):
+                if "3" not in self.zones and "3" not in ignored_zones:
+                    _LOGGER.info("Zone 3 discovered")
+                    self.zones.append("3")
+                    added_zones = True
+                    self.max_volume["3"] = self._params[PARAM_MAX_VOLUME_ZONEX]
+            if await self.send_command("query_power", "Z", ignore_error=True) and (
+                ignore_volume_check
+                or await self.send_command("query_volume", "Z", ignore_error=True)
+            ):
+                if "Z" not in self.zones and "Z" not in ignored_zones:
+                    _LOGGER.info("HDZone discovered")
+                    self.zones.append("Z")
+                    added_zones = True
+                    self.max_volume["Z"] = self._params[PARAM_MAX_VOLUME_ZONEX]
         if added_zones or force_update:
             await self.update(full=True)
 
@@ -1561,12 +1562,12 @@ class PioneerAVR:
                 if value:
                     ## Only request these if we're not doing a full update, if we are doing a full update these will be included anyway
                     if (self._full_update is False) and (self.tone.get("1") is not None):
-                        self._command_queue.append("query_listening_mode")
-                        self._command_queue.append("query_audio_information")
-                        self._command_queue.append("query_video_information")
+                        self.queue_command("query_listening_mode")
+                        self.queue_command("query_audio_information")
+                        self.queue_command("query_video_information")
                     ## Queue a full update
                     if self.tone.get("1") is None:
-                        self._command_queue.append("FULL_UPDATE")
+                        self.queue_command("FULL_UPDATE")
 
         elif response.startswith("APR"):
             value = response == "APR0"
@@ -1648,15 +1649,15 @@ class PioneerAVR:
                 _LOGGER.info("Zone 1: Source: %s (%s)", zid, self.get_source_name(zid))
                 ## Only request these if we're not doing a full update, if we are doing a full update these will be included anyway
                 if (self._full_update is False) and (self.tone.get("1") is not None):
-                    self._command_queue.append("query_listening_mode")
-                    self._command_queue.append("query_audio_information")
-                    self._command_queue.append("query_video_information")
-                    ## request tuner information if input is tuner. 
+                    self.queue_command("query_listening_mode")
+                    self.queue_command("query_audio_information")
+                    self.queue_command("query_video_information")
+                    ## request tuner information if input is tuner.
                     if (zid == "02"):
-                        self._command_queue.append("query_tuner_frequency")
-                        self._command_queue.append("query_tuner_preset")
+                        self.queue_command("query_tuner_frequency")
+                        self.queue_command("query_tuner_preset")
                         if (self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None):
-                            self._command_queue.append("_calculate_am_frequency_step")
+                            self.queue_command("_calculate_am_frequency_step")
                 if zid in MEDIA_CONTROL_SOURCES.keys():
                     ## This source supports media controls
                     self.media_control_mode["1"] = MEDIA_CONTROL_SOURCES.get(zid)
@@ -1672,12 +1673,12 @@ class PioneerAVR:
                 self.source["2"] = zid
                 updated_zones.add("2")
                 _LOGGER.info("Zone 2: Source: %s (%s)", zid, self.get_source_name(zid))
-                ## request tuner information if input is tuner. 
+                ## request tuner information if input is tuner.
                 if (zid == "02"):
-                    self._command_queue.append("query_tuner_frequency")
-                    self._command_queue.append("query_tuner_preset")
+                    self.queue_command("query_tuner_frequency")
+                    self.queue_command("query_tuner_preset")
                     if (self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None):
-                            self._command_queue.append("_calculate_am_frequency_step")
+                            self.queue_command("_calculate_am_frequency_step")
                 if zid in MEDIA_CONTROL_SOURCES.keys():
                     ## This source supports media controls
                     self.media_control_mode["2"] = MEDIA_CONTROL_SOURCES.get(zid)
@@ -1689,12 +1690,12 @@ class PioneerAVR:
                 self.source["3"] = zid
                 updated_zones.add("3")
                 _LOGGER.info("Zone 3: Source: %s (%s)", zid, self.get_source_name(zid))
-                ## request tuner information if input is tuner. 
+                ## request tuner information if input is tuner.
                 if (zid == "02"):
-                    self._command_queue.append("query_tuner_frequency")
-                    self._command_queue.append("query_tuner_preset")
+                    self.queue_command("query_tuner_frequency")
+                    self.queue_command("query_tuner_preset")
                     if (self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None):
-                            self._command_queue.append("_calculate_am_frequency_step")
+                            self.queue_command("_calculate_am_frequency_step")
                 if zid in MEDIA_CONTROL_SOURCES.keys():
                     ## This source supports media controls
                     self.media_control_mode["3"] = MEDIA_CONTROL_SOURCES.get(zid)
@@ -1706,18 +1707,18 @@ class PioneerAVR:
                 self.source["Z"] = zid
                 updated_zones.add("Z")
                 _LOGGER.info("HDZone: Source: %s (%s)", zid, self.get_source_name(zid))
-                ## request tuner information if input is tuner. 
+                ## request tuner information if input is tuner.
                 if (zid == "02"):
-                    self._command_queue.append("query_tuner_frequency")
-                    self._command_queue.append("query_tuner_preset")
+                    self.queue_command("query_tuner_frequency")
+                    self.queue_command("query_tuner_preset")
                     if (self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None):
-                            self._command_queue.append("_calculate_am_frequency_step")
+                            self.queue_command("_calculate_am_frequency_step")
                 if zid in MEDIA_CONTROL_SOURCES.keys():
                     ## This source supports media controls
                     self.media_control_mode["Z"] = MEDIA_CONTROL_SOURCES.get(zid)
                 else:
                     self.media_control_mode["Z"] = None
-        
+
         ## LISTENING MODES
         elif response.startswith("SR"):
             value = response[2:]
@@ -1812,7 +1813,7 @@ class PioneerAVR:
                 self.amp["status"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: AMP Status: %s (%s)", self.amp.get("status"), response[3:])
-        
+
         ## KEY LOCK
         elif response.startswith("PKL"):
             value = response[3:]
@@ -1841,7 +1842,7 @@ class PioneerAVR:
                 self.tuner["band"] = band
                 self.tuner["frequency"] = freq
                 if self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None and band == "A":
-                    self._command_queue.append("_calculate_am_frequency_step")
+                    self.queue_command("_calculate_am_frequency_step")
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Tuner Frequency: %s, Band: %s (%s)", str(freq), str(band), value)
 
@@ -1869,8 +1870,8 @@ class PioneerAVR:
 
         elif response.startswith("VTC"):
             value = int(response[3:])
-            if self.video.get("resolution") is not self._params.get(VIDEO_RESOLUTION_MODES).get(str(value)):
-                self.video["resolution"] = self._params.get(VIDEO_RESOLUTION_MODES).get(str(value))
+            if self.video.get("resolution") is not VIDEO_RESOLUTION_MODES.get(str(value)):
+                self.video["resolution"] = VIDEO_RESOLUTION_MODES.get(str(value))
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Resolution: %s (%s)", self.video.get("resolution"), str(value))
 
@@ -2067,9 +2068,9 @@ class PioneerAVR:
             if self.dsp.get("mcacc_memory_set") is not value:
                 _LOGGER.info("Zone 1: MCACC MEMORY SET %s", str(value))
                 self.dsp["mcacc_memory_set"] = value
-            
+
             updated_zones.add("1")
-        
+
         elif response.startswith("IS"):
             value = response[2:]
             if self.dsp.get("phase_control") is not DSP_PHASE_CONTROL.get(value):
@@ -2101,7 +2102,7 @@ class PioneerAVR:
                 self.dsp["virtual_height"] = value
 
             updated_zones.add("1")
-        
+
         elif response.startswith("ATA"):
             value = bool(response[3:])
             if self.dsp.get("sound_retriever") is not value:
@@ -2109,7 +2110,7 @@ class PioneerAVR:
                 self.dsp["sound_retriever"] = value
 
             updated_zones.add("1")
-        
+
         elif response.startswith("SDA"):
             value = response[3:]
             value = DSP_SIGNAL_SELECT.get(value)
@@ -2126,7 +2127,7 @@ class PioneerAVR:
                 self.dsp["analog_input_att"] = value
 
             updated_zones.add("1")
-        
+
         elif response.startswith("ATC"):
             value = bool(response[3:])
             if self.dsp.get("eq") is not value:
@@ -2147,7 +2148,7 @@ class PioneerAVR:
             value = int(response[3:])
             if value == 97:
                 value = "AUTO"
-            
+
             if self.dsp.get("phase_control_plus") is not value:
                 _LOGGER.info("Zone 1: PHASE CONTROL PLUS %s", str(value))
                 self.dsp["phase_control_plus"] = value
@@ -2266,7 +2267,7 @@ class PioneerAVR:
                 self.dsp["center_width"] = value
 
             updated_zones.add("1")
-        
+
         elif response.startswith("ATQ"):
             value = bool(response[3:])
             if self.dsp.get("panorama") is not value:
@@ -2492,9 +2493,9 @@ class PioneerAVR:
             else:
                 _LOGGER.info("Audio: Input Multi-Channel: %s", str(False))
                 self.audio["1"]["input_multichannel"] = False
-            
+
             updated_zones.add("1")
-        
+
 
         ## VIDEO INFORMATION
         elif response.startswith("VST"):
@@ -2571,7 +2572,7 @@ class PioneerAVR:
             if self.video.get("input_3d_format") is not VIDEO_SIGNAL_3D_MODES.get(value[37:39]):
                 _LOGGER.info("Video: Input 3D Format: %s (%s)", VIDEO_SIGNAL_3D_MODES.get(value[37:39]), value[37:39])
                 self.video["input_3d_format"] = VIDEO_SIGNAL_3D_MODES.get(value[37:39])
-            
+
             if self.video.get("output_3d_format") is not VIDEO_SIGNAL_3D_MODES.get(value[39:41]):
                 _LOGGER.info("Video: Output 3D Format: %s (%s)", VIDEO_SIGNAL_3D_MODES.get(value[39:41]), value[39:41])
                 self.video["output_3d_format"] = VIDEO_SIGNAL_3D_MODES.get(value[39:41])
@@ -2591,18 +2592,18 @@ class PioneerAVR:
                 _LOGGER.info("System: Speaker System: %s", value)
                 self.system["speaker_system"] = value
                 self.system["speaker_system_raw"] = response[3:]
-            
+
             updated_zones.add("1")
 
         ## OTHER FUNCTIONS
         elif response.startswith("AUB") and (self.tone.get("1") is not None):
             ## Queue audio information update
-            self._command_queue.append("query_listening_mode")
-            self._command_queue.append("query_audio_information")
-        
+            self.queue_command("query_listening_mode")
+            self.queue_command("query_audio_information")
+
         elif response.startswith("AUA") and (self.tone.get("1") is not None):
             ## Queue video information update
-            self._command_queue.append("query_video_information")
+            self.queue_command("query_video_information")
 
         result = {
             "updated_zones": updated_zones
@@ -2672,14 +2673,14 @@ class PioneerAVR:
             ## Timeout occurred, indicates AVR disconnected
             raise TimeoutError("Timeout waiting for data")
 
-        ## Zone 1 updates only, we loop through this to allow us to add commands to read without 
+        ## Zone 1 updates only, we loop through this to allow us to add commands to read without
         ## needing to add it here, also only do this if the zone is powered on
         if (zone == "1" and self.power.get("1") == True):
             for comm in query_commands:
                 if len(PIONEER_COMMANDS.get(comm)) == 1:
                     await self.send_command(comm, zone, ignore_error=True)
 
-        ## Zone 1 or 2 updates only, only availble if zone 1 is on
+        ## Zone 1 or 2 updates only, only available if zone 1 is on
         if ((zone == "1") or (zone == "2")) and self.power.get("1") == True:
             for comm in query_commands:
                 if (len(PIONEER_COMMANDS.get(comm)) == 2):
@@ -2829,22 +2830,12 @@ class PioneerAVR:
         self._check_zone(zone)
         return await self.send_command("volume_down", zone, ignore_error=False)
 
-    async def bounce_volume(self):
-        """
-        Send volume up/down to work around Main Zone reporting bug where
-        an initial volume is set. This initial volume is not reported until
-        the volume is changed.
-        """
-        if await self.volume_up():
-            return await self.volume_down()
-        else:
-            return False
-
     async def _execute_command_queue(self):
         """Executes commands from a queue."""
         _LOGGER.debug(">> PioneerAVR._command_queue")
         while len(self._command_queue) > 0:
-            command = self._command_queue.pop(0)
+            ## Keep command in queue until it has finished executing
+            command = self._command_queue[0]
             _LOGGER.info("Command Queue Executing: %s", command)
             if command == "FULL_UPDATE":
                 await self.update(full=True)
@@ -2852,6 +2843,7 @@ class PioneerAVR:
                 await self._calculate_am_frequency_step()
             else:
                 await self.send_command(command, ignore_error=True)
+            self._command_queue.pop(0)
 
         _LOGGER.debug("Command Queue Finished.")
         return True
@@ -2867,16 +2859,15 @@ class PioneerAVR:
         await self._command_queue_cancel()
         self._command_queue_task = asyncio.create_task(self._execute_command_queue())
 
-    async def _bouncer_schedule(self):
-        """Schedule volume bounce task. Run when zone 0 power on is detected."""
-        _LOGGER.debug(">> PioneerAVR._bouncer_schedule()")
-        await self._bouncer_cancel()
-        self._bouncer_task = asyncio.create_task(self.bounce_volume())
-
-    async def _bouncer_cancel(self):
-        """Cancel volume bounce task."""
-        await cancel_task(self._bouncer_task, "bouncer")
-        self._bouncer_task = None
+    def queue_command(self, command, skip_if_queued=True, insert_at=-1):
+        _LOGGER.debug(">> PioneerAVR.queue_command(%s)", command)
+        if not skip_if_queued or command not in self._command_queue:
+            if insert_at >= 0:
+                self._command_queue.insert(insert_at, command)
+            else:
+                self._command_queue.append(command)
+        else:
+            _LOGGER.debug("command %s already queued, skipping", command)
 
     async def _calculate_am_frequency_step(self):
         """Automatically calculate the AM frequency step by stepping the frequency up and then down."""
@@ -2956,7 +2947,7 @@ class PioneerAVR:
         return await self.send_command("mute_off", zone, ignore_error=False)
 
     async def set_listening_mode(self, listening_mode: str, zone="1"):
-        """Sets the listening mode using the predefnined list of options in params."""
+        """Sets the listening mode using the predefined list of options in params."""
         self._check_zone(zone)
         return await self.send_command(
             "set_listening_mode", zone, prefix=self._get_parameter_key_from_value(listening_mode, LISTENING_MODES), ignore_error=False
@@ -2990,13 +2981,13 @@ class PioneerAVR:
                     toneTreble = await self.send_command("set_tone_treble", zone, self._get_parameter_key_from_value(str(treble), TONE_DB_VALUES, looseMatch=True), ignore_error=False)
                 if (bass is not None):
                     toneBass = await self.send_command("set_tone_bass", zone, self._get_parameter_key_from_value(str(bass), TONE_DB_VALUES, looseMatch=True), ignore_error=False)
-            
+
             ## Only return true if all responses were true
             if toneResponse and toneBass and toneTreble:
                 return True
             else:
                 return False
-    
+
     async def set_video_settings(self, video_converter: bool=None, resolution: str=None, pure_cinema: str=None, prog_motion: int=None, stream_smoother: str=None, advanced_video_adjust: str=None, ynr: int=None, cnr: int=None, bnr: int=None, mnr: int=None, detail: int=None, sharpness: int=None, brightness: int=None, contrast: int=None, hue: int=None, chroma: int=None, black: bool=None, aspect: str=None, zone="1"):
         """Set video settings for a given zone using provided parameters."""
         self._check_zone(zone)
@@ -3027,7 +3018,7 @@ class PioneerAVR:
         ## FUNC: STREAM SMOOTHER (use PARAM_VIDEO_STREAM_SMOOTHER_MODES)
         if (self.video.get(zone).get("stream_smoother") is not None and stream_smoother is not None):
             await self.send_command("set_video_stream_smoother", zone, self._get_parameter_key_from_value(stream_smoother, VIDEO_STREAM_SMOOTHER_MODES), ignore_error=False)
-        
+
         ## FUNC: ADVANCED VIDEO ADJUST (use PARAM_ADVANCED_VIDEO_ADJUST_MODES)
         if (self.video.get(zone).get("advanced_video_adjust") is not None and advanced_video_adjust is not None):
             await self.send_command("set_video_advanced_video_adjust", zone, self._get_parameter_key_from_value(advanced_video_adjust, ADVANCED_VIDEO_ADJUST_MODES), ignore_error=False)
@@ -3121,10 +3112,10 @@ class PioneerAVR:
 
         if ((self.tuner.get("band") is None) or (self.power.get(zone) == False)):
             raise SystemError(f"Tuner functions are currently not available. Ensure Zone is on and source is set to tuner.")
-        
+
         if (band.upper() == "AM" and self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None):
             raise ValueError(f"AM Tuner functions are currently not available. Ensure 'am_frequency_step' is set.")
-        
+
         if (band.upper() != "AM" and band.upper() != "FM"):
             raise ValueError(f"The provided band is invalid")
 
@@ -3168,7 +3159,7 @@ class PioneerAVR:
             if (resp == False):
                 ## On error, exit loop
                 break
-        
+
         if resp:
             return True
         else:
@@ -3235,7 +3226,7 @@ class PioneerAVR:
                         elif type(arguments.get(arg) == int):
                             if arg == "lfe_att":
                                 arguments[arg] = int((-20/5)*-1)
-                            elif arg == "dimension": 
+                            elif arg == "dimension":
                                 arguments[arg] = arguments.get(arg)+50
                             elif arg == "effect":
                                 arguments[arg] = str(arguments.get(arg)/10).zfill(2)
