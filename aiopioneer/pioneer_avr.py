@@ -1439,9 +1439,9 @@ class PioneerAVR:
     def get_sound_modes(self, zone):
         """Return list of valid sound modes."""
         ## Check if the zone is the main zone or not, listening modes aren't supported on other zones
-        if (zone == "1"):
+        if zone == "1":
             ## Now check if the current input info is multi channel or not
-            if (self.audio.get(zone).get("input_multichannel")):
+            if self.audio.get(zone).get("input_multichannel"):
                 return list([v for k, v in LISTENING_MODES.items() if ("MULTI CH" in v.upper() or "DIRECT" in v.upper()) and k not in self._params.get(PARAM_DISABLED_LISTENING_MODES)])
             else:
                 return list([v for k, v in LISTENING_MODES.items() if ("MULTI CH" not in v.upper()) and k not in self._params.get(PARAM_DISABLED_LISTENING_MODES)])
@@ -1653,10 +1653,10 @@ class PioneerAVR:
                     self.queue_command("query_audio_information")
                     self.queue_command("query_video_information")
                     ## request tuner information if input is tuner.
-                    if (zid == "02"):
+                    if zid == "02":
                         self.queue_command("query_tuner_frequency")
                         self.queue_command("query_tuner_preset")
-                        if (self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None):
+                        if self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None:
                             self.queue_command("_calculate_am_frequency_step")
                 if zid in MEDIA_CONTROL_SOURCES.keys():
                     ## This source supports media controls
@@ -1674,11 +1674,11 @@ class PioneerAVR:
                 updated_zones.add("2")
                 _LOGGER.info("Zone 2: Source: %s (%s)", zid, self.get_source_name(zid))
                 ## request tuner information if input is tuner.
-                if (zid == "02"):
+                if zid == "02":
                     self.queue_command("query_tuner_frequency")
                     self.queue_command("query_tuner_preset")
-                    if (self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None):
-                            self.queue_command("_calculate_am_frequency_step")
+                    if self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None:
+                        self.queue_command("_calculate_am_frequency_step")
                 if zid in MEDIA_CONTROL_SOURCES.keys():
                     ## This source supports media controls
                     self.media_control_mode["2"] = MEDIA_CONTROL_SOURCES.get(zid)
@@ -1691,11 +1691,11 @@ class PioneerAVR:
                 updated_zones.add("3")
                 _LOGGER.info("Zone 3: Source: %s (%s)", zid, self.get_source_name(zid))
                 ## request tuner information if input is tuner.
-                if (zid == "02"):
+                if zid == "02":
                     self.queue_command("query_tuner_frequency")
                     self.queue_command("query_tuner_preset")
-                    if (self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None):
-                            self.queue_command("_calculate_am_frequency_step")
+                    if self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None:
+                        self.queue_command("_calculate_am_frequency_step")
                 if zid in MEDIA_CONTROL_SOURCES.keys():
                     ## This source supports media controls
                     self.media_control_mode["3"] = MEDIA_CONTROL_SOURCES.get(zid)
@@ -1708,11 +1708,11 @@ class PioneerAVR:
                 updated_zones.add("Z")
                 _LOGGER.info("HDZone: Source: %s (%s)", zid, self.get_source_name(zid))
                 ## request tuner information if input is tuner.
-                if (zid == "02"):
+                if zid == "02":
                     self.queue_command("query_tuner_frequency")
                     self.queue_command("query_tuner_preset")
-                    if (self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None):
-                            self.queue_command("_calculate_am_frequency_step")
+                    if self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None:
+                        self.queue_command("_calculate_am_frequency_step")
                 if zid in MEDIA_CONTROL_SOURCES.keys():
                     ## This source supports media controls
                     self.media_control_mode["Z"] = MEDIA_CONTROL_SOURCES.get(zid)
@@ -1799,7 +1799,7 @@ class PioneerAVR:
                 _LOGGER.info("Zone 1: Dimmer: %s", self.amp.get("dimmer"))
         elif response.startswith("SAB"):
             sleep_remaining = int(response[3:])
-            if (sleep_remaining == 0):
+            if sleep_remaining == 0:
                 sleep_remaining = None
 
             if self.amp.get("sleep_remain") != sleep_remaining:
@@ -1851,7 +1851,7 @@ class PioneerAVR:
             t_class = value[:1]
             t_preset = int(value[1:])
             value = t_class+str(t_preset)
-            if (self.tuner.get("preset") != value):
+            if self.tuner.get("preset") != value:
                 self.tuner["preset"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Tuner Preset: %s (%s)", value, response[2:])
@@ -1893,7 +1893,7 @@ class PioneerAVR:
             value = int(response[3:])
             if value < 55:
                 value = value - 50
-                if (self.video.get("prog_motion") != value):
+                if self.video.get("prog_motion") != value:
                     self.video["prog_motion"] = value
                     updated_zones.add("1")
                     _LOGGER.info("Zone 1: Video Prog. Motion: %s", str(value))
@@ -1906,14 +1906,14 @@ class PioneerAVR:
                 value = "on"
             else:
                 value = "auto"
-            if (self.video.get("stream_smoother") != value):
+            if self.video.get("stream_smoother") != value:
                 self.video["stream_smoother"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Stream Smoother: %s", value)
 
         elif response.startswith("VTG"):
             value = int(response[3:])
-            if (self.video.get("advanced_video_adjust") != ADVANCED_VIDEO_ADJUST_MODES.get(str(value))):
+            if self.video.get("advanced_video_adjust") != ADVANCED_VIDEO_ADJUST_MODES.get(str(value)):
                 self.video["advanced_video_adjust"] = ADVANCED_VIDEO_ADJUST_MODES.get(str(value))
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Advanced Video Adjust: %s (%s)", ADVANCED_VIDEO_ADJUST_MODES.get(str(value)), value)
@@ -1921,7 +1921,7 @@ class PioneerAVR:
         elif response.startswith("VTH"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("ynr") != value):
+            if self.video.get("ynr") != value:
                 self.video["ynr"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video YNR: %s", str(value))
@@ -1929,7 +1929,7 @@ class PioneerAVR:
         elif response.startswith("VTI"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("cnr") != value):
+            if self.video.get("cnr") != value:
                 self.video["cnr"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video CNR: %s", str(value))
@@ -1937,7 +1937,7 @@ class PioneerAVR:
         elif response.startswith("VTJ"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("bnr") != value):
+            if self.video.get("bnr") != value:
                 self.video["bnr"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video BNR: %s", str(value))
@@ -1945,7 +1945,7 @@ class PioneerAVR:
         elif response.startswith("VTK"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("mnr") != value):
+            if self.video.get("mnr") != value:
                 self.video["mnr"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video MNR: %s", str(value))
@@ -1953,7 +1953,7 @@ class PioneerAVR:
         elif response.startswith("VTL"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("detail") != value):
+            if self.video.get("detail") != value:
                 self.video["detail"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Detail: %s", str(value))
@@ -1961,7 +1961,7 @@ class PioneerAVR:
         elif response.startswith("VTM"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("sharpness") != value):
+            if self.video.get("sharpness") != value:
                 self.video["sharpness"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Sharpness: %s", str(value))
@@ -1969,7 +1969,7 @@ class PioneerAVR:
         elif response.startswith("VTN"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("brightness") != value):
+            if self.video.get("brightness") != value:
                 self.video["brightness"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Brightness: %s", str(value))
@@ -1977,7 +1977,7 @@ class PioneerAVR:
         elif response.startswith("VTO"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("contrast") != value):
+            if self.video.get("contrast") != value:
                 self.video["contrast"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Contrast: %s", str(value))
@@ -1985,7 +1985,7 @@ class PioneerAVR:
         elif response.startswith("VTP"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("hue") != value):
+            if self.video.get("hue") != value:
                 self.video["hue"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Hue: %s", str(value))
@@ -1993,7 +1993,7 @@ class PioneerAVR:
         elif response.startswith("VTQ"):
             value = int(response[3:])
             value = value - 50
-            if (self.video.get("chroma") != value):
+            if self.video.get("chroma") != value:
                 self.video["chroma"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Chroma: %s", str(value))
@@ -2005,7 +2005,7 @@ class PioneerAVR:
             elif value == 1:
                 value = 7.5
 
-            if (self.video.get("black_setup") != value):
+            if self.video.get("black_setup") != value:
                 self.video["black_setup"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Black Setup: %s", str(value))
@@ -2017,7 +2017,7 @@ class PioneerAVR:
             elif value == 1:
                 value = "normal"
 
-            if (self.video.get("aspect") != value):
+            if self.video.get("aspect") != value:
                 self.video["aspect"] = value
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Video Aspect: %s", str(value))
@@ -2026,11 +2026,11 @@ class PioneerAVR:
         elif response.startswith("CLV"):
             value = float((int(response[6:])-50)/2)
             speaker = str(response[3:6]).strip("_").upper()
-            if (self.channel_levels.get("1") is None):
+            if self.channel_levels.get("1") is None:
                 ## Define a new channel_levels object for zone 1
                 self.channel_levels["1"] = CHANNEL_LEVELS_OBJ
 
-            if (self.channel_levels.get("1").get(speaker) is not value):
+            if self.channel_levels.get("1").get(speaker) is not value:
                 _LOGGER.info("Zone 1: Speaker %s Channel Level %s", str(speaker), str(value))
                 self.channel_levels["1"][speaker] = value
 
