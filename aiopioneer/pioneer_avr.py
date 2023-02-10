@@ -2707,7 +2707,7 @@ class PioneerAVR:
         if debug_updater:
             _LOGGER.debug(">> PioneerAVR._updater_update() started")
         if self._update_lock.locked():
-            _LOGGER.warning("AVR update already running, skipping")
+            _LOGGER.debug("AVR update already running, skipping")
             return False
         if not self.available:
             _LOGGER.debug("AVR not connected, skipping update")
