@@ -133,6 +133,29 @@ async def cli_main():
                 pioneer.set_user_params(params)
             except json.JSONDecodeError:
                 print(f'ERROR: Invalid JSON params: "{arg}""')
+
+        elif cmd == "get_tone":
+            audio_attrs = {
+                "listening_mode": pioneer.listening_mode,
+                "media_control_mode": pioneer.media_control_mode,
+                "tone": pioneer.tone,
+            }
+            print(json.dumps(audio_attrs))
+        elif cmd == "get_amp":
+            print(json.dumps(pioneer.amp))
+        elif cmd == "get_tuner":
+            print(json.dumps(pioneer.tuner))
+        elif cmd == "get_channel_levels":
+            print(json.dumps(pioneer.channel_levels))
+        elif cmd == "get_dsp":
+            print(json.dumps(pioneer.dsp))
+        elif cmd == "get_video":
+            print(json.dumps(pioneer.video))
+        elif cmd == "get_audio":
+            print(json.dumps(pioneer.audio))
+        elif cmd == "get_system":
+            print(json.dumps(pioneer.system))
+
         elif cmd == "debug_listener":
             arg_bool = get_bool_arg(arg)
             params = pioneer.get_user_params()
