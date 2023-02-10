@@ -140,7 +140,7 @@ The CLI accepts all API commands, as well as the following:
 
 ## Breaking changes
 
-- **0.7**\
+- **0.2**\
   `volume_step_delta` has been removed entirely.
 
   By default, a number of additional queries are sent at module startup to the AVR to gather amp, tuner and channel levels attributes. If your AVR does not handle these additional queries well, they can be disabled by setting parameter `disable_autoquery` to `true`.
