@@ -45,10 +45,10 @@ The default parameters listed below are for AVR models that do not match any cus
 | `power_on_volume_bounce` | bool | `false` | On some AVRs (eg. VSX-930) where a power-on is set, the initial volume is not reported by the AVR correctly until a volume change is made. This option enables a workaround that sends a volume up and down command to the AVR on power-on to correct the reported volume without affecting the power-on volume.
 | `volume_step_only` | bool | `false` | On some AVRs (eg. VSX-S510), setting the volume level is not supported natively by the API. This option emulates setting the volume level using volume up and down commands.
 | `ignore_volume_check` | bool | `false` | Don't check volume when determining whether a zone exists on the AVR. Useful for AVRs with an HDZone that passes through audio.
-| `debug_listener` | bool | `false` | Enables additional debug logging for the listener task. See [Enabling debugging](#enabling-debugging) for details.
-| `debug_responder` | bool | `false` | Enables additional debug logging for the responder task. See [Enabling debugging](#enabling-debugging) for details.
-| `debug_updater` | bool | `false` | Enables additional debug logging for the updater task. See [Enabling debugging](#enabling-debugging) for details.
-| `debug_command` | bool | `false` | Enables additional debug logging for commands sent and responses received. See [Enabling debugging](#enabling-debugging) for details.
+| `debug_listener` | bool | `false` | Enables additional debug logging for the listener task.
+| `debug_responder` | bool | `false` | Enables additional debug logging for the responder task.
+| `debug_updater` | bool | `false` | Enables additional debug logging for the updater task.
+| `debug_command` | bool | `false` | Enables additional debug logging for commands sent and responses received.
 | `zone_2_sources` | list | `["04", "06", "15", "26", "38", "53", "41", "44", "45", "17", "13", "05", "01", "02", "33", "46", "47", "99", "10"]` | Customizes the available sources for use with Zone 2 (some AVRs do not support all sources).
 | `zone_3_sources` | list | `["04", "06", "15", "26", "38", "53", "41", "44", "45", "17", "13", "05", "01", "02", "33", "46", "47", "99", "10"]` | Customizes the available sources for use with Zone 3 (some AVRs do not support all sources).
 | `zone_h_sources` | list | `["25", "04", "06", "10", "15", "19", "20", "21", "22", "23", "24", "34", "35", "26", "38", "53", "41", "44", "45", "17", "13", "33", "31", "46", "47", "48"]` | Customizes the available sources for use with HDZone (some AVRs do not support all sources).
@@ -81,6 +81,14 @@ The CLI accepts all API commands, as well as the following:
 | `get_params` | | Return the currently active set of parameters.
 | `get_user_params` | | Return the currently active set of user parameters.
 | `set_user_params` | _params_ (JSON) | Set the user parameters to _params_.
+| `get_tone` | | Returns the current AVR tone attributes.
+| `get_amp` | | Returns the current AVR amp attributes.
+| `get_tuner` | | Returns the current AVR tuner attributes.
+| `get_channel_levels` | | Returns the current AVR channel levels.
+| `get_dsp` | | Returns the current AVR DSP attributes.
+| `get_video` | | Returns the current AVR video parameters.
+| `get_audio` | | Returns the current AVR audio parameters.
+| `get_system` | | Returns the AVR system attributes.
 | `debug_listener` | _state_ (bool) | Enable/disable the `debug_listener` parameter.
 | `debug_responder` | _state_ (bool) | Enable/disable the `debug_responder` parameter.
 | `debug_updater` | _state_ (bool) | Enable/disable the `debug_updater` parameter.
@@ -126,15 +134,17 @@ The CLI accepts all API commands, as well as the following:
 | 46 | AirPlay (Information only)
 | 47 | DMR (Information only)
 
-
 ## Known issues and future plans
 
 - Document PioneerAVR API
 
 ## Breaking changes
 
-- **0.6**\
+- **0.7**\
   `volume_step_delta` has been removed entirely.
+
+  By default, a number of additional queries are sent at module startup to the AVR to gather amp, tuner and channel levels attributes. If your AVR does not handle these additional queries well, they can be disabled by setting parameter `disable_autoquery` to `true`.
+
 - **0.1**\
   `_PioneerAVR.__init__()` no longer accepts `command_delay`, `volume_workaround` and `volume_steps` arguments. Configure these parameters using the equivalent `PARAM_*` keys in the `params` dict, passed in via the constructure or set via `set_user_params()`.
 
