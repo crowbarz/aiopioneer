@@ -88,6 +88,12 @@ PARAMS_ALL = PARAM_DEFAULTS.keys()
 PARAM_MODEL_DEFAULTS = OrderedDict(
     [
         (
+            r"^VSX-921", # disable video and audio to partially address errors in https://github.com/crowbarz/ha-pioneer_async/issues/13
+            {
+                PARAM_ENABLED_FUNCTIONS: ["amp", "dsp", "tuner", "tone", "channels", "system"]
+            }
+        ),
+        (
             r"^VSX-930",
             {
                 PARAM_POWER_ON_VOLUME_BOUNCE: True,
