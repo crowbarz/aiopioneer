@@ -2417,9 +2417,6 @@ class PioneerAVR:
                 self.audio["1"]["input_channels"]["XL"] = "active" if bool(int(value[19:20])) else "inactive"
             ## (data21) to (data25) are reserved according to FY16AVRs
             ## Decode output signal data
-            if self.audio.get("1").get("output_frequency") is not AUDIO_SIGNAL_INPUT_FREQ.get(value[43:45]):
-                _LOGGER.info("Audio: Output Frequency: %s (%s)", AUDIO_SIGNAL_INPUT_FREQ.get(value[43:45]), value[43:45])
-                self.audio["1"]["output_signal"] = AUDIO_SIGNAL_INPUT_FREQ.get(value[43:45]) + " (" + value[43:45] + ")"
             if self.audio.get("1").get("output_channels").get("L") is not bool(int(value[25:26])):
                 _LOGGER.info("Audio: Output Channel Left: %s", "active" if bool(int(value[25:26])) else "inactive")
                 self.audio["1"]["output_channels"]["L"] = "active" if bool(int(value[25:26])) else "inactive"
@@ -2474,18 +2471,24 @@ class PioneerAVR:
             if self.audio.get("1").get("output_channels").get("SW2") is not bool(int(value[42:43])):
                 _LOGGER.info("Audio: Output Channel SW2: %s", "active" if bool(int(value[42:43])) else "inactive")
                 self.audio["1"]["output_channels"]["SW2"] = "active" if bool(int(value[42:43])) else "inactive"
-            if self.audio.get("1").get("output_bits") is not int(value[45:47]):
-                _LOGGER.info("Audio: Output Bits: %s", value[45:47])
-                self.audio["1"]["output_bits"] = int(value[45:47])
-            if self.audio.get("1").get("output_pqls") is not AUDIO_WORKING_PQLS.get(value[51:52]):
-                _LOGGER.info("Audio: Output PQLS: %s (%s)", AUDIO_WORKING_PQLS.get(value[51:52]), value[51:52])
-                self.audio["1"]["output_pqls"] = AUDIO_WORKING_PQLS.get(value[51:52])
-            if self.audio.get("1").get("output_auto_phase_control_plus") is not int(value[52:54]):
-                _LOGGER.info("Audio: Output Auto Phase Control Plus: %sms", value[52:54])
-                self.audio["1"]["output_auto_phase_control_plus"] = int(value[52:54])
-            if self.audio.get("1").get("output_reverse_phase") is not bool(value[54:55]):
-                _LOGGER.info("Audio: Output Auto Phase Control Plus Reverse Phase: %s", value[54:55])
-                self.audio["1"]["output_reverse_phase"] = bool(value[54:55])
+
+            ## FY11 AVRs do not have any data bits (VSX-1021)
+            if len(value) > 43:
+                if self.audio.get("1").get("output_frequency") is not AUDIO_SIGNAL_INPUT_FREQ.get(value[43:45]):
+                    _LOGGER.info("Audio: Output Frequency: %s (%s)", AUDIO_SIGNAL_INPUT_FREQ.get(value[43:45]), value[43:45])
+                    self.audio["1"]["output_signal"] = AUDIO_SIGNAL_INPUT_FREQ.get(value[43:45]) + " (" + value[43:45] + ")"
+                if self.audio.get("1").get("output_bits") is not int(value[45:47]):
+                    _LOGGER.info("Audio: Output Bits: %s", value[45:47])
+                    self.audio["1"]["output_bits"] = int(value[45:47])
+                if self.audio.get("1").get("output_pqls") is not AUDIO_WORKING_PQLS.get(value[51:52]):
+                    _LOGGER.info("Audio: Output PQLS: %s (%s)", AUDIO_WORKING_PQLS.get(value[51:52]), value[51:52])
+                    self.audio["1"]["output_pqls"] = AUDIO_WORKING_PQLS.get(value[51:52])
+                if self.audio.get("1").get("output_auto_phase_control_plus") is not int(value[52:54]):
+                    _LOGGER.info("Audio: Output Auto Phase Control Plus: %sms", value[52:54])
+                    self.audio["1"]["output_auto_phase_control_plus"] = int(value[52:54])
+                if self.audio.get("1").get("output_reverse_phase") is not bool(value[54:55]):
+                    _LOGGER.info("Audio: Output Auto Phase Control Plus Reverse Phase: %s", value[54:55])
+                    self.audio["1"]["output_reverse_phase"] = bool(value[54:55])
 
             ## set multichannel value
             if bool(int(value[4:5])) and bool(int(value[5:6])) and bool(int(value[6:7])):
@@ -2501,11 +2504,13 @@ class PioneerAVR:
         ## VIDEO INFORMATION
         elif response.startswith("VST"):
             value = response[3:]
+
             ## INPUT TERMINAL
             if self.video.get("signal_input_terminal") is not VIDEO_SIGNAL_INPUT_TERMINAL.get(value[0]):
                 _LOGGER.info("Video: Input Terminal: %s (%s)", VIDEO_SIGNAL_INPUT_TERMINAL.get(value[0]), value[0])
                 self.video["signal_input_terminal"] = VIDEO_SIGNAL_INPUT_TERMINAL.get(value[0])
 
+            ## INPUT RESOLUTION
             if self.video.get("signal_input_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[2:4]):
                 _LOGGER.info("Video: Signal Input Resolution: %s (%s)", VIDEO_SIGNAL_FORMATS.get(value[2:4]), value[2:4])
                 self.video["signal_input_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[2:4])
@@ -2562,29 +2567,30 @@ class PioneerAVR:
                 _LOGGER.info("Video: Signal HDMI2 DeepColor: %s (%s)", VIDEO_SIGNAL_BITS.get(value[23]), value[23])
                 self.video["signal_hdmi2_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[23])
 
-            if self.video.get("signal_hdmi3_recommended_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[29:31]):
-                _LOGGER.info("Video: Signal HDMI3 Recommended Resolution: %s (%s)", VIDEO_SIGNAL_FORMATS.get(value[29:31]), value[29:31])
-                self.video["signal_hdmi3_recommended_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[29:31])
+            if len(value) > 40: ## FY11 AVRs only return 25 data values
+                if self.video.get("signal_hdmi3_recommended_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[29:31]):
+                    _LOGGER.info("Video: Signal HDMI3 Recommended Resolution: %s (%s)", VIDEO_SIGNAL_FORMATS.get(value[29:31]), value[29:31])
+                    self.video["signal_hdmi3_recommended_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[29:31])
 
-            if self.video.get("signal_hdmi3_deepcolor") is not VIDEO_SIGNAL_BITS.get(value[31]):
-                _LOGGER.info("Video: Signal HDMI3 DeepColor: %s (%s)", VIDEO_SIGNAL_BITS.get(value[31]), value[31])
-                self.video["signal_hdmi3_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[31])
+                if self.video.get("signal_hdmi3_deepcolor") is not VIDEO_SIGNAL_BITS.get(value[31]):
+                    _LOGGER.info("Video: Signal HDMI3 DeepColor: %s (%s)", VIDEO_SIGNAL_BITS.get(value[31]), value[31])
+                    self.video["signal_hdmi3_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[31])
 
-            if self.video.get("input_3d_format") is not VIDEO_SIGNAL_3D_MODES.get(value[37:39]):
-                _LOGGER.info("Video: Input 3D Format: %s (%s)", VIDEO_SIGNAL_3D_MODES.get(value[37:39]), value[37:39])
-                self.video["input_3d_format"] = VIDEO_SIGNAL_3D_MODES.get(value[37:39])
+                if self.video.get("input_3d_format") is not VIDEO_SIGNAL_3D_MODES.get(value[37:39]):
+                    _LOGGER.info("Video: Input 3D Format: %s (%s)", VIDEO_SIGNAL_3D_MODES.get(value[37:39]), value[37:39])
+                    self.video["input_3d_format"] = VIDEO_SIGNAL_3D_MODES.get(value[37:39])
 
-            if self.video.get("output_3d_format") is not VIDEO_SIGNAL_3D_MODES.get(value[39:41]):
-                _LOGGER.info("Video: Output 3D Format: %s (%s)", VIDEO_SIGNAL_3D_MODES.get(value[39:41]), value[39:41])
-                self.video["output_3d_format"] = VIDEO_SIGNAL_3D_MODES.get(value[39:41])
+                if self.video.get("output_3d_format") is not VIDEO_SIGNAL_3D_MODES.get(value[39:41]):
+                    _LOGGER.info("Video: Output 3D Format: %s (%s)", VIDEO_SIGNAL_3D_MODES.get(value[39:41]), value[39:41])
+                    self.video["output_3d_format"] = VIDEO_SIGNAL_3D_MODES.get(value[39:41])
 
-            if self.video.get("signal_hdmi4_recommended_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[41:43]):
-                _LOGGER.info("Video: Signal HDMI4 Recommended Resolution: %s (%s)", VIDEO_SIGNAL_FORMATS.get(value[41:43]), value[41:43])
-                self.video["signal_hdmi4_recommended_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[41:43])
+                if self.video.get("signal_hdmi4_recommended_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[41:43]):
+                    _LOGGER.info("Video: Signal HDMI4 Recommended Resolution: %s (%s)", VIDEO_SIGNAL_FORMATS.get(value[41:43]), value[41:43])
+                    self.video["signal_hdmi4_recommended_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[41:43])
 
-            if self.video.get("signal_hdmi4_deepcolor") is not VIDEO_SIGNAL_BITS.get(value[44]):
-                _LOGGER.info("Video: Signal HDMI4 DeepColor: %s (%s)", VIDEO_SIGNAL_BITS.get(value[44]), value[44])
-                self.video["signal_hdmi4_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[44])
+                if self.video.get("signal_hdmi4_deepcolor") is not VIDEO_SIGNAL_BITS.get(value[44]):
+                    _LOGGER.info("Video: Signal HDMI4 DeepColor: %s (%s)", VIDEO_SIGNAL_BITS.get(value[44]), value[44])
+                    self.video["signal_hdmi4_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[44])
 
         ## FUNC: SETUP
         elif response.startswith("SSF"):
