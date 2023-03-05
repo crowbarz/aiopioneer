@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD041 -->
+<!-- markdownlint-disable MD033 MD041 -->
 
 Python library for controlling a Pioneer AVI via its built-in API.
 
@@ -64,6 +64,19 @@ The default parameters listed below are for AVR models that do not match any cus
 ## Command line interface (CLI) (>= 0.1.3)
 
 A very simple command line interface `aiopioneer` is available to connect to the AVR, send commands and receive responses. It can be used to test the capabilities of the library against your specific AVR.
+
+Invoke the CLI as follows:
+
+    aiopioneer
+      [+Q | --no-query-device-info]
+      [+Z | --no-query-zone]
+      [hostname]
+
+| Option | Default | Description
+| --- | --- | ---
+| hostname | `avr` | hostname for AVR
+| `+Q`<br>`--no-query-device-info` | None | skip AVR device info query
+| `+Z`<br>`--no-query-zones` | None | skip AVR zone query
 
 The CLI accepts all API commands, as well as the following:
 | Command | Argument | Description

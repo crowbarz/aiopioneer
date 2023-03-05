@@ -4,6 +4,7 @@ import asyncio
 import logging
 import sys
 import json
+import argparse
 
 from aiopioneer import PioneerAVR
 from aiopioneer.param import (
@@ -51,9 +52,9 @@ def get_bool_arg(arg):
     return arg in ["true", "True", "TRUE", "on", "On", "ON", "1"]
 
 
-async def cli_main():
+async def cli_main(args: argparse.Namespace):
     """Main async entrypoint."""
-    pioneer = PioneerAVR("avr")
+    pioneer = PioneerAVR(args.hostname)
 
     try:
         await pioneer.connect(reconnect=False)
@@ -67,9 +68,11 @@ async def cli_main():
     print(f"Setting default params to: {params}")
     pioneer.set_user_params(params)
 
-    # await pioneer.query_device_info()
-    # await pioneer.query_zones()
-    # _LOGGER.info("AVR zones discovered: %s", pioneer.zones)
+    if args.query_device_info:
+        await pioneer.query_device_info()
+    if args.query_zones:
+        await pioneer.query_zones()
+        _LOGGER.info("AVR zones discovered: %s", pioneer.zones)
 
     reader, _writer = await connect_stdin_stdout()
     zone = "1"
@@ -239,9 +242,33 @@ def main():
     except:  # pylint: disable=bare-except
         logging.basicConfig(level=debug_level, format=log_format, datefmt=date_format)
 
+    parser = argparse.ArgumentParser(
+        prog="aiopioneer",
+        description="Debug CLI for aiopioneer package",
+        prefix_chars="-+",
+    )
+    parser.add_argument("hostname", help="hostname for AVR", default="avr.local")
+    parser.add_argument(
+        "+Q",
+        "--no-query-device-info",
+        dest="query_device_info",
+        help="skip AVR device info query",
+        action="store_false",
+        default=True,
+    )
+    parser.add_argument(
+        "+Z",
+        "--no-query-zones",
+        dest="query_zones",
+        help="skip AVR zone query",
+        action="store_false",
+        default=True,
+    )
+    args = parser.parse_args()
+
     rcode = False
     try:
-        rcode = asyncio.run(cli_main())
+        rcode = asyncio.run(cli_main(args))
     except KeyboardInterrupt:
         _LOGGER.info("KeyboardInterrupt")
     exit(0 if rcode else 1)
