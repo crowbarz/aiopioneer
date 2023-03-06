@@ -2367,128 +2367,134 @@ class PioneerAVR:
             if self.audio.get("1").get("input_frequency") is not AUDIO_SIGNAL_INPUT_FREQ.get(value[2:4]):
                 _LOGGER.info("Audio: Input Frequency: %s (%s)", AUDIO_SIGNAL_INPUT_FREQ.get(value[2:4]), value[2:4])
                 self.audio["1"]["input_signal"] = AUDIO_SIGNAL_INPUT_FREQ.get(value[2:4]) + " (" + value[2:4] + ")"
-            if self.audio.get("1").get("input_channels").get("L") is not bool(int(value[4:5])):
-                _LOGGER.info("Audio: Input Channel Left: %s", "active" if bool(int(value[4:5])) else "inactive")
-                self.audio["1"]["input_channels"]["L"] = "active" if bool(int(value[4:5])) else "inactive"
-            if self.audio.get("1").get("input_channels").get("C") is not bool(int(value[5:6])):
-                _LOGGER.info("Audio: Input Channel Center: %s", "active" if bool(int(value[5:6])) else "inactive")
-                self.audio["1"]["input_channels"]["C"] = "active" if bool(int(value[5:6])) else "inactive"
-            if self.audio.get("1").get("input_channels").get("R") is not bool(int(value[6:7])):
-                _LOGGER.info("Audio: Input Channel Right: %s", "active" if bool(int(value[6:7])) else "inactive")
-                self.audio["1"]["input_channels"]["R"] = "active" if bool(int(value[6:7])) else "inactive"
-            if self.audio.get("1").get("input_channels").get("SL") is not bool(int(value[7:8])):
-                _LOGGER.info("Audio: Input Channel Surround-Left: %s", "active" if bool(int(value[7:8])) else "inactive")
-                self.audio["1"]["input_channels"]["SL"] = "active" if bool(int(value[7:8])) else "inactive"
-            if self.audio.get("1").get("input_channels").get("SR") is not bool(int(value[8:9])):
-                _LOGGER.info("Audio: Input Channel Surround-Right: %s", "active" if bool(int(value[8:9])) else "inactive")
-                self.audio["1"]["input_channels"]["SR"] = "active" if bool(int(value[8:9])) else "inactive"
-            if self.audio.get("1").get("input_channels").get("SBL") is not bool(int(value[9:10])):
-                _LOGGER.info("Audio: Input Channel Surround-Back-Left: %s", "active" if bool(int(value[9:10])) else "inactive")
-                self.audio["1"]["input_channels"]["SBL"] = "active" if bool(int(value[9:10])) else "inactive"
-            if self.audio.get("1").get("input_channels").get("S") is not bool(int(value[10:11])):
-                _LOGGER.info("Audio: Input Channel Surround-Back-Center: %s", "active" if bool(int(value[10:11])) else "inactive")
-                self.audio["1"]["input_channels"]["S"] = "active" if bool(int(value[10:11])) else "inactive"
-            if self.audio.get("1").get("input_channels").get("SBR") is not bool(int(value[11:12])):
-                _LOGGER.info("Audio: Input Channel Surround-Back-Right: %s", "active" if bool(int(value[11:12])) else "inactive")
-                self.audio["1"]["input_channels"]["SBR"] = "active" if bool(int(value[11:12])) else "inactive"
-            if self.audio.get("1").get("input_channels").get("LFE") is not bool(int(value[12:13])):
-                _LOGGER.info("Audio: Input Channel LFE: %s", "active" if bool(int(value[12:13])) else "inactive")
-                self.audio["1"]["input_channels"]["LFE"] = "active" if bool(int(value[12:13])) else "inactive"
-            if self.audio.get("1").get("input_channels").get("FHL") is not bool(int(value[13:14])):
-                _LOGGER.info("Audio: Input Channel Front-Height-Left: %s", "active" if bool(int(value[13:14])) else "inactive")
-                self.audio["1"]["input_channels"]["FHL"] = "active" if bool(int(value[13:14])) else "inactive"
-            if self.audio.get("1").get("input_channels").get("FHR") is not bool(int(value[14:15])):
-                _LOGGER.info("Audio: Input Channel Front-Height-Right: %s", "active" if bool(int(value[14:15])) else "inactive")
-                self.audio["1"]["input_channels"]["FHR"] = "active" if bool(int(value[14:15])) else "inactive"
-            if self.audio.get("1").get("input_channels").get("FWL") is not bool(int(value[15:16])):
-                _LOGGER.info("Audio: Input Channel Front-Width-Left: %s", "active" if bool(int(value[15:16])) else "inactive")
-                self.audio["1"]["input_channels"]["FWL"] = "active" if bool(int(value[15:16])) else "inactive"
-            if self.audio.get("1").get("input_channels").get("FWR") is not bool(int(value[16:17])):
-                _LOGGER.info("Audio: Input Channel Front-Width-Right: %s", "active" if bool(int(value[16:17])) else "inactive")
-                self.audio["1"]["input_channels"]["FWR"] = "active" if bool(int(value[16:17])) else "inactive"
-            if self.audio.get("1").get("input_channels").get("XL") is not bool(int(value[17:18])):
-                _LOGGER.info("Audio: Input Channel XL: %s", "active" if bool(int(value[17:18])) else "inactive")
-                self.audio["1"]["input_channels"]["XL"] = "active" if bool(int(value[17:18])) else "inactive"
-            if self.audio.get("1").get("input_channels").get("XC") is not bool(int(value[18:19])):
-                _LOGGER.info("Audio: Input Channel XC: %s", "active" if bool(int(value[18:19])) else "inactive")
-                self.audio["1"]["input_channels"]["XC"] = "active" if bool(int(value[18:19])) else "inactive"
-            if self.audio.get("1").get("input_channels").get("XR") is not bool(int(value[19:20])):
-                _LOGGER.info("Audio: Input Channel XL: %s", "active" if bool(int(value[19:20])) else "inactive")
-                self.audio["1"]["input_channels"]["XL"] = "active" if bool(int(value[19:20])) else "inactive"
+            if self.audio.get("1").get("input_channels").get("L") is not bool(int(value[4])):
+                _LOGGER.info("Audio: Input Channel Left: %s", "active" if bool(int(value[4])) else "inactive")
+                self.audio["1"]["input_channels"]["L"] = "active" if bool(int(value[4])) else "inactive"
+            if self.audio.get("1").get("input_channels").get("C") is not bool(int(value[5])):
+                _LOGGER.info("Audio: Input Channel Center: %s", "active" if bool(int(value[5])) else "inactive")
+                self.audio["1"]["input_channels"]["C"] = "active" if bool(int(value[5])) else "inactive"
+            if self.audio.get("1").get("input_channels").get("R") is not bool(int(value[6])):
+                _LOGGER.info("Audio: Input Channel Right: %s", "active" if bool(int(value[6])) else "inactive")
+                self.audio["1"]["input_channels"]["R"] = "active" if bool(int(value[6])) else "inactive"
+            if self.audio.get("1").get("input_channels").get("SL") is not bool(int(value[7])):
+                _LOGGER.info("Audio: Input Channel Surround-Left: %s", "active" if bool(int(value[7])) else "inactive")
+                self.audio["1"]["input_channels"]["SL"] = "active" if bool(int(value[7])) else "inactive"
+            if self.audio.get("1").get("input_channels").get("SR") is not bool(int(value[8])):
+                _LOGGER.info("Audio: Input Channel Surround-Right: %s", "active" if bool(int(value[8])) else "inactive")
+                self.audio["1"]["input_channels"]["SR"] = "active" if bool(int(value[8])) else "inactive"
+            if self.audio.get("1").get("input_channels").get("SBL") is not bool(int(value[9])):
+                _LOGGER.info("Audio: Input Channel Surround-Back-Left: %s", "active" if bool(int(value[9])) else "inactive")
+                self.audio["1"]["input_channels"]["SBL"] = "active" if bool(int(value[9])) else "inactive"
+            if self.audio.get("1").get("input_channels").get("S") is not bool(int(value[10])):
+                _LOGGER.info("Audio: Input Channel Surround-Back-Center: %s", "active" if bool(int(value[10])) else "inactive")
+                self.audio["1"]["input_channels"]["S"] = "active" if bool(int(value[10])) else "inactive"
+            if self.audio.get("1").get("input_channels").get("SBR") is not bool(int(value[11])):
+                _LOGGER.info("Audio: Input Channel Surround-Back-Right: %s", "active" if bool(int(value[11])) else "inactive")
+                self.audio["1"]["input_channels"]["SBR"] = "active" if bool(int(value[11])) else "inactive"
+            if self.audio.get("1").get("input_channels").get("LFE") is not bool(int(value[12])):
+                _LOGGER.info("Audio: Input Channel LFE: %s", "active" if bool(int(value[12])) else "inactive")
+                self.audio["1"]["input_channels"]["LFE"] = "active" if bool(int(value[12])) else "inactive"
+            if self.audio.get("1").get("input_channels").get("FHL") is not bool(int(value[13])):
+                _LOGGER.info("Audio: Input Channel Front-Height-Left: %s", "active" if bool(int(value[13])) else "inactive")
+                self.audio["1"]["input_channels"]["FHL"] = "active" if bool(int(value[13])) else "inactive"
+            if self.audio.get("1").get("input_channels").get("FHR") is not bool(int(value[14])):
+                _LOGGER.info("Audio: Input Channel Front-Height-Right: %s", "active" if bool(int(value[14])) else "inactive")
+                self.audio["1"]["input_channels"]["FHR"] = "active" if bool(int(value[14])) else "inactive"
+            if self.audio.get("1").get("input_channels").get("FWL") is not bool(int(value[15])):
+                _LOGGER.info("Audio: Input Channel Front-Width-Left: %s", "active" if bool(int(value[15])) else "inactive")
+                self.audio["1"]["input_channels"]["FWL"] = "active" if bool(int(value[15])) else "inactive"
+            if self.audio.get("1").get("input_channels").get("FWR") is not bool(int(value[16])):
+                _LOGGER.info("Audio: Input Channel Front-Width-Right: %s", "active" if bool(int(value[16])) else "inactive")
+                self.audio["1"]["input_channels"]["FWR"] = "active" if bool(int(value[16])) else "inactive"
+            if self.audio.get("1").get("input_channels").get("XL") is not bool(int(value[17])):
+                _LOGGER.info("Audio: Input Channel XL: %s", "active" if bool(int(value[17])) else "inactive")
+                self.audio["1"]["input_channels"]["XL"] = "active" if bool(int(value[17])) else "inactive"
+            if self.audio.get("1").get("input_channels").get("XC") is not bool(int(value[18])):
+                _LOGGER.info("Audio: Input Channel XC: %s", "active" if bool(int(value[18])) else "inactive")
+                self.audio["1"]["input_channels"]["XC"] = "active" if bool(int(value[18])) else "inactive"
+            if self.audio.get("1").get("input_channels").get("XR") is not bool(int(value[19])):
+                _LOGGER.info("Audio: Input Channel XL: %s", "active" if bool(int(value[19])) else "inactive")
+                self.audio["1"]["input_channels"]["XL"] = "active" if bool(int(value[19])) else "inactive"
             ## (data21) to (data25) are reserved according to FY16AVRs
             ## Decode output signal data
-            if self.audio.get("1").get("output_frequency") is not AUDIO_SIGNAL_INPUT_FREQ.get(value[43:45]):
-                _LOGGER.info("Audio: Output Frequency: %s (%s)", AUDIO_SIGNAL_INPUT_FREQ.get(value[43:45]), value[43:45])
-                self.audio["1"]["output_signal"] = AUDIO_SIGNAL_INPUT_FREQ.get(value[43:45]) + " (" + value[43:45] + ")"
-            if self.audio.get("1").get("output_channels").get("L") is not bool(int(value[25:26])):
-                _LOGGER.info("Audio: Output Channel Left: %s", "active" if bool(int(value[25:26])) else "inactive")
-                self.audio["1"]["output_channels"]["L"] = "active" if bool(int(value[25:26])) else "inactive"
-            if self.audio.get("1").get("output_channels").get("C") is not bool(int(value[26:27])):
-                _LOGGER.info("Audio: Output Channel Center: %s", "active" if bool(int(value[26:27])) else "inactive")
-                self.audio["1"]["output_channels"]["C"] = "active" if bool(int(value[26:27])) else "inactive"
-            if self.audio.get("1").get("output_channels").get("R") is not bool(int(value[27:28])):
-                _LOGGER.info("Audio: Output Channel Right: %s", "active" if bool(int(value[27:28])) else "inactive")
-                self.audio["1"]["output_channels"]["R"] = "active" if bool(int(value[27:28])) else "inactive"
-            if self.audio.get("1").get("output_channels").get("SL") is not bool(int(value[28:29])):
-                _LOGGER.info("Audio: Output Channel Surround-Left: %s", "active" if bool(int(value[28:29])) else "inactive")
-                self.audio["1"]["output_channels"]["SL"] = "active" if bool(int(value[28:29])) else "inactive"
-            if self.audio.get("1").get("output_channels").get("SR") is not bool(int(value[29:30])):
-                _LOGGER.info("Audio: Output Channel Surround-Right: %s", "active" if bool(int(value[29:30])) else "inactive")
-                self.audio["1"]["output_channels"]["SR"] = "active" if bool(int(value[29:30])) else "inactive"
-            if self.audio.get("1").get("output_channels").get("SBL") is not bool(int(value[30:31])):
-                _LOGGER.info("Audio: Output Channel Surround-Back-Left: %s", "active" if bool(int(value[30:31])) else "inactive")
-                self.audio["1"]["output_channels"]["SBL"] = "active" if bool(int(value[30:31])) else "inactive"
-            if self.audio.get("1").get("output_channels").get("SB") is not bool(int(value[31:32])):
-                _LOGGER.info("Audio: Output Channel Surround-Back-Center: %s", "active" if bool(int(value[31:32])) else "inactive")
-                self.audio["1"]["output_channels"]["SB"] = "active" if bool(int(value[31:32])) else "inactive"
-            if self.audio.get("1").get("output_channels").get("SBR") is not bool(int(value[32:33])):
-                _LOGGER.info("Audio: Output Channel Surround-Back-Right: %s", "active" if bool(int(value[32:33])) else "inactive")
-                self.audio["1"]["output_channels"]["SBR"] = "active" if bool(int(value[32:33])) else "inactive"
-            if self.audio.get("1").get("output_channels").get("SW") is not bool(int(value[33:34])):
-                _LOGGER.info("Audio: Output Channel SW: %s", "active" if bool(int(value[33:34])) else "inactive")
-                self.audio["1"]["output_channels"]["SW"] = "active" if bool(int(value[33:34])) else "inactive"
-            if self.audio.get("1").get("output_channels").get("FHL") is not bool(int(value[34:35])):
-                _LOGGER.info("Audio: Output Channel Front-Height-Left: %s", "active" if bool(int(value[34:35])) else "inactive")
-                self.audio["1"]["output_channels"]["FHL"] = "active" if bool(int(value[34:35])) else "inactive"
-            if self.audio.get("1").get("output_channels").get("FHR") is not bool(int(value[35:36])):
-                _LOGGER.info("Audio: Output Channel Front-Height-Right: %s", "active" if bool(int(value[35:36])) else "inactive")
-                self.audio["1"]["output_channels"]["FHR"] = "active" if bool(int(value[35:36])) else "inactive"
-            if self.audio.get("1").get("output_channels").get("FWL") is not bool(int(value[36:37])):
-                _LOGGER.info("Audio: Output Channel Front-Width-Left: %s", "active" if bool(int(value[36:37])) else "inactive")
-                self.audio["1"]["output_channels"]["FWL"] = "active" if bool(int(value[36:37])) else "inactive"
-            if self.audio.get("1").get("output_channels").get("FWR") is not bool(int(value[37:38])):
-                _LOGGER.info("Audio: Output Channel Front-Width-Right: %s", "active" if bool(int(value[37:38])) else "inactive")
-                self.audio["1"]["output_channels"]["FWR"] = "active" if bool(int(value[37:38])) else "inactive"
-            if self.audio.get("1").get("output_channels").get("TML") is not bool(int(value[38:39])):
-                _LOGGER.info("Audio: Output Channel TML: %s", "active" if bool(int(value[38:39])) else "inactive")
-                self.audio["1"]["output_channels"]["TML"] = "active" if bool(int(value[38:39])) else "inactive"
-            if self.audio.get("1").get("output_channels").get("TMR") is not bool(int(value[39:40])):
-                _LOGGER.info("Audio: Output Channel TMR: %s", "active" if bool(int(value[39:40])) else "inactive")
-                self.audio["1"]["output_channels"]["TMR"] = "active" if bool(int(value[39:40])) else "inactive"
-            if self.audio.get("1").get("output_channels").get("TRL") is not bool(int(value[40:41])):
-                _LOGGER.info("Audio: Output Channel TRL: %s", "active" if bool(int(value[40:41])) else "inactive")
-                self.audio["1"]["output_channels"]["TRL"] = "active" if bool(int(value[40:41])) else "inactive"
-            if self.audio.get("1").get("output_channels").get("TRR") is not bool(int(value[41:42])):
-                _LOGGER.info("Audio: Output Channel TRR: %s", "active" if bool(int(value[41:42])) else "inactive")
-                self.audio["1"]["output_channels"]["TRR"] = "active" if bool(int(value[41:42])) else "inactive"
-            if self.audio.get("1").get("output_channels").get("SW2") is not bool(int(value[42:43])):
-                _LOGGER.info("Audio: Output Channel SW2: %s", "active" if bool(int(value[42:43])) else "inactive")
-                self.audio["1"]["output_channels"]["SW2"] = "active" if bool(int(value[42:43])) else "inactive"
-            if self.audio.get("1").get("output_bits") is not int(value[45:47]):
-                _LOGGER.info("Audio: Output Bits: %s", value[45:47])
-                self.audio["1"]["output_bits"] = int(value[45:47])
-            if self.audio.get("1").get("output_pqls") is not AUDIO_WORKING_PQLS.get(value[51:52]):
-                _LOGGER.info("Audio: Output PQLS: %s (%s)", AUDIO_WORKING_PQLS.get(value[51:52]), value[51:52])
-                self.audio["1"]["output_pqls"] = AUDIO_WORKING_PQLS.get(value[51:52])
-            if self.audio.get("1").get("output_auto_phase_control_plus") is not int(value[52:54]):
-                _LOGGER.info("Audio: Output Auto Phase Control Plus: %sms", value[52:54])
-                self.audio["1"]["output_auto_phase_control_plus"] = int(value[52:54])
-            if self.audio.get("1").get("output_reverse_phase") is not bool(value[54:55]):
-                _LOGGER.info("Audio: Output Auto Phase Control Plus Reverse Phase: %s", value[54:55])
-                self.audio["1"]["output_reverse_phase"] = bool(value[54:55])
+            if self.audio.get("1").get("output_channels").get("L") is not bool(int(value[25])):
+                _LOGGER.info("Audio: Output Channel Left: %s", "active" if bool(int(value[25])) else "inactive")
+                self.audio["1"]["output_channels"]["L"] = "active" if bool(int(value[25])) else "inactive"
+            if self.audio.get("1").get("output_channels").get("C") is not bool(int(value[26])):
+                _LOGGER.info("Audio: Output Channel Center: %s", "active" if bool(int(value[26])) else "inactive")
+                self.audio["1"]["output_channels"]["C"] = "active" if bool(int(value[26])) else "inactive"
+            if self.audio.get("1").get("output_channels").get("R") is not bool(int(value[27])):
+                _LOGGER.info("Audio: Output Channel Right: %s", "active" if bool(int(value[27])) else "inactive")
+                self.audio["1"]["output_channels"]["R"] = "active" if bool(int(value[27])) else "inactive"
+            if self.audio.get("1").get("output_channels").get("SL") is not bool(int(value[28])):
+                _LOGGER.info("Audio: Output Channel Surround-Left: %s", "active" if bool(int(value[28])) else "inactive")
+                self.audio["1"]["output_channels"]["SL"] = "active" if bool(int(value[28])) else "inactive"
+            if self.audio.get("1").get("output_channels").get("SR") is not bool(int(value[29])):
+                _LOGGER.info("Audio: Output Channel Surround-Right: %s", "active" if bool(int(value[29])) else "inactive")
+                self.audio["1"]["output_channels"]["SR"] = "active" if bool(int(value[29])) else "inactive"
+            if self.audio.get("1").get("output_channels").get("SBL") is not bool(int(value[30])):
+                _LOGGER.info("Audio: Output Channel Surround-Back-Left: %s", "active" if bool(int(value[30])) else "inactive")
+                self.audio["1"]["output_channels"]["SBL"] = "active" if bool(int(value[30])) else "inactive"
+            if self.audio.get("1").get("output_channels").get("SB") is not bool(int(value[31])):
+                _LOGGER.info("Audio: Output Channel Surround-Back-Center: %s", "active" if bool(int(value[31])) else "inactive")
+                self.audio["1"]["output_channels"]["SB"] = "active" if bool(int(value[31])) else "inactive"
+            if self.audio.get("1").get("output_channels").get("SBR") is not bool(int(value[32])):
+                _LOGGER.info("Audio: Output Channel Surround-Back-Right: %s", "active" if bool(int(value[32])) else "inactive")
+                self.audio["1"]["output_channels"]["SBR"] = "active" if bool(int(value[32])) else "inactive"
+
+            ## Some older AVRs do not have more than 33 data bits
+            if len(value) > 33: 
+                if self.audio.get("1").get("output_channels").get("SW") is not bool(int(value[33])):
+                    _LOGGER.info("Audio: Output Channel SW: %s", "active" if bool(int(value[33])) else "inactive")
+                    self.audio["1"]["output_channels"]["SW"] = "active" if bool(int(value[33])) else "inactive"
+                if self.audio.get("1").get("output_channels").get("FHL") is not bool(int(value[34])):
+                    _LOGGER.info("Audio: Output Channel Front-Height-Left: %s", "active" if bool(int(value[34])) else "inactive")
+                    self.audio["1"]["output_channels"]["FHL"] = "active" if bool(int(value[34])) else "inactive"
+                if self.audio.get("1").get("output_channels").get("FHR") is not bool(int(value[35])):
+                    _LOGGER.info("Audio: Output Channel Front-Height-Right: %s", "active" if bool(int(value[35])) else "inactive")
+                    self.audio["1"]["output_channels"]["FHR"] = "active" if bool(int(value[35])) else "inactive"
+                if self.audio.get("1").get("output_channels").get("FWL") is not bool(int(value[36])):
+                    _LOGGER.info("Audio: Output Channel Front-Width-Left: %s", "active" if bool(int(value[36])) else "inactive")
+                    self.audio["1"]["output_channels"]["FWL"] = "active" if bool(int(value[36])) else "inactive"
+                if self.audio.get("1").get("output_channels").get("FWR") is not bool(int(value[37])):
+                    _LOGGER.info("Audio: Output Channel Front-Width-Right: %s", "active" if bool(int(value[37])) else "inactive")
+                    self.audio["1"]["output_channels"]["FWR"] = "active" if bool(int(value[37])) else "inactive"
+                if self.audio.get("1").get("output_channels").get("TML") is not bool(int(value[38])):
+                    _LOGGER.info("Audio: Output Channel TML: %s", "active" if bool(int(value[38])) else "inactive")
+                    self.audio["1"]["output_channels"]["TML"] = "active" if bool(int(value[38])) else "inactive"
+                if self.audio.get("1").get("output_channels").get("TMR") is not bool(int(value[39])):
+                    _LOGGER.info("Audio: Output Channel TMR: %s", "active" if bool(int(value[39])) else "inactive")
+                    self.audio["1"]["output_channels"]["TMR"] = "active" if bool(int(value[39])) else "inactive"
+                if self.audio.get("1").get("output_channels").get("TRL") is not bool(int(value[40])):
+                    _LOGGER.info("Audio: Output Channel TRL: %s", "active" if bool(int(value[40])) else "inactive")
+                    self.audio["1"]["output_channels"]["TRL"] = "active" if bool(int(value[40])) else "inactive"
+                if self.audio.get("1").get("output_channels").get("TRR") is not bool(int(value[41])):
+                    _LOGGER.info("Audio: Output Channel TRR: %s", "active" if bool(int(value[41])) else "inactive")
+                    self.audio["1"]["output_channels"]["TRR"] = "active" if bool(int(value[41])) else "inactive"
+                if self.audio.get("1").get("output_channels").get("SW2") is not bool(int(value[42])):
+                    _LOGGER.info("Audio: Output Channel SW2: %s", "active" if bool(int(value[42])) else "inactive")
+                    self.audio["1"]["output_channels"]["SW2"] = "active" if bool(int(value[42])) else "inactive"
+
+            ## FY11 AVRs do not have more than data 43 data bits (VSX-1021)
+            if len(value) > 43:
+                if self.audio.get("1").get("output_frequency") is not AUDIO_SIGNAL_INPUT_FREQ.get(value[43:45]):
+                    _LOGGER.info("Audio: Output Frequency: %s (%s)", AUDIO_SIGNAL_INPUT_FREQ.get(value[43:45]), value[43:45])
+                    self.audio["1"]["output_signal"] = AUDIO_SIGNAL_INPUT_FREQ.get(value[43:45]) + " (" + value[43:45] + ")"
+                if self.audio.get("1").get("output_bits") is not int(value[45:47]):
+                    _LOGGER.info("Audio: Output Bits: %s", value[45:47])
+                    self.audio["1"]["output_bits"] = int(value[45:47])
+                if self.audio.get("1").get("output_pqls") is not AUDIO_WORKING_PQLS.get(value[51:52]):
+                    _LOGGER.info("Audio: Output PQLS: %s (%s)", AUDIO_WORKING_PQLS.get(value[51:52]), value[51:52])
+                    self.audio["1"]["output_pqls"] = AUDIO_WORKING_PQLS.get(value[51:52])
+                if self.audio.get("1").get("output_auto_phase_control_plus") is not int(value[52:54]):
+                    _LOGGER.info("Audio: Output Auto Phase Control Plus: %sms", value[52:54])
+                    self.audio["1"]["output_auto_phase_control_plus"] = int(value[52:54])
+                if self.audio.get("1").get("output_reverse_phase") is not bool(value[54:55]):
+                    _LOGGER.info("Audio: Output Auto Phase Control Plus Reverse Phase: %s", value[54:55])
+                    self.audio["1"]["output_reverse_phase"] = bool(value[54:55])
 
             ## set multichannel value
-            if bool(int(value[4:5])) and bool(int(value[5:6])) and bool(int(value[6:7])):
+            if bool(int(value[4])) and bool(int(value[5])) and bool(int(value[6])):
                 _LOGGER.info("Audio: Input Multi-Channel: %s", str(True))
                 self.audio["1"]["input_multichannel"] = True
             else:
@@ -2501,11 +2507,13 @@ class PioneerAVR:
         ## VIDEO INFORMATION
         elif response.startswith("VST"):
             value = response[3:]
+
             ## INPUT TERMINAL
             if self.video.get("signal_input_terminal") is not VIDEO_SIGNAL_INPUT_TERMINAL.get(value[0]):
                 _LOGGER.info("Video: Input Terminal: %s (%s)", VIDEO_SIGNAL_INPUT_TERMINAL.get(value[0]), value[0])
                 self.video["signal_input_terminal"] = VIDEO_SIGNAL_INPUT_TERMINAL.get(value[0])
 
+            ## INPUT RESOLUTION
             if self.video.get("signal_input_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[2:4]):
                 _LOGGER.info("Video: Signal Input Resolution: %s (%s)", VIDEO_SIGNAL_FORMATS.get(value[2:4]), value[2:4])
                 self.video["signal_input_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[2:4])
@@ -2562,29 +2570,30 @@ class PioneerAVR:
                 _LOGGER.info("Video: Signal HDMI2 DeepColor: %s (%s)", VIDEO_SIGNAL_BITS.get(value[23]), value[23])
                 self.video["signal_hdmi2_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[23])
 
-            if self.video.get("signal_hdmi3_recommended_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[29:31]):
-                _LOGGER.info("Video: Signal HDMI3 Recommended Resolution: %s (%s)", VIDEO_SIGNAL_FORMATS.get(value[29:31]), value[29:31])
-                self.video["signal_hdmi3_recommended_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[29:31])
+            if len(value) > 40: ## FY11 AVRs only return 25 data values
+                if self.video.get("signal_hdmi3_recommended_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[29:31]):
+                    _LOGGER.info("Video: Signal HDMI3 Recommended Resolution: %s (%s)", VIDEO_SIGNAL_FORMATS.get(value[29:31]), value[29:31])
+                    self.video["signal_hdmi3_recommended_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[29:31])
 
-            if self.video.get("signal_hdmi3_deepcolor") is not VIDEO_SIGNAL_BITS.get(value[31]):
-                _LOGGER.info("Video: Signal HDMI3 DeepColor: %s (%s)", VIDEO_SIGNAL_BITS.get(value[31]), value[31])
-                self.video["signal_hdmi3_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[31])
+                if self.video.get("signal_hdmi3_deepcolor") is not VIDEO_SIGNAL_BITS.get(value[31]):
+                    _LOGGER.info("Video: Signal HDMI3 DeepColor: %s (%s)", VIDEO_SIGNAL_BITS.get(value[31]), value[31])
+                    self.video["signal_hdmi3_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[31])
 
-            if self.video.get("input_3d_format") is not VIDEO_SIGNAL_3D_MODES.get(value[37:39]):
-                _LOGGER.info("Video: Input 3D Format: %s (%s)", VIDEO_SIGNAL_3D_MODES.get(value[37:39]), value[37:39])
-                self.video["input_3d_format"] = VIDEO_SIGNAL_3D_MODES.get(value[37:39])
+                if self.video.get("input_3d_format") is not VIDEO_SIGNAL_3D_MODES.get(value[37:39]):
+                    _LOGGER.info("Video: Input 3D Format: %s (%s)", VIDEO_SIGNAL_3D_MODES.get(value[37:39]), value[37:39])
+                    self.video["input_3d_format"] = VIDEO_SIGNAL_3D_MODES.get(value[37:39])
 
-            if self.video.get("output_3d_format") is not VIDEO_SIGNAL_3D_MODES.get(value[39:41]):
-                _LOGGER.info("Video: Output 3D Format: %s (%s)", VIDEO_SIGNAL_3D_MODES.get(value[39:41]), value[39:41])
-                self.video["output_3d_format"] = VIDEO_SIGNAL_3D_MODES.get(value[39:41])
+                if self.video.get("output_3d_format") is not VIDEO_SIGNAL_3D_MODES.get(value[39:41]):
+                    _LOGGER.info("Video: Output 3D Format: %s (%s)", VIDEO_SIGNAL_3D_MODES.get(value[39:41]), value[39:41])
+                    self.video["output_3d_format"] = VIDEO_SIGNAL_3D_MODES.get(value[39:41])
 
-            if self.video.get("signal_hdmi4_recommended_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[41:43]):
-                _LOGGER.info("Video: Signal HDMI4 Recommended Resolution: %s (%s)", VIDEO_SIGNAL_FORMATS.get(value[41:43]), value[41:43])
-                self.video["signal_hdmi4_recommended_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[41:43])
+                if self.video.get("signal_hdmi4_recommended_resolution") is not VIDEO_SIGNAL_FORMATS.get(value[41:43]):
+                    _LOGGER.info("Video: Signal HDMI4 Recommended Resolution: %s (%s)", VIDEO_SIGNAL_FORMATS.get(value[41:43]), value[41:43])
+                    self.video["signal_hdmi4_recommended_resolution"] = VIDEO_SIGNAL_FORMATS.get(value[41:43])
 
-            if self.video.get("signal_hdmi4_deepcolor") is not VIDEO_SIGNAL_BITS.get(value[44]):
-                _LOGGER.info("Video: Signal HDMI4 DeepColor: %s (%s)", VIDEO_SIGNAL_BITS.get(value[44]), value[44])
-                self.video["signal_hdmi4_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[44])
+                if self.video.get("signal_hdmi4_deepcolor") is not VIDEO_SIGNAL_BITS.get(value[44]):
+                    _LOGGER.info("Video: Signal HDMI4 DeepColor: %s (%s)", VIDEO_SIGNAL_BITS.get(value[44]), value[44])
+                    self.video["signal_hdmi4_deepcolor"] = VIDEO_SIGNAL_BITS.get(value[44])
 
         ## FUNC: SETUP
         elif response.startswith("SSF"):
