@@ -2,7 +2,7 @@
 
 Python library for controlling a Pioneer AVI via its built-in API.
 
-Inspired by the [original Pioneer Home Assistant integration](https://www.home-assistant.io/integrations/pioneer/).
+Used by the [pioneer_async](https://github.com/crowbarz/ha-pioneer_async) integration for Home Assistant, which was inspired by the [original Pioneer Home Assistant integration](https://www.home-assistant.io/integrations/pioneer/).
 Tested on a VSX-930 (Main Zone and HDZone outputs).
 
 ## Features
