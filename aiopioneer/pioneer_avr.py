@@ -13,6 +13,7 @@ from .util import (
     cancel_task,
     safe_wait_for,
 )
+from .const import DEFAULT_PORT
 from .param import (
     PARAM_IGNORED_ZONES,
     PARAM_COMMAND_DELAY,
@@ -765,7 +766,7 @@ class PioneerAVR:
     def __init__(
         self,
         host,
-        port=8102,
+        port=DEFAULT_PORT,
         timeout=2,
         scan_interval=60,
         params=None,

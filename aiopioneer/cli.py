@@ -7,6 +7,7 @@ import json
 import argparse
 
 from aiopioneer import PioneerAVR
+from aiopioneer.const import DEFAULT_PORT
 from aiopioneer.param import (
     PARAM_DEBUG_LISTENER,
     PARAM_DEBUG_RESPONDER,
@@ -54,7 +55,7 @@ def get_bool_arg(arg):
 
 async def cli_main(args: argparse.Namespace):
     """Main async entrypoint."""
-    pioneer = PioneerAVR(args.hostname)
+    pioneer = PioneerAVR(args.hostname, args.port)
 
     try:
         await pioneer.connect(reconnect=False)
@@ -247,7 +248,12 @@ def main():
         description="Debug CLI for aiopioneer package",
         prefix_chars="-+",
     )
-    parser.add_argument("hostname", help="hostname for AVR", default="avr.local")
+    parser.add_argument(
+        "hostname", help="hostname for AVR connection", default="avr.local"
+    )
+    parser.add_argument(
+        "-p", "--port", type=int, help="port for AVR connection", default=DEFAULT_PORT
+    )
     parser.add_argument(
         "+Q",
         "--no-query-device-info",
