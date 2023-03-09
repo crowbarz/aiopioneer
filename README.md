@@ -65,16 +65,14 @@ The default parameters listed below are for AVR models that do not match any cus
 
 A very simple command line interface `aiopioneer` is available to connect to the AVR, send commands and receive responses. It can be used to test the capabilities of the library against your specific AVR.
 
-Invoke the CLI as follows:
+On Home Assistant, you can run the CLI when the `pioneer_async` Home Assistant integration has been installed. On Home Assistant Supervised or Container, start the CLI from within the HA container: `docker exec -it homeassistant aiopioneer`.
 
-    aiopioneer
-      [+Q | --no-query-device-info]
-      [+Z | --no-query-zone]
-      [hostname]
+Invoke the CLI with the following optional parameters:
 
 | Option | Default | Description
 | --- | --- | ---
-| hostname | `avr` | hostname for AVR
+| hostname | `avr` | hostname for AVR connection
+| `-p`<br>`--port` | 8102 | port for AVR connection
 | `+Q`<br>`--no-query-device-info` | None | skip AVR device info query
 | `+Z`<br>`--no-query-zones` | None | skip AVR zone query
 
