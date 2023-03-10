@@ -1069,7 +1069,7 @@ class PioneerAVR:
         elif response.startswith("SR"):
             value = response[2:]
             if self.listening_mode.get("1") != value:
-                self.listening_mode["1"] = LISTENING_MODES.get(value)
+                self.listening_mode["1"] = LISTENING_MODES.get(value)[0]
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Listening Mode: %s (%s)",
                              self.listening_mode.get("1"), value)
@@ -2374,7 +2374,7 @@ class PioneerAVR:
         """Sets the listening mode using the predefined list of options in params."""
         self._check_zone(zone)
         return await self.send_command(
-            "set_listening_mode", zone, prefix=self._get_parameter_key_from_value(listening_mode, LISTENING_MODES), ignore_error=False
+            "set_listening_mode", zone, prefix=self._get_parameter_key_from_value(listening_mode, LISTENING_MODES, loose_match=True), ignore_error=False
         )
 
     async def set_panel_lock(self, panel_lock: str, zone="1"):
