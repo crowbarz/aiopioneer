@@ -78,8 +78,6 @@ from .param import (
 
 _LOGGER = logging.getLogger(__name__)
 
-VERSION = "0.2.1"
-
 PIONEER_COMMANDS = {
     "system_query_mac_addr": {"1": ["?SVB", "SVB"]},
     "system_query_software_version": {"1": ["?SSI", "SSI"]},
@@ -2444,7 +2442,7 @@ class PioneerAVR:
                 self.audio["1"]["output_channels"]["SBR"] = "active" if bool(int(value[32])) else "inactive"
 
             ## Some older AVRs do not have more than 33 data bits
-            if len(value) > 33: 
+            if len(value) > 33:
                 if self.audio.get("1").get("output_channels").get("SW") is not bool(int(value[33])):
                     _LOGGER.info("Audio: Output Channel SW: %s", "active" if bool(int(value[33])) else "inactive")
                     self.audio["1"]["output_channels"]["SW"] = "active" if bool(int(value[33])) else "inactive"
