@@ -779,9 +779,9 @@ class PioneerAVR:
         if zone == "1":
             # Now check if the current input info is multi channel or not
             if self.audio.get(zone).get("input_multichannel"):
-                return list([v for k, v in LISTENING_MODES if ("MULTI CH" in v.upper() or "DIRECT" in v.upper()) and k not in self._params.get(PARAM_DISABLED_LISTENING_MODES)])
+                return list([v[0] for k, v in LISTENING_MODES.items() if bool(v[2]) and k not in self._params.get(PARAM_DISABLED_LISTENING_MODES)])
             else:
-                return list([v for k, v in LISTENING_MODES if ("MULTI CH" not in v.upper()) and k not in self._params.get(PARAM_DISABLED_LISTENING_MODES)])
+                return list([v[0] for k, v in LISTENING_MODES.items() if bool(v[1]) and k not in self._params.get(PARAM_DISABLED_LISTENING_MODES)])
         else:
             return None
 
@@ -2534,7 +2534,7 @@ class PioneerAVR:
             if arg != "zone":
                 if arguments.get(arg) is not None:
                     if self.video.get(arg) is not arguments.get(arg):
-                        if isinstance(arguments.get(arg)) == str:
+                        if isinstance(arguments.get(arg), str):
                             # Functions to do a lookup here
                             if arg == "resolution":
                                 arguments[arg] = self._get_parameter_key_from_value(
@@ -2554,10 +2554,10 @@ class PioneerAVR:
                                 arguments[arg] = self._get_parameter_key_from_value(
                                     arguments.get(arg), VIDEO_ASPECT_MODES)
 
-                        elif isinstance(arguments.get(arg)) == bool:
+                        elif isinstance(arguments.get(arg), bool):
                             arguments[arg] = str(int(arguments.get(arg)))
 
-                        elif isinstance(arguments.get(arg) == int):
+                        elif isinstance(arguments.get(arg), int):
                             # parameter 0 = 50, so add 50 for all int video parameters
                             arguments[arg] += 50
                             if arg == "prog_motion":
@@ -2585,7 +2585,7 @@ class PioneerAVR:
             if arg != "zone":
                 if arguments.get(arg) is not None:
                     if self.dsp.get(arg) is not arguments.get(arg):
-                        if isinstance(arguments.get(arg)) == str:
+                        if isinstance(arguments.get(arg), str):
                             # Functions to do a lookup here
                             if arg == "phase_control":
                                 arguments[arg] = self._get_parameter_key_from_value(
@@ -2611,16 +2611,16 @@ class PioneerAVR:
                             elif arg == "digital_filter":
                                 arguments[arg] = self._get_parameter_key_from_value(
                                     arguments.get(arg), DSP_DIGITAL_FILTER)
-                        elif isinstance(arguments.get(arg)) == bool:
+                        elif isinstance(arguments.get(arg), bool):
                             arguments[arg] = str(int(arguments.get(arg)))
-                        elif isinstance(arguments.get(arg)) == float:
+                        elif isinstance(arguments.get(arg), float):
                             if arg == "sound_delay":
                                 arguments[arg] = str(
                                     int(float(arguments.get(arg)) * 10)).zfill(3)
                             elif arg == "center_image":
                                 arguments[arg] = str(
                                     int(arguments.get(arg)) * 10).zfill(2)
-                        elif isinstance(arguments.get(arg) == int):
+                        elif isinstance(arguments.get(arg), int):
                             if arg == "lfe_att":
                                 arguments[arg] = int((-20/5)*-1)
                             elif arg == "dimension":
