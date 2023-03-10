@@ -1,5 +1,5 @@
 """Pioneer AVR API (async)."""
-# pylint: disable=relative-beyond-top-level disable=too-many-lines
+# pylint: disable=relative-beyond-top-level disable=too-many-lines disable=line-too-long
 
 
 import asyncio
@@ -2412,103 +2412,6 @@ class PioneerAVR:
             else:
                 return False
 
-    async def set_video_settings(self, video_converter: bool = None, resolution: str = None, pure_cinema: str = None, prog_motion: int = None, stream_smoother: str = None, advanced_video_adjust: str = None, ynr: int = None, cnr: int = None, bnr: int = None, mnr: int = None, detail: int = None, sharpness: int = None, brightness: int = None, contrast: int = None, hue: int = None, chroma: int = None, black: bool = None, aspect: str = None, zone="1"):
-        """Set video settings for a given zone using provided parameters."""
-        self._check_zone(zone)
-        # This is a complex function and supports handles requests to update any video related parameters
-
-        # FUNC: VIDEO CONVERTER - 0 = OFF, 1 = ON
-        if (self.video.get(zone).get("converter") is not None and video_converter is not None):
-            await self.send_command("set_video_converter", zone, str(int(video_converter)), ignore_error=False)
-
-        # FUNC: RESOLUTION (use PARAM_VIDEO_RESOLUTIONS)
-        if (self.video.get(zone).get("resolution") is not None and resolution is not None):
-            key = self._get_parameter_key_from_value(
-                resolution, VIDEO_RESOLUTION_MODES)
-            if key in self._params.get(PARAM_VIDEO_RESOLUTION_MODES):
-                await self.send_command("set_video_resolution", zone, key, ignore_error=False)
-            else:
-                raise ValueError(
-                    f"Resolution {resolution} is not supported by current configuration.")
-
-        # FUNC: PURE CINEMA
-        if (self.video.get(zone).get("pure_cinema") is not None and pure_cinema is not None):
-            await self.send_command("set_video_pure_cinema_status", zone, self._get_parameter_key_from_value(pure_cinema, VIDEO_PURE_CINEMA_MODES), ignore_error=False)
-
-        # FUNC: PROG. MOTION
-        if (self.video.get(zone).get("prog_motion") is not None and prog_motion is not None):
-            # parameter 0 = 50, so add 50
-            prog_motion += 50
-            await self.send_command("set_video_prog_motion_status", zone, str(prog_motion), ignore_error=False)
-
-        # FUNC: STREAM SMOOTHER (use PARAM_VIDEO_STREAM_SMOOTHER_MODES)
-        if (self.video.get(zone).get("stream_smoother") is not None and stream_smoother is not None):
-            await self.send_command("set_video_stream_smoother", zone, self._get_parameter_key_from_value(stream_smoother, VIDEO_STREAM_SMOOTHER_MODES), ignore_error=False)
-
-        # FUNC: ADVANCED VIDEO ADJUST (use PARAM_ADVANCED_VIDEO_ADJUST_MODES)
-        if (self.video.get(zone).get("advanced_video_adjust") is not None and advanced_video_adjust is not None):
-            await self.send_command("set_video_advanced_video_adjust", zone, self._get_parameter_key_from_value(advanced_video_adjust, ADVANCED_VIDEO_ADJUST_MODES), ignore_error=False)
-
-        # FUNC: YNR
-        if (self.video.get(zone).get("ynr") is not None and ynr is not None):
-            # parameter 0 = 50, so add 50
-            await self.send_command("set_video_ynr", zone, str(ynr + 50), ignore_error=False)
-
-        # FUNC: CNR
-        if (self.video.get(zone).get("cnr") is not None and cnr is not None):
-            # parameter 0 = 50, so add 50
-            await self.send_command("set_video_cnr", zone, str(cnr + 50), ignore_error=False)
-
-        # FUNC: BNR
-        if (self.video.get(zone).get("bnr") is not None and bnr is not None):
-            # parameter 0 = 50, so add 50
-            await self.send_command("set_video_bnr", zone, str(bnr + 50), ignore_error=False)
-
-        # FUNC: MNR
-        if (self.video.get(zone).get("mnr") is not None and mnr is not None):
-            # parameter 0 = 50, so add 50
-            await self.send_command("set_video_mnr", zone, str(mnr + 50), ignore_error=False)
-
-        # FUNC: DETAIL
-        if (self.video.get(zone).get("detail") is not None and detail is not None):
-            # parameter 0 = 50, so add 50
-            await self.send_command("set_video_detail", zone, str(detail + 50), ignore_error=False)
-
-        # FUNC: SHARPNESS
-        if (self.video.get(zone).get("sharpness") is not None and sharpness is not None):
-            # parameter 0 = 50, so add 50
-            await self.send_command("set_video_sharpness", zone, str(sharpness + 50), ignore_error=False)
-
-        # FUNC: BRIGHTNESS
-        if (self.video.get(zone).get("brightness") is not None and brightness is not None):
-            # parameter 0 = 50, so add 50
-            await self.send_command("set_video_brightness", zone, str(brightness + 50), ignore_error=False)
-
-        # FUNC: CONTRAST
-        if (self.video.get(zone).get("contrast") is not None and contrast is not None):
-            # parameter 0 = 50, so add 50
-            await self.send_command("set_video_contrast", zone, str(contrast + 50), ignore_error=False)
-
-        # FUNC: HUE
-        if (self.video.get(zone).get("hue") is not None and hue is not None):
-            # parameter 0 = 50, so add 50
-            await self.send_command("set_video_hue", zone, str(hue + 50), ignore_error=False)
-
-        # FUNC: CHROMA
-        if (self.video.get(zone).get("chroma") is not None and chroma is not None):
-            # parameter 0 = 50, so add 50
-            await self.send_command("set_video_chroma", zone, str(chroma + 50), ignore_error=False)
-
-        # FUNC: BLACK SETUP (0 = 0, 1 = 7.5)
-        if (self.video.get(zone).get("black_setup") is not None and black is not None):
-            await self.send_command("set_video_chroma", zone, str(int(black)), ignore_error=False)
-
-        # FUNC: ASPECT (use PARAM_VIDEO_ASPECT_MODES)
-        if (self.video.get(zone).get("aspect") is not None and aspect is not None):
-            await self.send_command("set_video_aspect", zone, str(self._get_parameter_key_from_value(aspect, VIDEO_ASPECT_MODES)), ignore_error=False)
-
-        return True
-
     async def set_amp_settings(self, speaker_config: str = None, hdmi_out: str = None, hdmi_audio_output: bool = None, pqls: bool = None, amp: str = None, zone="1"):
         """Set AMP function settings for a given zone."""
         self._check_zone(zone)
@@ -2615,6 +2518,60 @@ class PioneerAVR:
                     f"The provided channel is invalid ({channel}, {str(level)} for zone {zone}")
         else:
             raise ValueError(f"Invalid zone {zone}")
+
+    async def set_video_settings(self, **arguments):
+        """Set video settings for a given zone using provided parameters."""
+        zone = arguments.get("zone")
+        self._check_zone(zone)
+
+        # This function is only valid for zone 1, no video settings are available for zone 2, 3, 4 and HDZone
+        if zone != "1":
+            raise ValueError(f"Invalid zone {zone}")
+
+        # This is a complex function and supports handles requests to update any video related parameters
+
+        for arg in arguments:
+            if arg != "zone":
+                if arguments.get(arg) is not None:
+                    if self.video.get(arg) is not arguments.get(arg):
+                        if isinstance(arguments.get(arg)) == str:
+                            # Functions to do a lookup here
+                            if arg == "resolution":
+                                arguments[arg] = self._get_parameter_key_from_value(
+                                    arguments.get(arg), VIDEO_RESOLUTION_MODES)
+                                if arguments[arg] not in self._params.get(PARAM_VIDEO_RESOLUTION_MODES):
+                                    raise ValueError(f"Resolution {arguments.get(arg)} is not supported by current configuration.")
+                            if arg == "pure_cinema":
+                                arguments[arg] = self._get_parameter_key_from_value(
+                                    arguments.get(arg), VIDEO_PURE_CINEMA_MODES)
+                            if arg == "stream_smoother":
+                                arguments[arg] = self._get_parameter_key_from_value(
+                                    arguments.get(arg), VIDEO_STREAM_SMOOTHER_MODES)
+                            if arg == "advanced_video_adjust":
+                                arguments[arg] = self._get_parameter_key_from_value(
+                                    arguments.get(arg), ADVANCED_VIDEO_ADJUST_MODES)
+                            if arg == "aspect":
+                                arguments[arg] = self._get_parameter_key_from_value(
+                                    arguments.get(arg), VIDEO_ASPECT_MODES)
+
+                        elif isinstance(arguments.get(arg)) == bool:
+                            arguments[arg] = str(int(arguments.get(arg)))
+
+                        elif isinstance(arguments.get(arg) == int):
+                            # parameter 0 = 50, so add 50 for all int video parameters
+                            arguments[arg] += 50
+                            if arg == "prog_motion":
+                                arguments[arg] += 50
+                            elif arg == "ynr":
+                                arguments[arg] += 50
+                            elif arg == "cnr":
+                                arguments[arg] += 50
+                            elif arg == "bnr":
+                                arguments[arg] += 50
+                            elif arg == "mnr":
+                                arguments[arg] += 50
+
+                        await self.send_command("set_video_" + arg, zone, str(arguments.get(arg)), ignore_error=False)
 
     async def set_dsp_settings(self, **arguments):
         """Sets the DSP settings for the amplifier."""

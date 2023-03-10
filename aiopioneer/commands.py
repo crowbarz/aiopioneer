@@ -190,16 +190,16 @@ PIONEER_COMMANDS = {
     "set_video_converter": {
         "1": ["VTB", "VTB"]
     },
-    "query_video_pure_cinema_status": {
+    "query_video_pure_cinema": {
         "1": ["?VTD", "VTD"]
     },
-    "set_video_pure_cinema_status": {
+    "set_video_pure_cinema": {
         "1": ["VTD", "VTD"]
     },
-    "query_video_prog_motion_status": {
+    "query_video_prog_motion": {
         "1": ["?VTE", "VTE"]
     },
-    "set_video_prog_motion_status": {
+    "set_video_prog_motion": {
         "1": ["VTE", "VTE"]
     },
     "query_video_stream_smoother": {
