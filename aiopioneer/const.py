@@ -1,7 +1,7 @@
 """Constants for aiopioneer."""
 
 DEFAULT_PORT = 8102
-VERSION = "0.2.2"
+VERSION = "0.2.3"
 
 # Listening modes is a dict with a nested array for the following structure:
 # key (display name, 2ch sources, multichannel sources)
