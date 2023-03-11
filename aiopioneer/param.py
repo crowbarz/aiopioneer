@@ -1,4 +1,5 @@
 """AVR device parameters."""
+# pylint: disable=too-many-lines
 
 from collections import OrderedDict
 
@@ -17,18 +18,22 @@ PARAM_DEBUG_COMMAND = "debug_command"
 PARAM_ZONE_2_SOURCES = "zone_2_sources"  ## All possible valid input sources for Zone 2
 PARAM_ZONE_3_SOURCES = "zone_3_sources"  ## All possible valid input sources for Zone 3
 PARAM_HDZONE_SOURCES = "zone_z_sources"  ## All possible valid input sources for HDZone
-PARAM_HDZONE_VOLUME_REQUIREMENTS = "hdzone_volume_requirements"  ## All possible valid speaker system settings for HDZone volume functions to be available
-PARAM_SPEAKER_SYSTEM_MODES = "amplifier_speaker_system_modes"  ## All possible speaker system modes. Different AVR models will have different available options
-PARAM_VIDEO_RESOLUTION_MODES = (
-    "video_resolution_modes"  ## All valid video resolution modes
-)
+## All possible valid speaker system settings for HDZone volume functions to be available
+PARAM_HDZONE_VOLUME_REQUIREMENTS = "hdzone_volume_requirements"
+## All possible speaker system modes. Different AVR models will have different available options
+PARAM_SPEAKER_SYSTEM_MODES = "amplifier_speaker_system_modes"
+## All valid video resolution modes
+PARAM_VIDEO_RESOLUTION_MODES = "video_resolution_modes"
 PARAM_MHL_SOURCE = "mhl_source"
-PARAM_ENABLED_FUNCTIONS = (
-    "enabled_functions"  ## Stores all the enabled high level categories for the AVR.
-)
-PARAM_DISABLE_AUTO_QUERY = "disable_autoquery"  ## If set to True, the AVR won't auto query additional attributes in high level categories, instead we rely on the AVR returning them as they are changed.
-PARAM_DISABLED_LISTENING_MODES = "disabled_amplifier_listening_modes"  ## A list containing all the IDs of listening modes that should be disabled
-PARAM_TUNER_AM_FREQ_STEP = "am_frequency_step"  ## A int that contains the tuner step for AM frequencies. If set to None, this is calculated automatically when tuner is first used.
+## Stores all the enabled high level categories for the AVR.
+PARAM_ENABLED_FUNCTIONS = "enabled_functions"
+## If set to True, the AVR won't auto query additional attributes in high level
+## categories, instead we rely on the AVR returning them as they are changed.
+PARAM_DISABLE_AUTO_QUERY = "disable_autoquery"
+## A list containing all the IDs of listening modes that should be disabled
+PARAM_DISABLED_LISTENING_MODES = "disabled_amplifier_listening_modes"
+## Tuner step for AM frequencies. If None, calculate automatically when tuner is first used
+PARAM_TUNER_AM_FREQ_STEP = "am_frequency_step"
 
 PARAM_DEFAULTS = {
     PARAM_IGNORED_ZONES: [],

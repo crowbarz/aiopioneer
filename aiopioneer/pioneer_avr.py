@@ -1,5 +1,5 @@
 """Pioneer AVR API (async)."""
-# pylint: disable=relative-beyond-top-level disable=too-many-lines disable=line-too-long
+# pylint: disable=relative-beyond-top-level disable=too-many-lines
 
 
 import asyncio
@@ -426,10 +426,11 @@ class PioneerAVR:
                         )
                 self._power_zone_1 = self.power.get("1")  # cache value
 
-                # Implement a command queue so that we can queue commands if we need to update attributes that only get updated when we request them to change.
+                # Implement a command queue so that we can queue commands if we
+                # need to update attributes that only get updated when we
+                # request them to change.
                 if len(self._command_queue) > 0 and (
-                    self._command_queue_task is None
-                    or self._command_queue_task._state == "FINISHED"
+                    self._command_queue_task is None or self._command_queue_task.done()
                 ):  # pylint: disable=W0212
                     _LOGGER.info(
                         "Scheduling command queue. (%s)", str(self._command_queue)
@@ -949,7 +950,8 @@ class PioneerAVR:
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Power: %s", value)
                 if value:
-                    # Only request these if we're not doing a full update, if we are doing a full update these will be included anyway
+                    # Only request these if we're not doing a full update.
+                    # If we are doing a full update these will be included anyway
                     if (self._full_update is False) and (
                         self.tone.get("1") is not None
                     ):
@@ -1038,7 +1040,8 @@ class PioneerAVR:
                 self.source["1"] = zid
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Source: %s (%s)", zid, self.get_source_name(zid))
-                # Only request these if we're not doing a full update, if we are doing a full update these will be included anyway
+                # Only request these if we're not doing a full update.
+                # If we are doing a full update these will be included anyway
                 if (self._full_update is False) and (self.tone.get("1") is not None):
                     self.queue_command("query_listening_mode")
                     self.queue_command("query_audio_information")
@@ -1251,7 +1254,8 @@ class PioneerAVR:
                 updated_zones.add("1")
                 _LOGGER.info("Zone 1: Remote Lock: %s", self.amp.get("remote_lock"))
 
-        # TUNER (AVRs only have one tuner, so no logic of zones here as the tuner state will apply across all zones)
+        # TUNER (AVRs only have one tuner, so no logic of zones here as the
+        # tuner state will apply across all zones)
         elif response.startswith("FR"):
             value = response[2:]
             # Split the value up here, first char is band
@@ -2575,8 +2579,9 @@ class PioneerAVR:
             # Timeout occurred, indicates AVR disconnected
             raise TimeoutError("Timeout waiting for data")
 
-        # Zone 1 updates only, we loop through this to allow us to add commands to read without
-        # needing to add it here, also only do this if the zone is powered on
+        # Zone 1 updates only, we loop through this to allow us to add commands
+        # to read without needing to add it here, also only do this if the zone
+        # is powered on
         if zone == "1" and bool(self.power.get("1")):
             for comm in query_commands:
                 if len(PIONEER_COMMANDS.get(comm)) == 1:
@@ -2588,8 +2593,9 @@ class PioneerAVR:
                 if len(PIONEER_COMMANDS.get(comm)) == 2:
                     await self.send_command(comm, zone, ignore_error=True)
 
-        # CHANNEL updates are handled differently as it requires more complex logic to send the commands
-        # we use the set_channel_levels command and prefix the query to it
+        # CHANNEL updates are handled differently as it requires more complex
+        # logic to send the commands we use the set_channel_levels command
+        # and prefix the query to it.
         # Only run this if the main zone is on
         # HDZone does not have any channels
         if ("channels" in self._params.get(PARAM_ENABLED_FUNCTIONS)) and (
@@ -2707,7 +2713,8 @@ class PioneerAVR:
         """Turn on the Pioneer AVR."""
         self._check_zone(zone)
         await self.send_command("turn_on", zone)
-        # Now schedule a full update of all zones if listening_mode is None (this means that the library connected to the AVR while the AVR was off)
+        # Now schedule a full update of all zones if listening_mode is None.
+        # This means that the library connected to the AVR while the AVR was off
         if zone == "1" and self.listening_mode.get("1") is None:
             await self.update(full=True)
 
@@ -2779,9 +2786,13 @@ class PioneerAVR:
             _LOGGER.debug("command %s already queued, skipping", command)
 
     async def _calculate_am_frequency_step(self):
-        """Automatically calculate the AM frequency step by stepping the frequency up and then down."""
+        """
+        Automatically calculate the AM frequency step by stepping the frequency
+        up and then down.
+        """
         _LOGGER.debug(">> PioneerAVR._calculate_am_frequency_step() ")
-        # Check if freq step is None, band is set to AM and current source is set to tuner for at least one zone. This function otherwise does not work.
+        # Check if freq step is None, band is set to AM and current source is
+        # set to tuner for at least one zone. This function otherwise does not work.
         if (
             self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None
             and self.tuner.get("band") == "A"
@@ -3004,12 +3015,14 @@ class PioneerAVR:
 
         if (self.tuner.get("band") is None) or (self.power.get(zone) is False):
             raise SystemError(
-                "Tuner functions are currently not available. Ensure Zone is on and source is set to tuner."
+                "Tuner functions are currently not available. "
+                "Ensure Zone is on and source is set to tuner."
             )
 
         if band.upper() == "AM" and self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None:
             raise ValueError(
-                "AM Tuner functions are currently not available. Ensure 'am_frequency_step' is set."
+                "AM Tuner functions are currently not available. "
+                "Ensure 'am_frequency_step' is set."
             )
 
         if band.upper() != "AM" and band.upper() != "FM":
@@ -3024,7 +3037,9 @@ class PioneerAVR:
             # Set the tuner band
             await self.send_command("set_tuner_band_fm", zone, ignore_error=False)
 
-        # Round the frequency to nearest 0.05 if band is FM, otherwise divide frequency by 9 using modf so that the remainder is split out, then select the whole number response and times by 9
+        # Round the frequency to nearest 0.05 if band is FM, otherwise divide
+        # frequency by 9 using modf so that the remainder is split out, then
+        # select the whole number response and times by 9
         if band.upper() == "FM":
             frequency = round(0.05 * round(frequency / 0.05), 2)
         elif band.upper() == "AM":
@@ -3097,12 +3112,13 @@ class PioneerAVR:
         zone = arguments.get("zone")
         self._check_zone(zone)
 
-        # This function is only valid for zone 1, no video settings are available for zone 2, 3, 4 and HDZone
+        # This function is only valid for zone 1, no video settings are
+        # available for zone 2, 3, 4 and HDZone
         if zone != "1":
             raise ValueError(f"Invalid zone {zone}")
 
-        # This is a complex function and supports handles requests to update any video related parameters
-
+        # This is a complex function and supports handles requests to update any
+        # video related parameters
         for arg in arguments:
             if arg != "zone":
                 if arguments.get(arg) is not None:
@@ -3117,7 +3133,8 @@ class PioneerAVR:
                                     PARAM_VIDEO_RESOLUTION_MODES
                                 ):
                                     raise ValueError(
-                                        f"Resolution {arguments.get(arg)} is not supported by current configuration."
+                                        f"Resolution {arguments.get(arg)} is "
+                                        f"not supported by current configuration."
                                     )
                             if arg == "pure_cinema":
                                 arguments[arg] = self._get_parameter_key_from_value(
@@ -3237,14 +3254,18 @@ class PioneerAVR:
                         )
 
     async def media_control(self, action: str, zone="1"):
-        """Perform media control activities such as play, pause, stop, fast forward or rewind."""
+        """
+        Perform media control activities such as play, pause, stop, fast forward
+        or rewind.
+        """
         self._check_zone(zone)
         if self.media_control_mode.get(zone) is not None:
             command = MEDIA_CONTROL_COMMANDS.get(self.media_control_mode.get(zone)).get(
                 action
             )
             if command is not None:
-                # These commands are ALWAYS sent to zone 1 because each zone does not have unique commands
+                # These commands are ALWAYS sent to zone 1 because each zone
+                # does not have unique commands
                 return await self.send_command(command, "1", ignore_error=False)
             else:
                 raise NotImplementedError(
@@ -3252,7 +3273,8 @@ class PioneerAVR:
                 )
         else:
             raise NotImplementedError(
-                f"Current source ({self.source.get(zone)}) does not support media_control activities."
+                f"Current source ({self.source.get(zone)}) does not support "
+                "media_control activities."
             )
 
     async def set_tuner_preset(self, tuner_class: str, tuner_preset: int, zone="1"):
