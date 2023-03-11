@@ -8,6 +8,7 @@ RECONNECT_DELAY_MAX = 64
 
 _LOGGER = logging.getLogger(__name__)
 
+
 ## Source: https://stackoverflow.com/a/7205107
 ## Modified so b overwrites a where there is a conflict
 def merge(a, b, path=None, forceOverwrite=False):  # pylint: disable=invalid-name
@@ -16,7 +17,11 @@ def merge(a, b, path=None, forceOverwrite=False):  # pylint: disable=invalid-nam
         path = []
     for key in b:
         if key in a:
-            if isinstance(a[key], dict) and isinstance(b[key], dict) and forceOverwrite == False:
+            if (
+                isinstance(a[key], dict)
+                and isinstance(b[key], dict)
+                and forceOverwrite == False
+            ):
                 merge(a[key], b[key], path + [str(key)])
             elif a[key] == b[key]:
                 pass  # same leaf value

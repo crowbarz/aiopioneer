@@ -186,7 +186,7 @@ MEDIA_CONTROL_COMMANDS = {
         "eject": "operation_mhl_eject",
         "next": "operation_mhl_next",
         "previous": "operation_mhl_previous",
-    }
+    },
 }
 
 TONE_MODES = {
@@ -254,11 +254,7 @@ VIDEO_PURE_CINEMA_MODES = {
     "2": "OFF",
 }
 
-VIDEO_STREAM_SMOOTHER_MODES = {
-    "0": "OFF",
-    "1": "ON",
-    "2": "AUTO"
-}
+VIDEO_STREAM_SMOOTHER_MODES = {"0": "OFF", "1": "ON", "2": "AUTO"}
 
 VIDEO_ASPECT_MODES = {
     "0": "PASSTHROUGH",
@@ -288,18 +284,9 @@ CHANNEL_LEVELS_OBJ = {
     "RW": 0,
 }
 
-DSP_PHASE_CONTROL = {
-    "0": "off",
-    "1": "on",
-    "2": "full band on"
-}
+DSP_PHASE_CONTROL = {"0": "off", "1": "on", "2": "full band on"}
 
-DSP_SIGNAL_SELECT = {
-    "0": "AUTO",
-    "1": "ANALOG",
-    "2": "DIGITAL",
-    "3": "HDMI"
-}
+DSP_SIGNAL_SELECT = {"0": "AUTO", "1": "ANALOG", "2": "DIGITAL", "3": "HDMI"}
 
 DSP_DIGITAL_DIALOG_ENHANCEMENT = {
     "0": "off",
@@ -307,40 +294,18 @@ DSP_DIGITAL_DIALOG_ENHANCEMENT = {
     "2": "+1",
     "3": "+2",
     "4": "+3",
-    "5": "+4"
+    "5": "+4",
 }
 
-DSP_DUAL_MONO = {
-    "0": "CH1+CH2",
-    "1": "CH1",
-    "2": "CH2"
-}
+DSP_DUAL_MONO = {"0": "CH1+CH2", "1": "CH1", "2": "CH2"}
 
-DSP_DRC = {
-    "0": "off",
-    "1": "auto",
-    "2": "mid",
-    "3": "max"
-}
+DSP_DRC = {"0": "off", "1": "auto", "2": "mid", "3": "max"}
 
-DSP_HEIGHT_GAIN = {
-    "0": "low",
-    "1": "mid",
-    "2": "high"
-}
+DSP_HEIGHT_GAIN = {"0": "low", "1": "mid", "2": "high"}
 
-DSP_VIRTUAL_DEPTH = {
-    "0": "off",
-    "1": "min",
-    "2": "mid",
-    "3": "max"
-}
+DSP_VIRTUAL_DEPTH = {"0": "off", "1": "min", "2": "mid", "3": "max"}
 
-DSP_DIGITAL_FILTER = {
-    "0": "slow",
-    "1": "sharp",
-    "2": "short"
-}
+DSP_DIGITAL_FILTER = {"0": "slow", "1": "sharp", "2": "short"}
 
 AUDIO_SIGNAL_INPUT_INFO = {
     "00": "ANALOG",
@@ -383,7 +348,7 @@ AUDIO_SIGNAL_INPUT_INFO = {
     "69": "ALAC(Apple Lossless)",
     "70": "AIFF",
     "71": "DSD (USB-DAC)",
-    "72": "Spotify"
+    "72": "Spotify",
 }
 
 AUDIO_SIGNAL_INPUT_FREQ = {
@@ -396,15 +361,10 @@ AUDIO_SIGNAL_INPUT_FREQ = {
     "06": "192kHz",
     "07": "---",
     "32": "2.8MHz",
-    "33": "5.6MHz"
+    "33": "5.6MHz",
 }
 
-AUDIO_WORKING_PQLS = {
-    "0": "off",
-    "1": "2h",
-    "2": "Multi-channel",
-    "3": "Bitstream"
-}
+AUDIO_WORKING_PQLS = {"0": "off", "1": "2h", "2": "Multi-channel", "3": "Bitstream"}
 
 VIDEO_SIGNAL_INPUT_TERMINAL = {
     "0": "---",
@@ -491,5 +451,5 @@ VIDEO_RESOLUTION_MODES = {
     "6": "1080p",
     "7": "1080/24p",
     "8": "4K",
-    "9": "4K/24p"
+    "9": "4K/24p",
 }
