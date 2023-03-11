@@ -1,8 +1,8 @@
-<!-- markdownlint-disable MD041 -->
+<!-- markdownlint-disable MD033 MD041 -->
 
 Python library for controlling a Pioneer AVI via its built-in API.
 
-Inspired by the [original Pioneer Home Assistant integration](https://www.home-assistant.io/integrations/pioneer/).
+Used by the [pioneer_async](https://github.com/crowbarz/ha-pioneer_async) integration for Home Assistant, which was inspired by the [original Pioneer Home Assistant integration](https://www.home-assistant.io/integrations/pioneer/).
 Tested on a VSX-930 (Main Zone and HDZone outputs).
 
 ## Features
@@ -64,6 +64,17 @@ The default parameters listed below are for AVR models that do not match any cus
 ## Command line interface (CLI) (>= 0.1.3)
 
 A very simple command line interface `aiopioneer` is available to connect to the AVR, send commands and receive responses. It can be used to test the capabilities of the library against your specific AVR.
+
+On Home Assistant, you can run the CLI when the `pioneer_async` Home Assistant integration has been installed. On Home Assistant Supervised or Container, start the CLI from within the HA container: `docker exec -it homeassistant aiopioneer`.
+
+Invoke the CLI with the following optional parameters:
+
+| Option | Default | Description
+| --- | --- | ---
+| hostname | `avr` | hostname for AVR connection
+| `-p`<br>`--port` | 8102 | port for AVR connection
+| `+Q`<br>`--no-query-device-info` | None | skip AVR device info query
+| `+Z`<br>`--no-query-zones` | None | skip AVR zone query
 
 The CLI accepts all API commands, as well as the following:
 | Command | Argument | Description

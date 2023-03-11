@@ -1,7 +1,7 @@
 """Pioneer AVR API (async) setup.py."""
 
 import setuptools
-from aiopioneer.pioneer_avr import VERSION
+from aiopioneer.const import VERSION
 
 with open("README.md", "r", encoding="utf8", errors="surrogateescape") as fh:
     long_description = fh.read()
