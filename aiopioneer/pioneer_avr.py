@@ -13,7 +13,7 @@ from .util import (
     cancel_task,
     safe_wait_for,
 )
-from .const import DEFAULT_PORT
+from .const import DEFAULT_PORT, VERSION
 from .param import (
     PARAM_IGNORED_ZONES,
     PARAM_COMMAND_DELAY,
