@@ -8,6 +8,7 @@ RECONNECT_DELAY_MAX = 64
 
 _LOGGER = logging.getLogger(__name__)
 
+
 ## Source: https://stackoverflow.com/a/7205107
 ## Modified so b overwrites a where there is a conflict
 def merge(a, b, path=None, forceOverwrite=False):  # pylint: disable=invalid-name
@@ -16,7 +17,11 @@ def merge(a, b, path=None, forceOverwrite=False):  # pylint: disable=invalid-nam
         path = []
     for key in b:
         if key in a:
-            if isinstance(a[key], dict) and isinstance(b[key], dict) and forceOverwrite == False:
+            if (
+                isinstance(a[key], dict)
+                and isinstance(b[key], dict)
+                and not forceOverwrite
+            ):
                 merge(a[key], b[key], path + [str(key)])
             elif a[key] == b[key]:
                 pass  # same leaf value
@@ -37,7 +42,7 @@ def merge(a, b, path=None, forceOverwrite=False):  # pylint: disable=invalid-nam
     return a
 
 
-## Source: https://stackoverflow.com/questions/12248132/how-to-change-tcp-keepalive-timer-using-python-script
+## Source: https://stackoverflow.com/questions/12248132/how-to-change-tcp-keepalive-timer-using-python-script  # pylint: disable=line-too-long
 def sock_set_keepalive(sock, after_idle_sec=1, interval_sec=3, max_fails=5):
     """Set TCP keepalive on an open socket.
 
@@ -51,7 +56,7 @@ def sock_set_keepalive(sock, after_idle_sec=1, interval_sec=3, max_fails=5):
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, after_idle_sec)
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, interval_sec)
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, max_fails)
-        except:  # pylint: disable=broad-except
+        except:  # pylint: disable=bare-except
             pass  ## ignore if keepalive cannot be set
 
 
@@ -65,12 +70,12 @@ def get_backoff_delay(retry_count):
     return delay
 
 
-async def safe_wait_for(aw, timeout=None):
+async def safe_wait_for(awt, timeout=None):
     """
     asyncio.wait_for() that re-raises cancellation even if aw is complete.
     Work around issue: https://bugs.python.org/issue42130
     """
-    task = asyncio.create_task(aw)
+    task = asyncio.create_task(awt)
     try:
         await asyncio.wait({task}, timeout=timeout)
         if task.done():
@@ -83,8 +88,8 @@ async def safe_wait_for(aw, timeout=None):
                 ## TODO: what if wait_for is cancelled when waiting for task to be cancelled?
                 pass
             raise asyncio.TimeoutError()
-    except asyncio.CancelledError:
-        raise
+    except asyncio.CancelledError as exc:
+        raise exc
 
 
 async def cancel_task(task, task_name=None):
