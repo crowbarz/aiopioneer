@@ -2879,12 +2879,30 @@ class PioneerAVR:
     async def set_listening_mode(self, listening_mode: str, zone="1"):
         """Sets the listening mode using the predefined list of options in params."""
         self._check_zone(zone)
+
+        if self.audio.get(zone).get("input_multichannel"):
+            listening_mode_key = [
+                k
+                for k, v in LISTENING_MODES.items()
+                if bool(v[2]) and v[0] == listening_mode
+            ]
+        else:
+            listening_mode_key = [
+                k
+                for k, v in LISTENING_MODES.items()
+                if bool(v[1]) and v[0] == listening_mode
+            ]
+
+        if len(listening_mode_key) == 0:
+            raise ValueError(f"Listening mode {listening_mode} not available")
+
+        if len(listening_mode_key) > 1:
+            raise ValueError(f"Duplicate listening modes found for {listening_mode}")
+
         return await self.send_command(
             "set_listening_mode",
             zone,
-            prefix=self._get_parameter_key_from_value(
-                listening_mode, LISTENING_MODES, loose_match=True
-            ),
+            prefix=listening_mode_key[0],
             ignore_error=False,
         )
 
