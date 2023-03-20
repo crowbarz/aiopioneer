@@ -9,7 +9,7 @@ from aiopioneer.const import (DSP_DIGITAL_DIALOG_ENHANCEMENT,
                               DSP_SIGNAL_SELECT,
                               DSP_VIRTUAL_DEPTH,
                               Zones)
-from .parse import Response
+from .response import Response
 
 class DspParsers():
     """DSP Response parsers."""

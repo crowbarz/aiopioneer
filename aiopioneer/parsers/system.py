@@ -14,7 +14,7 @@ from aiopioneer.const import (
     DIMMER_MODES,
     Zones
 )
-from .parse import Response
+from .response import Response
 
 class SystemParsers():
     """System related parsers."""

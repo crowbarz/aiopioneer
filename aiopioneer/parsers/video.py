@@ -1,7 +1,7 @@
 """Pioneer AVR response parsers for video parameters."""
 
 from aiopioneer.const import VIDEO_RESOLUTION_MODES, ADVANCED_VIDEO_ADJUST_MODES, Zones
-from .parse import Response
+from .response import Response
 
 class VideoParsers():
     """Video related parsers."""

@@ -12,7 +12,7 @@ from aiopioneer.const import (
     VIDEO_SIGNAL_COLORSPACE,
     VIDEO_SIGNAL_EXT_COLORSPACE,
     Zones)
-from .parse import Response
+from .response import Response
 
 class InformationParsers():
     """AVR operation information parsers."""

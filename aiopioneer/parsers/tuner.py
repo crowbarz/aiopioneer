@@ -2,7 +2,7 @@
 
 from aiopioneer.param import PARAM_TUNER_AM_FREQ_STEP
 from aiopioneer.const import Zones
-from .parse import Response
+from .response import Response
 
 class TunerParsers():
     """Tuner related parsers"""
