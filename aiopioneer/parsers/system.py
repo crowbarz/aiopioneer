@@ -1,5 +1,7 @@
 """Core system related parsers for Pioneer AVRs."""
 
+import re
+
 from aiopioneer.param import PARAM_TUNER_AM_FREQ_STEP, PARAM_MHL_SOURCE, PARAM_SPEAKER_SYSTEM_MODES
 from aiopioneer.const import (
     MEDIA_CONTROL_SOURCES,
@@ -248,6 +250,44 @@ class SystemParsers():
                             zone=Zones.Z1,
                             value=_param.get(PARAM_SPEAKER_SYSTEM_MODES).get(raw),
                             queue_commands=None))
+
+        return parsed
+
+    @staticmethod
+    def mac_address(raw: str, _param: dict) -> list:
+        """Defines a MAC response. This response is system wide."""
+        parsed = []
+        parsed.append(Response(raw=raw,
+                            response_command="SVB",
+                            base_property="mac_addr",
+                            property_name=None,
+                            zone=None,
+                            value=":".join([raw[i:i+2] for i in range(0, len(raw), 2)]),
+                            queue_commands=None))
+
+        return parsed
+
+    @staticmethod
+    def software_version(raw: str, _param: dict) -> list:
+        """Defines a software veersion response. This response is system wide."""
+        parsed = []
+        matches = re.search(r'"([^)]*)"', raw)
+        if matches:
+            parsed.append(Response(raw=raw,
+                                response_command="SSI",
+                                base_property="software_version",
+                                property_name=None,
+                                zone=None,
+                                value=matches.group(1),
+                                queue_commands=None))
+        else:
+            parsed.append(Response(raw=raw,
+                                response_command="SSI",
+                                base_property="software_version",
+                                property_name=None,
+                                zone=None,
+                                value="unknown",
+                                queue_commands=None))
 
         return parsed
 
