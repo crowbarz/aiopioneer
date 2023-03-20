@@ -80,12 +80,12 @@ def process_raw(raw: str, _param: dict) -> list:
         return audio_parameter_prohibitation(raw[3:], _param)
     if raw.startswith("AUB"):
         return audio_parameter_working(raw[3:], _param)
-    if raw.startswith("frf"):
-        return frf(raw[3:], _param)
-    if raw.startswith("fra"):
-        return fra(raw[3:], _param)
-    if raw.startswith("pr"):
-        return pr(raw[2:], _param)
+    if raw.startswith("FRF"):
+        return frequency_fm(raw[3:], _param)
+    if raw.startswith("FRA"):
+        return frequency_am(raw[3:], _param)
+    if raw.startswith("PR"):
+        return preset(raw[2:], _param)
     if raw.startswith("CLV"):
         return channel_levels(raw[3:], _param)
     if raw.startswith("ZGE"):
