@@ -6,6 +6,7 @@ from .audio import AudioParsers
 from .tuner import TunerParsers
 from .dsp import DspParsers
 from .information import InformationParsers
+from .video import VideoParsers
 
 RESPONSE_DATA = [
     ["PWR", SystemParsers.power, Zones.Z1],
@@ -90,6 +91,8 @@ RESPONSE_DATA = [
 
     ["AST", InformationParsers.audio_information, Zones.Z1],
     ["VST", InformationParsers.video_information, Zones.Z1],
+
+    ["VTB", VideoParsers.video_converter, Zones.Z1],
 ]
 
 def process_raw_response(raw_resp: str, _param: dict) -> list:
