@@ -941,10 +941,11 @@ class PioneerAVR:
                         setattr(self, response.base_property, current_value)
                         if response.zone not in updated_zones:
                             updated_zones.add(response.zone)
-                        _LOGGER.info("Zone %s: %s: %s",
+                        _LOGGER.info("Zone %s: %s: %s (%s)",
                                         response.zone,
                                         response.base_property,
-                                        getattr(self, response.base_property)[response.zone]
+                                        getattr(self, response.base_property)[response.zone],
+                                        response.raw
                             )
 
                     else:
@@ -953,11 +954,12 @@ class PioneerAVR:
                         setattr(self, response.base_property, current_value)
                         if response.zone not in updated_zones:
                             updated_zones.add(response.zone)
-                        _LOGGER.info("Zone %s: %s.%s: %s",
+                        _LOGGER.info("Zone %s: %s.%s: %s (%s)",
                                         response.zone,
                                         response.base_property,
                                         response.property_name,
-                                        getattr(self, response.base_property)[response.zone][response.property_name]
+                                        getattr(self, response.base_property)[response.zone][response.property_name],
+                                        response.raw
                             )
 
                 # Add any requested extra commands to run
