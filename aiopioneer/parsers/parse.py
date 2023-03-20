@@ -7,169 +7,105 @@ from .tuner import TunerParsers
 from .dsp import DspParsers
 from .information import InformationParsers
 
+RESPONSE_DATA = [
+    ["PWR", SystemParsers.power, Zones.Z1],
+    ["APR", SystemParsers.power, Zones.Z2],
+    ["BPR", SystemParsers.power, Zones.Z3],
+    ["ZEP", SystemParsers.power, Zones.HDZ],
+    ["FN", SystemParsers.input_source, Zones.Z1],
+    ["Z2F", SystemParsers.input_source, Zones.Z2],
+    ["Z3F", SystemParsers.input_source, Zones.Z3],
+    ["ZEA", SystemParsers.input_source, Zones.HDZ],
+    ["VOL", SystemParsers.volume, Zones.Z1],
+    ["ZV", SystemParsers.volume, Zones.Z2],
+    ["YV", SystemParsers.volume, Zones.Z3],
+    ["XV", SystemParsers.volume, Zones.HDZ],
+    ["MUT", SystemParsers.mute, Zones.Z1],
+    ["Z2MUT", SystemParsers.mute, Zones.Z2],
+    ["Z3MUT", SystemParsers.mute, Zones.Z3],
+    ["HZMUT", SystemParsers.mute, Zones.HDZ],
+    ["SPK", SystemParsers.speaker_modes, Zones.Z1],
+    ["HO", SystemParsers.hdmi_out, Zones.Z1],
+    ["HA", SystemParsers.hdmi_audio, Zones.Z1],
+    ["PQ", SystemParsers.pqls, Zones.Z1],
+    ["SAA", SystemParsers.dimmer, Zones.Z1],
+    ["SAB", SystemParsers.sleep, Zones.Z1],
+    ["SAC", SystemParsers.amp_status, Zones.Z1],
+    ["PKL", SystemParsers.panel_lock, Zones.Z1],
+    ["RML", SystemParsers.remote_lock, Zones.Z1],
+    ["SSF", SystemParsers.speaker_system, Zones.Z1],
+    ["AUA", SystemParsers.audio_parameter_prohibitation, Zones.Z1],
+    ["AUB", SystemParsers.audio_parameter_working, Zones.Z1],
 
-def process_raw(raw: str, _param: dict) -> list:
-    """Handler to pass the raw response to the correct parser."""
-    if raw.startswith("PWR"):
-        return SystemParsers.power(raw[3:], _param)
-    if raw.startswith("APR"):
-        return SystemParsers.power(raw[3:], _param, Zones.Z2, "APR")
-    if raw.startswith("BPR"):
-        return SystemParsers.power(raw[3:], _param, Zones.Z3, "BPR")
-    if raw.startswith("ZEP"):
-        return SystemParsers.power(raw[3:], _param, Zones.HDZ, "ZEP")
-    if raw.startswith("FN"):
-        return SystemParsers.input_source(raw[2:], _param)
-    if raw.startswith("Z2F"):
-        return SystemParsers.input_source(raw[3:], _param, Zones.Z2, "Z2F")
-    if raw.startswith("Z3F"):
-        return SystemParsers.input_source(raw[3:], _param, Zones.Z3, "Z3F")
-    if raw.startswith("ZEA"):
-        return SystemParsers.input_source(raw[3:], _param, Zones.HDZ, "ZEA")
-    if raw.startswith("VOL"):
-        return SystemParsers.volume(raw[3:], _param)
-    if raw.startswith("ZV"):
-        return SystemParsers.volume(raw[2:], _param, Zones.Z2, "ZV")
-    if raw.startswith("YV"):
-        return SystemParsers.volume(raw[2:], _param, Zones.Z3, "YV")
-    if raw.startswith("XV"):
-        return SystemParsers.volume(raw[2:], _param, Zones.HDZ, "XV")
-    if raw.startswith("MUT"):
-        return SystemParsers.mute(raw[3:], _param)
-    if raw.startswith("Z2MUT"):
-        return SystemParsers.mute(raw[5:], _param, Zones.Z2, "Z2MUT")
-    if raw.startswith("Z3MUT"):
-        return SystemParsers.mute(raw[5:], _param, Zones.Z3, "Z3MUT")
-    if raw.startswith("HZMUT"):
-        return SystemParsers.mute(raw[5:], _param, Zones.HDZ, "HZMUT")
-    if raw.startswith("SR"):
-        return AudioParsers.listening_mode(raw[2:], _param)
-    if raw.startswith("TO"):
-        return AudioParsers.tone(raw[2:], _param)
-    if raw.startswith("BA"):
-        return AudioParsers.tone_bass(raw[2:], _param)
-    if raw.startswith("TR"):
-        return AudioParsers.tone_treble(raw[2:], _param)
-    if raw.startswith("ZGA"):
-        return AudioParsers.tone(raw[3:], _param, Zones.Z2, "ZGA")
-    if raw.startswith("ZGB"):
-        return AudioParsers.tone_bass(raw[3:], _param, Zones.Z2, "ZGB")
-    if raw.startswith("ZGC"):
-        return AudioParsers.tone_treble(raw[3:], _param, Zones.Z2, "ZGC")
-    if raw.startswith("SPK"):
-        return SystemParsers.speaker_modes(raw[3:], _param)
-    if raw.startswith("HO"):
-        return SystemParsers.hdmi_out(raw[2:], _param)
-    if raw.startswith("HA"):
-        return SystemParsers.hdmi_audio(raw[2:], _param)
-    if raw.startswith("PQ"):
-        return SystemParsers.pqls(raw[2:], _param)
-    if raw.startswith("SAA"):
-        return SystemParsers.dimmer(raw[3:], _param)
-    if raw.startswith("SAB"):
-        return SystemParsers.sleep(raw[3:], _param)
-    if raw.startswith("SAC"):
-        return SystemParsers.amp_status(raw[3:], _param)
-    if raw.startswith("PKL"):
-        return SystemParsers.panel_lock(raw[3:], _param)
-    if raw.startswith("RML"):
-        return SystemParsers.remote_lock(raw[3:], _param)
-    if raw.startswith("SSF"):
-        return SystemParsers.speaker_system(raw[3:], _param)
-    if raw.startswith("AUA"):
-        return SystemParsers.audio_parameter_prohibitation(raw[3:], _param)
-    if raw.startswith("AUB"):
-        return SystemParsers.audio_parameter_working(raw[3:], _param)
-    if raw.startswith("FRF"):
-        return TunerParsers.frequency_fm(raw[3:], _param)
-    if raw.startswith("FRA"):
-        return TunerParsers.frequency_am(raw[3:], _param)
-    if raw.startswith("PR"):
-        return TunerParsers.preset(raw[2:], _param)
-    if raw.startswith("CLV"):
-        return AudioParsers.channel_levels(raw[3:], _param)
-    if raw.startswith("ZGE"):
-        return AudioParsers.channel_levels(raw[3:], _param, Zones.Z2, "ZGE")
-    if raw.startswith("ZHE"):
-        return AudioParsers.channel_levels(raw[3:], _param, Zones.Z3, "ZHE")
-    if raw.startswith("MC"):
-        return DspParsers.mcacc_setting(raw[2:], _param)
-    if raw.startswith("IS"):
-        return DspParsers.phasecontrol(raw[2:], _param)
-    if raw.startswith("VSP"):
-        return DspParsers.virtual_speakers(raw[3:], _param)
-    if raw.startswith("VSB"):
-        return DspParsers.virtual_soundback(raw[3:], _param)
-    if raw.startswith("VHT"):
-        return DspParsers.virtual_height(raw[3:], _param)
-    if raw.startswith("SDA"):
-        return DspParsers.signal_select(raw[3:], _param)
-    if raw.startswith("SDB"):
-        return DspParsers.input_att(raw[3:], _param)
-    if raw.startswith("ATA"):
-        return DspParsers.sound_retriever(raw[3:], _param)
-    if raw.startswith("ATC"):
-        return DspParsers.equalizer(raw[3:], _param)
-    if raw.startswith("ATD"):
-        return DspParsers.standing_wave(raw[3:], _param)
-    if raw.startswith("ATE"):
-        return DspParsers.phase_control_plus(raw[3:], _param)
-    if raw.startswith("ATF"):
-        return DspParsers.sound_delay(raw[3:], _param)
-    if raw.startswith("ATG"):
-        return DspParsers.digital_noise_reduction(raw[3:], _param)
-    if raw.startswith("ATH"):
-        return DspParsers.dialog_enhancement(raw[3:], _param)
-    if raw.startswith("ATI"):
-        return DspParsers.hi_bit(raw[3:], _param)
-    if raw.startswith("ATJ"):
-        return DspParsers.dual_mono(raw[3:], _param)
-    if raw.startswith("ATK"):
-        return DspParsers.fixed_pcm(raw[3:], _param)
-    if raw.startswith("atl"):
-        return DspParsers.atl(raw[3:], _param)
-    if raw.startswith("atm"):
-        return DspParsers.atm(raw[3:], _param)
-    if raw.startswith("atn"):
-        return DspParsers.atn(raw[3:], _param)
-    if raw.startswith("ato"):
-        return DspParsers.ato(raw[3:], _param)
-    if raw.startswith("atp"):
-        return DspParsers.atp(raw[3:], _param)
-    if raw.startswith("atq"):
-        return DspParsers.atq(raw[3:], _param)
-    if raw.startswith("atr"):
-        return DspParsers.atr(raw[3:], _param)
-    if raw.startswith("ats"):
-        return DspParsers.ats(raw[3:], _param)
-    if raw.startswith("att"):
-        return DspParsers.att(raw[3:], _param)
-    if raw.startswith("atu"):
-        return DspParsers.atu(raw[3:], _param)
-    if raw.startswith("atv"):
-        return DspParsers.atv(raw[3:], _param)
-    if raw.startswith("atw"):
-        return DspParsers.atw(raw[3:], _param)
-    if raw.startswith("aty"):
-        return DspParsers.aty(raw[3:], _param)
-    if raw.startswith("atz"):
-        return DspParsers.atz(raw[3:], _param)
-    if raw.startswith("vdp"):
-        return DspParsers.vdp(raw[3:], _param)
-    if raw.startswith("vwd"):
-        return DspParsers.vwd(raw[3:], _param)
-    if raw.startswith("ara"):
-        return DspParsers.ara(raw[3:], _param)
-    if raw.startswith("arb"):
-        return DspParsers.arb(raw[3:], _param)
-    if raw.startswith("ast"):
-        return InformationParsers.ast(raw[3:], _param)
-    if raw.startswith("vst"):
-        return InformationParsers.vst(raw[3:], _param)
+    ["CLV", AudioParsers.channel_levels, Zones.Z1],
+    ["ZGE", AudioParsers.channel_levels, Zones.Z2],
+    ["ZHE", AudioParsers.channel_levels, Zones.Z3],
+    ["SR", AudioParsers.listening_mode, Zones.Z1],
+    ["TO", AudioParsers.tone, Zones.Z1],
+    ["BA", AudioParsers.tone_bass, Zones.Z1],
+    ["TR", AudioParsers.tone_treble, Zones.Z1],
+    ["ZGA", AudioParsers.tone, Zones.Z2],
+    ["ZGB", AudioParsers.tone_bass, Zones.Z2],
+    ["ZGC", AudioParsers.tone_treble, Zones.Z2],
 
-    return None
+    ["FRF", TunerParsers.frequency_fm, Zones.Z1],
+    ["FRA", TunerParsers.frequency_am, Zones.Z1],
+    ["PR", TunerParsers.preset, Zones.Z1],
 
+    ["MC", DspParsers.mcacc_setting, Zones.Z1],
+    ["IS", DspParsers.phasecontrol, Zones.Z1],
+    ["VSP", DspParsers.virtual_speakers, Zones.Z1],
+    ["VSB", DspParsers.virtual_soundback, Zones.Z1],
+    ["VHT", DspParsers.virtual_height, Zones.Z1],
+    ["SDA", DspParsers.signal_select, Zones.Z1],
+    ["SDB", DspParsers.input_att, Zones.Z1],
+    ["ATA", DspParsers.sound_retriever, Zones.Z1],
+    ["ATC", DspParsers.equalizer, Zones.Z1],
+    ["ATD", DspParsers.standing_wave, Zones.Z1],
+    ["ATE", DspParsers.phase_control_plus, Zones.Z1],
+    ["ATF", DspParsers.sound_delay, Zones.Z1],
+    ["ATG", DspParsers.digital_noise_reduction, Zones.Z1],
+    ["ATH", DspParsers.dialog_enhancement, Zones.Z1],
+    ["ATI", DspParsers.hi_bit, Zones.Z1],
+    ["ATJ", DspParsers.dual_mono, Zones.Z1],
+    ["ATK", DspParsers.fixed_pcm, Zones.Z1],
+    ["ATL", DspParsers.dynamic_range_control, Zones.Z1],
+    ["ATM", DspParsers.lfe_attenuator, Zones.Z1],
+    ["ATN", DspParsers.sacd_gain, Zones.Z1],
+    ["ATO", DspParsers.auto_delay, Zones.Z1],
+    ["ATP", DspParsers.center_width, Zones.Z1],
+    ["ATQ", DspParsers.panorama, Zones.Z1],
+    ["ATR", DspParsers.dimension, Zones.Z1],
+    ["ATS", DspParsers.center_image, Zones.Z1],
+    ["ATT", DspParsers.effect, Zones.Z1],
+    ["ATU", DspParsers.height_gain, Zones.Z1],
+    ["ATV", DspParsers.digital_filter, Zones.Z1],
+    ["ATW", DspParsers.loudness_management, Zones.Z1],
+    ["ATY", DspParsers.audio_scaler, Zones.Z1],
+    ["ATZ", DspParsers.up_sampling, Zones.Z1],
+    ["ARA", DspParsers.center_spread, Zones.Z1],
+    ["VDP", DspParsers.virtual_depth, Zones.Z1],
+    ["VWD", DspParsers.virtual_wide, Zones.Z1],
+    ["ARB", DspParsers.rendering_mode, Zones.Z1],
+    ["AST", InformationParsers.ast, Zones.Z1],
+    ["VST", InformationParsers.vst, Zones.Z1],
+]
 
+def process_raw_response(raw_resp: str, _param: dict) -> list:
+    """Processes a raw response and looks up required functions from RESPONSE_DATA."""
+    match_resp = next((r for r in RESPONSE_DATA if raw_resp.startswith(r[0])), None)
+    if match_resp:
+        parse_cmd = match_resp[0]
+        parse_func = match_resp[1]
+        parse_zone = match_resp[2]
+        return parse_func(
+            raw=raw_resp[len(parse_cmd):],
+            _param=_param,
+            zone=parse_zone,
+            command=parse_cmd
+        )
+    else:
+        pass ## No error handling as not all responses have been captured by aiopioneer.
 
 class Response():
     """Model defining a parsed response for dynamic parsing into aiopioneer properties."""

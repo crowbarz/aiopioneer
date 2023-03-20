@@ -14,7 +14,7 @@ class AudioParsers():
                             response_command="sr",
                             base_property="listening_mode",
                             property_name=None,
-                            zone="1",
+                            zone=Zones.Z1,
                             value=LISTENING_MODES.get(raw)[0],
                             queue_commands=None))
         return parsed

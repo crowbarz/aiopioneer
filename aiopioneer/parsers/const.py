@@ -1,2 +1,1 @@
 """aiopioneer response parser consts."""
-

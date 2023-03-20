@@ -66,7 +66,7 @@ from .const import (
     DSP_DIGITAL_FILTER,
 )
 
-from .parsers.parse import process_raw
+from .parsers.parse import process_raw_response
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -930,7 +930,7 @@ class PioneerAVR:
         """Parse response and update cached parameters."""
         updated_zones = set()
 
-        parsed_response: list = process_raw(response, self._params)
+        parsed_response: list = process_raw_response(response, self._params)
         if parsed_response is not None:
             for response in parsed_response:
                 if response.base_property is not None:

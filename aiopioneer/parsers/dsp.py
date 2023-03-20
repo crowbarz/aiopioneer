@@ -145,7 +145,7 @@ class DspParsers():
         """Response parser for standing wave setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="atd",
+                            response_command="ATD",
                             base_property="dsp",
                             property_name="standing_wave",
                             zone=Zones.Z1,
@@ -160,7 +160,7 @@ class DspParsers():
         value = int(raw)
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="ate",
+                            response_command="ATE",
                             base_property="dsp",
                             property_name="phase_control_plus",
                             zone=Zones.Z1,
@@ -174,7 +174,7 @@ class DspParsers():
         """Response parser for sound delay setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="atf",
+                            response_command="ATF",
                             base_property="dsp",
                             property_name="sound_delay",
                             zone=Zones.Z1,
@@ -188,7 +188,7 @@ class DspParsers():
         """Response parser for digital noise reduction setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="atg",
+                            response_command="ATG",
                             base_property="dsp",
                             property_name="digital_noise_reduction",
                             zone=Zones.Z1,
@@ -202,7 +202,7 @@ class DspParsers():
         """Response parser for dialog enhancement setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="ath",
+                            response_command="ATH",
                             base_property="dsp",
                             property_name="dialog_enchancement",
                             zone=Zones.Z1,
@@ -212,14 +212,15 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def aty(raw: str, _param: dict) -> list:
+    def audio_scaler(raw: str, _param: dict) -> list:
+        """Response parser for Audio Scaler setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="aty",
+                            response_command="ATY",
                             base_property="dsp",
-                            property_name="digital_noise_reduction",
+                            property_name="audio_scaler",
                             zone=Zones.Z1,
-                            value= "off" if int(raw) == "0" else "on",
+                            value= "auto" if int(raw) == "0" else "manual",
                             queue_commands=None))
 
         return parsed
@@ -229,7 +230,7 @@ class DspParsers():
         """Response parser for Hi-BIT setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="ati",
+                            response_command="ATI",
                             base_property="dsp",
                             property_name="hi_bit",
                             zone=Zones.Z1,
@@ -239,8 +240,8 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def atz(raw: str, _param: dict) -> list:
-
+    def up_sampling(raw: str, _param: dict) -> list:
+        """Response parser for up sampling setting"""
         raw = int(raw)
 
         if raw == 0:
@@ -252,7 +253,7 @@ class DspParsers():
 
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="atz",
+                            response_command="ATZ",
                             base_property="dsp",
                             property_name="up_sampling",
                             zone=Zones.Z1,
@@ -266,7 +267,7 @@ class DspParsers():
         """Response parser for dual mono setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="atj",
+                            response_command="ATJ",
                             base_property="dsp",
                             property_name="dual_mono",
                             zone=Zones.Z1,
@@ -280,7 +281,7 @@ class DspParsers():
         """Response parser for fixed PCM setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="atk",
+                            response_command="ATK",
                             base_property="dsp",
                             property_name="fixed_pcm",
                             zone=Zones.Z1,
@@ -290,13 +291,13 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def atl(raw: str, _param: dict) -> list:
-        """Response parser for MCACC setting"""
+    def dynamic_range_control(raw: str, _param: dict) -> list:
+        """Response parser for dynamic range control setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="atj",
+                            response_command="ATL",
                             base_property="dsp",
-                            property_name="drc",
+                            property_name="dynamic_range_control",
                             zone=Zones.Z1,
                             value=DSP_DRC.get(raw),
                             queue_commands=None))
@@ -304,14 +305,14 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def atm(raw: str, _param: dict) -> list:
-
+    def lfe_attenuator(raw: str, _param: dict) -> list:
+        """Response parser for LFE attenuator setting"""
         value = int(raw) * -5
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="atm",
+                            response_command="ATM",
                             base_property="dsp",
-                            property_name="lfe_att",
+                            property_name="lfe_attenuator",
                             zone=Zones.Z1,
                             value="off" if value < -20 else value,
                             queue_commands=None))
@@ -319,10 +320,11 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def atn(raw: str, _param: dict) -> list:
+    def sacd_gain(raw: str, _param: dict) -> list:
+        """Response parser for SACD gain setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="atm",
+                            response_command="ATN",
                             base_property="dsp",
                             property_name="sacd_gain",
                             zone=Zones.Z1,
@@ -332,10 +334,11 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def ato(raw: str, _param: dict) -> list:
+    def auto_delay(raw: str, _param: dict) -> list:
+        """Response parser for auto delay setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="ato",
+                            response_command="ATO",
                             base_property="dsp",
                             property_name="auto_delay",
                             zone=Zones.Z1,
@@ -345,10 +348,11 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def atp(raw: str, _param: dict) -> list:
+    def center_width(raw: str, _param: dict) -> list:
+        """Response parser for center width setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="atp",
+                            response_command="ATP",
                             base_property="dsp",
                             property_name="center_width",
                             zone=Zones.Z1,
@@ -358,10 +362,11 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def atq(raw: str, _param: dict) -> list:
+    def panorama(raw: str, _param: dict) -> list:
+        """Response parser for panorama setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="atq",
+                            response_command="ATQ",
                             base_property="dsp",
                             property_name="panorama",
                             zone=Zones.Z1,
@@ -371,10 +376,11 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def atr(raw: str, _param: dict) -> list:
+    def dimension(raw: str, _param: dict) -> list:
+        """Response parser for dimension setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="atr",
+                            response_command="ATR",
                             base_property="dsp",
                             property_name="dimension",
                             zone=Zones.Z1,
@@ -384,10 +390,11 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def ats(raw: str, _param: dict) -> list:
+    def center_image(raw: str, _param: dict) -> list:
+        """Response parser for center image setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="ats",
+                            response_command="ATS",
                             base_property="dsp",
                             property_name="center_image",
                             zone=Zones.Z1,
@@ -397,10 +404,11 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def att(raw: str, _param: dict) -> list:
+    def effect(raw: str, _param: dict) -> list:
+        """Response parser for effect setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="atr",
+                            response_command="ATT",
                             base_property="dsp",
                             property_name="effect",
                             zone=Zones.Z1,
@@ -410,7 +418,8 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def atu(raw: str, _param: dict) -> list:
+    def height_gain(raw: str, _param: dict) -> list:
+        """Response parser for height gain setting"""
         parsed = []
         parsed.append(Response(raw=raw,
                             response_command="atu",
@@ -423,7 +432,8 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def atv(raw: str, _param: dict) -> list:
+    def digital_filter(raw: str, _param: dict) -> list:
+        """Response parser for digital filter setting"""
         parsed = []
         parsed.append(Response(raw=raw,
                             response_command="atv",
@@ -436,7 +446,8 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def atw(raw: str, _param: dict) -> list:
+    def loudness_management(raw: str, _param: dict) -> list:
+        """Response parser for loudness management setting"""
         parsed = []
         parsed.append(Response(raw=raw,
                             response_command="atw",
@@ -449,10 +460,11 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def ara(raw: str, _param: dict) -> list:
+    def center_spread(raw: str, _param: dict) -> list:
+        """Response parser for center spread setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="ara",
+                            response_command="ARA",
                             base_property="dsp",
                             property_name="center_spread",
                             zone=Zones.Z1,
@@ -462,10 +474,11 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def arb(raw: str, _param: dict) -> list:
+    def rendering_mode(raw: str, _param: dict) -> list:
+        """Response parser for rendering mode setting (Dolby Atmos only)"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="arb",
+                            response_command="ARB",
                             base_property="dsp",
                             property_name="rendering_mode",
                             zone=Zones.Z1,
@@ -475,10 +488,11 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def vdp(raw: str, _param: dict) -> list:
+    def virtual_depth(raw: str, _param: dict) -> list:
+        """Response parser for virtual depth setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="vdp",
+                            response_command="VDP",
                             base_property="dsp",
                             property_name="virtual_depth",
                             zone=Zones.Z1,
@@ -488,10 +502,11 @@ class DspParsers():
         return parsed
 
     @staticmethod
-    def vwd(raw: str, _param: dict) -> list:
+    def virtual_wide(raw: str, _param: dict) -> list:
+        """Response parser for virtual wide setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="vwd",
+                            response_command="VWD",
                             base_property="dsp",
                             property_name="virtual_wide",
                             zone=Zones.Z1,
