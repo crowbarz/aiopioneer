@@ -93,6 +93,23 @@ RESPONSE_DATA = [
     ["VST", InformationParsers.video_information, Zones.Z1],
 
     ["VTB", VideoParsers.video_converter, Zones.Z1],
+    ["VTC", VideoParsers.video_resolution, Zones.Z1],
+    ["VTD", VideoParsers.pure_cinema, Zones.Z1],
+    ["VTE", VideoParsers.prog_motion, Zones.Z1],
+    ["VTF", VideoParsers.stream_smoother, Zones.Z1],
+    ["VTG", VideoParsers.advanced_video_adjust, Zones.Z1],
+    ["VTH", VideoParsers.output_ynr, Zones.Z1],
+    ["VTI", VideoParsers.output_cnr, Zones.Z1],
+    ["VTJ", VideoParsers.output_bnr, Zones.Z1],
+    ["VTK", VideoParsers.output_mnr, Zones.Z1],
+    ["VTL", VideoParsers.output_detail, Zones.Z1],
+    ["VTM", VideoParsers.output_sharpness, Zones.Z1],
+    ["VTN", VideoParsers.output_brightness, Zones.Z1],
+    ["VTO", VideoParsers.output_contrast, Zones.Z1],
+    ["VTP", VideoParsers.output_hue, Zones.Z1],
+    ["VTQ", VideoParsers.output_chroma, Zones.Z1],
+    ["VTR", VideoParsers.black_setup, Zones.Z1],
+    ["VTS", VideoParsers.aspect, Zones.Z1],
 ]
 
 def process_raw_response(raw_resp: str, _param: dict) -> list:
