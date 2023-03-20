@@ -18,11 +18,12 @@ class InformationParsers():
     """AVR operation information parsers."""
 
     @staticmethod
-    def ast(raw: str, _param: dict) -> list:
+    def audio_information(raw: str, _param: dict) -> list:
+        """Audio information parser"""
         parsed = []
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_signal",
                             zone=Zones.Z1,
@@ -30,7 +31,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_frequency",
                             zone=Zones.Z1,
@@ -38,7 +39,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_channels.L",
                             zone=Zones.Z1,
@@ -46,7 +47,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_channels.C",
                             zone=Zones.Z1,
@@ -54,7 +55,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_channels.R",
                             zone=Zones.Z1,
@@ -62,7 +63,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_channels.SL",
                             zone=Zones.Z1,
@@ -70,7 +71,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_channels.SR",
                             zone=Zones.Z1,
@@ -78,7 +79,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_channels.SBL",
                             zone=Zones.Z1,
@@ -86,7 +87,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_channels.SBC",
                             zone=Zones.Z1,
@@ -94,7 +95,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_channels.SBR",
                             zone=Zones.Z1,
@@ -102,7 +103,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_channels.LFE",
                             zone=Zones.Z1,
@@ -110,7 +111,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_channels.FHL",
                             zone=Zones.Z1,
@@ -118,7 +119,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_channels.FHR",
                             zone=Zones.Z1,
@@ -126,7 +127,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_channels.FWL",
                             zone=Zones.Z1,
@@ -134,7 +135,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_channels.FWR",
                             zone=Zones.Z1,
@@ -142,7 +143,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_channels.XL",
                             zone=Zones.Z1,
@@ -150,7 +151,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_channels.XC",
                             zone=Zones.Z1,
@@ -158,7 +159,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_channels.XR",
                             zone=Zones.Z1,
@@ -169,7 +170,7 @@ class InformationParsers():
         ## Decode output signal data
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="output_channels.L",
                             zone=Zones.Z1,
@@ -177,7 +178,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="output_channels.C",
                             zone=Zones.Z1,
@@ -185,7 +186,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="output_channels.R",
                             zone=Zones.Z1,
@@ -193,7 +194,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="output_channels.SL",
                             zone=Zones.Z1,
@@ -201,7 +202,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="output_channels.SR",
                             zone=Zones.Z1,
@@ -209,7 +210,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="output_channels.SBL",
                             zone=Zones.Z1,
@@ -217,7 +218,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="output_channels.SB",
                             zone=Zones.Z1,
@@ -225,7 +226,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="output_channels.SBR",
                             zone=Zones.Z1,
@@ -235,7 +236,7 @@ class InformationParsers():
         ## Some older AVRs do not have more than 33 data bits
         if len(raw) > 33:
             parsed.append(Response(raw=raw,
-                                response_command="ast",
+                                response_command="AST",
                                 base_property="audio",
                                 property_name="output_channels.SW",
                                 zone=Zones.Z1,
@@ -243,7 +244,7 @@ class InformationParsers():
                                 queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                                response_command="ast",
+                                response_command="AST",
                                 base_property="audio",
                                 property_name="output_channels.FHL",
                                 zone=Zones.Z1,
@@ -251,7 +252,7 @@ class InformationParsers():
                                 queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                                response_command="ast",
+                                response_command="AST",
                                 base_property="audio",
                                 property_name="output_channels.FHR",
                                 zone=Zones.Z1,
@@ -259,7 +260,7 @@ class InformationParsers():
                                 queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                                response_command="ast",
+                                response_command="AST",
                                 base_property="audio",
                                 property_name="output_channels.FWL",
                                 zone=Zones.Z1,
@@ -267,7 +268,7 @@ class InformationParsers():
                                 queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                                response_command="ast",
+                                response_command="AST",
                                 base_property="audio",
                                 property_name="output_channels.FWR",
                                 zone=Zones.Z1,
@@ -275,7 +276,7 @@ class InformationParsers():
                                 queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                                response_command="ast",
+                                response_command="AST",
                                 base_property="audio",
                                 property_name="output_channels.TML",
                                 zone=Zones.Z1,
@@ -283,7 +284,7 @@ class InformationParsers():
                                 queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                                response_command="ast",
+                                response_command="AST",
                                 base_property="audio",
                                 property_name="output_channels.TMR",
                                 zone=Zones.Z1,
@@ -291,7 +292,7 @@ class InformationParsers():
                                 queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                                response_command="ast",
+                                response_command="AST",
                                 base_property="audio",
                                 property_name="output_channels.TRL",
                                 zone=Zones.Z1,
@@ -299,7 +300,7 @@ class InformationParsers():
                                 queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                                response_command="ast",
+                                response_command="AST",
                                 base_property="audio",
                                 property_name="output_channels.TRR",
                                 zone=Zones.Z1,
@@ -307,7 +308,7 @@ class InformationParsers():
                                 queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                                response_command="ast",
+                                response_command="AST",
                                 base_property="audio",
                                 property_name="output_channels.SW2",
                                 zone=Zones.Z1,
@@ -317,7 +318,7 @@ class InformationParsers():
         ## FY11 AVRs do not have more than data 43 data bits (VSX-1021)
         if len(raw) > 43:
             parsed.append(Response(raw=raw,
-                                response_command="ast",
+                                response_command="AST",
                                 base_property="audio",
                                 property_name="output_frequency",
                                 zone=Zones.Z1,
@@ -325,7 +326,7 @@ class InformationParsers():
                                 queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                                response_command="ast",
+                                response_command="AST",
                                 base_property="audio",
                                 property_name="output_bits",
                                 zone=Zones.Z1,
@@ -333,7 +334,7 @@ class InformationParsers():
                                 queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                                response_command="ast",
+                                response_command="AST",
                                 base_property="audio",
                                 property_name="output_pqls",
                                 zone=Zones.Z1,
@@ -341,7 +342,7 @@ class InformationParsers():
                                 queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                                response_command="ast",
+                                response_command="AST",
                                 base_property="audio",
                                 property_name="output_auto_phase_control_plus",
                                 zone=Zones.Z1,
@@ -349,7 +350,7 @@ class InformationParsers():
                                 queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                                response_command="ast",
+                                response_command="AST",
                                 base_property="audio",
                                 property_name="output_reverse_phase",
                                 zone=Zones.Z1,
@@ -358,7 +359,7 @@ class InformationParsers():
 
         # set multichannel value
         parsed.append(Response(raw=raw,
-                            response_command="ast",
+                            response_command="AST",
                             base_property="audio",
                             property_name="input_multichannel",
                             zone=Zones.Z1,
@@ -368,11 +369,12 @@ class InformationParsers():
         return parsed
 
     @staticmethod
-    def vst(raw: str, _param: dict) -> list:
+    def video_information(raw: str, _param: dict) -> list:
+        """Video information parser"""
         parsed = []
 
         parsed.append(Response(raw=raw,
-                            response_command="vst",
+                            response_command="VST",
                             base_property="video",
                             property_name="signal_input_terminal",
                             zone=Zones.Z1,
@@ -380,7 +382,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="vst",
+                            response_command="VST",
                             base_property="video",
                             property_name="signal_input_resolution",
                             zone=Zones.Z1,
@@ -388,7 +390,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="vst",
+                            response_command="VST",
                             base_property="video",
                             property_name="signal_input_aspect",
                             zone=Zones.Z1,
@@ -396,7 +398,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="vst",
+                            response_command="VST",
                             base_property="video",
                             property_name="signal_input_color_format",
                             zone=Zones.Z1,
@@ -404,7 +406,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="vst",
+                            response_command="VST",
                             base_property="video",
                             property_name="signal_input_bit",
                             zone=Zones.Z1,
@@ -412,7 +414,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="vst",
+                            response_command="VST",
                             base_property="video",
                             property_name="signal_input_extended_colorspace",
                             zone=Zones.Z1,
@@ -420,7 +422,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="vst",
+                            response_command="VST",
                             base_property="video",
                             property_name="signal_output_resolution",
                             zone=Zones.Z1,
@@ -428,7 +430,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="vst",
+                            response_command="VST",
                             base_property="video",
                             property_name="signal_output_aspect",
                             zone=Zones.Z1,
@@ -436,7 +438,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="vst",
+                            response_command="VST",
                             base_property="video",
                             property_name="signal_output_color_format",
                             zone=Zones.Z1,
@@ -444,7 +446,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="vst",
+                            response_command="VST",
                             base_property="video",
                             property_name="signal_output_bit",
                             zone=Zones.Z1,
@@ -452,7 +454,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="vst",
+                            response_command="VST",
                             base_property="video",
                             property_name="signal_output_extended_colorspace",
                             zone=Zones.Z1,
@@ -460,7 +462,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="vst",
+                            response_command="VST",
                             base_property="video",
                             property_name="signal_hdmi1_recommended_resolution",
                             zone=Zones.Z1,
@@ -468,7 +470,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="vst",
+                            response_command="VST",
                             base_property="video",
                             property_name="signal_hdmi1_deepcolor",
                             zone=Zones.Z1,
@@ -476,7 +478,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="vst",
+                            response_command="VST",
                             base_property="video",
                             property_name="signal_hdmi2_recommended_resolution",
                             zone=Zones.Z1,
@@ -484,7 +486,7 @@ class InformationParsers():
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="vst",
+                            response_command="VST",
                             base_property="video",
                             property_name="signal_hdmi2_deepcolor",
                             zone=Zones.Z1,
@@ -493,7 +495,7 @@ class InformationParsers():
 
         if len(raw) > 40: ## FY11 AVRs only return 25 data values
             parsed.append(Response(raw=raw,
-                            response_command="vst",
+                            response_command="VST",
                             base_property="video",
                             property_name="signal_hdmi3_recommended_resolution",
                             zone=Zones.Z1,
@@ -501,7 +503,7 @@ class InformationParsers():
                             queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                                response_command="vst",
+                                response_command="VST",
                                 base_property="video",
                                 property_name="signal_hdmi3_deepcolor",
                                 zone=Zones.Z1,
@@ -509,7 +511,7 @@ class InformationParsers():
                                 queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                                response_command="vst",
+                                response_command="VST",
                                 base_property="video",
                                 property_name="input_3d_format",
                                 zone=Zones.Z1,
@@ -517,7 +519,7 @@ class InformationParsers():
                                 queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                                response_command="vst",
+                                response_command="VST",
                                 base_property="video",
                                 property_name="output_3d_format",
                                 zone=Zones.Z1,
@@ -525,7 +527,7 @@ class InformationParsers():
                                 queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                            response_command="vst",
+                            response_command="VST",
                             base_property="video",
                             property_name="signal_hdmi4_recommended_resolution",
                             zone=Zones.Z1,
@@ -533,7 +535,7 @@ class InformationParsers():
                             queue_commands=None))
 
             parsed.append(Response(raw=raw,
-                                response_command="vst",
+                                response_command="VST",
                                 base_property="video",
                                 property_name="signal_hdmi4_deepcolor",
                                 zone=Zones.Z1,

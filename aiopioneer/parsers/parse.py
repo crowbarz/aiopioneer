@@ -87,8 +87,9 @@ RESPONSE_DATA = [
     ["VDP", DspParsers.virtual_depth, Zones.Z1],
     ["VWD", DspParsers.virtual_wide, Zones.Z1],
     ["ARB", DspParsers.rendering_mode, Zones.Z1],
-    ["AST", InformationParsers.ast, Zones.Z1],
-    ["VST", InformationParsers.vst, Zones.Z1],
+
+    ["AST", InformationParsers.audio_information, Zones.Z1],
+    ["VST", InformationParsers.video_information, Zones.Z1],
 ]
 
 def process_raw_response(raw_resp: str, _param: dict) -> list:
