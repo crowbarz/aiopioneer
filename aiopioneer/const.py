@@ -1,5 +1,15 @@
 """Constants for aiopioneer."""
 
+from enum import Enum
+
+class Zones(Enum):
+    """Valid aiopioneer zones"""
+
+    Z1 = "1"
+    Z2 = "2"
+    Z3 = "3"
+    HDZ = "Z"
+
 DEFAULT_PORT = 8102
 VERSION = "0.3"
 
@@ -453,3 +463,11 @@ VIDEO_RESOLUTION_MODES = {
     "8": "4K",
     "9": "4K/24p",
 }
+
+DIMMER_MODES = {
+    "0": "Brigtest",
+    "1": "Bright",
+    "2": "Dark",
+    "3": "Display Off",
+    "9": "DIMMER (cyclic)",
+ }

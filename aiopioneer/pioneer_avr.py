@@ -66,7 +66,7 @@ from .const import (
     DSP_DIGITAL_FILTER,
 )
 
-from .parsers import process_raw
+from .parsers.parse import process_raw
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -948,15 +948,8 @@ class PioneerAVR:
                             )
 
                     else:
-                        try:
-                            current_value[response.zone][response.property_name] = response.value
-                        except Exception as ex: # pylint: disable=broad-except
-                            if str(ex).replace("'", "") == response.zone:
-                                current_value[response.zone] = {} 
-                                current_value[response.zone][response.property_name] = response.value
-                            else:
-                                raise ex
-
+                        current_value.setdefault(response.zone, {})
+                        current_value[response.zone][response.property_name] = response.value
                         setattr(self, response.base_property, current_value)
                         if response.zone not in updated_zones:
                             updated_zones.add(response.zone)
@@ -973,7 +966,7 @@ class PioneerAVR:
                         self.queue_command(command)
 
                 # Some specific overrides for the command queue
-                if response.response_command in ["pwr", "fn", "aub", "aua"]:
+                if response.response_command in ["PWR", "FN", "AUB", "AUA"]:
                     # Only request these if we're not doing a full update.
                     # If we are doing a full update these will be included anyway
                     if (self._full_update is False) and (
