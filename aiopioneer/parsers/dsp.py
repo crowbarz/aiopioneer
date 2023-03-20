@@ -7,8 +7,9 @@ from aiopioneer.const import (DSP_DIGITAL_DIALOG_ENHANCEMENT,
                               DSP_HEIGHT_GAIN,
                               DSP_PHASE_CONTROL,
                               DSP_SIGNAL_SELECT,
-                              DSP_VIRTUAL_DEPTH)
-from .const import Response, Zones
+                              DSP_VIRTUAL_DEPTH,
+                              Zones)
+from .parse import Response
 
 class DspParsers():
     """DSP Response parsers."""

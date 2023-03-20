@@ -1,7 +1,7 @@
 """Pioneer AVR response parsers for video parameters."""
 
-from aiopioneer.const import VIDEO_RESOLUTION_MODES, ADVANCED_VIDEO_ADJUST_MODES
-from .const import Response
+from aiopioneer.const import VIDEO_RESOLUTION_MODES, ADVANCED_VIDEO_ADJUST_MODES, Zones
+from .parse import Response
 
 def vtb(raw: str, _param: dict) -> list:
     value = int(raw)

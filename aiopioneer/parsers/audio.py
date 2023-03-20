@@ -1,7 +1,7 @@
 """Pioneer AVR response parsers for audio parameters."""
 
 from aiopioneer.const import Zones, LISTENING_MODES, TONE_MODES, TONE_DB_VALUES
-from .const import Response
+from .parse import Response
 
 class AudioParsers():
     """Audio related parsers."""
