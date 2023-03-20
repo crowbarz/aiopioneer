@@ -6,42 +6,42 @@ from .tuner import *
 from .video import *
 from .dsp import *
 from .information import *
-from .const import Response
+from .const import Zones
 
 def process_raw(raw: str, _param: dict) -> list:
     """Handler to pass the raw response to the correct parser."""
-    if raw.startswith("pwr"):
-        return pwr(raw[3:], _param)
-    if raw.startswith("apr"):
-        return apr(raw[3:], _param)
-    if raw.startswith("bpr"):
-        return bpr(raw[3:], _param)
-    if raw.startswith("zep"):
-        return zep(raw[3:], _param)
-    if raw.startswith("fn"):
-        return fn(raw[2:], _param)
-    if raw.startswith("z2f"):
-        return z2f(raw[3:], _param)
-    if raw.startswith("z3f"):
-        return z3f(raw[3:], _param)
-    if raw.startswith("zea"):
-        return zea(raw[3:], _param)
-    if raw.startswith("vol"):
-        return vol(raw[3:], _param)
-    if raw.startswith("zv"):
-        return zv(raw[2:], _param)
-    if raw.startswith("yv"):
-        return yv(raw[2:], _param)
-    if raw.startswith("xv"):
-        return xv(raw[2:], _param)
-    if raw.startswith("mut"):
-        return mut(raw[3:], _param)
-    if raw.startswith("z2mut"):
-        return z2mut(raw[5:], _param)
-    if raw.startswith("z3mut"):
-        return z3mut(raw[5:], _param)
+    if raw.startswith("PWR"):
+        return power(raw[3:], _param)
+    if raw.startswith("APR"):
+        return power(raw[3:], _param, Zones.Z2, "APR")
+    if raw.startswith("BPR"):
+        return power(raw[3:], _param, Zones.Z3, "BPR")
+    if raw.startswith("ZEP"):
+        return power(raw[3:], _param, Zones.HDZ, "ZEP")
+    if raw.startswith("FN"):
+        return input_source(raw[2:], _param)
+    if raw.startswith("Z2F"):
+        return input_source(raw[3:], _param, Zones.Z2, "Z2F")
+    if raw.startswith("Z3F"):
+        return input_source(raw[3:], _param, Zones.Z3, "Z3F")
+    if raw.startswith("ZEA"):
+        return input_source(raw[3:], _param, Zones.HDZ, "ZEA")
+    if raw.startswith("VOL"):
+        return volume(raw[3:], _param)
+    if raw.startswith("ZV"):
+        return volume(raw[2:], _param, Zones.Z2, "ZV")
+    if raw.startswith("YV"):
+        return volume(raw[2:], _param, Zones.Z3, "YV")
+    if raw.startswith("XV"):
+        return volume(raw[2:], _param, Zones.HDZ, "XV")
+    if raw.startswith("MUT"):
+        return mute(raw[3:], _param)
+    if raw.startswith("Z2MUT"):
+        return mute(raw[5:], _param, Zones.Z2, "Z2MUT")
+    if raw.startswith("Z3MUT"):
+        return mute(raw[5:], _param, Zones.Z3, "Z3MUT")
     if raw.startswith("HZMUT"):
-        return hzmut(raw[5:], _param)
+        return mute(raw[5:], _param, Zones.HDZ, "HZMUT")
     if raw.startswith("SR"):
         return listening_mode(raw[2:], _param)
     if raw.startswith("TO"):
@@ -51,29 +51,35 @@ def process_raw(raw: str, _param: dict) -> list:
     if raw.startswith("TR"):
         return tone_treble(raw[2:], _param)
     if raw.startswith("ZGA"):
-        return tone(raw[3:], _param, "2", "ZGA")
+        return tone(raw[3:], _param, Zones.Z2, "ZGA")
     if raw.startswith("ZGB"):
-        return tone_bass(raw[3:], _param, "2", "ZGB")
+        return tone_bass(raw[3:], _param, Zones.Z2, "ZGB")
     if raw.startswith("ZGC"):
-        return tone_treble(raw[3:], _param, "2", "ZGC")
-    if raw.startswith("spk"):
-        return spk(raw[3:], _param)
-    if raw.startswith("ho"):
-        return ho(raw[2:], _param)
-    if raw.startswith("ha"):
-        return ha(raw[2:], _param)
-    if raw.startswith("pq"):
-        return pq(raw[2:], _param)
-    if raw.startswith("saa"):
-        return saa(raw[3:], _param)
-    if raw.startswith("sab"):
-        return sab(raw[3:], _param)
-    if raw.startswith("sac"):
-        return sac(raw[3:], _param)
-    if raw.startswith("pkl"):
-        return pkl(raw[3:], _param)
-    if raw.startswith("rml"):
-        return rml(raw[3:], _param)
+        return tone_treble(raw[3:], _param, Zones.Z2, "ZGC")
+    if raw.startswith("SPK"):
+        return speaker_modes(raw[3:], _param)
+    if raw.startswith("HO"):
+        return hdmi_out(raw[2:], _param)
+    if raw.startswith("HA"):
+        return hdmi_audio(raw[2:], _param)
+    if raw.startswith("PQ"):
+        return pqls(raw[2:], _param)
+    if raw.startswith("SAA"):
+        return dimmer(raw[3:], _param)
+    if raw.startswith("SAB"):
+        return sleep(raw[3:], _param)
+    if raw.startswith("SAC"):
+        return amp_status(raw[3:], _param)
+    if raw.startswith("PKL"):
+        return panel_lock(raw[3:], _param)
+    if raw.startswith("RML"):
+        return remote_lock(raw[3:], _param)
+    if raw.startswith("SSF"):
+        return speaker_system(raw[3:], _param)
+    if raw.startswith("AUA"):
+        return audio_parameter_prohibitation(raw[3:], _param)
+    if raw.startswith("AUB"):
+        return audio_parameter_working(raw[3:], _param)
     if raw.startswith("frf"):
         return frf(raw[3:], _param)
     if raw.startswith("fra"):
@@ -83,9 +89,9 @@ def process_raw(raw: str, _param: dict) -> list:
     if raw.startswith("CLV"):
         return channel_levels(raw[3:], _param)
     if raw.startswith("ZGE"):
-        return channel_levels(raw[3:], _param, "2", "ZGE")
+        return channel_levels(raw[3:], _param, Zones.Z2, "ZGE")
     if raw.startswith("ZHE"):
-        return channel_levels(raw[3:], _param, "3", "ZHE")
+        return channel_levels(raw[3:], _param, Zones.Z3, "ZHE")
     if raw.startswith("mc"):
         return mc(raw[2:], _param)
     if raw.startswith("is"):

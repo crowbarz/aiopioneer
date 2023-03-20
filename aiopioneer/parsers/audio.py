@@ -1,7 +1,7 @@
 """Pioneer AVR response parsers for audio parameters."""
 
 from aiopioneer.const import LISTENING_MODES, TONE_MODES, TONE_DB_VALUES
-from .const import Response
+from .const import Response, Zones
 
 def listening_mode(raw: str, _param: dict) -> list:
     """Defines a listening mode response parser for Zone 1 returning string values"""
@@ -15,7 +15,7 @@ def listening_mode(raw: str, _param: dict) -> list:
                          queue_commands=None))
     return parsed
 
-def tone(raw: str, _param: dict, zone = "1", command = "TO") -> list:
+def tone(raw: str, _param: dict, zone = Zones.Z1, command = "TO") -> list:
     """Defines a tone mode response parser for Zone 1 returning string values"""
     parsed = []
     parsed.append(Response(raw=raw,
@@ -27,7 +27,7 @@ def tone(raw: str, _param: dict, zone = "1", command = "TO") -> list:
                          queue_commands=None))
     return parsed
 
-def tone_bass(raw: str, _param: dict, zone = "1", command = "BA") -> list:
+def tone_bass(raw: str, _param: dict, zone = Zones.Z1, command = "BA") -> list:
     """Defines a tone bass response parser for Zone 1 returning string values"""
     parsed = []
     parsed.append(Response(raw=raw,
@@ -39,7 +39,7 @@ def tone_bass(raw: str, _param: dict, zone = "1", command = "BA") -> list:
                          queue_commands=None))
     return parsed
 
-def tone_treble(raw: str, _param: dict, zone = "1", command = "TO") -> list:
+def tone_treble(raw: str, _param: dict, zone = Zones.Z1, command = "TO") -> list:
     """Defines a tone treble response parser for Zone 1 returning string values"""
     parsed = []
     parsed.append(Response(raw=raw,
@@ -51,7 +51,7 @@ def tone_treble(raw: str, _param: dict, zone = "1", command = "TO") -> list:
                          queue_commands=None))
     return parsed
 
-def channel_levels(raw: str, _param: dict, zone = "1", command = "CLV") -> list:
+def channel_levels(raw: str, _param: dict, zone = Zones.Z1, command = "CLV") -> list:
     """Defines a channel levels resposne object for Zone 1 returning float values"""
     value = float(int(raw[6:]) - 50) / 2
     speaker = str(raw[3:6]).strip("_").upper()

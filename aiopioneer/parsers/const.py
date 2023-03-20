@@ -1,5 +1,16 @@
 """aiopioneer response parser consts."""
 
+from enum import Enum
+
+
+class Zones(Enum):
+    """Valid aiopioneer zones"""
+
+    Z1 = "1"
+    Z2 = "2"
+    Z3 = "3"
+    HDZ = "Z"
+
 class Response():
     """Model defining a parsed response for dynamic parsing into aiopioneer properties."""
 

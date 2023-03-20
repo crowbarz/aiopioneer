@@ -10,46 +10,22 @@ from aiopioneer.const import (
     AMP_MODES,
     PANEL_LOCK
 )
-from .const import Response
+from .const import Response, Zones
 
 
-def pwr(raw: str, _param: dict) -> list:
+def power(raw: str, _param: dict, zone = Zones.Z1, command = "PWR") -> list:
     """Defines a power response parser for Zone 1 returning values of True or False"""
     parsed = []
     parsed.append(Response(raw=raw,
-                         response_command="pwr",
+                         response_command=command,
                          base_property="power",
                          property_name=None,
-                         zone="1",
+                         zone=zone,
                          value=(raw == "0"),
                          queue_commands=None))
     return parsed
 
-def apr(raw: str, _param: dict) -> list:
-    """Defines a power response parser for Zone 2 returning values of True or False"""
-    # Reuse Zone 1 parser and override zone and response_command parameter
-    parsed = pwr(raw, _param)
-    parsed[0].zone="2"
-    parsed[0].response_command="apr"
-    return parsed
-
-def bpr(raw: str, _param: dict) -> list:
-    """Defines a power response parser for Zone 3 returning values of True or False"""
-    # Reuse Zone 1 parser and override zone and response_command parameter
-    parsed = pwr(raw, _param)
-    parsed[0].zone="3"
-    parsed[0].response_command="bpr"
-    return parsed
-
-def zep(raw: str, _param: dict) -> list:
-    """Defines a power response parser for HDZone (Z) returning values of True or False"""
-    # Reuse Zone 1 parser and override zone and response_command parameter
-    parsed = pwr(raw, _param)
-    parsed[0].zone="Z"
-    parsed[0].response_command="zep"
-    return parsed
-
-def fn(raw: str, _param: dict) -> list:
+def input_source(raw: str, _param: dict, zone = Zones.Z1, command = "FN") -> list:
     """Defines a source input response parser for Zone 1 returning string values."""
     raw = "".join(filter(str.isnumeric, raw)) # Select only numeric values from raw
     parsed = []
@@ -61,281 +37,209 @@ def fn(raw: str, _param: dict) -> list:
             command_queue.append("_calculate_am_frequency_step")
 
     parsed.append(Response(raw=raw,
-                         response_command="fn",
+                         response_command=command,
                          base_property="source",
                          property_name=None,
-                         zone="1",
+                         zone=zone,
                          value=raw,
                          queue_commands=command_queue))
 
     # Add a response for media_control_mode
     if raw in MEDIA_CONTROL_SOURCES:
         parsed.append(Response(raw=raw,
-                         response_command="fn",
+                         response_command=command,
                          base_property="media_control_mode",
                          property_name=None,
-                         zone="1",
+                         zone=zone,
                          value=MEDIA_CONTROL_SOURCES.get(raw),
                          queue_commands=command_queue))
 
     elif raw is _param.get(PARAM_MHL_SOURCE):
         # This source is a MHL source
         parsed.append(Response(raw=raw,
-                         response_command="fn",
+                         response_command=command,
                          base_property="media_control_mode",
                          property_name=None,
-                         zone="1",
+                         zone=zone,
                          value="MHL",
                          queue_commands=command_queue))
     else:
         # This source is a MHL source
         parsed.append(Response(raw=raw,
-                         response_command="fn",
+                         response_command=command,
                          base_property="media_control_mode",
                          property_name=None,
-                         zone="1",
+                         zone=zone,
                          value=None,
                          queue_commands=command_queue))
 
     return parsed
 
-def z2f(raw: str, _param: dict) -> list:
-    """Defines a source input response parser for Zone 2 returning string values."""
-    # Reuse Zone 1 parser and override zone and response_command parameter
-    parsed = fn(raw, _param)
-
-    parsed[0].zone="2"
-    parsed[0].response_command="z2f"
-    parsed[1].zone="2"
-    parsed[1].response_command="z2f"
-
-    return parsed
-
-def z3f(raw: str, _param: dict) -> list:
-    """Defines a source input response parser for Zone 3 returning string values."""
-    # Reuse Zone 1 parser and override zone and response_command parameter
-    parsed = fn(raw, _param)
-
-    parsed[0].zone="3"
-    parsed[0].response_command="z3f"
-    parsed[1].zone="3"
-    parsed[1].response_command="z3f"
-
-    return parsed
-
-def zea(raw: str, _param: dict) -> list:
-    """Defines a source input response parser for HDZone (Z) returning string values."""
-    # Reuse Zone 1 parser and override zone and response_command parameter
-    parsed = fn(raw, _param)
-
-    parsed[0].zone="Z"
-    parsed[0].response_command="zea"
-    parsed[1].zone="Z"
-    parsed[1].response_command="zea"
-
-    return parsed
-
-def vol(raw: str, _param: dict) -> list:
+def volume(raw: str, _param: dict, zone = Zones.Z1, command = "VOL") -> list:
     """Defines a volume response parser for Zone 1 returning integer values"""
     raw = "".join(filter(str.isnumeric, raw)) # Select only numeric values from raw
     parsed = []
     parsed.append(Response(raw=raw,
-                         response_command="vol",
+                         response_command=command,
                          base_property="volume",
                          property_name=None,
-                         zone="1",
+                         zone=zone,
                          value=int(raw),
                          queue_commands=None))
 
     return parsed
 
-def zv(raw: str, _param: dict) -> list:
-    """Defines a volume response parser for Zone 2 returning integer values"""
-    # Reuse Zone 1 parser and override zone and response_command parameter
-    parsed = vol(raw, _param)
-    parsed[0].zone="2"
-    parsed[0].response_command="zv"
-    return parsed
-
-def yv(raw: str, _param: dict) -> list:
-    """Defines a volume response parser for Zone 3 returning integer values"""
-    # Reuse Zone 1 parser and override zone and response_command parameter
-    parsed = vol(raw, _param)
-    parsed[0].zone="3"
-    parsed[0].response_command="yv"
-    return parsed
-
-def xv(raw: str, _param: dict) -> list:
-    """Defines a volume response parser for HDZone (Z) returning integer values"""
-    # Reuse Zone 1 parser and override zone and response_command parameter
-    parsed = vol(raw, _param)
-    parsed[0].zone="Z"
-    parsed[0].response_command="xv"
-    return parsed
-
-def mut(raw: str, _param: dict) -> list:
+def mute(raw: str, _param: dict, zone = Zones.Z1, command = "MUT") -> list:
     """Defines a mute status response parser for Zone 1 returning values of True or False"""
     raw = "".join(filter(str.isnumeric, raw)) # Select only numeric values from raw
     parsed = []
     parsed.append(Response(raw=raw,
-                         response_command="mut",
+                         response_command=command,
                          base_property="mute",
                          property_name=None,
-                         zone="1",
+                         zone=zone,
                          value=(raw == "0"),
                          queue_commands=None))
 
     return parsed
 
-def z2mut(raw: str, _param: dict) -> list:
-    """Defines a mute status response parser for Zone 2 returning values of True or False"""
-    # Reuse Zone 1 parser and override zone and response_command parameter
-    parsed = mut(raw, _param)
-    parsed[0].zone="2"
-    parsed[0].response_command="z2mut"
-    return parsed
-
-def z3mut(raw: str, _param: dict) -> list:
-    """Defines a mute status response parser for Zone 3 returning values of True or False"""
-    # Reuse Zone 1 parser and override zone and response_command parameter
-    parsed = mut(raw, _param)
-    parsed[0].zone="3"
-    parsed[0].response_command="z3mut"
-    return parsed
-
-def hzmut(raw: str, _param: dict) -> list:
-    """Defines a mute status response parser for HDZone (Z) returning values of True or False"""
-    # Reuse Zone 1 parser and override zone and response_command parameter
-    parsed = mut(raw, _param)
-    parsed[0].zone="Z"
-    parsed[0].response_command="hzmut"
-    return parsed
-
 # AMP FUNCTIONS
-def spk(raw: str, _param: dict) -> list:
+def speaker_modes(raw: str, _param: dict) -> list:
+    """Defines a speaker mode response. This response is only vaid for Zone 1"""
     parsed = []
     parsed.append(Response(raw=raw,
-                         response_command="spk",
+                         response_command="SPK",
                          base_property="amp",
                          property_name="speakers",
-                         zone="1",
+                         zone=Zones.Z1,
                          value=SPEAKER_MODES.get(raw),
                          queue_commands=None))
 
     return parsed
 
-def ho(raw: str, _param: dict) -> list:
+def hdmi_out(raw: str, _param: dict) -> list:
+    """Defines a HDMI out mode response. This response is only valid for Zone 1"""
     parsed = []
     parsed.append(Response(raw=raw,
-                         response_command="ho",
+                         response_command="HO",
                          base_property="amp",
                          property_name="hdmi_out",
-                         zone="1",
+                         zone=Zones.Z1,
                          value=HDMI_OUT_MODES.get(raw),
                          queue_commands=None))
 
     return parsed
     
-def ha(raw: str, _param: dict) -> list:
+def hdmi_audio(raw: str, _param: dict) -> list:
+    """Defines a HDMI audio mode response. This response is only valid for Zone 1"""
     parsed = []
     parsed.append(Response(raw=raw,
-                         response_command="ho",
+                         response_command="HA",
                          base_property="amp",
                          property_name="hdmi_audio",
-                         zone="1",
+                         zone=Zones.Z1,
                          value=HDMI_AUDIO_MODES.get(raw),
                          queue_commands=None))
 
     return parsed
 
-def pq(raw: str, _param: dict) -> list:
+def pqls(raw: str, _param: dict) -> list:
+    """Defines a PQLS mode response. This response is only valid for Zone 1"""
     parsed = []
     parsed.append(Response(raw=raw,
-                         response_command="pq",
+                         response_command="PQ",
                          base_property="amp",
                          property_name="pqls",
-                         zone="1",
+                         zone=Zones.Z1,
                          value=PQLS_MODES.get(raw),
                          queue_commands=None))
 
     return parsed
 
-def saa(raw: str, _param: dict) -> list:
+def dimmer(raw: str, _param: dict) -> list:
+    """Defines a display dimmer response. This response is only valid for Zone 1"""
     parsed = []
     parsed.append(Response(raw=raw,
-                         response_command="saa",
+                         response_command="SAA",
                          base_property="amp",
                          property_name="dimmer",
-                         zone="1",
+                         zone=Zones.Z1,
                          value=raw,
                          queue_commands=None))
 
     return parsed
 
-def sab(raw: str, _param: dict) -> list:
+def sleep(raw: str, _param: dict) -> list:
+    """Defines a sleep timer response. This response is only valid for Zone 1"""
     parsed = []
     parsed.append(Response(raw=raw,
-                         response_command="sab",
+                         response_command="SAB",
                          base_property="amp",
-                         property_name="dimmer",
-                         zone="1",
+                         property_name="sleep",
+                         zone=Zones.Z1,
                          value=int(raw),
                          queue_commands=None))
 
     return parsed
 
-def sac(raw: str, _param: dict) -> list:
+def amp_status(raw: str, _param: dict) -> list:
+    """Defines a AMP status response. This response is only valid for Zone 1"""
     parsed = []
     parsed.append(Response(raw=raw,
-                         response_command="sac",
+                         response_command="SAC",
                          base_property="amp",
                          property_name="status",
-                         zone="1",
+                         zone=Zones.Z1,
                          value=AMP_MODES.get(raw),
                          queue_commands=None))
 
     return parsed
 
-def pkl(raw: str, _param: dict) -> list:
+def panel_lock(raw: str, _param: dict) -> list:
+    """Defines a panel lock response. This response is only valid for Zone 1"""
     parsed = []
     parsed.append(Response(raw=raw,
-                         response_command="pkl",
+                         response_command="PKL",
                          base_property="amp",
                          property_name="panel_lock",
-                         zone="1",
+                         zone=Zones.Z1,
                          value=PANEL_LOCK.get(raw),
                          queue_commands=None))
 
     return parsed
 
-def rml(raw: str, _param: dict) -> list:
+def remote_lock(raw: str, _param: dict) -> list:
+    """Defines a remote lock response. This response is only valid for Zone 1"""
     parsed = []
     parsed.append(Response(raw=raw,
-                         response_command="pkl",
+                         response_command="RML",
                          base_property="amp",
                          property_name="remote_lock",
-                         zone="1",
+                         zone=Zones.Z1,
                          value=raw,
                          queue_commands=None))
 
     return parsed
 
-def ssf(raw: str, _param: dict) -> list:
+def speaker_system(raw: str, _param: dict) -> list:
+    """Defines a speaker system mode response. This response is only valid for Zone 1"""
     parsed = []
     parsed.append(Response(raw=raw,
-                         response_command="ssf",
+                         response_command="SSF",
                          base_property="amp",
-                         property_name="remote_lock",
-                         zone="1",
+                         property_name="speaker_system",
+                         zone=Zones.Z1,
                          value=_param.get(PARAM_SPEAKER_SYSTEM_MODES).get(raw),
                          queue_commands=None))
     
     return parsed
 
-def aua(raw: str, _param: dict) -> list:
+# The below responses are yet to be decoded properly due to little Pioneer documentation
+def audio_parameter_prohibitation(raw: str, _param: dict) -> list:
+    """Defines a audio param prohibitaion response. This response is only valid for Zone 1"""
     parsed = []
     parsed.append(Response(raw=raw,
-                         response_command="aua",
+                         response_command="AUA",
                          base_property=None,
                          property_name=None,
                          zone=None,
@@ -344,10 +248,11 @@ def aua(raw: str, _param: dict) -> list:
 
     return parsed
 
-def aub(raw: str, _param: dict) -> list:
+def audio_parameter_working(raw: str, _param: dict) -> list:
+    """Defines a audio param working response. This response is only valid for Zone 1"""
     parsed = []
     parsed.append(Response(raw=raw,
-                         response_command="aub",
+                         response_command="AUB",
                          base_property=None,
                          property_name=None,
                          zone=None,
