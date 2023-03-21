@@ -42,7 +42,13 @@ RESPONSE_DATA = [
 
     ["SSL", SettingsParsers.home_menu_status, None],
     ["SSJ", SettingsParsers.mcacc_diagnostic_status, None],
-    ["SSU", SettingsParsers.standing_wave_setting, None],
+    ["SUU", SettingsParsers.standing_wave_setting, None],
+    ["SUV", SettingsParsers.standing_wave_sw_trim, None],
+    ["SSP", SettingsParsers.surround_position, None],
+    ["SSQ", SettingsParsers.x_over, None],
+    ["SST", SettingsParsers.x_curve, None],
+    ["SSU", SettingsParsers.loudness_plus, None],
+    ["SSV", SettingsParsers.sbch_processing, None],
 
     ["CLV", AudioParsers.channel_levels, Zones.Z1],
     ["ZGE", AudioParsers.channel_levels, Zones.Z2],

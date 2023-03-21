@@ -522,3 +522,11 @@ STANDING_WAVE_FREQUENCIES = {
     '31': '239Hz',
     '32': '250Hz'
 }
+
+XOVER_SETTING = {
+    "0": "50Hz",
+    "1": "80Hz",
+    "2": "100Hz",
+    "3": "150Hz",
+    "4": "200Hz",
+}
