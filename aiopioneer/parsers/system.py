@@ -114,178 +114,178 @@ class SystemParsers():
         return parsed
 
     @staticmethod
-    def speaker_modes(raw: str, _param: dict) -> list:
+    def speaker_modes(raw: str, _param: dict, zone = Zones.Z1, command = "SPK") -> list:
         """Defines a speaker mode response. This response is only vaid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="SPK",
+                            response_command=command,
                             base_property="amp",
                             property_name="speakers",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=SPEAKER_MODES.get(raw),
                             queue_commands=None))
 
         return parsed
 
     @staticmethod
-    def hdmi_out(raw: str, _param: dict) -> list:
+    def hdmi_out(raw: str, _param: dict, zone = Zones.Z1, command = "HO") -> list:
         """Defines a HDMI out mode response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="HO",
+                            response_command=command,
                             base_property="amp",
                             property_name="hdmi_out",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=HDMI_OUT_MODES.get(raw),
                             queue_commands=None))
 
         return parsed
 
     @staticmethod
-    def hdmi_audio(raw: str, _param: dict) -> list:
+    def hdmi_audio(raw: str, _param: dict, zone = Zones.Z1, command = "HA") -> list:
         """Defines a HDMI audio mode response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="HA",
+                            response_command=command,
                             base_property="amp",
                             property_name="hdmi_audio",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=HDMI_AUDIO_MODES.get(raw),
                             queue_commands=None))
 
         return parsed
 
     @staticmethod
-    def pqls(raw: str, _param: dict) -> list:
+    def pqls(raw: str, _param: dict, zone = Zones.Z1, command = "PQ") -> list:
         """Defines a PQLS mode response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="PQ",
+                            response_command=command,
                             base_property="amp",
                             property_name="pqls",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=PQLS_MODES.get(raw),
                             queue_commands=None))
 
         return parsed
 
     @staticmethod
-    def dimmer(raw: str, _param: dict) -> list:
+    def dimmer(raw: str, _param: dict, zone = Zones.Z1, command = "SAA") -> list:
         """Defines a display dimmer response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="SAA",
+                            response_command=command,
                             base_property="amp",
                             property_name="dimmer",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=DIMMER_MODES.get(raw),
                             queue_commands=None))
 
         return parsed
 
     @staticmethod
-    def sleep(raw: str, _param: dict) -> list:
+    def sleep(raw: str, _param: dict, zone = Zones.Z1, command = "SAB") -> list:
         """Defines a sleep timer response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="SAB",
+                            response_command=command,
                             base_property="amp",
                             property_name="sleep",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=int(raw),
                             queue_commands=None))
 
         return parsed
 
     @staticmethod
-    def amp_status(raw: str, _param: dict) -> list:
+    def amp_status(raw: str, _param: dict, zone = Zones.Z1, command = "SAC") -> list:
         """Defines a AMP status response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="SAC",
+                            response_command=command,
                             base_property="amp",
                             property_name="status",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=AMP_MODES.get(raw),
                             queue_commands=None))
 
         return parsed
 
     @staticmethod
-    def panel_lock(raw: str, _param: dict) -> list:
+    def panel_lock(raw: str, _param: dict, zone = Zones.Z1, command = "PKL") -> list:
         """Defines a panel lock response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="PKL",
+                            response_command=command,
                             base_property="amp",
                             property_name="panel_lock",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=PANEL_LOCK.get(raw),
                             queue_commands=None))
 
         return parsed
 
     @staticmethod
-    def remote_lock(raw: str, _param: dict) -> list:
+    def remote_lock(raw: str, _param: dict, zone = Zones.Z1, command = "RML") -> list:
         """Defines a remote lock response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="RML",
+                            response_command=command,
                             base_property="amp",
                             property_name="remote_lock",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=raw,
                             queue_commands=None))
 
         return parsed
 
     @staticmethod
-    def speaker_system(raw: str, _param: dict) -> list:
+    def speaker_system(raw: str, _param: dict, zone = Zones.Z1, command = "SSF") -> list:
         """Defines a speaker system mode response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="SSF",
+                            response_command=command,
                             base_property="amp",
                             property_name="speaker_system",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=_param.get(PARAM_SPEAKER_SYSTEM_MODES).get(raw),
                             queue_commands=None))
 
         return parsed
 
     @staticmethod
-    def mac_address(raw: str, _param: dict) -> list:
+    def mac_address(raw: str, _param: dict, zone = None, command = "SVB") -> list:
         """Defines a MAC response. This response is system wide."""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="SVB",
+                            response_command=command,
                             base_property="mac_addr",
                             property_name=None,
-                            zone=None,
+                            zone=zone,
                             value=":".join([raw[i:i+2] for i in range(0, len(raw), 2)]),
                             queue_commands=None))
 
         return parsed
 
     @staticmethod
-    def software_version(raw: str, _param: dict) -> list:
+    def software_version(raw: str, _param: dict, zone = None, command = "SSI") -> list:
         """Defines a software veersion response. This response is system wide."""
         parsed = []
         matches = re.search(r'"([^)]*)"', raw)
         if matches:
             parsed.append(Response(raw=raw,
-                                response_command="SSI",
+                                response_command=command,
                                 base_property="software_version",
                                 property_name=None,
-                                zone=None,
+                                zone=zone,
                                 value=matches.group(1),
                                 queue_commands=None))
         else:
             parsed.append(Response(raw=raw,
-                                response_command="SSI",
+                                response_command=command,
                                 base_property="software_version",
                                 property_name=None,
-                                zone=None,
+                                zone=zone,
                                 value="unknown",
                                 queue_commands=None))
 
@@ -293,28 +293,28 @@ class SystemParsers():
 
     # The below responses are yet to be decoded properly due to little Pioneer documentation
     @staticmethod
-    def audio_parameter_prohibitation(raw: str, _param: dict) -> list:
+    def audio_parameter_prohibitation(raw: str, _param: dict, zone = None, command = "AUA") -> list:
         """Defines a audio param prohibitaion response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="AUA",
+                            response_command=command,
                             base_property=None,
                             property_name=None,
-                            zone=None,
+                            zone=zone,
                             value=None,
                             queue_commands=None))
 
         return parsed
 
     @staticmethod
-    def audio_parameter_working(raw: str, _param: dict) -> list:
+    def audio_parameter_working(raw: str, _param: dict, zone = None, command = "AUB") -> list:
         """Defines a audio param working response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="AUB",
+                            response_command=command,
                             base_property=None,
                             property_name=None,
-                            zone=None,
+                            zone=zone,
                             value=None,
                             queue_commands=None))
 
