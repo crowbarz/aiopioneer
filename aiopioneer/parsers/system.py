@@ -114,7 +114,7 @@ class SystemParsers():
         return parsed
 
     @staticmethod
-    def speaker_modes(raw: str, _param: dict, zone = Zones.Z1, command = "SPK") -> list:
+    def speaker_modes(raw: str, _param: dict, zone = None, command = "SPK") -> list:
         """Defines a speaker mode response. This response is only vaid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
@@ -128,7 +128,7 @@ class SystemParsers():
         return parsed
 
     @staticmethod
-    def hdmi_out(raw: str, _param: dict, zone = Zones.Z1, command = "HO") -> list:
+    def hdmi_out(raw: str, _param: dict, zone = None, command = "HO") -> list:
         """Defines a HDMI out mode response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
@@ -142,7 +142,7 @@ class SystemParsers():
         return parsed
 
     @staticmethod
-    def hdmi_audio(raw: str, _param: dict, zone = Zones.Z1, command = "HA") -> list:
+    def hdmi_audio(raw: str, _param: dict, zone = None, command = "HA") -> list:
         """Defines a HDMI audio mode response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
@@ -156,7 +156,7 @@ class SystemParsers():
         return parsed
 
     @staticmethod
-    def pqls(raw: str, _param: dict, zone = Zones.Z1, command = "PQ") -> list:
+    def pqls(raw: str, _param: dict, zone = None, command = "PQ") -> list:
         """Defines a PQLS mode response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
@@ -170,7 +170,7 @@ class SystemParsers():
         return parsed
 
     @staticmethod
-    def dimmer(raw: str, _param: dict, zone = Zones.Z1, command = "SAA") -> list:
+    def dimmer(raw: str, _param: dict, zone = None, command = "SAA") -> list:
         """Defines a display dimmer response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
@@ -184,7 +184,7 @@ class SystemParsers():
         return parsed
 
     @staticmethod
-    def sleep(raw: str, _param: dict, zone = Zones.Z1, command = "SAB") -> list:
+    def sleep(raw: str, _param: dict, zone = None, command = "SAB") -> list:
         """Defines a sleep timer response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
@@ -198,7 +198,7 @@ class SystemParsers():
         return parsed
 
     @staticmethod
-    def amp_status(raw: str, _param: dict, zone = Zones.Z1, command = "SAC") -> list:
+    def amp_status(raw: str, _param: dict, zone = None, command = "SAC") -> list:
         """Defines a AMP status response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
@@ -212,7 +212,7 @@ class SystemParsers():
         return parsed
 
     @staticmethod
-    def panel_lock(raw: str, _param: dict, zone = Zones.Z1, command = "PKL") -> list:
+    def panel_lock(raw: str, _param: dict, zone = None, command = "PKL") -> list:
         """Defines a panel lock response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
@@ -226,7 +226,7 @@ class SystemParsers():
         return parsed
 
     @staticmethod
-    def remote_lock(raw: str, _param: dict, zone = Zones.Z1, command = "RML") -> list:
+    def remote_lock(raw: str, _param: dict, zone = None, command = "RML") -> list:
         """Defines a remote lock response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
@@ -240,15 +240,23 @@ class SystemParsers():
         return parsed
 
     @staticmethod
-    def speaker_system(raw: str, _param: dict, zone = Zones.Z1, command = "SSF") -> list:
+    def speaker_system(raw: str, _param: dict, zone = None, command = "SSF") -> list:
         """Defines a speaker system mode response. This response is only valid for Zone 1"""
         parsed = []
         parsed.append(Response(raw=raw,
                             response_command=command,
-                            base_property="amp",
+                            base_property="system",
                             property_name="speaker_system",
                             zone=zone,
                             value=_param.get(PARAM_SPEAKER_SYSTEM_MODES).get(raw),
+                            queue_commands=None))
+
+        parsed.append(Response(raw=raw,
+                            response_command=command,
+                            base_property="system",
+                            property_name="speaker_system_raw",
+                            zone=zone,
+                            value=raw,
                             queue_commands=None))
 
         return parsed

@@ -657,11 +657,6 @@ class PioneerAVR:
             ):
                 if "1" not in self.zones and "1" not in ignored_zones:
                     _LOGGER.info("Zone 1 discovered")
-                    # Set high level categories if not already set
-                    self.audio["1"] = {
-                        "input_channels": {},
-                        "output_channels": {},
-                    }
                     self.tone["1"] = {}
                     self.amp = {}
                     self.tuner = {}
@@ -783,7 +778,7 @@ class PioneerAVR:
         # Check if the zone is the main zone or not, listening modes aren't supported on other zones
         if zone == "1":
             # Now check if the current input info is multi channel or not
-            if self.audio.get(zone).get("input_multichannel"):
+            if self.audio.get("input_multichannel"):
                 return list(
                     [
                         v[0]
@@ -935,7 +930,7 @@ class PioneerAVR:
             for response in parsed_response:
                 if response.base_property is not None:
                     current_value = getattr(self, response.base_property)
-                    if response.property_name is None:
+                    if response.property_name is None and response.zone is not None:
                         #if current_value[str(p.zone)] is not p.value:
                         current_value[response.zone.value] = response.value
                         setattr(self, response.base_property, current_value)
@@ -948,7 +943,7 @@ class PioneerAVR:
                                         response.raw
                             )
 
-                    else:
+                    elif response.property_name is not None and response.zone is not None:
                         current_value.setdefault(response.zone.value, {})
                         current_value[response.zone.value][response.property_name] = response.value
                         setattr(self, response.base_property, current_value)
@@ -958,9 +953,32 @@ class PioneerAVR:
                                         response.zone.value,
                                         response.base_property,
                                         response.property_name,
-                                        getattr(self, response.base_property)[response.zone.value][response.property_name],
+                                        getattr(self, response.base_property)
+                                            [response.zone.value]
+                                            [response.property_name],
                                         response.raw
                             )
+
+                    elif response.property_name is None and response.zone is None:
+                        current_value = response.value
+                        setattr(self, response.base_property, current_value)
+                        _LOGGER.info("Global: %s: %s (%s)",
+                                        response.base_property,
+                                        getattr(self, response.base_property),
+                                        response.raw
+                            )
+
+                    else:
+                        current_value[response.property_name] = response.value
+                        setattr(self, response.base_property, current_value)
+                        _LOGGER.info("Global: %s.%s: %s (%s)",
+                                        response.base_property,
+                                        response.property_name,
+                                        getattr(self, response.base_property)
+                                            [response.property_name],
+                                        response.raw
+                            )
+
 
                 # Add any requested extra commands to run
                 if response.command_queue is not None:

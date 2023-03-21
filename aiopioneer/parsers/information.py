@@ -556,8 +556,8 @@ class InformationParsers():
         parsed = []
         parsed.append(Response(raw=raw,
                             response_command=command,
-                            base_property=None,
-                            property_name=None,
+                            base_property="amp",
+                            property_name="display",
                             zone=zone,
                             value=value,
                             queue_commands=None))

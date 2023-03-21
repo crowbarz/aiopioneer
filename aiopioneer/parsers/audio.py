@@ -61,8 +61,8 @@ class AudioParsers():
     @staticmethod
     def channel_levels(raw: str, _param: dict, zone = Zones.Z1, command = "CLV") -> list:
         """Defines a channel levels resposne object for Zone 1 returning float values"""
-        value = float(int(raw[6:]) - 50) / 2
-        speaker = str(raw[3:6]).strip("_").upper()
+        value = float(int(raw[3:]) - 50) / 2
+        speaker = str(raw[:3]).strip("_").upper()
 
         parsed = []
         parsed.append(Response(raw=raw,
