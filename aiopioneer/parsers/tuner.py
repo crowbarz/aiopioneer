@@ -8,38 +8,38 @@ class TunerParsers():
     """Tuner related parsers"""
 
     @staticmethod
-    def frequency_fm(raw: str, _param: dict) -> list:
+    def frequency_fm(raw: str, _param: dict, zone = Zones.Z1, command = "FR") -> list:
         """Defines a FM Tuner Frequency response parser."""
         freq = float(raw) / 100
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="FR",
+                            response_command=command,
                             base_property="tuner",
                             property_name="band",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value="FM",
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="FR",
+                            response_command=command,
                             base_property="tuner",
                             property_name="frequency",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=freq,
                             queue_commands=None))
 
         return parsed
 
     @staticmethod
-    def frequency_am(raw: str, _param: dict) -> list:
+    def frequency_am(raw: str, _param: dict, zone = Zones.Z1, command = "FR") -> list:
         """Defines a AM Tuner Frequency response parser."""
         freq = float(raw)
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="FR",
+                            response_command=command,
                             base_property="tuner",
                             property_name="band",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value="AM",
                             queue_commands=None))
 
@@ -47,35 +47,35 @@ class TunerParsers():
             parsed[0].queue_commands=["_calculate_am_frequency_step"]
 
         parsed.append(Response(raw=raw,
-                            response_command="FR",
+                            response_command=command,
                             base_property="tuner",
                             property_name="frequency",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=freq,
                             queue_commands=None))
 
         return parsed
 
     @staticmethod
-    def preset(raw: str, _param: dict) -> list:
+    def preset(raw: str, _param: dict, zone = Zones.Z1, command = "PR") -> list:
         """Defines a tuner preset response."""
         t_class = raw[:1]
         t_preset = int(raw[1:])
 
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="PR",
+                            response_command=command,
                             base_property="tuner",
                             property_name="class",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=t_class,
                             queue_commands=None))
 
         parsed.append(Response(raw=raw,
-                            response_command="PR",
+                            response_command=command,
                             base_property="tuner",
                             property_name="preset",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=t_preset,
                             queue_commands=None))
 
