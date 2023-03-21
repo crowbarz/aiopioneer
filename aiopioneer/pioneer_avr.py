@@ -937,28 +937,28 @@ class PioneerAVR:
                     current_value = getattr(self, response.base_property)
                     if response.property_name is None:
                         #if current_value[str(p.zone)] is not p.value:
-                        current_value[response.zone] = response.value
+                        current_value[response.zone.value] = response.value
                         setattr(self, response.base_property, current_value)
-                        if response.zone not in updated_zones:
+                        if response.zone.value not in updated_zones:
                             updated_zones.add(response.zone)
                         _LOGGER.info("Zone %s: %s: %s (%s)",
-                                        response.zone,
+                                        response.zone.value,
                                         response.base_property,
-                                        getattr(self, response.base_property)[response.zone],
+                                        getattr(self, response.base_property)[response.zone.value],
                                         response.raw
                             )
 
                     else:
-                        current_value.setdefault(response.zone, {})
-                        current_value[response.zone][response.property_name] = response.value
+                        current_value.setdefault(response.zone.value, {})
+                        current_value[response.zone.value][response.property_name] = response.value
                         setattr(self, response.base_property, current_value)
-                        if response.zone not in updated_zones:
-                            updated_zones.add(response.zone)
+                        if response.zone.value not in updated_zones:
+                            updated_zones.add(response.zone.value)
                         _LOGGER.info("Zone %s: %s.%s: %s (%s)",
-                                        response.zone,
+                                        response.zone.value,
                                         response.base_property,
                                         response.property_name,
-                                        getattr(self, response.base_property)[response.zone][response.property_name],
+                                        getattr(self, response.base_property)[response.zone.value][response.property_name],
                                         response.raw
                             )
 

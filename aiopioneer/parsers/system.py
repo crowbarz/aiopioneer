@@ -269,7 +269,7 @@ class SystemParsers():
 
     @staticmethod
     def software_version(raw: str, _param: dict, zone = None, command = "SSI") -> list:
-        """Defines a software veersion response. This response is system wide."""
+        """Defines a software version response. This response is system wide."""
         parsed = []
         matches = re.search(r'"([^)]*)"', raw)
         if matches:
@@ -284,6 +284,30 @@ class SystemParsers():
             parsed.append(Response(raw=raw,
                                 response_command=command,
                                 base_property="software_version",
+                                property_name=None,
+                                zone=zone,
+                                value="unknown",
+                                queue_commands=None))
+
+        return parsed
+
+    @staticmethod
+    def avr_model(raw: str, _param: dict, zone = None, command = "RGD") -> list:
+        """Defines a model response. This response is system wide."""
+        parsed = []
+        matches = re.search(r"<([^>/]{5,})(/.[^>]*)?>", raw)
+        if matches:
+            parsed.append(Response(raw=raw,
+                                response_command=command,
+                                base_property="model",
+                                property_name=None,
+                                zone=zone,
+                                value=matches.group(1),
+                                queue_commands=None))
+        else:
+            parsed.append(Response(raw=raw,
+                                response_command=command,
+                                base_property="model",
                                 property_name=None,
                                 zone=zone,
                                 value="unknown",
