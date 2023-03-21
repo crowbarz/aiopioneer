@@ -7,14 +7,14 @@ class AudioParsers():
     """Audio related parsers."""
 
     @staticmethod
-    def listening_mode(raw: str, _param: dict) -> list:
+    def listening_mode(raw: str, _param: dict, zone = Zones.Z1, command = "SR") -> list:
         """Defines a listening mode response parser for Zone 1 returning string values"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="sr",
+                            response_command=command,
                             base_property="listening_mode",
                             property_name=None,
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=LISTENING_MODES.get(raw)[0],
                             queue_commands=None))
         return parsed
