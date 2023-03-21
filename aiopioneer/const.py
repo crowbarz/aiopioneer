@@ -1,6 +1,6 @@
 """Constants for aiopioneer."""
 
-from enum import Enum, IntEnum
+from enum import Enum
 
 DEFAULT_PORT = 8102
 VERSION = "0.3"
@@ -529,4 +529,17 @@ XOVER_SETTING = {
     "2": "100Hz",
     "3": "150Hz",
     "4": "200Hz",
+}
+
+OSD_LANGUAGES = {
+    "00": "English",
+    "01": "French",
+    "03": "German",
+    "04": "Italian",
+    "05": "Spanish",
+    "06": "Dutch",
+    "07": "Russian",
+    "08": "Chinese (簡体)",
+    "09": "Chinese (繁体)",
+    "10": "Japanese"
 }

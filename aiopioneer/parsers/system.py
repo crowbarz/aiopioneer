@@ -323,6 +323,31 @@ class SystemParsers():
 
         return parsed
 
+    @staticmethod
+    def input_name(raw: str, _param: dict, zone = None, command = "RGB") -> list:
+        """Input name parser. Applies system wide."""
+        source_number = raw[:2]
+        source_name = raw[3:]
+
+        parsed = []
+        parsed.append(Response(raw=raw,
+                            response_command=command,
+                            base_property="_source_name_to_id",
+                            property_name=source_name,
+                            zone=zone,
+                            value=source_number,
+                            queue_commands=None))
+
+        parsed.append(Response(raw=raw,
+                            response_command=command,
+                            base_property="_source_id_to_name",
+                            property_name=source_number,
+                            zone=zone,
+                            value=source_name,
+                            queue_commands=None))
+
+        return parsed
+
     # The below responses are yet to be decoded properly due to little Pioneer documentation
     @staticmethod
     def audio_parameter_prohibitation(raw: str, _param: dict, zone = None, command = "AUA") -> list:
