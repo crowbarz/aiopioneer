@@ -7,6 +7,7 @@ from .tuner import TunerParsers
 from .dsp import DspParsers
 from .information import InformationParsers
 from .video import VideoParsers
+from .settings import SettingsParsers
 
 RESPONSE_DATA = [
     ["PWR", SystemParsers.power, Zones.Z1],
@@ -38,6 +39,10 @@ RESPONSE_DATA = [
 
     ["AUA", SystemParsers.audio_parameter_prohibitation, Zones.Z1],
     ["AUB", SystemParsers.audio_parameter_working, Zones.Z1],
+
+    ["SSL", SettingsParsers.home_menu_status, None],
+    ["SSJ", SettingsParsers.mcacc_diagnostic_status, None],
+    ["SSU", SettingsParsers.standing_wave_setting, None],
 
     ["CLV", AudioParsers.channel_levels, Zones.Z1],
     ["ZGE", AudioParsers.channel_levels, Zones.Z2],

@@ -1,6 +1,9 @@
 """Constants for aiopioneer."""
 
-from enum import Enum
+from enum import Enum, IntEnum
+
+DEFAULT_PORT = 8102
+VERSION = "0.3"
 
 class Zones(Enum):
     """Valid aiopioneer zones"""
@@ -9,9 +12,6 @@ class Zones(Enum):
     Z2 = "2"
     Z3 = "3"
     HDZ = "Z"
-
-DEFAULT_PORT = 8102
-VERSION = "0.3"
 
 # Listening modes is a dict with a nested array for the following structure:
 # key (display name, 2ch sources, multichannel sources)
@@ -471,3 +471,54 @@ DIMMER_MODES = {
     "3": "Display Off",
     "9": "DIMMER (cyclic)",
  }
+
+MCACC_MEASUREMENT_ERROR = {
+    "0": "No error",
+    "1": "No microphone",
+    "2": "Ambient noise",
+    "3": "Microphone",
+    "4": "Unsupported connection",
+    "5": "Reverse phase",
+    "6": "Subwoofer level",
+}
+
+MCACC_MEASUREMENT_STATUS = {
+    "0": "Inactive",
+    "1": "Measuring"
+}
+
+STANDING_WAVE_FREQUENCIES = {
+    '00': '63Hz',
+    '01': '65Hz',
+    '02': '68Hz',
+    '03': '71Hz',
+    '04': '74Hz',
+    '05': '78Hz',
+    '06': '81Hz',
+    '07': '85Hz',
+    '08': '88Hz',
+    '09': '92Hz',
+    '10': '96Hz',
+    '11': '101Hz',
+    '12': '105Hz',
+    '13': '110Hz',
+    '14': '115Hz',
+    '15': '120Hz',
+    '16': '125Hz',
+    '17': '131Hz',
+    '18': '136Hz',
+    '19': '142Hz',
+    '20': '149Hz',
+    '21': '155Hz',
+    '22': '162Hz',
+    '23': '169Hz',
+    '24': '177Hz',
+    '25': '185Hz',
+    '26': '193Hz',
+    '27': '201Hz',
+    '28': '210Hz',
+    '29': '220Hz',
+    '30': '229Hz',
+    '31': '239Hz',
+    '32': '250Hz'
+}
