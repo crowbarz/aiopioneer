@@ -6,7 +6,7 @@ from .response import Response
 class VideoParsers():
     """Video related parsers."""
     @staticmethod
-    def video_converter(raw: str, _param: dict) -> list:
+    def video_converter(raw: str, _param: dict, zone = Zones.Z1, command = "VTB") -> list:
         """Response parser for video converter setting"""
         value = int(raw)
         if value == 1:
@@ -16,29 +16,29 @@ class VideoParsers():
 
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="VTB",
+                            response_command=command,
                             base_property="video",
                             property_name="converter",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=value,
                             queue_commands=None))
         return parsed
 
     @staticmethod
-    def video_resolution(raw: str, _param: dict) -> list:
+    def video_resolution(raw: str, _param: dict, zone = Zones.Z1, command = "VTC") -> list:
         """Response parser for video resolution setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="VTC",
+                            response_command=command,
                             base_property="video",
                             property_name="resolution",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=VIDEO_RESOLUTION_MODES.get(raw),
                             queue_commands=None))
         return parsed
 
     @staticmethod
-    def pure_cinema(raw: str, _param: dict) -> list:
+    def pure_cinema(raw: str, _param: dict, zone = Zones.Z1, command = "VTD") -> list:
         """Response parser for pure cinema setting"""
         value = int(raw)
         if value == 0:
@@ -50,16 +50,16 @@ class VideoParsers():
 
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="VTD",
+                            response_command=command,
                             base_property="video",
                             property_name="pure_cinema",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=value,
                             queue_commands=None))
         return parsed
 
     @staticmethod
-    def prog_motion(raw: str, _param: dict) -> list:
+    def prog_motion(raw: str, _param: dict, zone = Zones.Z1, command = "VTE") -> list:
         """Response parser for prog motion setting"""
         value = int(raw)
         if value < 55:
@@ -67,16 +67,16 @@ class VideoParsers():
 
             parsed = []
             parsed.append(Response(raw=raw,
-                                response_command="VTE",
+                                response_command=command,
                                 base_property="video",
                                 property_name="prog_motion",
-                                zone=Zones.Z1,
+                                zone=zone,
                                 value=value,
                                 queue_commands=None))
             return parsed
 
     @staticmethod
-    def stream_smoother(raw: str, _param: dict) -> list:
+    def stream_smoother(raw: str, _param: dict, zone = Zones.Z1, command = "VTF") -> list:
         """Response parser for stream smoother setting"""
         value = int(raw)
         if value == 0:
@@ -88,114 +88,105 @@ class VideoParsers():
 
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="VTF",
+                            response_command=command,
                             base_property="video",
                             property_name="stream_smoother",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=value,
                             queue_commands=None))
         return parsed
 
     @staticmethod
-    def advanced_video_adjust(raw: str, _param: dict) -> list:
+    def advanced_video_adjust(raw: str, _param: dict, zone = Zones.Z1, command = "VTG") -> list:
         """Response parser for advanced video adjust setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="VTG",
+                            response_command=command,
                             base_property="video",
                             property_name="advanced_video_adjust",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=ADVANCED_VIDEO_ADJUST_MODES.get(raw),
                             queue_commands=None))
         return parsed
 
     @staticmethod
-    def output_ynr(raw: str, _param: dict) -> list:
+    def output_ynr(raw: str, _param: dict, zone = Zones.Z1, command = "VTH") -> list:
         """Response parser for output YNR setting"""
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="VTH",
+                            response_command=command,
                             base_property="video",
                             property_name="ynr",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=int(raw) - 50,
                             queue_commands=None))
         return parsed
 
     @staticmethod
-    def output_cnr(raw: str, _param: dict) -> list:
+    def output_cnr(raw: str, _param: dict, zone = Zones.Z1, command = "VTI") -> list:
         """Response parser for output CNR setting"""
-        parsed = VideoParsers.output_ynr(raw, _param)
+        parsed = VideoParsers.output_ynr(raw, _param, zone=zone, command=command)
         parsed[0].property_name = "cnr"
-        parsed[0].response_command = "VTI"
         return parsed
 
     @staticmethod
-    def output_bnr(raw: str, _param: dict) -> list:
+    def output_bnr(raw: str, _param: dict, zone = Zones.Z1, command = "VTJ") -> list:
         """Response parser for output BNR setting"""
-        parsed = VideoParsers.output_ynr(raw, _param)
+        parsed = VideoParsers.output_ynr(raw, _param, zone=zone, command=command)
         parsed[0].property_name = "bnr"
-        parsed[0].response_command = "VTJ"
         return parsed
 
     @staticmethod
-    def output_mnr(raw: str, _param: dict) -> list:
+    def output_mnr(raw: str, _param: dict, zone = Zones.Z1, command = "VTK") -> list:
         """Response parser for output MNR setting"""
-        parsed = VideoParsers.output_ynr(raw, _param)
+        parsed = VideoParsers.output_ynr(raw, _param, zone=zone, command=command)
         parsed[0].property_name = "mnr"
-        parsed[0].response_command = "VTK"
         return parsed
 
     @staticmethod
-    def output_detail(raw: str, _param: dict) -> list:
+    def output_detail(raw: str, _param: dict, zone = Zones.Z1, command = "VTL") -> list:
         """Response parser for output detail setting"""
-        parsed = VideoParsers.output_ynr(raw, _param)
+        parsed = VideoParsers.output_ynr(raw, _param, zone=zone, command=command)
         parsed[0].property_name = "detail"
-        parsed[0].response_command = "VTL"
         return parsed
 
     @staticmethod
-    def output_sharpness(raw: str, _param: dict) -> list:
+    def output_sharpness(raw: str, _param: dict, zone = Zones.Z1, command = "VTM") -> list:
         """Response parser for output sharpness setting"""
-        parsed = VideoParsers.output_ynr(raw, _param)
+        parsed = VideoParsers.output_ynr(raw, _param, zone=zone, command=command)
         parsed[0].property_name = "sharpness"
-        parsed[0].response_command = "VTM"
         return parsed
 
     @staticmethod
-    def output_brightness(raw: str, _param: dict) -> list:
+    def output_brightness(raw: str, _param: dict, zone = Zones.Z1, command = "VTN") -> list:
         """Response parser for output brightness setting"""
-        parsed = VideoParsers.output_ynr(raw, _param)
+        parsed = VideoParsers.output_ynr(raw, _param, zone=zone, command=command)
         parsed[0].property_name = "brightness"
-        parsed[0].response_command = "VTN"
         return parsed
 
     @staticmethod
-    def output_contrast(raw: str, _param: dict) -> list:
+    def output_contrast(raw: str, _param: dict, zone = Zones.Z1, command = "VTO") -> list:
         """Response parser for output contrast setting"""
-        parsed = VideoParsers.output_ynr(raw, _param)
+        parsed = VideoParsers.output_ynr(raw, _param, zone=zone, command=command)
         parsed[0].property_name = "contrast"
-        parsed[0].response_command = "VTO"
         return parsed
 
     @staticmethod
-    def output_hue(raw: str, _param: dict) -> list:
+    def output_hue(raw: str, _param: dict, zone = Zones.Z1, command = "VTP") -> list:
         """Response parser for output hue setting"""
-        parsed = VideoParsers.output_ynr(raw, _param)
+        parsed = VideoParsers.output_ynr(raw, _param, zone=zone, command=command)
         parsed[0].property_name = "hue"
-        parsed[0].response_command = "VTP"
         return parsed
 
     @staticmethod
-    def output_chroma(raw: str, _param: dict) -> list:
+    def output_chroma(raw: str, _param: dict, zone = Zones.Z1, command = "VTQ") -> list:
         """Response parser for output chroma setting"""
-        parsed = VideoParsers.output_ynr(raw, _param)
+        parsed = VideoParsers.output_ynr(raw, _param, zone=zone, command=command)
         parsed[0].property_name = "chroma"
-        parsed[0].response_command = "VTQ"
         return parsed
 
     @staticmethod
-    def black_setup(raw: str, _param: dict) -> list:
+    def black_setup(raw: str, _param: dict, zone = Zones.Z1, command = "VTR") -> list:
         """Response parser for black setup setting"""
         value = int(raw)
         if value == 0:
@@ -205,16 +196,16 @@ class VideoParsers():
 
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="VTR",
+                            response_command=command,
                             base_property="video",
                             property_name="black_setup",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=value,
                             queue_commands=None))
         return parsed
 
     @staticmethod
-    def aspect(raw: str, _param: dict) -> list:
+    def aspect(raw: str, _param: dict, zone = Zones.Z1, command = "VTS") -> list:
         """Response parser for output aspect setting"""
         value = int(raw)
         if value == 0:
@@ -224,10 +215,10 @@ class VideoParsers():
 
         parsed = []
         parsed.append(Response(raw=raw,
-                            response_command="VTS",
+                            response_command=command,
                             base_property="video",
                             property_name="aspect",
-                            zone=Zones.Z1,
+                            zone=zone,
                             value=value,
                             queue_commands=None))
         return parsed
