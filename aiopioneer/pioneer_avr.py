@@ -657,9 +657,6 @@ class PioneerAVR:
             ):
                 if "1" not in self.zones and "1" not in ignored_zones:
                     _LOGGER.info("Zone 1 discovered")
-                    self.tone["1"] = {}
-                    self.amp = {}
-                    self.tuner = {}
                     self.zones.append("1")
                     added_zones = True
                     self.max_volume["1"] = self._params[PARAM_MAX_VOLUME]
@@ -674,8 +671,6 @@ class PioneerAVR:
                     self.zones.append("2")
                     added_zones = True
                     self.max_volume["2"] = self._params[PARAM_MAX_VOLUME_ZONEX]
-
-                    self.tone["2"] = {}
 
             if await self.send_command("query_power", "3", ignore_error=True) and (
                 ignore_volume_check
