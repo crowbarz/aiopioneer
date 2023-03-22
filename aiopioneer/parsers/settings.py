@@ -5,7 +5,9 @@ from aiopioneer.const import (
     MCACC_MEASUREMENT_ERROR,
     STANDING_WAVE_FREQUENCIES,
     XOVER_SETTING,
-    OSD_LANGUAGES
+    OSD_LANGUAGES,
+    STANDBY_PASSTHROUGH_OPTIONS,
+    EXTERNAL_HDMI_TRIGGER_OPTIONS
 )
 from .response import Response
 
@@ -447,5 +449,165 @@ class SettingsParsers():
                             property_name="parental_lock_password",
                             zone=zone,
                             value=raw,
+                            queue_commands=None))
+        return parsed
+
+    @staticmethod
+    def port_numbers(raw: str, _param: dict, zone = None, command = "SUM") -> list:
+        """Current port numbers set for the AVR."""
+        ports = [raw[i:i+2] for i in range(0, len(raw), 2)]
+        parsed = []
+        index = 1
+        for port in ports:
+            parsed.append(Response(raw=raw,
+                                response_command=command,
+                                base_property="ip_control_port_{index}",
+                                property_name=None,
+                                zone=zone,
+                                value="disabled" if port=="99999" else port,
+                                queue_commands=None))
+            index += 1
+
+        return parsed
+
+    @staticmethod
+    def hdmi_control(raw: str, _param: dict, zone = None, command = "STQ") -> list:
+        """Current HDMI control setting"""
+
+        parsed = []
+        parsed.append(Response(raw=raw,
+                            response_command=command,
+                            base_property="system",
+                            property_name="hdmi_control",
+                            zone=zone,
+                            value=bool(raw),
+                            queue_commands=None))
+        return parsed
+
+    @staticmethod
+    def hdmi_control_mode(raw: str, _param: dict, zone = None, command = "STR") -> list:
+        """Current HDMI Control Mode setting"""
+
+        parsed = []
+        parsed.append(Response(raw=raw,
+                            response_command=command,
+                            base_property="system",
+                            property_name="hdmi_control_mode",
+                            zone=zone,
+                            value=bool(raw),
+                            queue_commands=None))
+        return parsed
+
+    @staticmethod
+    def hdmi_arc(raw: str, _param: dict, zone = None, command = "STT") -> list:
+        """Current HDMI ARC setting"""
+
+        parsed = []
+        parsed.append(Response(raw=raw,
+                            response_command=command,
+                            base_property="system",
+                            property_name="hdmi_arc",
+                            zone=zone,
+                            value=bool(raw),
+                            queue_commands=None))
+        return parsed
+
+    @staticmethod
+    def pqls_for_backup(raw: str, _param: dict, zone = None, command = "SVL") -> list:
+        """Current PQLS for backup setting"""
+
+        parsed = []
+        parsed.append(Response(raw=raw,
+                            response_command=command,
+                            base_property="system",
+                            property_name="pqls_for_backup",
+                            zone=zone,
+                            value=bool(raw),
+                            queue_commands=None))
+        return parsed
+
+    @staticmethod
+    def speaker_b_link(raw: str, _param: dict, zone = None, command = "STX") -> list:
+        """Current speaker B link setting"""
+
+        parsed = []
+        parsed.append(Response(raw=raw,
+                            response_command=command,
+                            base_property="system",
+                            property_name="speaker_b_link",
+                            zone=zone,
+                            value=bool(raw),
+                            queue_commands=None))
+        return parsed
+
+    @staticmethod
+    def standby_passthrough(raw: str, _param: dict, zone = None, command = "STU") -> list:
+        """Current Standby Through setting"""
+
+        parsed = []
+        parsed.append(Response(raw=raw,
+                            response_command=command,
+                            base_property="system",
+                            property_name="standby_passthrough",
+                            zone=zone,
+                            value=STANDBY_PASSTHROUGH_OPTIONS.get(raw),
+                            queue_commands=None))
+        return parsed
+
+    @staticmethod
+    def external_hdmi_trigger(raw: str, _param: dict, zone = None, command = "STV") -> list:
+        """Current 12V Trigger 1 (HDMI Setup) setting"""
+
+        trigger = "1" if command == "STV" else "2"
+
+        parsed = []
+        parsed.append(Response(raw=raw,
+                            response_command=command,
+                            base_property="system",
+                            property_name=f"external_hdmi_trigger_{trigger}",
+                            zone=zone,
+                            value=EXTERNAL_HDMI_TRIGGER_OPTIONS.get(raw),
+                            queue_commands=None))
+        return parsed
+
+    @staticmethod
+    def osd_overlay(raw: str, _param: dict, zone = None, command = "SVA") -> list:
+        """Current OSD Overlay status"""
+
+        parsed = []
+        parsed.append(Response(raw=raw,
+                            response_command=command,
+                            base_property="system",
+                            property_name="osd_overlay",
+                            zone=zone,
+                            value=bool(raw),
+                            queue_commands=None))
+        return parsed
+
+    @staticmethod
+    def additional_service(raw: str, _param: dict, zone = None, command = "ADS") -> list:
+        """Current additional service setting"""
+
+        parsed = []
+        parsed.append(Response(raw=raw,
+                            response_command=command,
+                            base_property="system",
+                            property_name="additional_service",
+                            zone=zone,
+                            value=bool(raw),
+                            queue_commands=None))
+        return parsed
+
+    @staticmethod
+    def user_lock(raw: str, _param: dict, zone = None, command = "SUT") -> list:
+        """Current user lock setting"""
+
+        parsed = []
+        parsed.append(Response(raw=raw,
+                            response_command=command,
+                            base_property="system",
+                            property_name="user_lock",
+                            zone=zone,
+                            value=bool(raw),
                             queue_commands=None))
         return parsed

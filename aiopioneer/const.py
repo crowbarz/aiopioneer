@@ -543,3 +543,25 @@ OSD_LANGUAGES = {
     "09": "Chinese (繁体)",
     "10": "Japanese"
 }
+
+STANDBY_PASSTHROUGH_OPTIONS = {
+    "00": "OFF",
+    "01": "LAST",
+    "02": "BD",
+    "03": "HDMI1",
+    "04": "HDMI2",
+    "05": "HDMI3",
+    "06": "HDMI4",
+    "07": "HDMI5",
+    "08": "HDMI6",
+    "09": "HDMI7",
+    "10": "HDMI8"
+}
+
+EXTERNAL_HDMI_TRIGGER_OPTIONS = {
+    "0": "OFF",
+    "1": "HDMIOUT1",
+    "2": "HDMIOUT2",
+    "3": "HDMIOUT3",
+    "4": "HDMIOUT4/HDBaseT"
+}
