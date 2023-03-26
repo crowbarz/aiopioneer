@@ -980,13 +980,11 @@ class PioneerAVR:
                     for command in response.command_queue:
                         self.queue_command(command)
 
-                # Some specific overrides for the command queue
-                if response.response_command in ["PWR", "FN", "AUB", "AUA"]:
-                    # Only request these if we're not doing a full update.
-                    # If we are doing a full update these will be included anyway
-                    if (self._full_update is False) and (
-                        self.tone.get("1") is not None
-                    ) and (bool(response.value)):
+                # Some specific overrides for the command queue, these are only
+                # requested if we are not doing a full update
+                if (response.response_command in ["PWR", "FN", "AUB", "AUA"]) and (
+                    not self._full_update):
+                    if (self.tone.get("1") is not None) and (self.power.get("1")):
                         self.queue_command("query_listening_mode")
                         self.queue_command("query_audio_information")
                         self.queue_command("query_video_information")
