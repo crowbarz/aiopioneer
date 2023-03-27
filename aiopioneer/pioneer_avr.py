@@ -169,14 +169,14 @@ class PioneerAVR:
         """Set current parameters."""
         self._params = {}
         merge(self._params, self._default_params)
-        merge(self._params, self._user_params)
+        merge(self._params, self._user_params, force_overwrite=True)
 
     def set_user_params(self, params=None):
         """Set parameters and merge with defaults."""
         _LOGGER.debug(">> PioneerAVR.set_user_params(%s)", params)
         self._user_params = {}
         if params is not None:
-            self._user_params = params
+            merge(self._user_params, params)
         self._update_params()
 
     def _set_default_params_model(self):
@@ -191,7 +191,7 @@ class PioneerAVR:
                         model,
                         model_regex,
                     )
-                    merge(self._default_params, model_params, forceOverwrite=True)
+                    merge(self._default_params, model_params, force_overwrite=True)
         self._update_params()
 
     def get_params(self):
