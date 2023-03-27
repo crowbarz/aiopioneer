@@ -744,28 +744,19 @@ class PioneerAVR:
         if zone == "1":
             return list(self._source_name_to_id.keys())
         elif zone == "2":
+            sources_z2 = self._params.get(PARAM_ZONE_2_SOURCES, [])
             return list(
-                [
-                    k
-                    for k, v in self._source_name_to_id.items()
-                    if v in self._params.get(PARAM_ZONE_2_SOURCES)
-                ]
+                [k for k, v in self._source_name_to_id.items() if v in sources_z2]
             )
         elif zone == "3":
+            sources_z3 = self._params.get(PARAM_ZONE_3_SOURCES, [])
             return list(
-                [
-                    k
-                    for k, v in self._source_name_to_id.items()
-                    if v in self._params.get(PARAM_ZONE_3_SOURCES)
-                ]
+                [k for k, v in self._source_name_to_id.items() if v in sources_z3]
             )
         elif zone == "Z":
+            sources_hdz = self._params.get(PARAM_HDZONE_SOURCES, [])
             return list(
-                [
-                    k
-                    for k, v in self._source_name_to_id.items()
-                    if v in self._params.get(PARAM_HDZONE_SOURCES)
-                ]
+                [k for k, v in self._source_name_to_id.items() if v in sources_hdz]
             )
 
     def get_sound_modes(self, zone):
@@ -830,9 +821,21 @@ class PioneerAVR:
         else:
             return None
 
-    def get_source_dict(self):
+    def get_source_dict(self, zone="1"):
         """Return source id<->name translation tables."""
-        return self._source_name_to_id
+        if zone == "1":
+            return self._source_name_to_id
+        elif zone == "2":
+            sources_z2 = self._params.get(PARAM_ZONE_2_SOURCES, [])
+            return {k: v for k, v in self._source_name_to_id.items() if v in sources_z2}
+        elif zone == "3":
+            sources_z3 = self._params.get(PARAM_ZONE_3_SOURCES, [])
+            return {k: v for k, v in self._source_name_to_id.items() if v in sources_z3}
+        elif zone == "Z":
+            sources_hdz = self._params.get(PARAM_HDZONE_SOURCES, [])
+            return {
+                k: v for k, v in self._source_name_to_id.items() if v in sources_hdz
+            }
 
     def get_source_name(self, source_id):
         """Return name for given source ID."""
