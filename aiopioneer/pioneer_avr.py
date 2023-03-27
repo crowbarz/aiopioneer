@@ -707,7 +707,9 @@ class PioneerAVR:
 
     def set_source_dict(self, sources):
         """Manually set source id<->name translation tables."""
-        self._source_name_to_id = sources
+        source_name_to_id = {}
+        merge(source_name_to_id, sources)
+        self._source_name_to_id = source_name_to_id
         self._source_id_to_name = {v: k for k, v in sources.items()}
 
     async def build_source_dict(self):
