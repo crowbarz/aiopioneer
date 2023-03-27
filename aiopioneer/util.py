@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ## Source: https://stackoverflow.com/a/7205107
 ## Modified so b overwrites a where there is a conflict
-def merge(a, b, path=None, forceOverwrite=False):  # pylint: disable=invalid-name
+def merge(a, b, path=None, force_overwrite=False):  # pylint: disable=invalid-name
     """Recursively merges dict b into dict a."""
     if path is None:
         path = []
@@ -20,7 +20,7 @@ def merge(a, b, path=None, forceOverwrite=False):  # pylint: disable=invalid-nam
             if (
                 isinstance(a[key], dict)
                 and isinstance(b[key], dict)
-                and not forceOverwrite
+                and not force_overwrite
             ):
                 merge(a[key], b[key], path + [str(key)])
             elif a[key] == b[key]:
@@ -29,7 +29,11 @@ def merge(a, b, path=None, forceOverwrite=False):  # pylint: disable=invalid-nam
                 a[key] = b[key]  # copy key from b to a
             elif b[key] is None and isinstance(a[key], dict):
                 pass  # leave key in a alone
-            elif isinstance(a[key], list) and isinstance(b[key], list):
+            elif (
+                isinstance(a[key], list)
+                and isinstance(b[key], list)
+                and not force_overwrite
+            ):
                 a[key].extend(b[key])  # append list b to list a
             elif isinstance(b[key], list):
                 a[key] = b[key][:]  # replace a[key] with shallow copy of b[key]
