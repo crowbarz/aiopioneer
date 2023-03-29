@@ -149,6 +149,7 @@ class PioneerAVR:
         self._reconnect_task = None
         self._updater_task = None
         self._command_queue_task = None
+        self._initial_query = True
         # Stores a list of commands to run after receiving an event from the AVR
         self._command_queue = []
         self._power_zone_1 = None
@@ -693,6 +694,8 @@ class PioneerAVR:
         if added_zones or force_update:
             await self.update(full=True)
 
+        self._initial_query = False
+
     async def update_zones(self):
         """Update zones from ignored_zones and re-query zones."""
         removed_zones = False
@@ -931,53 +934,64 @@ class PioneerAVR:
                 if response.base_property is not None:
                     current_value = getattr(self, response.base_property)
                     if response.property_name is None and response.zone is not None:
-                        #if current_value[str(p.zone)] is not p.value:
-                        current_value[response.zone.value] = response.value
-                        setattr(self, response.base_property, current_value)
-                        if response.zone.value not in updated_zones:
-                            updated_zones.add(response.zone)
-                        _LOGGER.info("Zone %s: %s: %s (%s)",
-                                        response.zone.value,
-                                        response.base_property,
-                                        getattr(self, response.base_property)[response.zone.value],
-                                        response.raw
-                            )
+                        if current_value.get(response.zone.value) is not response.value:
+                            current_value[response.zone.value] = response.value
+                            setattr(self, response.base_property, current_value)
+                            if response.zone.value not in updated_zones:
+                                updated_zones.add(response.zone)
+                            _LOGGER.info("Zone %s: %s: %s (%s)",
+                                            response.zone.value,
+                                            response.base_property,
+                                            getattr(self,
+                                                    response.base_property)
+                                                    [response.zone.value],
+                                            response.raw
+                                )
 
                     elif response.property_name is not None and response.zone is not None:
+                        # Set default value first otherwise we hit an exception
                         current_value.setdefault(response.zone.value, {})
-                        current_value[response.zone.value][response.property_name] = response.value
-                        setattr(self, response.base_property, current_value)
-                        if response.zone.value not in updated_zones:
-                            updated_zones.add(response.zone.value)
-                        _LOGGER.info("Zone %s: %s.%s: %s (%s)",
-                                        response.zone.value,
-                                        response.base_property,
-                                        response.property_name,
-                                        getattr(self, response.base_property)
-                                            [response.zone.value]
-                                            [response.property_name],
-                                        response.raw
-                            )
+                        if current_value.get(
+                            response.zone.value).get(
+                            response.property_name) is not response.value:
+                            # Set current_value to response.value for setattr
+                            current_value[
+                                response.zone.value][
+                                response.property_name] = response.value
+                            setattr(self, response.base_property, current_value)
+                            if response.zone.value not in updated_zones:
+                                updated_zones.add(response.zone.value)
+                            _LOGGER.info("Zone %s: %s.%s: %s (%s)",
+                                            response.zone.value,
+                                            response.base_property,
+                                            response.property_name,
+                                            getattr(self, response.base_property)
+                                                [response.zone.value]
+                                                [response.property_name],
+                                            response.raw
+                                )
 
                     elif response.property_name is None and response.zone is None:
-                        current_value = response.value
-                        setattr(self, response.base_property, current_value)
-                        _LOGGER.info("Global: %s: %s (%s)",
-                                        response.base_property,
-                                        getattr(self, response.base_property),
-                                        response.raw
-                            )
+                        if current_value is not response.value:
+                            current_value = response.value
+                            setattr(self, response.base_property, current_value)
+                            _LOGGER.info("Global: %s: %s (%s)",
+                                            response.base_property,
+                                            getattr(self, response.base_property),
+                                            response.raw
+                                )
 
                     else:
-                        current_value[response.property_name] = response.value
-                        setattr(self, response.base_property, current_value)
-                        _LOGGER.info("Global: %s.%s: %s (%s)",
-                                        response.base_property,
-                                        response.property_name,
-                                        getattr(self, response.base_property)
-                                            [response.property_name],
-                                        response.raw
-                            )
+                        if current_value.get(response.property_name) is not response.value:
+                            current_value[response.property_name] = response.value
+                            setattr(self, response.base_property, current_value)
+                            _LOGGER.info("Global: %s.%s: %s (%s)",
+                                            response.base_property,
+                                            response.property_name,
+                                            getattr(self, response.base_property)
+                                                [response.property_name],
+                                            response.raw
+                                )
 
 
                 # Add any requested extra commands to run
@@ -989,14 +1003,19 @@ class PioneerAVR:
                 # requested if we are not doing a full update
                 if (response.response_command in ["PWR", "FN", "AUB", "AUA"]) and (
                     not self._full_update) and (
-                    not self._params.get(PARAM_DISABLE_AUTO_QUERY)
+                    not self._params.get(PARAM_DISABLE_AUTO_QUERY)) and (
+                    not self._initial_query) and (
+                    self.power.get("1") or
+                    self.power.get("2") or
+                    self.power.get("3") or
+                    self.power.get("Z") # These should only queue if the AVR is on
                     ):
-                    if (self.tone.get("1") is not None) and (self.power.get("1")):
+                    if self.tuner is not None:
                         self.queue_command("query_listening_mode")
                         self.queue_command("query_audio_information")
                         self.queue_command("query_video_information")
                     # Queue a full update
-                    if self.tone.get("1") is None:
+                    if self.tuner is None:
                         self.queue_command("FULL_UPDATE")
 
         result = {"updated_zones": updated_zones}
