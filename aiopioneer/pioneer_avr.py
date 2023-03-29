@@ -107,7 +107,7 @@ class PioneerAVR:
         self.max_volume = {}
         self.mute = {}
         self.source = {}
-        self.listening_mode = {}
+        self.listening_mode = ""
         self.media_control_mode = {}
 
         # FUNC: TONE
