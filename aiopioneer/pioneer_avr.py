@@ -1224,10 +1224,6 @@ class PioneerAVR:
         """Turn on the Pioneer AVR."""
         self._check_zone(zone)
         await self.send_command("turn_on", zone)
-        # Now schedule a full update of all zones if listening_mode is None.
-        # This means that the library connected to the AVR while the AVR was off
-        if zone == "1" and self.listening_mode.get("1") is None:
-            await self.update(full=True)
 
     async def turn_off(self, zone="1"):
         """Turn off the Pioneer AVR."""
