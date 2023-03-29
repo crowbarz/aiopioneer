@@ -5,6 +5,7 @@ from enum import Enum
 DEFAULT_PORT = 8102
 VERSION = "0.3.1"
 
+
 class Zones(Enum):
     """Valid aiopioneer zones"""
 
@@ -12,6 +13,10 @@ class Zones(Enum):
     Z2 = "2"
     Z3 = "3"
     HDZ = "Z"
+
+    def __str__(self):
+        return self.value
+
 
 # Listening modes is a dict with a nested array for the following structure:
 # key (display name, 2ch sources, multichannel sources)
@@ -470,7 +475,7 @@ DIMMER_MODES = {
     "2": "Dark",
     "3": "Display Off",
     "9": "DIMMER (cyclic)",
- }
+}
 
 MCACC_MEASUREMENT_ERROR = {
     "0": "No error",
@@ -482,45 +487,42 @@ MCACC_MEASUREMENT_ERROR = {
     "6": "Subwoofer level",
 }
 
-MCACC_MEASUREMENT_STATUS = {
-    "0": "Inactive",
-    "1": "Measuring"
-}
+MCACC_MEASUREMENT_STATUS = {"0": "Inactive", "1": "Measuring"}
 
 STANDING_WAVE_FREQUENCIES = {
-    '00': '63Hz',
-    '01': '65Hz',
-    '02': '68Hz',
-    '03': '71Hz',
-    '04': '74Hz',
-    '05': '78Hz',
-    '06': '81Hz',
-    '07': '85Hz',
-    '08': '88Hz',
-    '09': '92Hz',
-    '10': '96Hz',
-    '11': '101Hz',
-    '12': '105Hz',
-    '13': '110Hz',
-    '14': '115Hz',
-    '15': '120Hz',
-    '16': '125Hz',
-    '17': '131Hz',
-    '18': '136Hz',
-    '19': '142Hz',
-    '20': '149Hz',
-    '21': '155Hz',
-    '22': '162Hz',
-    '23': '169Hz',
-    '24': '177Hz',
-    '25': '185Hz',
-    '26': '193Hz',
-    '27': '201Hz',
-    '28': '210Hz',
-    '29': '220Hz',
-    '30': '229Hz',
-    '31': '239Hz',
-    '32': '250Hz'
+    "00": "63Hz",
+    "01": "65Hz",
+    "02": "68Hz",
+    "03": "71Hz",
+    "04": "74Hz",
+    "05": "78Hz",
+    "06": "81Hz",
+    "07": "85Hz",
+    "08": "88Hz",
+    "09": "92Hz",
+    "10": "96Hz",
+    "11": "101Hz",
+    "12": "105Hz",
+    "13": "110Hz",
+    "14": "115Hz",
+    "15": "120Hz",
+    "16": "125Hz",
+    "17": "131Hz",
+    "18": "136Hz",
+    "19": "142Hz",
+    "20": "149Hz",
+    "21": "155Hz",
+    "22": "162Hz",
+    "23": "169Hz",
+    "24": "177Hz",
+    "25": "185Hz",
+    "26": "193Hz",
+    "27": "201Hz",
+    "28": "210Hz",
+    "29": "220Hz",
+    "30": "229Hz",
+    "31": "239Hz",
+    "32": "250Hz",
 }
 
 XOVER_SETTING = {
@@ -541,7 +543,7 @@ OSD_LANGUAGES = {
     "07": "Russian",
     "08": "Chinese (簡体)",
     "09": "Chinese (繁体)",
-    "10": "Japanese"
+    "10": "Japanese",
 }
 
 STANDBY_PASSTHROUGH_OPTIONS = {
@@ -555,7 +557,7 @@ STANDBY_PASSTHROUGH_OPTIONS = {
     "07": "HDMI5",
     "08": "HDMI6",
     "09": "HDMI7",
-    "10": "HDMI8"
+    "10": "HDMI8",
 }
 
 EXTERNAL_HDMI_TRIGGER_OPTIONS = {
@@ -563,5 +565,5 @@ EXTERNAL_HDMI_TRIGGER_OPTIONS = {
     "1": "HDMIOUT1",
     "2": "HDMIOUT2",
     "3": "HDMIOUT3",
-    "4": "HDMIOUT4/HDBaseT"
+    "4": "HDMIOUT4/HDBaseT",
 }

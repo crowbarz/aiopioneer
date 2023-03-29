@@ -917,8 +917,8 @@ class PioneerAVR:
         if zones is None:
             zones = self.zones
         for zone in zones:
-            if zone in self._zone_callback:
-                callback = self._zone_callback[zone]
+            if str(zone) in self._zone_callback:
+                callback = self._zone_callback[str(zone)]
                 if callback:
                     _LOGGER.debug("calling callback for zone %s", zone)
                     callback()
