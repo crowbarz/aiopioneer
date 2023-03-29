@@ -983,7 +983,9 @@ class PioneerAVR:
                 # Some specific overrides for the command queue, these are only
                 # requested if we are not doing a full update
                 if (response.response_command in ["PWR", "FN", "AUB", "AUA"]) and (
-                    not self._full_update):
+                    not self._full_update) and (
+                    not self._params.get(PARAM_DISABLE_AUTO_QUERY)
+                    ):
                     if (self.tone.get("1") is not None) and (self.power.get("1")):
                         self.queue_command("query_listening_mode")
                         self.queue_command("query_audio_information")
