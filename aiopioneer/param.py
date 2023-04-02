@@ -2,6 +2,7 @@
 # pylint: disable=too-many-lines
 
 from collections import OrderedDict
+from .const import Zones
 
 PARAM_IGNORED_ZONES = "ignored_zones"
 PARAM_COMMAND_DELAY = "command_delay"
@@ -18,6 +19,12 @@ PARAM_DEBUG_COMMAND = "debug_command"
 PARAM_ZONE_2_SOURCES = "zone_2_sources"  ## All possible valid input sources for Zone 2
 PARAM_ZONE_3_SOURCES = "zone_3_sources"  ## All possible valid input sources for Zone 3
 PARAM_HDZONE_SOURCES = "zone_z_sources"  ## All possible valid input sources for HDZone
+PARAM_ZONE_SOURCES = {
+    Zones.Z2: PARAM_ZONE_2_SOURCES,
+    Zones.Z3: PARAM_ZONE_3_SOURCES,
+    Zones.HDZ: PARAM_HDZONE_SOURCES,
+}
+
 ## All possible valid speaker system settings for HDZone volume functions to be available
 PARAM_HDZONE_VOLUME_REQUIREMENTS = "hdzone_volume_requirements"
 ## All possible speaker system modes. Different AVR models will have different available options
