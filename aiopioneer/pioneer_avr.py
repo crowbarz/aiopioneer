@@ -43,6 +43,7 @@ from .const import (
     DEFAULT_PORT,
     VERSION,
     LISTENING_MODES,
+    DIMMER_MODES,
     TONE_MODES,
     TONE_DB_VALUES,
     SPEAKER_MODES,
@@ -1223,7 +1224,7 @@ class PioneerAVR:
         return await self.send_command("volume_down", zone, ignore_error=False)
 
     async def _execute_command_queue(self):
-        """Executes commands from a queue."""
+        """Execute commands from a queue."""
         _LOGGER.debug(">> PioneerAVR._command_queue")
         while len(self._command_queue) > 0:
             # Keep command in queue until it has finished executing
@@ -1241,7 +1242,7 @@ class PioneerAVR:
         return True
 
     async def _command_queue_cancel(self):
-        """Cancels any pending commands and the task itself."""
+        """Cancel any pending commands and the task itself."""
         await cancel_task(self._command_queue_task, "command_queue")
         self._command_queue_task = None
 
@@ -1354,7 +1355,7 @@ class PioneerAVR:
         return await self.send_command("mute_off", zone, ignore_error=False)
 
     async def set_listening_mode(self, listening_mode: str, zone="1"):
-        """Sets the listening mode using the predefined list of options in params."""
+        """Set the listening mode using the predefined list of options in params."""
         self._check_zone(zone)
 
         if self.audio.get(zone).get("input_multichannel"):
@@ -1384,7 +1385,7 @@ class PioneerAVR:
         )
 
     async def set_panel_lock(self, panel_lock: str, zone="1"):
-        """Sets the panel lock."""
+        """Set the panel lock."""
         self._check_zone(zone)
         return await self.send_command(
             "set_amp_panel_lock",
@@ -1394,7 +1395,7 @@ class PioneerAVR:
         )
 
     async def set_remote_lock(self, remote_lock: bool, zone="1"):
-        """Sets the remote lock."""
+        """Set the remote lock."""
         self._check_zone(zone)
         return await self.send_command(
             "set_amp_remote_lock",
@@ -1403,18 +1404,22 @@ class PioneerAVR:
             prefix=str(int(remote_lock)),
         )
 
-    async def set_dimmer(self, dimmer, zone="1"):
+    async def set_dimmer(self, dimmer: str, zone="1"):
         """Set the display dimmer."""
         self._check_zone(zone)
         return await self.send_command(
-            "set_amp_dimmer", zone, ignore_error=False, prefix=dimmer
+            "set_amp_dimmer",
+            zone,
+            self._get_parameter_key_from_value(dimmer, DIMMER_MODES),
+            ignore_error=False,
         )
 
     async def set_tone_settings(
         self, tone: str = None, treble: int = None, bass: int = None, zone="1"
     ):
-        """Set the tone settings of a given zone."""
+        """Set the tone settings for a given zone."""
         # Check the zone supports tone settings
+        ## TODO: Refactor to convert to dB directly instead of using TONE_MODES
         if self.tone.get(zone) is not None:
             tone_response, tone_treble, tone_bass = True, True, True
             if tone is not None:
@@ -1460,7 +1465,7 @@ class PioneerAVR:
         amp: str = None,
         zone="1",
     ):
-        """Set AMP function settings for a given zone."""
+        """Set amplifier function settings for a given zone."""
         self._check_zone(zone)
 
         # FUNC: SPEAKERS (use PARAM_SPEAKER_MODES)
@@ -1506,7 +1511,7 @@ class PioneerAVR:
             )
 
     async def set_tuner_frequency(self, band: str, frequency: float, zone: str = "1"):
-        """Sets the tuner frequency and band."""
+        """Set the tuner frequency and band."""
 
         if (self.tuner.get("band") is None) or (self.power.get(zone) is False):
             raise SystemError(
@@ -1577,8 +1582,18 @@ class PioneerAVR:
         else:
             return False
 
+    async def set_tuner_preset(self, tuner_class: str, preset: int, zone="1"):
+        """Set the tuner preset."""
+        self._check_zone(zone)
+        return await self.send_command(
+            "set_tuner_preset",
+            zone,
+            str(tuner_class).upper() + str(preset).upper().zfill(2),
+            ignore_error=False,
+        )
+
     async def set_channel_levels(self, channel: str, level: float, zone="1"):
-        """Sets the level(gain) of each amplifier channel."""
+        """Set the level (gain) for amplifier channel in zone."""
         self._check_zone(zone)
 
         if self.channel_levels.get(zone) is not None:
@@ -1603,7 +1618,7 @@ class PioneerAVR:
             raise ValueError(f"Invalid zone {zone}")
 
     async def set_video_settings(self, **arguments):
-        """Set video settings for a given zone using provided parameters."""
+        """Set video settings for a given zone."""
         zone = arguments.get("zone")
         self._check_zone(zone)
 
@@ -1673,7 +1688,7 @@ class PioneerAVR:
                         )
 
     async def set_dsp_settings(self, **arguments):
-        """Sets the DSP settings for the amplifier."""
+        """Set the DSP settings for the amplifier."""
         zone = arguments.get("zone")
         self._check_zone(zone)
 
@@ -1771,13 +1786,3 @@ class PioneerAVR:
                 f"Current source ({self.source.get(zone)}) does not support "
                 "media_control activities."
             )
-
-    async def set_tuner_preset(self, tuner_class: str, tuner_preset: int, zone="1"):
-        """Set the tuner preset to the specified class and number."""
-        self._check_zone(zone)
-        return await self.send_command(
-            "set_tuner_preset",
-            zone,
-            str(tuner_class).upper() + str(tuner_preset).upper().zfill(2),
-            ignore_error=False,
-        )

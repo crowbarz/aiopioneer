@@ -470,7 +470,7 @@ VIDEO_RESOLUTION_MODES = {
 }
 
 DIMMER_MODES = {
-    "0": "Brigtest",
+    "0": "Brightest",
     "1": "Bright",
     "2": "Dark",
     "3": "Display Off",
