@@ -468,3 +468,102 @@ VIDEO_RESOLUTION_MODES = {
     "8": "4K",
     "9": "4K/24p",
 }
+
+DIMMER_MODES = {
+    "0": "Brigtest",
+    "1": "Bright",
+    "2": "Dark",
+    "3": "Display Off",
+    "9": "DIMMER (cyclic)",
+}
+
+MCACC_MEASUREMENT_ERROR = {
+    "0": "No error",
+    "1": "No microphone",
+    "2": "Ambient noise",
+    "3": "Microphone",
+    "4": "Unsupported connection",
+    "5": "Reverse phase",
+    "6": "Subwoofer level",
+}
+
+MCACC_MEASUREMENT_STATUS = {"0": "Inactive", "1": "Measuring"}
+
+STANDING_WAVE_FREQUENCIES = {
+    "00": "63Hz",
+    "01": "65Hz",
+    "02": "68Hz",
+    "03": "71Hz",
+    "04": "74Hz",
+    "05": "78Hz",
+    "06": "81Hz",
+    "07": "85Hz",
+    "08": "88Hz",
+    "09": "92Hz",
+    "10": "96Hz",
+    "11": "101Hz",
+    "12": "105Hz",
+    "13": "110Hz",
+    "14": "115Hz",
+    "15": "120Hz",
+    "16": "125Hz",
+    "17": "131Hz",
+    "18": "136Hz",
+    "19": "142Hz",
+    "20": "149Hz",
+    "21": "155Hz",
+    "22": "162Hz",
+    "23": "169Hz",
+    "24": "177Hz",
+    "25": "185Hz",
+    "26": "193Hz",
+    "27": "201Hz",
+    "28": "210Hz",
+    "29": "220Hz",
+    "30": "229Hz",
+    "31": "239Hz",
+    "32": "250Hz",
+}
+
+XOVER_SETTING = {
+    "0": "50Hz",
+    "1": "80Hz",
+    "2": "100Hz",
+    "3": "150Hz",
+    "4": "200Hz",
+}
+
+OSD_LANGUAGES = {
+    "00": "English",
+    "01": "French",
+    "03": "German",
+    "04": "Italian",
+    "05": "Spanish",
+    "06": "Dutch",
+    "07": "Russian",
+    "08": "Chinese (簡体)",
+    "09": "Chinese (繁体)",
+    "10": "Japanese",
+}
+
+STANDBY_PASSTHROUGH_OPTIONS = {
+    "00": "OFF",
+    "01": "LAST",
+    "02": "BD",
+    "03": "HDMI1",
+    "04": "HDMI2",
+    "05": "HDMI3",
+    "06": "HDMI4",
+    "07": "HDMI5",
+    "08": "HDMI6",
+    "09": "HDMI7",
+    "10": "HDMI8",
+}
+
+EXTERNAL_HDMI_TRIGGER_OPTIONS = {
+    "0": "OFF",
+    "1": "HDMIOUT1",
+    "2": "HDMIOUT2",
+    "3": "HDMIOUT3",
+    "4": "HDMIOUT4/HDBaseT",
+}
