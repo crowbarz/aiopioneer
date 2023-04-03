@@ -721,26 +721,21 @@ class PioneerAVR:
         self._source_name_to_id = {}
         self._source_id_to_name = {}
         _LOGGER.info("querying AVR source names")
-        max_source_id = self._params[PARAM_MAX_SOURCE_ID]
         async with self._update_lock:
-            for src_id in range(max_source_id + 1):
+            for src_id in range(self._params[PARAM_MAX_SOURCE_ID] + 1):
                 response = await self.send_raw_request(
                     "?RGB" + str(src_id).zfill(2),
                     "RGB",
                     ignore_error=True,
                     rate_limit=False,
                 )
+                await asyncio.sleep(0)  # yield to updater task
+
                 if response is None:
                     timeouts += 1
                     _LOGGER.debug("timeout %d retrieving source %s", timeouts, src_id)
                 elif response is not False:
                     timeouts = 0
-                    source_name = response[6:]
-                    source_number = str(src_id).zfill(2)
-                    self._source_name_to_id[source_name] = source_number
-                    self._source_id_to_name[source_number] = source_name
-        _LOGGER.debug("source name->id: %s", self._source_name_to_id)
-        _LOGGER.debug("source id->name: %s", self._source_id_to_name)
         if not self._source_name_to_id:
             _LOGGER.warning("no input sources found on AVR")
 
@@ -853,42 +848,17 @@ class PioneerAVR:
         """Query device information from Pioneer AVR."""
         if self.model or self.mac_addr or self.software_version:
             return
+        self.model = "unknown"
+        self.mac_addr = "unknown"
+        self.software_version = "unknown"
 
         _LOGGER.info("querying device information from Pioneer AVR")
-        model = None
-        mac_addr = None
-        software_version = None
+        await self.send_command("system_query_model", ignore_error=True)
+        await self.send_command("system_query_mac_addr", ignore_error=True)
+        await self.send_command("system_query_software_version", ignore_error=True)
+        await asyncio.sleep(0)  # yield to updater task
 
-        # Query model via command
-        data = await self.send_command("system_query_model", ignore_error=True)
-        if data:
-            matches = re.search(r"<([^>/]{5,})(/.[^>]*)?>", data)
-            if matches:
-                model = matches.group(1)
-
-        # Query MAC address via command
-        data = await self.send_command("system_query_mac_addr", ignore_error=True)
-        if data:
-            mac_addr = data[0:2] + ":" + data[2:4] + ":" + data[4:6]
-            mac_addr += ":" + data[6:8] + ":" + data[8:10] + ":" + data[10:12]
-
-        # Query software version via command
-        data = await self.send_command(
-            "system_query_software_version", ignore_error=True
-        )
-        if data:
-            matches = re.search(r'SSI"([^)]*)"', data)
-            if matches:
-                software_version = matches.group(1)
-
-        self.model = "unknown"
-        if model:
-            self.model = model
-
-        # Update default params for this model
-        self._set_default_params_model()
-        self.mac_addr = mac_addr if mac_addr else "unknown"
-        self.software_version = software_version if software_version else "unknown"
+        self._set_default_params_model()  # Update default params for this model
 
         # It is possible to query via HTML page if all info is not available
         # via API commands: http://avr/1000/system_information.asp
