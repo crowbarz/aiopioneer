@@ -1,7 +1,22 @@
 """Constants for aiopioneer."""
 
+from enum import Enum
+
 DEFAULT_PORT = 8102
 VERSION = "0.3.1"
+
+
+class Zones(Enum):
+    """Valid aiopioneer zones"""
+
+    Z1 = "1"
+    Z2 = "2"
+    Z3 = "3"
+    HDZ = "Z"
+
+    def __str__(self):
+        return self.value
+
 
 # Listening modes is a dict with a nested array for the following structure:
 # key (display name, 2ch sources, multichannel sources)
