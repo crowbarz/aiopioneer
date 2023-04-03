@@ -80,3 +80,19 @@ class TunerParsers():
                             queue_commands=None))
 
         return parsed
+
+    @staticmethod
+    def am_frequency_step(raw: str, _param: dict, zone = None, command = "SUQ") -> list:
+        """Response parser for frequency step.
+        NOTE: This is supported on very few AVRs"""
+
+        parsed = []
+        parsed.append(Response(raw=raw,
+                            response_command=command,
+                            base_property="_params",
+                            property_name=PARAM_TUNER_AM_FREQ_STEP,
+                            zone=zone,
+                            value=9 if raw == "0" else 10,
+                            queue_commands=None))
+
+        return parsed

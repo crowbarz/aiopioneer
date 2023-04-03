@@ -93,6 +93,7 @@ RESPONSE_DATA = [
     ["FRF", TunerParsers.frequency_fm, None],
     ["FRA", TunerParsers.frequency_am, None],
     ["PR", TunerParsers.preset, None],
+    ["SUQ", TunerParsers.am_frequency_step, None],
 
     ["MC", DspParsers.mcacc_setting, None],
     ["IS", DspParsers.phasecontrol, None],
