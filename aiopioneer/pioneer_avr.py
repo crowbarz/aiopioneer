@@ -1268,6 +1268,8 @@ class PioneerAVR:
         up and then down.
         """
         _LOGGER.debug(">> PioneerAVR._calculate_am_frequency_step() ")
+        # Try sending the query_tuner_am_step command first.
+        await self.send_command(command="query_tuner_am_step", ignore_error=True)
         # Check if freq step is None, band is set to AM and current source is
         # set to tuner for at least one zone. This function otherwise does not work.
         if (
