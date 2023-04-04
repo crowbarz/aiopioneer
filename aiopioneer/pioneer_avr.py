@@ -24,9 +24,7 @@ from .param import (
     PARAM_MODEL_DEFAULTS,
     PARAM_DISABLED_LISTENING_MODES,
     PARAM_VIDEO_RESOLUTION_MODES,
-    PARAM_HDZONE_SOURCES,
-    PARAM_ZONE_2_SOURCES,
-    PARAM_ZONE_3_SOURCES,
+    PARAM_ZONE_SOURCES,
     PARAM_ENABLED_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY,
     PARAM_TUNER_AM_FREQ_STEP,
@@ -40,6 +38,7 @@ from .util import (
     safe_wait_for,
 )
 from .const import (
+    Zones,
     DEFAULT_PORT,
     VERSION,
     LISTENING_MODES,
@@ -740,25 +739,39 @@ class PioneerAVR:
         if not self._source_name_to_id:
             _LOGGER.warning("no input sources found on AVR")
 
-    def get_source_list(self, zone="1"):
+    def get_source_list(self, zone: str | Zones = Zones.Z1) -> list[str]:
         """Return list of available input sources."""
-        if zone == "1":
-            return list(self._source_name_to_id.keys())
-        elif zone == "2":
-            sources_z2 = self._params.get(PARAM_ZONE_2_SOURCES, [])
-            return list(
-                [k for k, v in self._source_name_to_id.items() if v in sources_z2]
-            )
-        elif zone == "3":
-            sources_z3 = self._params.get(PARAM_ZONE_3_SOURCES, [])
-            return list(
-                [k for k, v in self._source_name_to_id.items() if v in sources_z3]
-            )
-        elif zone == "Z":
-            sources_hdz = self._params.get(PARAM_HDZONE_SOURCES, [])
-            return list(
-                [k for k, v in self._source_name_to_id.items() if v in sources_hdz]
-            )
+
+        source_ids = self._params.get(PARAM_ZONE_SOURCES[Zones(zone)], [])
+        return list(
+            self._source_name_to_id.keys()
+            if not source_ids
+            else [
+                self._source_id_to_name[s]
+                for s in source_ids
+                if s in self._source_id_to_name
+            ]
+        )
+
+    def get_source_dict(self, zone: str | Zones = None) -> dict[str, str]:
+        """Return source id<->name translation tables."""
+
+        if zone is None:
+            return self._source_name_to_id
+        source_ids = self._params.get(PARAM_ZONE_SOURCES[Zones(zone)], [])
+        return (
+            self._source_name_to_id
+            if not source_ids
+            else {k: v for k, v in self._source_name_to_id.items() if v in source_ids}
+        )
+
+    def get_source_name(self, source_id: str) -> str:
+        """Return name for given source ID."""
+        return (
+            self._source_id_to_name.get(source_id, source_id)
+            if self._source_name_to_id
+            else source_id
+        )
 
     def get_sound_modes(self, zone):
         """Return list of valid sound modes."""
@@ -821,29 +834,6 @@ class PioneerAVR:
             )
         else:
             return None
-
-    def get_source_dict(self, zone="1"):
-        """Return source id<->name translation tables."""
-        if zone == "1":
-            return self._source_name_to_id
-        elif zone == "2":
-            sources_z2 = self._params.get(PARAM_ZONE_2_SOURCES, [])
-            return {k: v for k, v in self._source_name_to_id.items() if v in sources_z2}
-        elif zone == "3":
-            sources_z3 = self._params.get(PARAM_ZONE_3_SOURCES, [])
-            return {k: v for k, v in self._source_name_to_id.items() if v in sources_z3}
-        elif zone == "Z":
-            sources_hdz = self._params.get(PARAM_HDZONE_SOURCES, [])
-            return {
-                k: v for k, v in self._source_name_to_id.items() if v in sources_hdz
-            }
-
-    def get_source_name(self, source_id):
-        """Return name for given source ID."""
-        if not self._source_name_to_id:
-            return source_id
-        else:
-            return self._source_id_to_name.get(source_id, source_id)
 
     async def query_device_info(self):
         """Query device information from Pioneer AVR."""
@@ -1615,7 +1605,7 @@ class PioneerAVR:
 
         if self.channel_levels.get(zone) is not None:
             # Check the channel exists
-            if self.channel_levels.get(zone).get(channel.upper()) is not None:
+            if self.channel_levels[zone].get(channel.upper()) is not None:
                 # Append underscores depending on length
                 if len(channel) == 1:
                     channel = channel + "__"

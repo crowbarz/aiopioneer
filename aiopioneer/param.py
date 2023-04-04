@@ -16,10 +16,12 @@ PARAM_DEBUG_LISTENER = "debug_listener"
 PARAM_DEBUG_RESPONDER = "debug_responder"
 PARAM_DEBUG_UPDATER = "debug_updater"
 PARAM_DEBUG_COMMAND = "debug_command"
+PARAM_ZONE_1_SOURCES = "zone_1_sources"  ## All possible valid input sources for Zone 1
 PARAM_ZONE_2_SOURCES = "zone_2_sources"  ## All possible valid input sources for Zone 2
 PARAM_ZONE_3_SOURCES = "zone_3_sources"  ## All possible valid input sources for Zone 3
-PARAM_HDZONE_SOURCES = "zone_z_sources"  ## All possible valid input sources for HDZone
+PARAM_HDZONE_SOURCES = "hdzone_sources"  ## All possible valid input sources for HDZone
 PARAM_ZONE_SOURCES = {
+    Zones.Z1: PARAM_ZONE_1_SOURCES,
     Zones.Z2: PARAM_ZONE_2_SOURCES,
     Zones.Z3: PARAM_ZONE_3_SOURCES,
     Zones.HDZ: PARAM_HDZONE_SOURCES,
@@ -66,6 +68,7 @@ PARAM_DEFAULTS = {
         "audio",
     ],
     PARAM_DISABLE_AUTO_QUERY: False,
+    PARAM_ZONE_1_SOURCES: [],
     PARAM_ZONE_2_SOURCES: [
         "04",
         "06",
