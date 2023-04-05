@@ -1795,3 +1795,15 @@ class PioneerAVR:
                 f"Current source ({self.source.get(zone)}) does not support "
                 "media_control activities."
             )
+
+    async def set_source_name(self, source_id: str, name: str = "", default: bool = False):
+        """Renames a given source, set the default parameter to true to reset to default."""
+        if default:
+            await self.send_raw_command(f"0RGB{source_id}")
+        else:
+            if len(name) > 14:
+                raise ValueError(f"New source name ({name}) length too long. "
+                                 "Up to 14 characters are allowed")
+            if self._source_id_to_name.get(source_id) is not name:
+                await self.send_raw_command(f"{name}1RGB{source_id}")
+        return True
