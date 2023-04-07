@@ -600,7 +600,7 @@ class PioneerAVR:
                         return False
 
     async def send_command(
-        self, command, zone="1", prefix="", ignore_error=None, rate_limit=True
+        self, command, zone="1", prefix="", ignore_error=None, rate_limit=True, suffix=""
     ):
         """Send a command or request to the device."""
         # pylint: disable=unidiomatic-typecheck disable=logging-not-lazy
@@ -608,12 +608,13 @@ class PioneerAVR:
         if debug_command:
             _LOGGER.debug(
                 '>> PioneerAVR.send_command("%s", zone="%s", prefix="%s", '
-                + "ignore_error=%s, rate_limit=%s)",
+                + "ignore_error=%s, rate_limit=%s, suffix=%s)",
                 command,
                 zone,
                 prefix,
                 ignore_error,
                 rate_limit,
+                suffix,
             )
         raw_command = PIONEER_COMMANDS.get(command, {}).get(zone)
         try:
@@ -623,7 +624,7 @@ class PioneerAVR:
                     expected_response = raw_command[1]
                     raw_command = raw_command[0]
                     response = await self.send_raw_request(
-                        prefix + raw_command,
+                        prefix + raw_command + suffix,
                         expected_response,
                         ignore_error,
                         rate_limit,
@@ -635,7 +636,7 @@ class PioneerAVR:
                     _LOGGER.error("invalid request %s for zone %s", raw_command, zone)
                     return None
             elif type(raw_command) is str:
-                return await self.send_raw_command(prefix + raw_command, rate_limit)
+                return await self.send_raw_command(prefix + raw_command + suffix, rate_limit)
             else:
                 _LOGGER.warning("invalid command %s for zone %s", command, zone)
                 return None
