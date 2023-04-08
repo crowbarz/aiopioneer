@@ -948,7 +948,7 @@ class PioneerAVR:
                     response.base_property(self)
                 elif response.base_property is not None:
                     current_value = getattr(self, response.base_property)
-                    if response.property_name is None and response.zone is not None:
+                    if response.property_name is None and response.zone is not Zones.ALL:
                         if current_value.get(response.zone.value) is not response.value:
                             current_value[response.zone.value] = response.value
                             setattr(self, response.base_property, current_value)
@@ -965,7 +965,7 @@ class PioneerAVR:
                             )
 
                     elif (
-                        response.property_name is not None and response.zone is not None
+                        response.property_name is not None and response.zone is not Zones.ALL
                     ):
                         # Set default value first otherwise we hit an exception
                         current_value.setdefault(response.zone.value, {})
@@ -993,7 +993,7 @@ class PioneerAVR:
                                 response.raw,
                             )
 
-                    elif response.property_name is None and response.zone is None:
+                    elif response.property_name is None and response.zone is Zones.ALL:
                         if current_value is not response.value:
                             current_value = response.value
                             setattr(self, response.base_property, current_value)

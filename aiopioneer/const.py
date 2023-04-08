@@ -9,6 +9,7 @@ VERSION = "0.4.1"
 class Zones(Enum):
     """Valid aiopioneer zones"""
 
+    ALL = "ALL"
     Z1 = "1"
     Z2 = "2"
     Z3 = "3"
