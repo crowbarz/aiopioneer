@@ -1368,7 +1368,7 @@ class PioneerAVR:
         """Set the listening mode using the predefined list of options in params."""
         self._check_zone(zone)
 
-        if self.audio.get(zone).get("input_multichannel"):
+        if self.audio.get("input_multichannel"):
             listening_mode_key = [
                 k
                 for k, v in LISTENING_MODES.items()
