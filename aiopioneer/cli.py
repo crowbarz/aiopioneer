@@ -216,8 +216,15 @@ async def cli_main(args: argparse.Namespace):
                 or zone not in PIONEER_COMMANDS[cmd]
             ):
                 cur_zone = "1"
-            prefix = arg if arg else ""
-            await pioneer.send_command(cmd, zone=cur_zone, prefix=prefix)
+            prefix = (suffix := "")
+            if arg:
+                prefix, _, suffix = arg.partition("|")
+            print(
+                f"Sending command {cmd}"
+                + (f", prefix {prefix}" if prefix else "")
+                + (f", suffix {suffix}" if suffix else "")
+            )
+            await pioneer.send_command(cmd, zone=cur_zone, prefix=prefix, suffix=suffix)
         else:
             print(f"ERROR: Unknown command {cmd}")
 
