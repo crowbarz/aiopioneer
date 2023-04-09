@@ -1797,22 +1797,25 @@ class PioneerAVR:
                 "media_control activities."
             )
 
-    async def set_input_name(self, input_id: str, name: str = "", default: bool = False):
+    async def set_source_name(
+        self, source_id: str, source_name: str = "", default: bool = False
+    ):
         """Renames a given input, set the default parameter to true to reset to default."""
         if default:
             await self.send_command(
-                command="set_default_input_name",
-                zone="1",
-                suffix=input_id)
+                command="set_default_source_name", zone="1", suffix=source_id
+            )
         else:
-            if len(name) > 14:
-                raise ValueError(f"New input name ({name}) length too long. "
-                                 "Up to 14 characters are allowed")
-            if self._source_id_to_name.get(input_id) is not name:
+            if len(source_name) > 14:
+                raise ValueError(
+                    f"New source name ({source_name}) length too long. "
+                    "Up to 14 characters are allowed"
+                )
+            if self._source_id_to_name.get(source_id) is not source_name:
                 await self.send_command(
-                    command="set_input_name",
+                    command="set_source_name",
                     zone="1",
-                    prefix=name,
-                    suffix=input_id
+                    prefix=source_name,
+                    suffix=source_id,
                 )
         return True

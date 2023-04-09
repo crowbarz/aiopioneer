@@ -288,6 +288,6 @@ PIONEER_COMMANDS = {
     "operation_amp_channel_select": {"1": "CLC"},
     "operation_amp_home_menu": {"1": "HM"},
     "operation_amp_key_off": {"1": "KOF"},
-    "set_input_name": {"1": ["1RGB", "RGB"]},
-    "set_default_input_name": {"1": ["0RGB", "RGB"]}
+    "set_source_name": {"1": ["1RGB", "RGB"]},
+    "set_default_source_name": {"1": ["0RGB", "RGB"]},
 }
