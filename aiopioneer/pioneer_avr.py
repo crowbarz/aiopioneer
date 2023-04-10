@@ -162,20 +162,19 @@ class PioneerAVR:
         self._source_name_to_id = {}
         self._source_id_to_name = {}
         self._zone_callback = {}
-        self.__query_sources = None
+        self._query_sources = None
         # self._update_callback = None
 
     def __del__(self):
         _LOGGER.debug(">> PioneerAVR.__del__()")
 
     @property
-    def _query_sources(self) -> None:
+    def query_sources(self) -> bool:
         """Whether sources have been queried from AVR."""
-        return self.__query_sources
+        return self._query_sources
 
-    @_query_sources.setter
-    def _query_sources(self, value: bool) -> None:
-        self.__query_sources = value
+    def _set_query_sources(self, value: bool) -> None:
+        self._query_sources = value
         self._system_params[PARAM_QUERY_SOURCES] = value
         self._update_params()
 
@@ -740,14 +739,14 @@ class PioneerAVR:
         """Manually set source id<->name translation tables."""
         source_name_to_id = {}
         merge(source_name_to_id, sources)
-        self._query_sources = False
+        self._set_query_sources(False)
         self._source_name_to_id = source_name_to_id
         self._source_id_to_name = {v: k for k, v in sources.items()}
 
     async def build_source_dict(self):
         """Generate source id<->name translation tables."""
         timeouts = 0
-        self._query_sources = True
+        self._set_query_sources(True)
         self._source_name_to_id = {}
         self._source_id_to_name = {}
         _LOGGER.info("querying AVR source names")
