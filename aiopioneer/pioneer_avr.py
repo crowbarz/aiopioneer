@@ -146,8 +146,8 @@ class PioneerAVR:
         self._update_event = asyncio.Event()
         self._reconnect = True
         self._full_update = True
-        self._last_updated = 0.0
-        self._last_command = 0.0
+        self._last_updated = None
+        self._last_command = None
         self._reader = None
         self._writer = None
         self._listener_task = None
@@ -394,9 +394,12 @@ class PioneerAVR:
 
     async def _connection_listener(self):
         """AVR connection listener. Parse responses and update state."""
-        _LOGGER.debug(">> PioneerAVR._connection_listener() started")
+        if self._params[PARAM_DEBUG_LISTENER]:
+            _LOGGER.debug(">> PioneerAVR._connection_listener() started")
         running = True
         while self.available:
+            debug_listener = self._params[PARAM_DEBUG_LISTENER]
+            action = " listening for responses"
             try:
                 response = await self._read_response()
                 if response is None:
@@ -404,7 +407,6 @@ class PioneerAVR:
                     break
 
                 # Check for empty response
-                debug_listener = self._params[PARAM_DEBUG_LISTENER]
                 self._last_updated = time.time()  # include empty responses
                 if not response:
                     # Skip processing empty responses (keepalives)
@@ -412,13 +414,15 @@ class PioneerAVR:
                         _LOGGER.debug("ignoring empty response")
                     continue
                 if debug_listener:
-                    _LOGGER.debug("AVR listener received response: %s", response)
+                    _LOGGER.debug("received AVR response: %s", response)
 
                 # Parse response, update cached properties
+                action = " parsing response " + response
                 parse_result = self._parse_response(response)
                 updated_zones = parse_result.get("updated_zones")
 
                 # Detect Main Zone power on for volume workaround
+                action = ""
                 power_on_volume_bounce = self._params[PARAM_POWER_ON_VOLUME_BOUNCE]
                 if power_on_volume_bounce and self._power_zone_1 is not None:
                     if not self._power_zone_1 and self.power.get("1"):
@@ -448,19 +452,19 @@ class PioneerAVR:
                 # the listener loop.
 
                 if updated_zones:
+                    action = f" while calling zone callbacks for {updated_zones}"
                     # Call zone callbacks for updated zones
                     self._call_zone_callbacks(updated_zones)
                     # NOTE: updating zone 1 does not reset its scan interval -
                     # scan interval is set to a regular timer
 
             except asyncio.CancelledError:
-                _LOGGER.debug(">> PioneerAVR._connection_listener() cancelled")
+                if debug_listener:
+                    _LOGGER.debug(">> PioneerAVR._connection_listener() cancelled")
                 running = False
                 break
             except Exception as exc:  # pylint: disable=broad-except
-                _LOGGER.error(
-                    ">> PioneerAVR._connection_listener() exception: %s", str(exc)
-                )
+                _LOGGER.error("listener exception%s: %s", action, str(exc))
                 print(exc)
                 # continue listening on exception
 
@@ -472,13 +476,15 @@ class PioneerAVR:
 
     async def _listener_schedule(self):
         """Schedule the listener task."""
-        _LOGGER.debug(">> PioneerAVR._listener_schedule()")
+        if self._params[PARAM_DEBUG_LISTENER]:
+            _LOGGER.debug(">> PioneerAVR._listener_schedule()")
         await self._listener_cancel()
         self._listener_task = asyncio.create_task(self._connection_listener())
 
     async def _listener_cancel(self):
         """Cancel the listener task."""
-        await cancel_task(self._listener_task, "listener")
+        debug_listener = self._params[PARAM_DEBUG_LISTENER]
+        await cancel_task(self._listener_task, "listener", debug=debug_listener)
         self._listener_task = None
 
     # Reader co-routine
@@ -487,14 +493,14 @@ class PioneerAVR:
         try:
             return await self._reader.readuntil(b"\n")
         except asyncio.CancelledError:
-            _LOGGER.debug("reader: readuntil() was cancelled")
+            if self._params[PARAM_DEBUG_RESPONDER]:
+                _LOGGER.debug("reader: readuntil() was cancelled")
             return None
 
     # Read responses from AVR
     async def _read_response(self, timeout=None):
         """Wait for a response from AVR and return to all readers."""
         debug_responder = self._params[PARAM_DEBUG_RESPONDER]
-
         if debug_responder:
             _LOGGER.debug(">> PioneerAVR._read_response(timeout=%s)", timeout)
 
@@ -508,11 +514,11 @@ class PioneerAVR:
             # responder_task = asyncio.create_task(self._reader.readuntil(b"\n"))
             self._responder_task = responder_task
             if debug_responder:
-                _LOGGER.debug("created responder task %s", responder_task)
+                _LOGGER.debug("created responder task %s", responder_task.get_name())
         else:
             # Wait on existing responder task
             if debug_responder:
-                _LOGGER.debug("using existing responder task %s", responder_task)
+                _LOGGER.debug("using responder task %s", responder_task.get_name())
 
         # Wait for result and process
         task_name = asyncio.current_task().get_name()
@@ -536,7 +542,8 @@ class PioneerAVR:
                 raw_response = await responder_task
         except (EOFError, TimeoutError):
             # Connection closed
-            _LOGGER.debug("%s: connection closed", task_name)
+            if debug_responder:
+                _LOGGER.debug("%s: connection closed", task_name)
             return None
         except Exception as exc:  # pylint: disable=broad-except
             _LOGGER.error("%s: exception: %s", task_name, str(exc))
@@ -550,7 +557,8 @@ class PioneerAVR:
 
     async def _responder_cancel(self):
         """Cancel any active responder task."""
-        await cancel_task(self._responder_task, "responder")
+        debug_responder = self._params[PARAM_DEBUG_RESPONDER]
+        await cancel_task(self._responder_task, "responder", debug=debug_responder)
         self._responder_task = None
 
     # Send commands and requests to AVR
@@ -568,13 +576,16 @@ class PioneerAVR:
 
         if rate_limit:
             # Rate limit commands
-            since_command = time.time() - self._last_command
             command_delay = self._params[PARAM_COMMAND_DELAY]
+            since_command = command_delay + 0.1
+            if self._last_command:
+                since_command = time.time() - self._last_command
             if since_command < command_delay:
                 delay = command_delay - since_command
-                _LOGGER.debug("delaying command for %.3f s", delay)
+                if debug_command:
+                    _LOGGER.debug("delaying command for %.3f s", delay)
                 await asyncio.sleep(command_delay - since_command)
-        _LOGGER.debug("sending AVR command: %s", command)
+        _LOGGER.debug("sending command: %s", command)
         self._writer.write(command.encode("ASCII") + b"\r")
         await self._writer.drain()
         self._last_command = time.time()
@@ -602,9 +613,10 @@ class PioneerAVR:
                     _LOGGER.debug("AVR command %s timed out", command)
                     return None
                 elif response.startswith(response_prefix):
-                    _LOGGER.debug(
-                        "AVR command %s returned response: %s", command, response
-                    )
+                    if debug_command:
+                        _LOGGER.debug(
+                            "AVR command %s returned response: %s", command, response
+                        )
                     return response
                 elif response.startswith("E"):
                     err = f"AVR command {command} returned error: {response}"
@@ -921,7 +933,7 @@ class PioneerAVR:
             if str(zone) in self._zone_callback:
                 callback = self._zone_callback[str(zone)]
                 if callback:
-                    _LOGGER.debug("calling callback for zone %s", zone)
+                    # _LOGGER.debug("calling callback for zone %s", zone)
                     callback()
 
     # Update functions
@@ -1082,7 +1094,8 @@ class PioneerAVR:
 
     async def _updater_cancel(self):
         """Cancel the updater task."""
-        await cancel_task(self._updater_task, "updater")
+        debug_updater = self._params[PARAM_DEBUG_UPDATER]
+        await cancel_task(self._updater_task, "updater", debug=debug_updater)
         self._updater_task = None
 
     async def _update_zone(self, zone):
@@ -1161,14 +1174,19 @@ class PioneerAVR:
         async with self._update_lock:
             # Update only if scan_interval has passed
             now = time.time()
-            since_updated = now - self._last_updated
             full_update = self._full_update
             scan_interval = self.scan_interval
+            since_updated = scan_interval + 1
+            since_updated_str = "never"
+            if self._last_updated:
+                since_updated = now - self._last_updated
+                since_updated_str = "%.3f s ago" % since_updated
+
             if full_update or not scan_interval or since_updated > scan_interval:
                 _LOGGER.info(
-                    "updating AVR status (full=%s, last updated %.3f s ago)",
+                    "updating AVR status (full=%s, last updated %s)",
                     full_update,
-                    since_updated,
+                    since_updated_str,
                 )
                 self._last_updated = now
                 self._full_update = False
@@ -1197,9 +1215,7 @@ class PioneerAVR:
                 # connected to port 23.
                 _rc = None
                 if debug_updater:
-                    _LOGGER.debug(
-                        "skipping update: last updated %.3f s ago", since_updated
-                    )
+                    _LOGGER.debug("skipping update: last updated %s", since_updated_str)
         if _rc is False:
             # Disconnect on error
             await self.disconnect()
@@ -1275,11 +1291,14 @@ class PioneerAVR:
 
     async def _execute_command_queue(self):
         """Execute commands from a queue."""
-        _LOGGER.debug(">> PioneerAVR._command_queue")
+        debug_command = self._params[PARAM_DEBUG_COMMAND]
+        if debug_command:
+            _LOGGER.debug(">> PioneerAVR._command_queue")
         while len(self._command_queue) > 0:
             # Keep command in queue until it has finished executing
             command = self._command_queue[0]
-            _LOGGER.info("Command Queue Executing: %s", command)
+            if debug_command:
+                _LOGGER.debug("command queue executing: %s", command)
             if command == "FULL_UPDATE":
                 await self.update(full=True)
             elif command == "_calculate_am_frequency_step":
@@ -1288,30 +1307,37 @@ class PioneerAVR:
                 await self.send_command(command, ignore_error=True)
             self._command_queue.pop(0)
 
-        _LOGGER.debug("Command Queue Finished.")
+        if debug_command:
+            _LOGGER.debug("command queue finished")
         return True
 
     async def _command_queue_cancel(self):
         """Cancel any pending commands and the task itself."""
-        await cancel_task(self._command_queue_task, "command_queue")
+        debug_command = self._params[PARAM_DEBUG_COMMAND]
+        await cancel_task(
+            self._command_queue_task, "command_queue", debug=debug_command
+        )
         self._command_queue_task = None
 
     async def _command_queue_schedule(self):
         """Schedule commands to queue."""
-        _LOGGER.debug(">> PioneerAVR._command_queue_schedule()")
+        if self._params[PARAM_DEBUG_COMMAND]:
+            _LOGGER.debug(">> PioneerAVR._command_queue_schedule()")
         await self._command_queue_cancel()
         self._command_queue_task = asyncio.create_task(self._execute_command_queue())
 
     def queue_command(self, command, skip_if_queued=True, insert_at=-1):
         """Add a new command to the queue to run."""
-        _LOGGER.debug(">> PioneerAVR.queue_command(%s)", command)
+        if self._params[PARAM_DEBUG_COMMAND]:
+            _LOGGER.debug(">> PioneerAVR.queue_command(%s)", command)
         if not skip_if_queued or command not in self._command_queue:
             if insert_at >= 0:
                 self._command_queue.insert(insert_at, command)
             else:
                 self._command_queue.append(command)
         else:
-            _LOGGER.debug("command %s already queued, skipping", command)
+            if self._params[PARAM_DEBUG_COMMAND]:
+                _LOGGER.debug("command %s already queued, skipping", command)
 
     async def _calculate_am_frequency_step(self):
         """

@@ -96,7 +96,7 @@ async def safe_wait_for(awt, timeout=None):
         raise exc
 
 
-async def cancel_task(task, task_name=None):
+async def cancel_task(task, task_name=None, debug=False):
     """Cancels a task and waits for it to finish."""
     if task:
         if task_name is None:
@@ -108,28 +108,37 @@ async def cancel_task(task, task_name=None):
         except AttributeError:
             pass
         if current_task is not None and task == current_task:
-            _LOGGER.debug(
-                ">> cancel_task(%s): ignoring cancellation of current task", task_name
-            )
+            if debug:
+                _LOGGER.debug(
+                    ">> cancel_task(%s): ignoring cancellation of current task",
+                    task_name,
+                )
             return
         if not task.done():
-            _LOGGER.debug(">> cancel_task(%s): requesting cancellation", task_name)
+            if debug:
+                _LOGGER.debug(">> cancel_task(%s): requesting cancellation", task_name)
             task.cancel()
-            _LOGGER.debug(">> cancel_task(%s): waiting for completion", task_name)
+            if debug:
+                _LOGGER.debug(">> cancel_task(%s): waiting for completion", task_name)
             try:
                 await task
             except asyncio.CancelledError:
-                _LOGGER.debug(">> cancel_task(%s): cancelled exception", task_name)
+                if debug:
+                    _LOGGER.debug(">> cancel_task(%s): cancelled exception", task_name)
             except Exception as exc:  # pylint: disable=broad-except
-                _LOGGER.debug(
-                    ">> cancel_task(%s): returned exception: %s", task_name, exc
-                )
+                if debug:
+                    _LOGGER.debug(
+                        ">> cancel_task(%s): returned exception: %s", task_name, exc
+                    )
             else:
-                _LOGGER.debug(">> cancel_task(%s): completed", task_name)
+                if debug:
+                    _LOGGER.debug(">> cancel_task(%s): completed", task_name)
         else:
-            _LOGGER.debug(">> cancel_task(%s): already completed", task_name)
+            if debug:
+                _LOGGER.debug(">> cancel_task(%s): already completed", task_name)
             exc = task.exception()
             if exc:
-                _LOGGER.debug(
-                    ">> cancel_task(%s): returned exception: %s", task_name, exc
-                )
+                if debug:
+                    _LOGGER.debug(
+                        ">> cancel_task(%s): returned exception: %s", task_name, exc
+                    )
