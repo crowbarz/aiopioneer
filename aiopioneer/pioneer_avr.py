@@ -7,6 +7,9 @@ import time
 import logging
 import re
 import math
+
+from inspect import isfunction
+
 from .param import (
     PARAM_IGNORED_ZONES,
     PARAM_COMMAND_DELAY,
@@ -894,14 +897,17 @@ class PioneerAVR:
                     callback()
 
     # Update functions
-    def _parse_response(self, response):
+    def _parse_response(self, response_raw: str):
         """Parse response and update cached parameters."""
         updated_zones = set()
 
-        parsed_response: list = process_raw_response(response, self._params)
+        parsed_response: list = process_raw_response(response_raw, self._params)
         if parsed_response is not None:
             for response in parsed_response:
-                if response.base_property is not None:
+                if isfunction(response.base_property):
+                    ## Call PioneerAVR class function
+                    response.base_property(self)
+                elif response.base_property is not None:
                     current_value = getattr(self, response.base_property)
                     if response.property_name is None and response.zone is not None:
                         if current_value.get(response.zone.value) is not response.value:
