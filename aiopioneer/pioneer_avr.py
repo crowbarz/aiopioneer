@@ -8,6 +8,7 @@ import logging
 import re
 import math
 
+from collections.abc import Callable
 from inspect import isfunction
 
 from .param import (
@@ -873,19 +874,21 @@ class PioneerAVR:
         # It is unknown how iControlAV5 determines this on a routed network.
 
     # Callback functions
-    def set_zone_callback(self, zone, callback):
+    def set_zone_callback(
+        self, zone: Zones | str, callback: Callable[..., None] | None = None
+    ):
         """Register a callback for a zone."""
-        if zone in self.zones:
+        if str(zone) in self.zones:
             if callback:
-                self._zone_callback[zone] = callback
+                self._zone_callback[str(zone)] = callback
             else:
-                self._zone_callback.pop(zone)
+                self._zone_callback.pop(str(zone))
 
     def clear_zone_callbacks(self):
         """Clear all callbacks for a zone."""
         self._zone_callback = {}
 
-    def _call_zone_callbacks(self, zones=None):
+    def _call_zone_callbacks(self, zones: list[Zones | str] = None):
         """Call callbacks to signal updated zone(s)."""
         if zones is None:
             zones = self.zones
