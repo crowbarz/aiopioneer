@@ -16,6 +16,7 @@ PARAM_DEBUG_LISTENER = "debug_listener"
 PARAM_DEBUG_RESPONDER = "debug_responder"
 PARAM_DEBUG_UPDATER = "debug_updater"
 PARAM_DEBUG_COMMAND = "debug_command"
+PARAM_QUERY_SOURCES = "query_sources"
 PARAM_ZONE_1_SOURCES = "zone_1_sources"  ## All possible valid input sources for Zone 1
 PARAM_ZONE_2_SOURCES = "zone_2_sources"  ## All possible valid input sources for Zone 2
 PARAM_ZONE_3_SOURCES = "zone_3_sources"  ## All possible valid input sources for Zone 3
@@ -45,6 +46,7 @@ PARAM_DISABLED_LISTENING_MODES = "disabled_amplifier_listening_modes"
 PARAM_TUNER_AM_FREQ_STEP = "am_frequency_step"
 
 PARAM_DEFAULTS = {
+    PARAM_QUERY_SOURCES: False,
     PARAM_IGNORED_ZONES: [],
     PARAM_COMMAND_DELAY: 0.1,
     PARAM_MAX_SOURCE_ID: 60,

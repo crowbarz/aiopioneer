@@ -24,6 +24,7 @@ from .param import (
     PARAM_DEBUG_RESPONDER,
     PARAM_DEBUG_UPDATER,
     PARAM_DEBUG_COMMAND,
+    PARAM_QUERY_SOURCES,
     PARAM_DEFAULTS,
     PARAM_MODEL_DEFAULTS,
     PARAM_DISABLED_LISTENING_MODES,
@@ -133,6 +134,7 @@ class PioneerAVR:
         # Parameters
         self._default_params = PARAM_DEFAULTS
         self._user_params = None
+        self._system_params = {}
         self._params = None
         self.set_user_params(params)
 
@@ -160,10 +162,22 @@ class PioneerAVR:
         self._source_name_to_id = {}
         self._source_id_to_name = {}
         self._zone_callback = {}
+        self.__query_sources = None
         # self._update_callback = None
 
     def __del__(self):
         _LOGGER.debug(">> PioneerAVR.__del__()")
+
+    @property
+    def _query_sources(self) -> None:
+        """Whether sources have been queried from AVR."""
+        return self.__query_sources
+
+    @_query_sources.setter
+    def _query_sources(self, value: bool) -> None:
+        self.__query_sources = value
+        self._system_params[PARAM_QUERY_SOURCES] = value
+        self._update_params()
 
     def get_unique_id(self):
         """Get unique identifier for this instance."""
@@ -175,6 +189,7 @@ class PioneerAVR:
         self._params = {}
         merge(self._params, self._default_params)
         merge(self._params, self._user_params, force_overwrite=True)
+        merge(self._params, self._system_params)
 
     def set_user_params(self, params=None):
         """Set parameters and merge with defaults."""
@@ -725,12 +740,14 @@ class PioneerAVR:
         """Manually set source id<->name translation tables."""
         source_name_to_id = {}
         merge(source_name_to_id, sources)
+        self._query_sources = False
         self._source_name_to_id = source_name_to_id
         self._source_id_to_name = {v: k for k, v in sources.items()}
 
     async def build_source_dict(self):
         """Generate source id<->name translation tables."""
         timeouts = 0
+        self._query_sources = True
         self._source_name_to_id = {}
         self._source_id_to_name = {}
         _LOGGER.info("querying AVR source names")
@@ -785,6 +802,15 @@ class PioneerAVR:
             if self._source_name_to_id
             else source_id
         )
+
+    def clear_source_id(self, source_id: str) -> None:
+        """Clear name mapping for given source ID."""
+        source_name = None
+        if source_id in self._source_id_to_name:
+            source_name = self._source_id_to_name[source_id]
+            self._source_id_to_name.pop(source_id)
+        if source_name in self._source_name_to_id:
+            self._source_name_to_id.pop(source_name)
 
     def get_sound_modes(self, zone):
         """Return list of valid sound modes."""

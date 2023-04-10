@@ -155,7 +155,7 @@ RESPONSE_DATA = [
     ["VTS", VideoParsers.aspect, Zones.Z1],
 ]
 
-def process_raw_response(raw_resp: str, _param: dict) -> list:
+def process_raw_response(raw_resp: str, params: dict) -> list:
     """Processes a raw response and looks up required functions from RESPONSE_DATA."""
     match_resp = next((r for r in RESPONSE_DATA if raw_resp.startswith(r[0])), None)
     if match_resp:
@@ -163,8 +163,8 @@ def process_raw_response(raw_resp: str, _param: dict) -> list:
         parse_func = match_resp[1]
         parse_zone = match_resp[2]
         return parse_func(
-            raw=raw_resp[len(parse_cmd):],
-            _param=_param,
+            raw_resp[len(parse_cmd):],
+            params,
             zone=parse_zone,
             command=parse_cmd
         )

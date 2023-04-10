@@ -2,7 +2,12 @@
 
 import re
 
-from aiopioneer.param import PARAM_TUNER_AM_FREQ_STEP, PARAM_MHL_SOURCE, PARAM_SPEAKER_SYSTEM_MODES
+from aiopioneer.param import (
+    PARAM_QUERY_SOURCES,
+    PARAM_TUNER_AM_FREQ_STEP,
+    PARAM_MHL_SOURCE,
+    PARAM_SPEAKER_SYSTEM_MODES,
+)
 from aiopioneer.const import (
     MEDIA_CONTROL_SOURCES,
     SPEAKER_MODES,
@@ -324,12 +329,24 @@ class SystemParsers():
         return parsed
 
     @staticmethod
-    def input_name(raw: str, _param: dict, zone = None, command = "RGB") -> list:
+    def input_name(raw: str, params: dict, zone = None, command = "RGB") -> list:
         """Input name parser. Applies system wide."""
         source_number = raw[:2]
         source_name = raw[3:]
 
         parsed = []
+        if not params[PARAM_QUERY_SOURCES]:
+            ## Only update AVR source mappings if AVR sources are being queried
+            return parsed
+        ## Clear current source ID from source mappings via PioneerAVR.clear_source_id
+        parsed.append(Response(raw=raw,
+                            response_command=command,
+                            base_property=lambda self: self.clear_source_id(source_number),
+                            property_name=source_name,
+                            zone=zone,
+                            value=source_number,
+                            queue_commands=None))
+
         parsed.append(Response(raw=raw,
                             response_command=command,
                             base_property="_source_name_to_id",
