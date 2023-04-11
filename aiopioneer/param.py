@@ -45,8 +45,11 @@ PARAM_DISABLED_LISTENING_MODES = "disabled_amplifier_listening_modes"
 ## Tuner step for AM frequencies. If None, calculate automatically when tuner is first used
 PARAM_TUNER_AM_FREQ_STEP = "am_frequency_step"
 
+PARAM_DEFAULTS_SYSTEM = {
+    PARAM_QUERY_SOURCES: None,
+}
+
 PARAM_DEFAULTS = {
-    PARAM_QUERY_SOURCES: False,
     PARAM_IGNORED_ZONES: [],
     PARAM_COMMAND_DELAY: 0.1,
     PARAM_MAX_SOURCE_ID: 60,

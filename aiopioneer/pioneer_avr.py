@@ -26,6 +26,7 @@ from .param import (
     PARAM_DEBUG_COMMAND,
     PARAM_QUERY_SOURCES,
     PARAM_DEFAULTS,
+    PARAM_DEFAULTS_SYSTEM,
     PARAM_MODEL_DEFAULTS,
     PARAM_DISABLED_LISTENING_MODES,
     PARAM_VIDEO_RESOLUTION_MODES,
@@ -133,8 +134,8 @@ class PioneerAVR:
 
         # Parameters
         self._default_params = PARAM_DEFAULTS
+        self._system_params = PARAM_DEFAULTS_SYSTEM
         self._user_params = None
-        self._system_params = {}
         self._params = None
         self.set_user_params(params)
 
@@ -162,7 +163,6 @@ class PioneerAVR:
         self._source_name_to_id = {}
         self._source_id_to_name = {}
         self._zone_callback = {}
-        self._query_sources = None
         # self._update_callback = None
 
     def __del__(self):
@@ -171,10 +171,9 @@ class PioneerAVR:
     @property
     def query_sources(self) -> bool:
         """Whether sources have been queried from AVR."""
-        return self._query_sources
+        return self._system_params.get(PARAM_QUERY_SOURCES)
 
     def _set_query_sources(self, value: bool) -> None:
-        self._query_sources = value
         self._system_params[PARAM_QUERY_SOURCES] = value
         self._update_params()
 
@@ -749,9 +748,9 @@ class PioneerAVR:
 
     def set_source_dict(self, sources):
         """Manually set source id<->name translation tables."""
+        self._set_query_sources(False)
         source_name_to_id = {}
         merge(source_name_to_id, sources)
-        self._set_query_sources(False)
         self._source_name_to_id = source_name_to_id
         self._source_id_to_name = {v: k for k, v in sources.items()}
 
