@@ -963,7 +963,8 @@ class PioneerAVR:
                             )
 
                     elif (
-                        response.property_name is not None and response.zone not in [Zones.ALL, None]
+                        response.property_name is not None and
+                        response.zone not in [Zones.ALL, None]
                     ):
                         # Set default value first otherwise we hit an exception
                         current_value.setdefault(response.zone.value, {})
@@ -1016,7 +1017,7 @@ class PioneerAVR:
                                 ],
                                 response.raw,
                             )
-                    
+
                     # Set updated_zones if response.zone is not None and not already added
                     if response.zone is not None and response.zone not in updated_zones:
                         updated_zones.add(response.zone)
