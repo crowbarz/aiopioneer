@@ -948,12 +948,10 @@ class PioneerAVR:
                     response.base_property(self)
                 elif response.base_property is not None:
                     current_value = getattr(self, response.base_property)
-                    if response.property_name is None and response.zone is not None:
+                    if response.property_name is None and response.zone not in [Zones.ALL, None]:
                         if current_value.get(response.zone.value) is not response.value:
                             current_value[response.zone.value] = response.value
                             setattr(self, response.base_property, current_value)
-                            if response.zone.value not in updated_zones:
-                                updated_zones.add(response.zone)
                             _LOGGER.info(
                                 "Zone %s: %s: %s (%s)",
                                 response.zone.value,
@@ -965,7 +963,8 @@ class PioneerAVR:
                             )
 
                     elif (
-                        response.property_name is not None and response.zone is not None
+                        response.property_name is not None and
+                        response.zone not in [Zones.ALL, None]
                     ):
                         # Set default value first otherwise we hit an exception
                         current_value.setdefault(response.zone.value, {})
@@ -980,8 +979,6 @@ class PioneerAVR:
                                 response.property_name
                             ] = response.value
                             setattr(self, response.base_property, current_value)
-                            if response.zone.value not in updated_zones:
-                                updated_zones.add(response.zone.value)
                             _LOGGER.info(
                                 "Zone %s: %s.%s: %s (%s)",
                                 response.zone.value,
@@ -993,7 +990,7 @@ class PioneerAVR:
                                 response.raw,
                             )
 
-                    elif response.property_name is None and response.zone is None:
+                    elif response.property_name is None and response.zone in [Zones.ALL, None]:
                         if current_value is not response.value:
                             current_value = response.value
                             setattr(self, response.base_property, current_value)
@@ -1020,6 +1017,10 @@ class PioneerAVR:
                                 ],
                                 response.raw,
                             )
+
+                    # Set updated_zones if response.zone is not None and not already added
+                    if response.zone is not None and response.zone not in updated_zones:
+                        updated_zones.add(response.zone)
 
                 # Add any requested extra commands to run
                 if response.command_queue is not None:
