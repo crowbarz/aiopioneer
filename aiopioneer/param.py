@@ -2,7 +2,7 @@
 # pylint: disable=too-many-lines
 
 from collections import OrderedDict
-from .const import Zones
+from .const import Zones, AvrGenerations
 
 PARAM_IGNORED_ZONES = "ignored_zones"
 PARAM_COMMAND_DELAY = "command_delay"
@@ -21,6 +21,7 @@ PARAM_ZONE_1_SOURCES = "zone_1_sources"  ## All possible valid input sources for
 PARAM_ZONE_2_SOURCES = "zone_2_sources"  ## All possible valid input sources for Zone 2
 PARAM_ZONE_3_SOURCES = "zone_3_sources"  ## All possible valid input sources for Zone 3
 PARAM_HDZONE_SOURCES = "hdzone_sources"  ## All possible valid input sources for HDZone
+PARAM_AVR_GENERATION = "avr_generation"  ## The specific AVR generation, defaults to None
 PARAM_ZONE_SOURCES = {
     Zones.Z1: PARAM_ZONE_1_SOURCES,
     Zones.Z2: PARAM_ZONE_2_SOURCES,
@@ -181,6 +182,7 @@ PARAM_DEFAULTS = {
     PARAM_VIDEO_RESOLUTION_MODES: ["0", "1", "3", "4", "5", "6", "7", "8", "9"],
     PARAM_MHL_SOURCE: None,
     PARAM_TUNER_AM_FREQ_STEP: None,
+    PARAM_AVR_GENERATION: None,
 }
 
 PARAMS_ALL = PARAM_DEFAULTS.keys()
@@ -1373,5 +1375,8 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         ),
         (r"^VSX-45", {PARAM_HDZONE_VOLUME_REQUIREMENTS: []}),
         (r"^VSX-830", {PARAM_HDZONE_VOLUME_REQUIREMENTS: []}),
+        (r"^VSX-828", {PARAM_AVR_GENERATION: AvrGenerations.FY10}),
+        (r"^VSX-1120", {PARAM_AVR_GENERATION: AvrGenerations.FY10}),
+        (r"^VSX-922", {PARAM_AVR_GENERATION: AvrGenerations.FY13})
     ]
 )
