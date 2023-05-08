@@ -948,7 +948,10 @@ class PioneerAVR:
                     response.base_property(self)
                 elif response.base_property is not None:
                     current_value = getattr(self, response.base_property)
-                    if response.property_name is None and response.zone not in [Zones.ALL, None]:
+                    if response.property_name is None and response.zone not in [
+                        Zones.ALL,
+                        None,
+                    ]:
                         if current_value.get(response.zone.value) is not response.value:
                             current_value[response.zone.value] = response.value
                             setattr(self, response.base_property, current_value)
@@ -962,10 +965,10 @@ class PioneerAVR:
                                 response.raw,
                             )
 
-                    elif (
-                        response.property_name is not None and
-                        response.zone not in [Zones.ALL, None]
-                    ):
+                    elif response.property_name is not None and response.zone not in [
+                        Zones.ALL,
+                        None,
+                    ]:
                         # Set default value first otherwise we hit an exception
                         current_value.setdefault(response.zone.value, {})
                         if (
@@ -990,7 +993,10 @@ class PioneerAVR:
                                 response.raw,
                             )
 
-                    elif response.property_name is None and response.zone in [Zones.ALL, None]:
+                    elif response.property_name is None and response.zone in [
+                        Zones.ALL,
+                        None,
+                    ]:
                         if current_value is not response.value:
                             current_value = response.value
                             setattr(self, response.base_property, current_value)
@@ -1180,7 +1186,7 @@ class PioneerAVR:
             since_updated_str = "never"
             if self._last_updated:
                 since_updated = now - self._last_updated
-                since_updated_str = "%.3f s ago" % since_updated
+                since_updated_str = f"{since_updated:.3f} s ago"
 
             if full_update or not scan_interval or since_updated > scan_interval:
                 _LOGGER.info(
