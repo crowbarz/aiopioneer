@@ -145,6 +145,9 @@ class PioneerAVR:
         self._update_lock = asyncio.Lock()
         self._request_lock = asyncio.Lock()
         self._update_event = asyncio.Event()
+        self._response_event = asyncio.Event()
+        self._response_queue = []
+        self._queue_responses = False
         self._reconnect = True
         self._full_update = True
         self._last_updated = None
@@ -420,6 +423,12 @@ class PioneerAVR:
                 parse_result = self._parse_response(response)
                 updated_zones = parse_result.get("updated_zones")
 
+                ## Queue raw response and signal response handler
+                if self._queue_responses:
+                    self._response_queue.append(response)
+                    self._response_event.set()
+                    ## Do not yield, process all responses first
+
                 # Detect Main Zone power on for volume workaround
                 action = ""
                 power_on_volume_bounce = self._params[PARAM_POWER_ON_VOLUME_BOUNCE]
@@ -584,9 +593,40 @@ class PioneerAVR:
         await self._writer.drain()
         self._last_command = time.time()
 
+    async def _wait_for_response(
+        self, command: str, response_prefix: str, ignore_error: bool
+    ) -> str | bool:
+        """Wait for a response to a request."""
+        debug_command = self._params[PARAM_DEBUG_COMMAND]
+
+        while True:
+            await self._response_event.wait()
+            self._response_event.clear()
+            for response in self._response_queue:
+                if response.startswith(response_prefix):
+                    if debug_command:
+                        _LOGGER.debug(
+                            "AVR command %s returned response: %s", command, response
+                        )
+                    return response
+                if response.startswith("E"):
+                    err = f"AVR command {command} returned error: {response}"
+                    if ignore_error is None:
+                        raise RuntimeError(err)
+                    if ignore_error:
+                        _LOGGER.debug(err)
+                    else:
+                        _LOGGER.error(err)
+                    return False
+            self._response_queue = []
+
     async def send_raw_request(
-        self, command, response_prefix, ignore_error=None, rate_limit=True
-    ):
+        self,
+        command: str,
+        response_prefix: str,
+        ignore_error: bool | None = None,
+        rate_limit: bool = True,
+    ) -> str | bool | None:
         """Send a raw command to the AVR and return the response."""
         debug_command = self._params[PARAM_DEBUG_COMMAND]
         if debug_command:
@@ -597,31 +637,25 @@ class PioneerAVR:
                 ignore_error,
                 rate_limit,
             )
-        async with self._request_lock:
+        async with self._request_lock:  ## Only send one request at a time
+            self._response_queue = []
+            self._queue_responses = (
+                True  ## Start queueing responses before sending command
+            )
+            self._response_event.clear()
             await self.send_raw_command(command, rate_limit=rate_limit)
-            while True:
-                response = await self._read_response(timeout=self._timeout)
+            try:
+                response = await safe_wait_for(
+                    self._wait_for_response(command, response_prefix, ignore_error),
+                    timeout=self._timeout,
+                )
+            except asyncio.TimeoutError:  # response timer expired
+                _LOGGER.debug("AVR command %s timed out", command)
+                response = None
 
-                # Check response
-                if response is None:
-                    _LOGGER.debug("AVR command %s timed out", command)
-                    return None
-                elif response.startswith(response_prefix):
-                    if debug_command:
-                        _LOGGER.debug(
-                            "AVR command %s returned response: %s", command, response
-                        )
-                    return response
-                elif response.startswith("E"):
-                    err = f"AVR command {command} returned error: {response}"
-                    if ignore_error is None:
-                        raise RuntimeError(err)
-                    elif not ignore_error:
-                        _LOGGER.error(err)
-                        return False
-                    elif ignore_error:
-                        _LOGGER.debug(err)
-                        return False
+            self._queue_responses = False
+            self._response_queue = []
+            return response
 
     async def send_command(
         self,
@@ -755,6 +789,7 @@ class PioneerAVR:
         self._set_query_sources(True)
         self._source_name_to_id = {}
         self._source_id_to_name = {}
+        await self._command_queue_wait()  ## wait for command queue to complete
         _LOGGER.info("querying AVR source names")
         async with self._update_lock:
             for src_id in range(self._params[PARAM_MAX_SOURCE_ID] + 1):
