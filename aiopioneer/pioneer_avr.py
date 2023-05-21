@@ -1393,7 +1393,9 @@ class PioneerAVR:
         Automatically calculate the AM frequency step by stepping the frequency
         up and then down.
         """
-        _LOGGER.debug(">> PioneerAVR._calculate_am_frequency_step() ")
+        debug_command = self._params[PARAM_DEBUG_COMMAND]
+        if debug_command:
+            _LOGGER.debug(">> PioneerAVR._calculate_am_frequency_step() ")
         # Try sending the query_tuner_am_step command first.
         await self.send_command(command="query_tuner_am_step", ignore_error=True)
 
