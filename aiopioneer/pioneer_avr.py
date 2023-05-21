@@ -468,7 +468,6 @@ class PioneerAVR:
                 break
             except Exception as exc:  # pylint: disable=broad-except
                 _LOGGER.error("listener exception%s: %s", action, str(exc))
-                print(exc)
                 # continue listening on exception
 
         if running and self.available:
