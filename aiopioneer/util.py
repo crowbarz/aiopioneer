@@ -1,5 +1,6 @@
 """ Pioneer AVR utils. """
 import asyncio
+import contextlib
 import socket
 import random
 import logging
@@ -84,14 +85,14 @@ async def safe_wait_for(awt, timeout=None):
         await asyncio.wait({task}, timeout=timeout)
         if task.done():
             return task.result()
-        else:  # timeout
-            try:
-                task.cancel()
-                await task
-            except asyncio.CancelledError:
-                ## TODO: what if wait_for is cancelled when waiting for task to be cancelled?
-                pass
-            raise asyncio.TimeoutError()
+        ## timed out
+        try:
+            task.cancel()
+            await task
+        except asyncio.CancelledError:
+            ## TODO: what if wait_for is cancelled when waiting for task to be cancelled?
+            pass
+        raise asyncio.TimeoutError()
     except asyncio.CancelledError as exc:
         raise exc
 
