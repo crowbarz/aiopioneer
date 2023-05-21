@@ -111,6 +111,7 @@ The CLI accepts all API commands, as well as the following:
 | `get_scan_interval` | | Return the current scan interval.
 | `set_volume_level` | _volume_level_ (int) | Set the volume level for the current zone.
 | `select_source` | _source_name_ | Set the input source for the current zone.
+| `set_tuner_frequency` | _band_ _frequency_ | Set the tuner band and (optionally) frequency.
 | `send_raw_command` | _raw_command_ | Send the raw command _raw_command_ to the AVR.
 
 **NOTE:** The CLI interface may change in the future, and should not be used in scripts. Use the Python API instead.

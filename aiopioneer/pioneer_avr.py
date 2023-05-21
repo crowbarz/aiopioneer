@@ -1317,6 +1317,16 @@ class PioneerAVR:
             _LOGGER.debug("command queue finished")
         return True
 
+    async def _command_queue_wait(self):
+        """Wait for command queue to be flushed."""
+        if self._params[PARAM_DEBUG_COMMAND]:
+            _LOGGER.debug(">> PioneerAVR._command_queue_wait()")
+        if self._command_queue_task:
+            if self._command_queue_task.done():
+                self._command_queue_task = None
+            else:
+                await asyncio.wait([self._command_queue_task])
+
     async def _command_queue_cancel(self):
         """Cancel any pending commands and the task itself."""
         debug_command = self._params[PARAM_DEBUG_COMMAND]
@@ -1353,32 +1363,27 @@ class PioneerAVR:
         _LOGGER.debug(">> PioneerAVR._calculate_am_frequency_step() ")
         # Try sending the query_tuner_am_step command first.
         await self.send_command(command="query_tuner_am_step", ignore_error=True)
+
         # Check if freq step is None, band is set to AM and current source is
         # set to tuner for at least one zone. This function otherwise does not work.
         if (
             self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None
-            and self.tuner.get("band") == "A"
-            and ("02" in list([v for k, v in self.source.items()]))
+            and self.tuner.get("band") == "AM"
+            and "02" in self.source.values()
         ):
-            current_f = self.tuner.get("frequency")
-            await self.send_command("increase_tuner_frequency", ignore_error=False)
-            # Sleep for 1s to allow for other updates and the responses to be parsed
-            await asyncio.sleep(1)
-            new_f = self.tuner.get("frequency")
-
-            while new_f == current_f:
-                _LOGGER.warning(
-                    "Frequency increment has not changed value, %s old %s",
-                    new_f,
-                    current_f,
-                )
-                # Wait until new_f != current_f
+            current_freq = self.tuner.get("frequency")
+            new_freq = current_freq
+            count = 5
+            while new_freq == current_freq and count > 0:
                 await self.send_command("increase_tuner_frequency", ignore_error=False)
-                # Sleep for 1s to allow for other updates and the responses to be parsed
-                await asyncio.sleep(1)
-                new_f = self.tuner.get("frequency")
+                new_freq = self.tuner.get("frequency")
+                count -= 1
+            if new_freq == current_freq and count == 0:
+                _LOGGER.warning("unable to calculate tuner AM frequency step")
 
-            self._params[PARAM_TUNER_AM_FREQ_STEP] = new_f - current_f
+            self._system_params[PARAM_TUNER_AM_FREQ_STEP] = new_freq - current_freq
+            self._update_params()
+            await asyncio.sleep(1)  ## wait for tuner command to complete
             await self.send_command("decrease_tuner_frequency", ignore_error=True)
 
         return True
@@ -1594,77 +1599,87 @@ class PioneerAVR:
                 ignore_error=False,
             )
 
-    async def set_tuner_frequency(self, band: str, frequency: float, zone: str = "1"):
-        """Set the tuner frequency and band."""
+    async def _set_tuner_band(self, band: str = "FM", zone: str = "1"):
+        """Set the tuner band."""
 
+        band = band.upper()
         if (self.tuner.get("band") is None) or (self.power.get(zone) is False):
-            raise SystemError(
-                "Tuner functions are currently not available. "
-                "Ensure Zone is on and source is set to tuner."
+            raise SystemError("tuner is unavailable")
+        if band not in ["AM", "FM"]:
+            raise ValueError(f"tuner band {band} is invalid")
+
+        # Set the tuner band
+        if band != self.tuner.get("band"):
+            await self.send_command(
+                {"AM": "set_tuner_band_am", "FM": "set_tuner_band_fm"}[band],
+                zone,
+                ignore_error=False,
             )
 
-        if band.upper() == "AM" and self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None:
-            raise ValueError(
-                "AM Tuner functions are currently not available. "
-                "Ensure 'am_frequency_step' is set."
-            )
-
-        if band.upper() != "AM" and band.upper() != "FM":
-            raise ValueError("The provided band is invalid")
-
-        if band.upper() == "AM" and self.tuner.get("band") == "F":
-            band = "A"
-            # Set the tuner band
-            await self.send_command("set_tuner_band_am", zone, ignore_error=False)
-        elif band.upper() == "FM" and self.tuner.get("band") == "A":
-            band = "F"
-            # Set the tuner band
-            await self.send_command("set_tuner_band_fm", zone, ignore_error=False)
-
-        # Round the frequency to nearest 0.05 if band is FM, otherwise divide
-        # frequency by 9 using modf so that the remainder is split out, then
-        # select the whole number response and times by 9
-        if band.upper() == "FM":
-            frequency = round(0.05 * round(frequency / 0.05), 2)
-        elif band.upper() == "AM":
-            frequency = (
-                math.modf(frequency / self._params.get(PARAM_TUNER_AM_FREQ_STEP))[1]
-            ) * self._params.get(PARAM_TUNER_AM_FREQ_STEP)
-
-        resp = True
-        increasing = False
-        # Continue adjusting until frequency is set
-        while True:
-            to_freq = str(frequency)
-            current_freq = str(self.tuner.get("frequency"))
-
-            if increasing:
-                if current_freq >= to_freq:
-                    break
-            else:
-                if current_freq <= to_freq:
-                    break
-
-            # Decrease frequency
-            if self.tuner.get("frequency") > frequency:
-                resp = await self.send_command(
-                    "decrease_tuner_frequency", ignore_error=False
+    async def _step_tuner_frequency(self, band: str, frequency: float):
+        """Step the tuner frequency until requested frequency is reached."""
+        current_freq = self.tuner.get("frequency")
+        if band == "AM":
+            if (freq_step := self._params.get(PARAM_TUNER_AM_FREQ_STEP)) is None:
+                raise ValueError(
+                    "AM Tuner functions are currently not available. "
+                    "Ensure 'am_frequency_step' is set."
                 )
-                increasing = False
-            else:
+
+            # Divide frequency by freq_step using modf so that the remainder is
+            # split out, then select the whole number response and times by
+            # freq_step
+            # pylint: disable=unsubscriptable-object
+            target_freq = (math.modf(frequency / freq_step)[1]) * freq_step
+        else:
+            # Round the frequency to nearest 0.05
+            target_freq = 0.05 * round(frequency / 0.05)
+
+        # Continue adjusting until frequency is set
+        resp = True
+        count = 100  ## Stop stepping after maximum steps
+        if target_freq > current_freq:
+            while current_freq < target_freq and count > 0 and resp:
                 resp = await self.send_command(
                     "increase_tuner_frequency", ignore_error=False
                 )
-                increasing = True
+                if resp is None:  ## ignore timeouts
+                    resp = True
+                current_freq = self.tuner.get("frequency")
+                count -= 1
+        elif target_freq < current_freq:
+            while current_freq > target_freq and count > 0 and resp:
+                resp = await self.send_command(
+                    "decrease_tuner_frequency", ignore_error=False
+                )
+                if resp is None:  ## ignore timeouts
+                    resp = True
+                current_freq = self.tuner.get("frequency")
+                count -= 1
 
-            if not resp:
-                # On error, exit loop
-                break
+        if count == 0:
+            _LOGGER.warning("maximum frequency step count exceeded")
+            resp = False
+        return resp
 
-        if resp:
+    async def set_tuner_frequency(
+        self, band: str, frequency: float = None, zone: str = "1"
+    ):
+        """Set the tuner frequency and band."""
+        band = band.upper()
+        await self._set_tuner_band(band, zone)
+        await self._command_queue_wait()  ## wait for AM step to be calculated
+
+        if frequency is None:
             return True
-        else:
-            return False
+        elif not isinstance(frequency, float):
+            raise ValueError(f"invalid frequency {frequency}")
+        elif (band == "AM" and not 530 < frequency < 1700) or (
+            band == "FM" and not 87.5 < frequency < 108.0
+        ):
+            raise ValueError(f"frequency {frequency} out of range for band {band}")
+
+        return await self._step_tuner_frequency(band, frequency)
 
     async def set_tuner_preset(self, tuner_class: str, preset: int, zone="1"):
         """Set the tuner preset."""

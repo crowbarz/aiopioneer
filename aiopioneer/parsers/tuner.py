@@ -35,16 +35,17 @@ class TunerParsers():
         """Defines a AM Tuner Frequency response parser."""
         freq = float(raw)
         parsed = []
+        queue_commands = None
+        if _param.get(PARAM_TUNER_AM_FREQ_STEP) is None:
+            queue_commands = ["_calculate_am_frequency_step"]
+
         parsed.append(Response(raw=raw,
                             response_command=command,
                             base_property="tuner",
                             property_name="band",
                             zone=zone,
                             value="AM",
-                            queue_commands=None))
-
-        if _param.get(PARAM_TUNER_AM_FREQ_STEP) is None:
-            parsed[0].queue_commands=["_calculate_am_frequency_step"]
+                            queue_commands=queue_commands))
 
         parsed.append(Response(raw=raw,
                             response_command=command,
@@ -89,7 +90,7 @@ class TunerParsers():
         parsed = []
         parsed.append(Response(raw=raw,
                             response_command=command,
-                            base_property="_params",
+                            base_property="_system_params",
                             property_name=PARAM_TUNER_AM_FREQ_STEP,
                             zone=zone,
                             value=9 if raw == "0" else 10,

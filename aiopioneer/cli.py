@@ -202,7 +202,17 @@ async def cli_main(args: argparse.Namespace):
         elif cmd == "select_source":
             source = arg if arg else ""
             await pioneer.select_source(source, zone=zone)
-        elif cmd == "send_raw_command" or cmd == ">":
+        elif cmd == "set_tuner_frequency":
+            subargs = arg.split(" ", maxsplit=1)
+            try:
+                band = subargs[0]
+                frequency = float(subargs[1]) if len(subargs) > 1 else None
+                await pioneer.set_tuner_frequency(band, frequency, zone=zone)
+            except Exception as exc:  # pylint: disable=broad-except
+                print(
+                    f'ERROR: Invalid parameters for set_tuner_frequency "{arg}": {exc}'
+                )
+        elif cmd in ["send_raw_command", ">"]:
             if arg:
                 print(f"Sending raw command {arg}")
                 await pioneer.send_raw_command(arg)
