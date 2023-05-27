@@ -190,6 +190,12 @@ class PioneerAVR:
         self._params = {}
         merge(self._params, self._default_params)
         merge(self._params, self._user_params, force_overwrite=True)
+        if (
+            PARAM_TUNER_AM_FREQ_STEP in self._params
+            and PARAM_TUNER_AM_FREQ_STEP in self._system_params
+        ):
+            ## defer PARAM_TUNER_AM_FREQ_STEP to _user_params if specified
+            del self._system_params[PARAM_TUNER_AM_FREQ_STEP]
         merge(self._params, self._system_params)
 
     def set_user_params(self, params=None):
