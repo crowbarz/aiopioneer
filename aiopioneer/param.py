@@ -317,6 +317,12 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
             r"^VSX-930",
             {
                 PARAM_POWER_ON_VOLUME_BOUNCE: True,
+                PARAM_EXTRA_LISTENING_MODES: {
+                    "0040": ["Dolby Surround", True, True],
+                    "0041": ["EXTENDED STEREO", True, True],
+                    "0100": ["ADVANCED SURROUND (cyclic)", True, True],
+                },
+                PARAM_DISABLED_LISTENING_MODES: ["0112"],
             },
         ),
         (
