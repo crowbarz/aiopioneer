@@ -978,7 +978,7 @@ class PioneerAVR:
 
     def _call_zone_callbacks(self, zones: list[Zones | str] = None):
         """Call callbacks to signal updated zone(s)."""
-        if zones is None:
+        if not zones or Zones.ALL in zones:
             zones = self.zones
         for zone in zones:
             if str(zone) in self._zone_callback:
