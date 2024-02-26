@@ -31,7 +31,7 @@ PARAM_ZONE_SOURCES = {
 ## All possible valid speaker system settings for HDZone volume functions to be available
 PARAM_HDZONE_VOLUME_REQUIREMENTS = "hdzone_volume_requirements"
 ## All possible speaker system modes. Different AVR models will have different available options
-PARAM_SPEAKER_SYSTEM_MODES = "amplifier_speaker_system_modes"
+PARAM_SPEAKER_SYSTEM_MODES = "amp_speaker_system_modes"
 ## All valid video resolution modes
 PARAM_VIDEO_RESOLUTION_MODES = "video_resolution_modes"
 PARAM_MHL_SOURCE = "mhl_source"
@@ -39,13 +39,13 @@ PARAM_MHL_SOURCE = "mhl_source"
 PARAM_ENABLED_FUNCTIONS = "enabled_functions"
 ## If set to True, the AVR won't auto query additional attributes in high level
 ## categories, instead we rely on the AVR returning them as they are changed.
-PARAM_DISABLE_AUTO_QUERY = "disable_autoquery"
+PARAM_DISABLE_AUTO_QUERY = "disable_auto_query"
 ## A list containing all the IDs of listening modes that should be disabled
-PARAM_DISABLED_LISTENING_MODES = "disabled_amplifier_listening_modes"
+PARAM_DISABLED_LISTENING_MODES = "disabled_amp_listening_modes"
 ## A list containing additional listening modes. Overrides.
 ## Display names should be unique.
 ## key: [display_name, 2ch_source_bool, multichannel_source_bool]
-PARAM_EXTRA_LISTENING_MODES = "extra_amplifier_listening_modes"
+PARAM_EXTRA_LISTENING_MODES = "extra_amp_listening_modes"
 ## Tuner step for AM frequencies. If None, calculate automatically when tuner is first used
 PARAM_TUNER_AM_FREQ_STEP = "am_frequency_step"
 
