@@ -545,20 +545,24 @@ class InformationParsers():
         return parsed
 
     @staticmethod
-    def device_display_information(raw: str, _param: dict, zone = None, command = "FL") -> list:
+    def device_display_information(
+        raw: str, _params: dict, zone=None, command="FL"
+    ) -> list:
         """Response parser for the current text on the AVR display"""
 
-        hex_chars = [raw[i:i+2] for i in range(0, len(raw), 2)]
-        value = ""
-        for hex_char in hex_chars:
-            value = value + chr(int(hex_char, 16))
-
+        display_str = "".join(
+            [chr(int(raw[i : i + 2], 16)) for i in range(2, len(raw) - 2, 2)]
+        )
         parsed = []
-        parsed.append(Response(raw=raw,
-                            response_command=command,
-                            base_property="amp",
-                            property_name="display",
-                            zone=zone,
-                            value=value,
-                            queue_commands=None))
+        parsed.append(
+            Response(
+                raw=raw,
+                response_command=command,
+                base_property="amp",
+                property_name="display",
+                zone=zone,
+                value=display_str,
+                queue_commands=None,
+            )
+        )
         return parsed
