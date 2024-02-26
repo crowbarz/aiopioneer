@@ -895,7 +895,7 @@ class PioneerAVR:
                 listening_modes |= {mode_id: mode_details}
                 listening_mode_names.append(mode_details[0])
 
-        _LOGGER.info("determining available listening modes: %s", listening_modes)
+        _LOGGER.info("determining available listening modes")
         self._system_params[PARAM_LISTENING_MODES] = listening_modes
         self._update_params()
 
