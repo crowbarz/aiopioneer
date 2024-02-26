@@ -1,4 +1,5 @@
 """AVR device parameters."""
+
 # pylint: disable=too-many-lines
 
 from collections import OrderedDict
@@ -16,7 +17,6 @@ PARAM_DEBUG_LISTENER = "debug_listener"
 PARAM_DEBUG_RESPONDER = "debug_responder"
 PARAM_DEBUG_UPDATER = "debug_updater"
 PARAM_DEBUG_COMMAND = "debug_command"
-PARAM_QUERY_SOURCES = "query_sources"
 PARAM_ZONE_1_SOURCES = "zone_1_sources"  ## All possible valid input sources for Zone 1
 PARAM_ZONE_2_SOURCES = "zone_2_sources"  ## All possible valid input sources for Zone 2
 PARAM_ZONE_3_SOURCES = "zone_3_sources"  ## All possible valid input sources for Zone 3
@@ -42,11 +42,20 @@ PARAM_ENABLED_FUNCTIONS = "enabled_functions"
 PARAM_DISABLE_AUTO_QUERY = "disable_autoquery"
 ## A list containing all the IDs of listening modes that should be disabled
 PARAM_DISABLED_LISTENING_MODES = "disabled_amplifier_listening_modes"
+## A list containing additional listening modes. Overrides.
+## Display names should be unique.
+## key: [display_name, 2ch_source_bool, multichannel_source_bool]
+PARAM_EXTRA_LISTENING_MODES = "extra_amplifier_listening_modes"
 ## Tuner step for AM frequencies. If None, calculate automatically when tuner is first used
 PARAM_TUNER_AM_FREQ_STEP = "am_frequency_step"
 
+## System params
+PARAM_QUERY_SOURCES = "query_sources"
+PARAM_LISTENING_MODES = "listening_modes"
+
 PARAM_DEFAULTS_SYSTEM = {
     PARAM_QUERY_SOURCES: None,
+    PARAM_LISTENING_MODES: None,
 }
 
 PARAM_DEFAULTS = {
@@ -178,6 +187,7 @@ PARAM_DEFAULTS = {
         "32": "7.2.4ch Front Pre Out",
     },
     PARAM_DISABLED_LISTENING_MODES: [],
+    PARAM_EXTRA_LISTENING_MODES: {},
     PARAM_VIDEO_RESOLUTION_MODES: ["0", "1", "3", "4", "5", "6", "7", "8", "9"],
     PARAM_MHL_SOURCE: None,
     PARAM_TUNER_AM_FREQ_STEP: None,

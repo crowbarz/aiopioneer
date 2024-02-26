@@ -1,22 +1,41 @@
 """Pioneer AVR response parsers for audio parameters."""
 
-from aiopioneer.const import Zones, LISTENING_MODES, TONE_MODES, TONE_DB_VALUES
+from aiopioneer.const import Zones, TONE_MODES, TONE_DB_VALUES
+from aiopioneer.param import PARAM_LISTENING_MODES
 from .response import Response
 
-class AudioParsers():
+
+class AudioParsers:
     """Audio related parsers."""
 
     @staticmethod
-    def listening_mode(raw: str, _param: dict, zone = Zones.Z1, command = "SR") -> list:
+    def listening_mode(raw: str, params: dict, zone=Zones.Z1, command="SR") -> list:
         """Defines a listening mode response parser for Zone 1 returning string values"""
+        listening_mode = params.get(PARAM_LISTENING_MODES, {}).get(raw)
+        mode_name = listening_mode[0] if isinstance(listening_mode, list) else raw
         parsed = []
-        parsed.append(Response(raw=raw,
-                            response_command=command,
-                            base_property="listening_mode",
-                            property_name=None,
-                            zone=zone,
-                            value=LISTENING_MODES.get(raw)[0],
-                            queue_commands=None))
+        parsed.append(
+            Response(
+                raw=raw,
+                response_command=command,
+                base_property="listening_mode",
+                property_name=None,
+                zone=zone,
+                value=mode_name,
+                queue_commands=None,
+            )
+        )
+        parsed.append(
+            Response(
+                raw=raw,
+                response_command=command,
+                base_property="listening_mode_raw",
+                property_name=None,
+                zone=zone,
+                value=raw,
+                queue_commands=None,
+            )
+        )
         return parsed
 
     @staticmethod

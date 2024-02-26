@@ -1,4 +1,5 @@
 """Pioneer AVR API (async)."""
+
 # pylint: disable=relative-beyond-top-level disable=too-many-lines
 
 
@@ -24,16 +25,18 @@ from .param import (
     PARAM_DEBUG_RESPONDER,
     PARAM_DEBUG_UPDATER,
     PARAM_DEBUG_COMMAND,
-    PARAM_QUERY_SOURCES,
     PARAM_DEFAULTS,
     PARAM_DEFAULTS_SYSTEM,
     PARAM_MODEL_DEFAULTS,
     PARAM_DISABLED_LISTENING_MODES,
+    PARAM_EXTRA_LISTENING_MODES,
     PARAM_VIDEO_RESOLUTION_MODES,
     PARAM_ZONE_SOURCES,
     PARAM_ENABLED_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY,
     PARAM_TUNER_AM_FREQ_STEP,
+    PARAM_QUERY_SOURCES,
+    PARAM_LISTENING_MODES,
 )
 from .commands import PIONEER_COMMANDS
 from .util import (
@@ -114,6 +117,7 @@ class PioneerAVR:
         self.mute = {}
         self.source = {}
         self.listening_mode = ""
+        self.listening_mode_raw = ""
         self.media_control_mode = {}
 
         # FUNC: TONE
@@ -205,6 +209,7 @@ class PioneerAVR:
         if params is not None:
             merge(self._user_params, params)
         self._update_params()
+        self._update_listening_modes()
 
     def _set_default_params_model(self):
         """Set default parameters based on device model."""
@@ -857,31 +862,42 @@ class PioneerAVR:
         if source_name in self._source_name_to_id:
             self._source_name_to_id.pop(source_name)
 
-    def get_sound_modes(self, zone):
-        """Return list of valid sound modes."""
-        # Check if the zone is the main zone or not, listening modes aren't supported on other zones
+    def get_zone_listening_modes(self, zone) -> dict[str, str] | None:
+        """Return dict of valid listening modes and names for zone."""
+        ## Listening modes only supported on main zone
         if zone == "1":
-            # Now check if the current input info is multi channel or not
-            if self.audio.get("input_multichannel"):
-                return list(
-                    [
-                        v[0]
-                        for k, v in LISTENING_MODES.items()
-                        if bool(v[2])
-                        and k not in self._params.get(PARAM_DISABLED_LISTENING_MODES)
-                    ]
+            multichannel = self.audio.get("input_multichannel")
+            listening_modes = self._params.get(PARAM_LISTENING_MODES, {})
+            zone_listening_modes = {}
+            for mode_id, mode_details in listening_modes.items():
+                if (multichannel and mode_details[2]) or (
+                    not multichannel and mode_details[1]
+                ):
+                    zone_listening_modes |= {mode_id: mode_details[0]}
+            return zone_listening_modes
+        return None
+
+    def _update_listening_modes(self):
+        """Update list of valid listening modes for AVR."""
+        extra_listening_modes = self._params.get(PARAM_EXTRA_LISTENING_MODES, {})
+        disabled_listening_modes = self._params.get(PARAM_DISABLED_LISTENING_MODES)
+        listening_modes = {}
+        listening_mode_names = []
+
+        for mode_id, mode_details in (LISTENING_MODES | extra_listening_modes).items():
+            if mode_id in disabled_listening_modes:
+                pass
+            elif mode_details[0] in listening_mode_names:
+                _LOGGER.error(
+                    "ignored duplicate listening mode name: %s", mode_details[0]
                 )
             else:
-                return list(
-                    [
-                        v[0]
-                        for k, v in LISTENING_MODES.items()
-                        if bool(v[1])
-                        and k not in self._params.get(PARAM_DISABLED_LISTENING_MODES)
-                    ]
-                )
-        else:
-            return None
+                listening_modes |= {mode_id: mode_details}
+                listening_mode_names.append(mode_details[0])
+
+        _LOGGER.info("determining available listening modes: %s", listening_modes)
+        self._system_params[PARAM_LISTENING_MODES] = listening_modes
+        self._update_params()
 
     def get_ipod_control_commands(self):
         """Return a list of all valid iPod control modes."""
@@ -934,6 +950,7 @@ class PioneerAVR:
         await asyncio.sleep(0)  # yield to updater task
 
         self._set_default_params_model()  # Update default params for this model
+        self._update_listening_modes()  # Update valid listening modes
 
         # It is possible to query via HTML page if all info is not available
         # via API commands: http://avr/1000/system_information.asp
@@ -1491,31 +1508,17 @@ class PioneerAVR:
         """Set the listening mode using the predefined list of options in params."""
         self._check_zone(zone)
 
-        if self.audio.get("input_multichannel"):
-            listening_mode_key = [
-                k
-                for k, v in LISTENING_MODES.items()
-                if bool(v[2]) and v[0] == listening_mode
-            ]
-        else:
-            listening_mode_key = [
-                k
-                for k, v in LISTENING_MODES.items()
-                if bool(v[1]) and v[0] == listening_mode
-            ]
-
-        if len(listening_mode_key) == 0:
-            raise ValueError(f"Listening mode {listening_mode} not available")
-
-        if len(listening_mode_key) > 1:
-            raise ValueError(f"Duplicate listening modes found for {listening_mode}")
-
-        return await self.send_command(
-            "set_listening_mode",
-            zone,
-            prefix=listening_mode_key[0],
-            ignore_error=False,
-        )
+        listening_modes = self.get_zone_listening_modes(zone)
+        if listening_modes:
+            for mode_id, mode_name in listening_modes.items():
+                if mode_name == listening_mode:
+                    return await self.send_command(
+                        "set_listening_mode",
+                        zone,
+                        prefix=mode_id,
+                        ignore_error=False,
+                    )
+        raise ValueError(f"listening mode {listening_mode} not available")
 
     async def set_panel_lock(self, panel_lock: str, zone="1"):
         """Set the panel lock."""
