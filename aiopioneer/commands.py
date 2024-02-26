@@ -221,6 +221,7 @@ PIONEER_COMMANDS = {
     "query_dsp_virtual_wide": {"1": ["?VWD", "VWD"]},
     "query_system_speaker_system": {"1": ["?SSF", "SSF"]},
     "set_system_speaker_system": {"1": ["?SSF", "SSF"]},
+    "query_display_information": {"1": ["?FL", "FL"]},
     "query_audio_information": {"1": ["?AST", "AST"]},
     "query_video_information": {"1": ["?VST", "VST"]},
     "operation_tuner_edit": {"1": "02TN"},

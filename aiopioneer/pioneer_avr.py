@@ -1084,10 +1084,12 @@ class PioneerAVR:
                         )  # These should only queue if the AVR is on
                     )
                 ):
+                    ## TODO: not sure why check self.tuner here?
                     if self.tuner is not None:
                         self.queue_command("query_listening_mode")
                         self.queue_command("query_audio_information")
                         self.queue_command("query_video_information")
+                        self.queue_command("query_display_information")
                     # Queue a full update
                     if self.tuner is None:
                         self.queue_command("FULL_UPDATE")
@@ -1232,6 +1234,7 @@ class PioneerAVR:
                 self._last_updated = now
                 self._full_update = False
                 try:
+                    ## TODO: update audio, video and display information
                     for zone in self.zones:
                         await self._update_zone(zone)
                     if full_update:
