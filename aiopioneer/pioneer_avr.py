@@ -1116,7 +1116,6 @@ class PioneerAVR:
                         self.queue_command("query_listening_mode")
                         self.queue_command("query_audio_information")
                         self.queue_command("query_video_information")
-                        self.queue_command("query_display_information")
                     # Queue a full update
                     if self.tuner is None:
                         self.queue_command("FULL_UPDATE")
