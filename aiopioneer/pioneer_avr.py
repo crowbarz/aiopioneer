@@ -28,15 +28,17 @@ from .param import (
     PARAM_DEFAULTS,
     PARAM_DEFAULTS_SYSTEM,
     PARAM_MODEL_DEFAULTS,
-    PARAM_DISABLED_LISTENING_MODES,
     PARAM_EXTRA_LISTENING_MODES,
+    PARAM_DISABLED_LISTENING_MODES,
+    PARAM_ENABLED_LISTENING_MODES,
     PARAM_VIDEO_RESOLUTION_MODES,
     PARAM_ZONE_SOURCES,
     PARAM_ENABLED_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY,
     PARAM_TUNER_AM_FREQ_STEP,
     PARAM_QUERY_SOURCES,
-    PARAM_LISTENING_MODES,
+    PARAM_ALL_LISTENING_MODES,
+    PARAM_AVAILABLE_LISTENING_MODES,
 )
 from .commands import PIONEER_COMMANDS
 from .util import (
@@ -862,12 +864,14 @@ class PioneerAVR:
         if source_name in self._source_name_to_id:
             self._source_name_to_id.pop(source_name)
 
-    def get_zone_listening_modes(self, zone) -> dict[str, str] | None:
+    def get_zone_listening_modes(
+        self, zone: str | Zones = Zones.Z1
+    ) -> dict[str, str] | None:
         """Return dict of valid listening modes and names for zone."""
         ## Listening modes only supported on main zone
-        if zone == "1":
+        if Zones(zone) == Zones.Z1:
             multichannel = self.audio.get("input_multichannel")
-            listening_modes = self._params.get(PARAM_LISTENING_MODES, {})
+            listening_modes = self._params.get(PARAM_AVAILABLE_LISTENING_MODES, {})
             zone_listening_modes = {}
             for mode_id, mode_details in listening_modes.items():
                 if (multichannel and mode_details[2]) or (
@@ -879,24 +883,30 @@ class PioneerAVR:
 
     def _update_listening_modes(self):
         """Update list of valid listening modes for AVR."""
-        extra_listening_modes = self._params.get(PARAM_EXTRA_LISTENING_MODES, {})
+        all_listening_modes = LISTENING_MODES | self._params.get(
+            PARAM_EXTRA_LISTENING_MODES, {}
+        )
         disabled_listening_modes = self._params.get(PARAM_DISABLED_LISTENING_MODES)
-        listening_modes = {}
-        listening_mode_names = []
+        enabled_listening_modes = self._params.get(PARAM_ENABLED_LISTENING_MODES)
+        available_listening_modes = {}
+        available_listening_mode_names = []
 
-        for mode_id, mode_details in (LISTENING_MODES | extra_listening_modes).items():
-            if mode_id in disabled_listening_modes:
+        for mode_id, mode_details in all_listening_modes.items():
+            if mode_id in disabled_listening_modes or (
+                enabled_listening_modes and mode_id not in enabled_listening_modes
+            ):
                 pass
-            elif mode_details[0] in listening_mode_names:
+            elif mode_details[0] in available_listening_mode_names:
                 _LOGGER.error(
                     "ignored duplicate listening mode name: %s", mode_details[0]
                 )
             else:
-                listening_modes |= {mode_id: mode_details}
-                listening_mode_names.append(mode_details[0])
+                available_listening_modes |= {mode_id: mode_details}
+                available_listening_mode_names.append(mode_details[0])
 
         _LOGGER.info("determining available listening modes")
-        self._system_params[PARAM_LISTENING_MODES] = listening_modes
+        self._system_params[PARAM_ALL_LISTENING_MODES] = all_listening_modes
+        self._system_params[PARAM_AVAILABLE_LISTENING_MODES] = available_listening_modes
         self._update_params()
 
     def get_ipod_control_commands(self):

@@ -40,22 +40,29 @@ PARAM_ENABLED_FUNCTIONS = "enabled_functions"
 ## If set to True, the AVR won't auto query additional attributes in high level
 ## categories, instead we rely on the AVR returning them as they are changed.
 PARAM_DISABLE_AUTO_QUERY = "disable_auto_query"
-## A list containing all the IDs of listening modes that should be disabled
-PARAM_DISABLED_LISTENING_MODES = "disabled_amp_listening_modes"
-## A list containing additional listening modes. Overrides.
-## Display names should be unique.
+## List of additional listening modes. Overrides LISTENING_MODES. Non-unique
+## display names will be ignored
 ## key: [display_name, 2ch_source_bool, multichannel_source_bool]
 PARAM_EXTRA_LISTENING_MODES = "extra_amp_listening_modes"
+## List of enabled listening mode IDs. If specified, then no listening modes
+## are added by default
+PARAM_ENABLED_LISTENING_MODES = "enabled_amp_listening_modes"
+## List of disabled listening mode IDs. Override IDs that are also specified in
+## PARAM_EXTRA_LISTENING_MODES
+PARAM_DISABLED_LISTENING_MODES = "disabled_amp_listening_modes"
 ## Tuner step for AM frequencies. If None, calculate automatically when tuner is first used
 PARAM_TUNER_AM_FREQ_STEP = "am_frequency_step"
 
 ## System params
 PARAM_QUERY_SOURCES = "query_sources"
-PARAM_LISTENING_MODES = "listening_modes"
+## List of all possible listening modes
+PARAM_ALL_LISTENING_MODES = "all_listening_modes"
+## List of listening modes available for selection on AVR
+PARAM_AVAILABLE_LISTENING_MODES = "available_listening_modes"
 
 PARAM_DEFAULTS_SYSTEM = {
     PARAM_QUERY_SOURCES: None,
-    PARAM_LISTENING_MODES: None,
+    PARAM_AVAILABLE_LISTENING_MODES: None,
 }
 
 PARAM_DEFAULTS = {
@@ -186,8 +193,9 @@ PARAM_DEFAULTS = {
         "31": "7.2.4ch SB Pre Out",
         "32": "7.2.4ch Front Pre Out",
     },
-    PARAM_DISABLED_LISTENING_MODES: [],
     PARAM_EXTRA_LISTENING_MODES: {},
+    PARAM_DISABLED_LISTENING_MODES: [],
+    PARAM_ENABLED_LISTENING_MODES: [],
     PARAM_VIDEO_RESOLUTION_MODES: ["0", "1", "3", "4", "5", "6", "7", "8", "9"],
     PARAM_MHL_SOURCE: None,
     PARAM_TUNER_AM_FREQ_STEP: None,
@@ -322,7 +330,20 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
                     "0041": ["EXTENDED STEREO", True, True],
                     "0100": ["ADVANCED SURROUND (cyclic)", True, True],
                 },
-                PARAM_DISABLED_LISTENING_MODES: ["0112"],
+                PARAM_ENABLED_LISTENING_MODES: [
+                    "0005",
+                    "0006",
+                    "0007",
+                    "0008",
+                    "0009",
+                    "0010",
+                    "0016",
+                    "0040",
+                    "0041",
+                    "0100",
+                    "0151",
+                    "0212",
+                ],
             },
         ),
         (
