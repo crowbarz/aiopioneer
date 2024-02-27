@@ -126,6 +126,10 @@ async def cli_main(args: argparse.Namespace):
                 print(f'ERROR: Invalid JSON source dict: "{arg}""')
         elif cmd == "get_source_list":
             print(f"Source list: {json.dumps(pioneer.get_source_list())}")
+        elif cmd == "get_zone_listening_modes":
+            print(
+                f"Available listening modes: {json.dumps(pioneer.get_zone_listening_modes())}"
+            )
         elif cmd == "get_params":
             print(f"Params: {json.dumps(pioneer.get_params())}")
         elif cmd == "get_user_params":
@@ -141,6 +145,7 @@ async def cli_main(args: argparse.Namespace):
         elif cmd == "get_tone":
             audio_attrs = {
                 "listening_mode": pioneer.listening_mode,
+                "listening_mode_raw": pioneer.listening_mode_raw,
                 "media_control_mode": pioneer.media_control_mode,
                 "tone": pioneer.tone,
             }
@@ -202,6 +207,9 @@ async def cli_main(args: argparse.Namespace):
         elif cmd == "select_source":
             source = arg if arg else ""
             await pioneer.select_source(source, zone=zone)
+        elif cmd == "set_listening_mode":
+            listening_mode = arg if arg else ""
+            await pioneer.set_listening_mode(listening_mode)
         elif cmd == "set_tuner_frequency":
             subargs = arg.split(" ", maxsplit=1)
             try:
