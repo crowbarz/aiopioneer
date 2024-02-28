@@ -19,6 +19,20 @@ class Zones(Enum):
         return self.value
 
 
+class AvrGenerations(Enum):
+    """AVR Generations"""
+    FY10 = "FY10"
+    FY11 = "FY11"
+    FY12 = "FY12"
+    FY13 = "FY13"
+    FY14 = "FY14"
+    FY15 = "FY15"
+    FY16 = "FY16"
+
+    def __str__(self) -> str:
+        return self.value
+
+
 # Listening modes is a dict with a nested array for the following structure:
 # key: [display_name, 2ch_source_bool, multichannel_source_bool]
 LISTENING_MODES = {
