@@ -1,4 +1,6 @@
-"""Main aiopioneer parsing classes and functions"""
+"""aiopioneer parsing classes and functions."""
+
+import logging
 
 from aiopioneer.const import Zones
 from .system import SystemParsers
@@ -8,6 +10,8 @@ from .dsp import DspParsers
 from .information import InformationParsers
 from .video import VideoParsers
 from .settings import SettingsParsers
+
+_LOGGER = logging.getLogger(__name__)
 
 RESPONSE_DATA = [
     ["PWR", SystemParsers.power, Zones.Z1],
@@ -40,10 +44,10 @@ RESPONSE_DATA = [
     ["SVB", SystemParsers.mac_address, Zones.ALL],
     ["RGD", SystemParsers.avr_model, Zones.ALL],
     ["SSI", SystemParsers.software_version, Zones.ALL],
-
+    ##
     ["AUA", SystemParsers.audio_parameter_prohibitation, Zones.Z1],
     ["AUB", SystemParsers.audio_parameter_working, Zones.Z1],
-
+    ##
     ["SSL", SettingsParsers.home_menu_status, Zones.ALL],
     ["SSJ", SettingsParsers.mcacc_diagnostic_status, Zones.ALL],
     ["SUU", SettingsParsers.standing_wave_setting, Zones.ALL],
@@ -78,7 +82,7 @@ RESPONSE_DATA = [
     ["SVA", SettingsParsers.osd_overlay, Zones.ALL],
     ["ADS", SettingsParsers.additional_service, Zones.ALL],
     ["SUT", SettingsParsers.user_lock, Zones.ALL],
-
+    ##
     ["CLV", AudioParsers.channel_levels, Zones.Z1],
     ["ZGE", AudioParsers.channel_levels, Zones.Z2],
     ["ZHE", AudioParsers.channel_levels, Zones.Z3],
@@ -89,12 +93,12 @@ RESPONSE_DATA = [
     ["ZGA", AudioParsers.tone, Zones.Z2],
     ["ZGB", AudioParsers.tone_bass, Zones.Z2],
     ["ZGC", AudioParsers.tone_treble, Zones.Z2],
-
+    ##
     ["FRF", TunerParsers.frequency_fm, Zones.ALL],
     ["FRA", TunerParsers.frequency_am, Zones.ALL],
     ["PR", TunerParsers.preset, Zones.ALL],
     ["SUQ", TunerParsers.am_frequency_step, Zones.ALL],
-
+    ##
     ["MC", DspParsers.mcacc_setting, Zones.ALL],
     ["IS", DspParsers.phasecontrol, Zones.ALL],
     ["VSP", DspParsers.virtual_speakers, Zones.ALL],
@@ -130,11 +134,11 @@ RESPONSE_DATA = [
     ["VDP", DspParsers.virtual_depth, Zones.ALL],
     ["VWD", DspParsers.virtual_wide, Zones.ALL],
     ["ARB", DspParsers.rendering_mode, Zones.ALL],
-
+    ##
     ["AST", InformationParsers.audio_information, Zones.ALL],
     ["VST", InformationParsers.video_information, Zones.ALL],
     ["FL", InformationParsers.device_display_information, Zones.ALL],
-
+    ##
     ["VTB", VideoParsers.video_converter, Zones.Z1],
     ["VTC", VideoParsers.video_resolution, Zones.Z1],
     ["VTD", VideoParsers.pure_cinema, Zones.Z1],
@@ -155,6 +159,7 @@ RESPONSE_DATA = [
     ["VTS", VideoParsers.aspect, Zones.Z1],
 ]
 
+
 def process_raw_response(raw_resp: str, params: dict) -> list:
     """Processes a raw response and looks up required functions from RESPONSE_DATA."""
     match_resp = next((r for r in RESPONSE_DATA if raw_resp.startswith(r[0])), None)
@@ -163,10 +168,9 @@ def process_raw_response(raw_resp: str, params: dict) -> list:
         parse_func = match_resp[1]
         parse_zone = match_resp[2]
         return parse_func(
-            raw_resp[len(parse_cmd):],
-            params,
-            zone=parse_zone,
-            command=parse_cmd
+            raw_resp[len(parse_cmd) :], params, zone=parse_zone, command=parse_cmd
         )
-    else:
-        pass ## No error handling as not all responses have been captured by aiopioneer.
+
+    ## No error handling as not all responses have been captured by aiopioneer.
+    # _LOGGER.debug("unparsed raw response ignored: %s", raw_resp)
+    return []
