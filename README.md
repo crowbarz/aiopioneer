@@ -1,9 +1,9 @@
 <!-- markdownlint-disable MD033 MD041 -->
 
-Python library for controlling a Pioneer AVI via its built-in API.
+Python library for controlling a Pioneer AVR via its built-in API.
 
 Used by the [pioneer_async](https://github.com/crowbarz/ha-pioneer_async) integration for Home Assistant, which was inspired by the [original Pioneer Home Assistant integration](https://www.home-assistant.io/integrations/pioneer/).
-Tested on a VSX-930 (Main Zone and HDZone outputs).
+Originally developed and tested on a VSX-930 (Main Zone and HDZone outputs) but has since been [tested on a larger set of models by the community](https://github.com/crowbarz/ha-pioneer_async/issues/20).
 
 ## Features
 
@@ -48,16 +48,18 @@ The default parameters listed below are for AVR models that do not match any cus
 | `volume_step_only` | bool | `false` | On some AVRs (eg. VSX-S510), setting the volume level is not supported natively by the API. This option emulates setting the volume level using volume up and down commands.
 | `ignore_volume_check` | bool | `false` | Don't check volume when determining whether a zone exists on the AVR. Useful for AVRs with an HDZone that passes through audio.
 | `zone_1_sources` | list | `[]` | (>0.4) Customises the available sources for use with Zone 1. Defaults to all available sources.
-| `zone_2_sources` | list | `["04", "06", "15", "26", "38", "53", "41", "44", "45", "17", "13", "05", "01", "02", "33", "46", "47", "99", "10"]` | Customises the available sources for use with Zone 2 (some AVRs do not support all sources).
-| `zone_3_sources` | list | `["04", "06", "15", "26", "38", "53", "41", "44", "45", "17", "13", "05", "01", "02", "33", "46", "47", "99", "10"]` | Customises the available sources for use with Zone 3 (some AVRs do not support all sources).
-| `hdzone_sources` | list | `["25", "04", "06", "10", "15", "19", "20", "21", "22", "23", "24", "34", "35", "26", "38", "53", "41", "44", "45", "17", "13", "33", "31", "46", "47", "48"]` | Customises the available sources for use with HDZone (some AVRs do not support all sources).
+| `zone_2_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with Zone 2 (some AVRs do not support all sources).
+| `zone_3_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with Zone 3 (some AVRs do not support all sources).
+| `hdzone_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61)` | Customises the available sources for use with HDZone (some AVRs do not support all sources).
 | `hdzone_volume_requirements` | list | `["13", "15", "05", "25"]` | A list of sources that HDZone must be set to for volume control, some AVRs do not support HDZone volume at all (see `ignore_volume_check` above) and some only allow control of certain sources.
-| `amplifier_speaker_system_modes` | dict | `....` | Customises the names of speaker system modes. Different generations of AVR will name zones slighty differently. For example, the SC-LX57 names speaker system mode `15` as `5.1ch Bi-Amp + ZONE2` however this can also be called `5.2ch Bi-Amp + HDZONE` on newer AVRs.
-| `disabled_amplifier_listening_modes` | list | `[]` | A list of disabled listening modes / sound modes, all modes are enabled by default, some AVRs have definitions already to disable unsupported modes. If you try to change sound mode to a mode that has not been enabled, the AVR will return an error (usually `E02`).
+| `amp_speaker_system_modes` | dict | `....` | Customises the names of speaker system modes. Different generations of AVR will name zones slighty differently. For example, the SC-LX57 names speaker system mode `15` as `5.1ch Bi-Amp + ZONE2` however this can also be called `5.2ch Bi-Amp + HDZONE` on newer AVRs.
+| `extra_amp_listening_modes` | dict | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/const.py#L24) | (>0.5) Additional listening modes that are added to the list of all possible listening modes for the AVR. This list is used to decode the listening mode ID returned by the AVR. See the source for the format for listening mode definition.
+| `enabled_amp_listening_modes` | list | `[]` | (>0.5) A list of listening mode IDs to be made available for selection. If specified, then no listening mode IDs will be included by default. All enabled source names must be unique, and duplicated names are ignored. The additional listening modes must be actually supported by the AVR, and will return an error (usually `E02`) when an unsupported listening mode is selected. This list is predefined for some AVRs, and specifying this param manually will override the model specific default disable list.
+| `disabled_amp_listening_modes` | list | `[]` | A list of listening mode IDs to be disabled. Listening mode IDs that are also specified in `enabled_amp_listening_modes` will be disabled. This list is predefined for some AVRs, and specifying this param manually will override the model specific default disable list.
 | `video_resolution_modes` | list | `['0', '1', '3', '4', '5', '6', '7', '8', '9']` | Sets the available video resolutions. Not all AVRs support the same resolution settings. This defaults to all of the latest resolutions from FY16.
 | `mhl_source` | string | `null` | Sets the MHL source ID. This is used for media controls. This information cannot be queried automatically
 | `enabled_functions` | list | `["amp", "dsp", "tuner", "tone", "channels", "video", "system", "audio"]` | Change the functions that are enabled by the API, adding more functions will increase the amount of time it takes to complete a full init and update.
-| `disable_autoquery` | bool | `false` | Setting to `true` will disable auto queries on init for all functions apart from basic functionality (power, source, volume and mute). If you only need those functions, you can set this to `true`
+| `disable_auto_query` | bool | `false` | Setting to `true` will disable auto queries on init for all functions apart from basic functionality (power, source, volume and mute). If you only need those functions, you can set this to `true`
 | `am_frequency_step` | int | `null` | Optional setting to configure the AM frequency step. If this is set to `null`, a function is queued to detect this information by stepping up and down the frequency when the tuner is first used while set to AM.
 | `debug_listener` | bool | `false` | Enables additional debug logging for the listener task.
 | `debug_responder` | bool | `false` | Enables additional debug logging for the responder task.
@@ -92,6 +94,7 @@ The CLI accepts all API commands, as well as the following:
 | `build_source_dict` | | Query the sources from the AVR.
 | `set_source_dict` | _sources_ (JSON) | Manually set the sources to _sources_.
 | `get_source_list` | | Return the current set of available source names that can be used with the `select_source` command.
+| `get_zone_listening_modes` | | (>0.5) Return the current set of available listening modes.
 | `get_params` | | Return the currently active set of parameters.
 | `get_user_params` | | Return the currently active set of user parameters.
 | `set_user_params` | _params_ (JSON) | Set the user parameters to _params_.
@@ -111,6 +114,7 @@ The CLI accepts all API commands, as well as the following:
 | `get_scan_interval` | | Return the current scan interval.
 | `set_volume_level` | _volume_level_ (int) | Set the volume level for the current zone.
 | `select_source` | _source_name_ | Set the input source for the current zone.
+| `set_listening_mode` | _listening_mode_ | (>0.5) Set the listening mode to the specified mode.
 | `set_tuner_frequency` | _band_ _frequency_ | Set the tuner band and (optionally) frequency.
 | `send_raw_command` | _raw_command_ | Send the raw command _raw_command_ to the AVR.
 
@@ -154,6 +158,11 @@ The CLI accepts all API commands, as well as the following:
 - Document PioneerAVR API
 
 ## Breaking changes
+
+- **0.5**\
+  `get_sound_modes` was renamed to `get_zone_listening_modes` to reflect Pioneer AVR terminology.\
+  `disable_autoquery` was renamed `disable_auto_query` to better match the underlying variable name.\
+  `amplifier_speaker_system_modes` and `disabled_amplifier_listening_modes` were shortened to `amp_speaker_system_modes` and `disabled_amp_listening_modes` respectively.
 
 - **0.4**\
   `zone_z_sources` was renamed `hdzone_sources` for even more consistency.
