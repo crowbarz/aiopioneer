@@ -1201,8 +1201,8 @@ class PioneerAVR:
                 if len(PIONEER_COMMANDS.get(comm)) == 1:
                     await self.send_command(comm, zone, ignore_error=True)
 
-        # Zone 1 or 2 updates only, only available if zone 1 is on
-        if (zone in ("1", "2")) and bool(self.power.get("1")):
+        # Zone 2 updates only, only available if zone 1 is on
+        if zone == "2" and bool(self.power.get("1")):
             for comm in query_commands:
                 if len(PIONEER_COMMANDS.get(comm)) == 2:
                     await self.send_command(comm, zone, ignore_error=True)
