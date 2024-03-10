@@ -1415,6 +1415,8 @@ class PioneerAVR:
         if self._params[PARAM_DEBUG_COMMAND]:
             _LOGGER.debug(">> PioneerAVR.queue_command(%s)", command)
         if not skip_if_queued or command not in self._command_queue:
+            if command == "FULL_UPDATE":
+                self._full_update = True
             if insert_at >= 0:
                 self._command_queue.insert(insert_at, command)
             else:
