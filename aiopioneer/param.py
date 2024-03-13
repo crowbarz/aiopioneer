@@ -87,6 +87,7 @@ PARAM_DEFAULTS = {
         "video",
         "system",
         "audio",
+        "display",
     ],
     PARAM_DISABLE_AUTO_QUERY: False,
     PARAM_ZONE_1_SOURCES: [],
@@ -344,6 +345,8 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
                     "0151",
                     "0212",
                 ],
+                # Zone 1 volume returns E02 if only HDZone is on
+                PARAM_IGNORE_VOLUME_CHECK: True,
             },
         ),
         (
