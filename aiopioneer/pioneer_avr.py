@@ -442,12 +442,12 @@ class PioneerAVR:
                     self._response_event.set()
                     ## Do not yield, process all responses first
 
-                # Detect Main Zone power on for volume workaround
+                ## Detect Zone 1 power on for volume workaround
                 action = ""
                 power_on_volume_bounce = self._params[PARAM_POWER_ON_VOLUME_BOUNCE]
                 if power_on_volume_bounce and self._power_zone_1 is not None:
                     if not self._power_zone_1 and self.power.get("1"):
-                        # Main zone powered on, schedule bounce task
+                        ## Zone 1 powered on, schedule bounce task
                         _LOGGER.info("scheduling main zone volume workaround")
                         self.queue_command(
                             "volume_up", skip_if_queued=False, insert_at=0
@@ -741,7 +741,8 @@ class PioneerAVR:
                     added_zones = True
                     self.max_volume["1"] = self._params[PARAM_MAX_VOLUME]
             else:
-                raise RuntimeError("Main Zone not found on AVR")
+                raise RuntimeError("Zone 1 not found on AVR")
+
             if await self.send_command("query_power", "2", ignore_error=True) and (
                 ignore_volume_check
                 or await self.send_command("query_volume", "2", ignore_error=True)
@@ -1249,12 +1250,13 @@ class PioneerAVR:
             since_updated_str = "never"
             if self._last_updated:
                 since_updated = now - self._last_updated
-                since_updated_str = f"{since_updated:.3f} s ago"
+                since_updated_str = f"{since_updated:.3f}s ago"
 
             if full_update or not scan_interval or since_updated > scan_interval:
                 _LOGGER.info(
-                    "updating AVR status (full=%s, last updated %s)",
+                    "updating AVR status (full=%s, zones=%s, last updated %s)",
                     full_update,
+                    self.zones,
                     since_updated_str,
                 )
                 self._last_updated = now
