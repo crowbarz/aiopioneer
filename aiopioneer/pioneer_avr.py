@@ -165,7 +165,7 @@ class PioneerAVR:
         self._reconnect_task = None
         self._updater_task = None
         self._command_queue_task = None
-        self._initial_query = True
+        self._defer_initial_update = None
         # Stores a list of commands to run after receiving an event from the AVR
         self._command_queue = []
         self._power_zone_1 = None
@@ -740,6 +740,12 @@ class PioneerAVR:
                     self.zones.append("1")
                     added_zones = True
                     self.max_volume["1"] = self._params[PARAM_MAX_VOLUME]
+                    await asyncio.sleep(0)  # yield to listener task
+
+                    if not self.power["1"] and self._defer_initial_update is False:
+                        ## Defer initial update if Zone 1 is not powered on
+                        _LOGGER.debug("deferring initial update")
+                        self._defer_initial_update = True
             else:
                 raise RuntimeError("Zone 1 not found on AVR")
 
@@ -773,8 +779,6 @@ class PioneerAVR:
                     self.max_volume["Z"] = self._params[PARAM_MAX_VOLUME_ZONEX]
         if added_zones or force_update:
             await self.update(full=True)
-
-        self._initial_query = False
 
     async def update_zones(self):
         """Update zones from ignored_zones and re-query zones."""
@@ -948,20 +952,25 @@ class PioneerAVR:
 
     async def query_device_info(self):
         """Query device information from Pioneer AVR."""
-        if self.model or self.mac_addr or self.software_version:
-            return
-        self.model = "unknown"
-        self.mac_addr = "unknown"
-        self.software_version = "unknown"
-
-        _LOGGER.info("querying device information from Pioneer AVR")
-        await self.send_command("system_query_model", ignore_error=True)
-        await self.send_command("system_query_mac_addr", ignore_error=True)
-        await self.send_command("system_query_software_version", ignore_error=True)
+        _LOGGER.info("querying device information")
+        commands = [k for k in PIONEER_COMMANDS if k.startswith("system_query_")]
+        for command in commands:
+            await self.send_command(command, ignore_error=True)
         await asyncio.sleep(0)  # yield to updater task
+
+        ## Retry device info query on initial update
+        if not self.zones and self._defer_initial_update is None:
+            _LOGGER.debug("deferring device information query")
+            self._defer_initial_update = False
 
         self._set_default_params_model()  # Update default params for this model
         self._update_listening_modes()  # Update valid listening modes
+
+    def queue_device_info_query(self):
+        """Queue device information query from Pioneer AVR."""
+        commands = [k for k in PIONEER_COMMANDS if k.startswith("system_query_")]
+        for command in commands:
+            self.queue_command(command)
 
         # It is possible to query via HTML page if all info is not available
         # via API commands: http://avr/1000/system_information.asp
@@ -970,6 +979,7 @@ class PioneerAVR:
         # https://github.com/home-assistant/architecture/blob/master/adr/0004-webscraping.md
         #
         # VSX-930 will report model and software version, but not MAC address.
+        # It will report software version only if Zone 1 is powered on.
         # It is unknown how iControlAV5 determines this on a routed network.
 
     # Callback functions
@@ -1099,10 +1109,21 @@ class PioneerAVR:
                 # Some specific overrides for the command queue, these are only
                 # requested if we are not doing a full update
                 if (
+                    response.base_property == "power"
+                    and response.value
+                    and self._defer_initial_update
+                ):
+                    ## Perform full update on first power on of Zone 1
+                    _LOGGER.info(
+                        "retrying device information query on Zone 1 first power on"
+                    )
+                    self.queue_device_info_query()
+                    self.queue_command("FULL_UPDATE")
+                    self._defer_initial_update = None
+                elif (
                     (response.response_command in ["PWR", "FN", "AUB", "AUA"])
                     and (not self._full_update)
                     and (not self._params.get(PARAM_DISABLE_AUTO_QUERY))
-                    and (not self._initial_query)
                     and (
                         self.power.get("1")
                         or self.power.get("2")
@@ -1173,13 +1194,12 @@ class PioneerAVR:
         # Check for timeouts, but ignore errors (eg. ?V will
         # return E02 immediately after power on)
 
-        if self._params.get(PARAM_DISABLE_AUTO_QUERY):
-            query_commands = []
-        else:
+        query_commands = []
+        if not self._params.get(PARAM_DISABLE_AUTO_QUERY):
             query_commands = [
                 k
                 for k in PIONEER_COMMANDS
-                if (k.startswith("query"))
+                if (k.startswith("query_"))
                 and (k.split("_")[1] in self._params.get(PARAM_ENABLED_FUNCTIONS))
             ]
 
@@ -1233,11 +1253,14 @@ class PioneerAVR:
         debug_updater = self._params[PARAM_DEBUG_UPDATER]
         if debug_updater:
             _LOGGER.debug(">> PioneerAVR._updater_update() started")
-        if self._update_lock.locked():
-            _LOGGER.debug("AVR updates locked, skipping")
-            return False
         if not self.available:
             _LOGGER.debug("AVR not connected, skipping update")
+            return False
+        if not self.zones:
+            _LOGGER.debug("AVR zones not discovered yet, skipping update")
+            return False
+        if self._update_lock.locked():
+            _LOGGER.debug("AVR updates locked, skipping update")
             return False
 
         _rc = True
