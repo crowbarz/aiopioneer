@@ -86,7 +86,7 @@ class TunerParsers:
                 property_name="class",
                 zone=zone,
                 value=t_class,
-                queue_commands=None,
+                queue_commands=["query_tuner_frequency"],
             )
         )
 
@@ -98,7 +98,7 @@ class TunerParsers:
                 property_name="preset",
                 zone=zone,
                 value=t_preset,
-                queue_commands=None,
+                queue_commands=["query_tuner_frequency"],
             )
         )
         return parsed
