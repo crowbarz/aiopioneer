@@ -101,7 +101,7 @@ PIONEER_COMMANDS = {
     "set_amp_hdmi_audio_status": {"1": ["HA", "HA"]},
     "query_amp_pqls_status": {"1": ["?PQ", "PQ"]},
     "set_amp_pqls_status": {"1": ["PQ", "PQ"]},
-    "set_amp_dimmer": {"1": ["SAA", "SAA"]},
+    "set_amp_dimmer": {"1": ["SAA", "SAA"]},  ## no query command
     "query_amp_sleep_remain_time": {"1": ["?SAB", "SAB"]},
     "set_amp_sleep_remain_time": {"1": ["SAB", "SAB"]},
     "query_tuner_frequency": {"1": ["?FR", "FR"]},
