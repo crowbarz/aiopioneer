@@ -167,7 +167,7 @@ class PioneerAVR:
         self._command_queue_task = None
         self._defer_initial_update = None
         # Stores a list of commands to run after receiving an event from the AVR
-        self._command_queue = []
+        self._command_queue: list[str] = []
         self._power_zone_1 = None
         self._source_name_to_id = {}
         self._source_id_to_name = {}
@@ -1135,6 +1135,7 @@ class PioneerAVR:
                 ):
                     ## TODO: not sure why check self.tuner here?
                     if self.tuner is not None:
+                        self.queue_command("_sleep(2)")
                         self.queue_command("query_listening_mode")
                         self.queue_command("query_audio_information")
                         self.queue_command("query_video_information")
@@ -1398,6 +1399,9 @@ class PioneerAVR:
                 await self.update(full=True)
             elif command == "_calculate_am_frequency_step":
                 await self._calculate_am_frequency_step()
+            elif command.startswith("_sleep("):
+                delay = float(command.split("(", 1)[1].split(")", 1)[0])
+                await asyncio.sleep(delay)
             else:
                 await self.send_command(command, ignore_error=True)
             self._command_queue.pop(0)
