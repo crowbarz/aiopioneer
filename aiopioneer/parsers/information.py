@@ -20,7 +20,9 @@ class InformationParsers:
     """AVR operation information parsers."""
 
     @staticmethod
-    def audio_information(raw: str, _params: dict, zone=Zones.Z1, command="AST") -> list:
+    def audio_information(
+        raw: str, _params: dict, zone=Zones.Z1, command="AST"
+    ) -> list:
         """Response parser for audio information."""
         parsed = []
 
@@ -502,7 +504,9 @@ class InformationParsers:
         return parsed
 
     @staticmethod
-    def video_information(raw: str, _params: dict, zone=Zones.Z1, command="VST") -> list:
+    def video_information(
+        raw: str, _params: dict, zone=Zones.Z1, command="VST"
+    ) -> list:
         """Response parser for video information."""
         parsed = []
 
@@ -524,7 +528,7 @@ class InformationParsers:
                 base_property="video",
                 property_name="signal_input_resolution",
                 zone=zone,
-                value=VIDEO_SIGNAL_FORMATS.get(raw[2:4]),
+                value=VIDEO_SIGNAL_FORMATS.get(raw[1:2]),
                 queue_commands=None,
             )
         )
@@ -749,7 +753,7 @@ class InformationParsers:
     ) -> list:
         """Response parser for AVR display text."""
         display_str = "".join(
-            [chr(int(raw[i : i + 2], 16)) for i in range(2, len(raw) - 2, 2)]
+            [chr(int(raw[i : i + 2], 16)) for i in range(2, len(raw) - 1, 2)]
         )
         parsed = []
         parsed.append(
