@@ -528,7 +528,7 @@ class InformationParsers:
                 base_property="video",
                 property_name="signal_input_resolution",
                 zone=zone,
-                value=VIDEO_SIGNAL_FORMATS.get(raw[1:2]),
+                value=VIDEO_SIGNAL_FORMATS.get(raw[1:3]),
                 queue_commands=None,
             )
         )
