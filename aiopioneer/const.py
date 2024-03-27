@@ -474,8 +474,8 @@ DIMMER_MODES = {
     "0": "Brightest",
     "1": "Bright",
     "2": "Dark",
-    "3": "Display Off",
-    "9": "DIMMER (cyclic)",
+    "3": "Off",
+    "9": "(cycle)",
 }
 
 MCACC_MEASUREMENT_ERROR = {
