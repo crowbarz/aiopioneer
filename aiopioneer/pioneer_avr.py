@@ -1221,13 +1221,13 @@ class PioneerAVR:
         # is powered on
         if Zones(zone) is Zones.Z1 and bool(self.power.get("1")):
             for comm in query_commands:
-                if len(PIONEER_COMMANDS.get(comm)) == 1:
+                if PIONEER_COMMANDS.get(comm).get("1"):
                     await self.send_command(comm, zone, ignore_error=True)
 
-        # Zone 2 updates only, only available if zone 1 is on
-        if Zones(zone) is Zones.Z2 and bool(self.power.get("1")):
+        # Zone 2 updates only, only available if zone 2 is on
+        if Zones(zone) is Zones.Z2 and bool(self.power.get("2")):
             for comm in query_commands:
-                if len(PIONEER_COMMANDS.get(comm)) == 2:
+                if PIONEER_COMMANDS.get(comm).get("2"):
                     await self.send_command(comm, zone, ignore_error=True)
 
         # CHANNEL updates are handled differently as it requires more complex
