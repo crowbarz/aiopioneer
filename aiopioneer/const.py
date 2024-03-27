@@ -375,7 +375,7 @@ AUDIO_SIGNAL_INPUT_FREQ = {
     "04": "96kHz",
     "05": "176.4kHz",
     "06": "192kHz",
-    "07": "---",
+    # "07": "---",
     "32": "2.8MHz",
     "33": "5.6MHz",
 }
@@ -383,7 +383,7 @@ AUDIO_SIGNAL_INPUT_FREQ = {
 AUDIO_WORKING_PQLS = {"0": "off", "1": "2h", "2": "Multi-channel", "3": "Bitstream"}
 
 VIDEO_SIGNAL_INPUT_TERMINAL = {
-    "0": "---",
+    # "0": "---",
     "1": "VIDEO",
     "2": "S-VIDEO",
     "3": "COMPONENT",
@@ -392,7 +392,7 @@ VIDEO_SIGNAL_INPUT_TERMINAL = {
 }
 
 VIDEO_SIGNAL_FORMATS = {
-    "00": "---",
+    # "00": "---",
     "01": "480/60i",
     "02": "576/50i",
     "03": "480/60p",
@@ -413,14 +413,14 @@ VIDEO_SIGNAL_FORMATS = {
 }
 
 VIDEO_SIGNAL_ASPECTS = {
-    "0": "---",
+    # "0": "---",
     "1": "4:3",
     "2": "16:9",
     "3": "14:9",
 }
 
 VIDEO_SIGNAL_COLORSPACE = {
-    "0": "---",
+    # "0": "---",
     "1": "RGB Limit",
     "2": "RGB Full",
     "3": "YcbCr444",
@@ -429,7 +429,7 @@ VIDEO_SIGNAL_COLORSPACE = {
 }
 
 VIDEO_SIGNAL_BITS = {
-    "0": "---",
+    # "0": "---",
     "1": "24bit (8bit*3)",
     "2": "30bit (10bit*3)",
     "3": "36bit (12bit*3)",
@@ -437,7 +437,7 @@ VIDEO_SIGNAL_BITS = {
 }
 
 VIDEO_SIGNAL_EXT_COLORSPACE = {
-    "0": "---",
+    # "0": "---",
     "1": "Standard",
     "2": "xvYCC601",
     "3": "xvYCC709",
@@ -447,7 +447,7 @@ VIDEO_SIGNAL_EXT_COLORSPACE = {
 }
 
 VIDEO_SIGNAL_3D_MODES = {
-    "00": "---",
+    # "00": "---",
     "01": "Frame packing",
     "02": "Field alternative",
     "03": "Line alternative",
