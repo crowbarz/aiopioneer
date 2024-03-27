@@ -1609,42 +1609,43 @@ class PioneerAVR:
         treble: int = None,
         bass: int = None,
         zone: Zones | str = Zones.Z1,
-    ) -> bool:
+    ) -> bool | None:
         """Set the tone settings for a given zone."""
-        # Check the zone supports tone settings
-        ## TODO: Refactor to convert to dB directly instead of using TONE_MODES
+        ## Check the zone supports tone settings and that inputs are within range
         rc = True
-        if self.tone.get(str(zone)) is not None:
-            if tone is not None:
+        if self.tone.get(str(zone)) is None:
+            return None
+        if not -6 <= treble <= 6:
+            raise ValueError(f"invalid treble value: {treble}")
+        if not -6 <= bass <= 6:
+            raise ValueError(f"invalid bass value: {bass}")
+
+        if tone is not None:
+            rc = await self.send_command(
+                "set_tone_mode",
+                zone,
+                self._get_parameter_key_from_value(tone, TONE_MODES),
+                ignore_error=False,
+            )
+        ## Set treble and bass only if zone tone status is set to "On"
+        if rc and self.tone.get(str(zone), {}).get("status") == "On":
+            treble_str = f"{str(treble)}dB"
+            bass_str = f"{str(bass)}dB"
+            if treble is not None:
                 rc = await self.send_command(
-                    "set_tone_mode",
+                    "set_tone_treble",
                     zone,
-                    self._get_parameter_key_from_value(tone, TONE_MODES),
+                    self._get_parameter_key_from_value(treble_str, TONE_DB_VALUES),
                     ignore_error=False,
                 )
-            # These actions only work if zone tone is set to "ON"
-            if rc and self.tone.get(str(zone)) == "ON":
-                if treble is not None:
-                    rc = await self.send_command(
-                        "set_tone_treble",
-                        zone,
-                        self._get_parameter_key_from_value(
-                            str(treble), TONE_DB_VALUES, loose_match=True
-                        ),
-                        ignore_error=False,
-                    )
-                if rc and bass is not None:
-                    rc = await self.send_command(
-                        "set_tone_bass",
-                        zone,
-                        self._get_parameter_key_from_value(
-                            str(bass), TONE_DB_VALUES, loose_match=True
-                        ),
-                        ignore_error=False,
-                    )
-            return rc
-
-        return False
+            if rc and bass is not None:
+                rc = await self.send_command(
+                    "set_tone_bass",
+                    zone,
+                    self._get_parameter_key_from_value(bass_str, TONE_DB_VALUES),
+                    ignore_error=False,
+                )
+        return bool(rc)
 
     async def set_amp_settings(
         self,
