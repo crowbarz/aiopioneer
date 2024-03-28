@@ -53,6 +53,7 @@ from .const import (
     Zones,
     DEFAULT_PORT,
     VERSION,
+    SOURCE_TUNER,
     LISTENING_MODES,
     DIMMER_MODES,
     TONE_MODES,
@@ -1474,7 +1475,7 @@ class PioneerAVR:
         if (
             self._params.get(PARAM_TUNER_AM_FREQ_STEP) is None
             and self.tuner.get("band") == "AM"
-            and "02" in self.source.values()
+            and SOURCE_TUNER in self.source.values()
         ):
             current_freq = self.tuner.get("frequency")
             new_freq = current_freq

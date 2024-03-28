@@ -9,6 +9,7 @@ from aiopioneer.param import (
     PARAM_SPEAKER_SYSTEM_MODES,
 )
 from aiopioneer.const import (
+    SOURCE_TUNER,
     MEDIA_CONTROL_SOURCES,
     SPEAKER_MODES,
     HDMI_AUDIO_MODES,
@@ -48,7 +49,7 @@ class SystemParsers:
         raw = "".join(filter(str.isnumeric, raw))  # select only numeric values from raw
         parsed = []
         command_queue = []
-        if raw == "02":
+        if raw == SOURCE_TUNER:
             command_queue.append("query_tuner_frequency")
             command_queue.append("query_tuner_preset")
             if params.get(PARAM_TUNER_AM_FREQ_STEP) is None:

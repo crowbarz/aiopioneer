@@ -19,6 +19,8 @@ class Zones(Enum):
         return self.value
 
 
+SOURCE_TUNER = "02"
+
 # Listening modes is a dict with a nested array for the following structure:
 # key: [display_name, 2ch_source_bool, multichannel_source_bool]
 LISTENING_MODES = {
