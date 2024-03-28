@@ -60,6 +60,29 @@ PARAM_ALL_LISTENING_MODES = "all_listening_modes"
 ## List of listening modes available for selection on AVR
 PARAM_AVAILABLE_LISTENING_MODES = "available_listening_modes"
 
+DEFAULT_PARAM_ENABLED_FUNCTIONS = [
+    "amp",
+    "dsp",
+    "tuner",
+    "tone",
+    "channels",
+    "video",
+    "system",
+    "audio",
+    "display",
+]
+
+PARAM_ENABLED_FUNCTIONS_NO_VIDEO = [
+    "amp",
+    "dsp",
+    "tuner",
+    "tone",
+    "channels",
+    "system",
+    "audio",
+    "display",
+]
+
 PARAM_DEFAULTS_SYSTEM = {
     PARAM_QUERY_SOURCES: None,
     PARAM_AVAILABLE_LISTENING_MODES: None,
@@ -78,17 +101,7 @@ PARAM_DEFAULTS = {
     PARAM_DEBUG_RESPONDER: False,
     PARAM_DEBUG_UPDATER: False,
     PARAM_DEBUG_COMMAND: False,
-    PARAM_ENABLED_FUNCTIONS: [
-        "amp",
-        "dsp",
-        "tuner",
-        "tone",
-        "channels",
-        "video",
-        "system",
-        "audio",
-        "display",
-    ],
+    PARAM_ENABLED_FUNCTIONS: DEFAULT_PARAM_ENABLED_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY: False,
     PARAM_ZONE_1_SOURCES: [],
     PARAM_ZONE_2_SOURCES: [
@@ -346,6 +359,7 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
                 ],
                 # Zone 1 volume returns E02 if only HDZone is on
                 PARAM_IGNORE_VOLUME_CHECK: True,
+                PARAM_ENABLED_FUNCTIONS: PARAM_ENABLED_FUNCTIONS_NO_VIDEO,
             },
         ),
         (
