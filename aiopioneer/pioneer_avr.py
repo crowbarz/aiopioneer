@@ -11,6 +11,7 @@ import math
 
 from collections.abc import Callable
 from inspect import isfunction
+from types import MappingProxyType
 from typing import Any
 
 from .param import (
@@ -846,7 +847,7 @@ class PioneerAVR:
         """Return source id<->name translation tables."""
 
         if zone is None:
-            return self._source_name_to_id
+            return MappingProxyType(self._source_name_to_id)
         source_ids = self._params.get(PARAM_ZONE_SOURCES[Zones(zone)], [])
         return (
             self._source_name_to_id
