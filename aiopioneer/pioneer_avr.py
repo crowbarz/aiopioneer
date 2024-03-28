@@ -4,10 +4,11 @@
 
 
 import asyncio
-import time
+import copy
 import logging
 import re
 import math
+import time
 
 from collections.abc import Callable
 from inspect import isfunction
@@ -210,9 +211,7 @@ class PioneerAVR:
     def set_user_params(self, params: dict[str, Any] = None) -> None:
         """Set parameters and merge with defaults."""
         _LOGGER.debug(">> PioneerAVR.set_user_params(%s)", params)
-        self._user_params = {}
-        if params is not None:
-            merge(self._user_params, params)
+        self._user_params = copy.deepcopy(params) if params is not None else {}
         self._update_params()
         self._update_listening_modes()
 
@@ -231,23 +230,22 @@ class PioneerAVR:
                     merge(self._default_params, model_params, force_overwrite=True)
         self._update_params()
 
+    def get_param(self, param_name: str) -> Any:
+        """Get a copy of all current parameters."""
+        return self._params[param_name]
+
     def get_params(self) -> dict[str, Any]:
         """Get a copy of all current parameters."""
-        params = {}
-        merge(params, self._params)
-        return params
+        ## NOTE: can't use MappingProxyTypeType because of mutable dict values
+        return copy.deepcopy(self._params)
 
     def get_user_params(self) -> dict[str, Any]:
         """Get a copy of user parameters."""
-        params = {}
-        merge(params, self._user_params)
-        return params
+        return copy.deepcopy(self._user_params)
 
     def get_default_params(self) -> dict[str, Any]:
         """Get a copy of current default parameters."""
-        params = {}
-        merge(params, self._default_params)
-        return params
+        return copy.deepcopy(self._default_params)
 
     # Connection/disconnection
     async def connect(self, reconnect: bool = True) -> None:
@@ -798,9 +796,7 @@ class PioneerAVR:
     def set_source_dict(self, sources: dict[str, str]) -> None:
         """Manually set source id<->name translation tables."""
         self._set_query_sources(False)
-        source_name_to_id = {}
-        merge(source_name_to_id, sources)
-        self._source_name_to_id = source_name_to_id
+        self._source_name_to_id = copy.deepcopy(sources)
         self._source_id_to_name = {v: k for k, v in sources.items()}
 
     async def build_source_dict(self) -> None:
