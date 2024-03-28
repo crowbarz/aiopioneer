@@ -77,7 +77,7 @@ class SystemParsers:
                     property_name=None,
                     zone=zone,
                     value=MEDIA_CONTROL_SOURCES.get(raw),
-                    queue_commands=command_queue,
+                    queue_commands=None,
                 )
             )
         elif raw is params.get(PARAM_MHL_SOURCE):
@@ -90,7 +90,7 @@ class SystemParsers:
                     property_name=None,
                     zone=zone,
                     value="MHL",
-                    queue_commands=command_queue,
+                    queue_commands=None,
                 )
             )
         else:
@@ -102,7 +102,7 @@ class SystemParsers:
                     property_name=None,
                     zone=zone,
                     value=None,
-                    queue_commands=command_queue,
+                    queue_commands=None,
                 )
             )
         return parsed

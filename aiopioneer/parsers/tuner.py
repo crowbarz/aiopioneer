@@ -86,10 +86,9 @@ class TunerParsers:
                 property_name="class",
                 zone=zone,
                 value=t_class,
-                queue_commands=["query_tuner_frequency"],
+                queue_commands=None,  # AVR automatically sends frequency response
             )
         )
-
         parsed.append(
             Response(
                 raw=raw,
@@ -98,7 +97,7 @@ class TunerParsers:
                 property_name="preset",
                 zone=zone,
                 value=t_preset,
-                queue_commands=["query_tuner_frequency"],
+                queue_commands=None,
             )
         )
         return parsed
