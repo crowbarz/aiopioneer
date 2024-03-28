@@ -1706,7 +1706,7 @@ class PioneerAVR:
 
         return rc
 
-    async def _set_tuner_band(
+    async def _select_tuner_band(
         self, band: str = "FM", zone: Zones | str = Zones.Z1
     ) -> bool:
         """Set the tuner band."""
@@ -1779,7 +1779,7 @@ class PioneerAVR:
     ) -> bool:
         """Set the tuner frequency and band."""
         band = band.upper()
-        if not await self._set_tuner_band(band, zone):
+        if not await self._select_tuner_band(band, zone):
             return False
         await self._command_queue_wait()  ## wait for AM step to be calculated
 
@@ -1794,13 +1794,16 @@ class PioneerAVR:
 
         return await self._step_tuner_frequency(band, frequency, zone)
 
-    async def set_tuner_preset(
+    ## TODO: use TAC<CR>8TP<CR>7TP<CR>5TP<CR>0TP<CR> to direct set
+    ## TODO: add param to enable this
+
+    async def select_tuner_preset(
         self, tuner_class: str, preset: int, zone: Zones | str = Zones.Z1
     ) -> bool:
-        """Set the tuner preset."""
+        """Select the tuner preset."""
         self._check_zone(zone)
         return await self.send_command(
-            "set_tuner_preset",
+            "select_tuner_preset",
             zone,
             str(tuner_class).upper() + str(preset).upper().zfill(2),
             ignore_error=False,

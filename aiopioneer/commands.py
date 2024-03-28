@@ -115,7 +115,7 @@ PIONEER_COMMANDS = {
     "set_amp_remote_lock": {"1": ["RML", "RML"]},
     "query_tuner_preset": {"1": ["?PR", "PR"]},
     "query_tuner_am_step": {"1": ["?SUQ", "SUQ"]},
-    "set_tuner_preset": {"1": ["PR", "PR"]},
+    "select_tuner_preset": {"1": ["PR", "PR"]},
     "increase_tuner_preset": {"1": ["TPI", "PR"]},
     "decrease_tuner_preset": {"1": ["TPD", "PR"]},
     "query_video_resolution": {"1": ["?VTC", "VTC"]},
