@@ -47,7 +47,7 @@ class TunerParsers:
         parsed = []
         queue_commands = None
         if params.get(PARAM_TUNER_AM_FREQ_STEP) is None:
-            queue_commands = ["_calculate_am_frequency_step"]
+            queue_commands = ["_sleep(2)", "_calculate_am_frequency_step"]
 
         parsed.extend(
             [

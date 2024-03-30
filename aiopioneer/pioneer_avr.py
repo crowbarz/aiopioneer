@@ -201,7 +201,7 @@ class PioneerAVR:
         merge(self._params, self._default_params)
         merge(self._params, self._user_params, force_overwrite=True)
         if (
-            PARAM_TUNER_AM_FREQ_STEP in self._params
+            self._params.get(PARAM_TUNER_AM_FREQ_STEP)
             and PARAM_TUNER_AM_FREQ_STEP in self._system_params
         ):
             ## defer PARAM_TUNER_AM_FREQ_STEP to _user_params if specified
@@ -1701,9 +1701,9 @@ class PioneerAVR:
         Automatically calculate the AM frequency step by stepping the frequency
         up and then down.
         """
-        # debug_command = self._params[PARAM_DEBUG_COMMAND]
-        # if debug_command:
-        _LOGGER.debug(">> PioneerAVR._calculate_am_frequency_step() ")
+        debug_command = self._params[PARAM_DEBUG_COMMAND]
+        if debug_command:
+            _LOGGER.debug(">> PioneerAVR._calculate_am_frequency_step() ")
 
         if self._params.get(PARAM_TUNER_AM_FREQ_STEP):
             return
@@ -1728,7 +1728,6 @@ class PioneerAVR:
         while new_freq == current_freq and count > 0:
             await self.send_command("increase_tuner_frequency", ignore_error=True)
             new_freq = self.tuner.get("frequency")
-            _LOGGER.warning("current_freq = %f, new_freq = %f", current_freq, new_freq)
             count -= 1
         if new_freq == current_freq and count == 0:
             _LOGGER.error(
@@ -1737,9 +1736,7 @@ class PioneerAVR:
             return
 
         self._system_params[PARAM_TUNER_AM_FREQ_STEP] = new_freq - current_freq
-        _LOGGER.warning("setting step to %f", new_freq - current_freq)
         self._update_params()
-        await asyncio.sleep(1)  ## wait for tuner command to complete
         await self.send_command("decrease_tuner_frequency", ignore_error=True)
 
     async def _step_tuner_frequency(
