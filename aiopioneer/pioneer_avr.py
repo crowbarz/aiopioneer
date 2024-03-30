@@ -1804,10 +1804,16 @@ class PioneerAVR:
         ):
             raise ValueError(f"frequency {frequency} out of range for band {band}")
 
-        return await self._step_tuner_frequency(band, frequency, zone)
-
-    ## TODO: use TAC<CR>8TP<CR>7TP<CR>5TP<CR>0TP<CR> to direct set
-    ## TODO: add param to enable this
+        if await self.send_command("operation_direct_access", zone, ignore_error=True):
+            ## Set tuner frequency directly if command is supported
+            freq_str = str(int(frequency * (100 if band == "FM" else 1)))
+            for digit in freq_str:
+                if not await self.send_command(
+                    "operation_tuner_digit", zone, prefix=digit, ignore_error=False
+                ):
+                    raise SystemError(f"AVR rejected frequency set to {frequency}")
+        else:
+            return await self._step_tuner_frequency(band, frequency, zone)
 
     async def select_tuner_preset(
         self, tuner_class: str, preset: int, zone: Zones | str = Zones.Z1
