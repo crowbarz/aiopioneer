@@ -8,33 +8,36 @@ from .response import Response
 class TunerParsers:
     """Tuner response parsers."""
 
+    _cached_preset_raw: str = None  # preset updated after tuner frequency update
+
     @staticmethod
-    def frequency_fm(raw: str, _params: dict, zone=Zones.Z1, command="FR") -> list:
+    def frequency_fm(raw: str, params: dict, zone=Zones.Z1, command="FR") -> list:
         """Response parser for FM tuner frequency."""
         freq = float(raw) / 100
         parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="tuner",
-                property_name="band",
-                zone=zone,
-                value="FM",
-                queue_commands=None,
-            )
+        parsed.extend(
+            [
+                Response(
+                    raw=raw,
+                    response_command=command,
+                    base_property="tuner",
+                    property_name="band",
+                    zone=zone,
+                    value="FM",
+                    queue_commands=None,
+                ),
+                Response(
+                    raw=raw,
+                    response_command=command,
+                    base_property="tuner",
+                    property_name="frequency",
+                    zone=zone,
+                    value=freq,
+                    queue_commands=None,
+                ),
+            ]
         )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="tuner",
-                property_name="frequency",
-                zone=zone,
-                value=freq,
-                queue_commands=None,
-            )
-        )
+        parsed.extend(TunerParsers._update_preset(params, zone))
         return parsed
 
     @staticmethod
@@ -46,59 +49,76 @@ class TunerParsers:
         if params.get(PARAM_TUNER_AM_FREQ_STEP) is None:
             queue_commands = ["_calculate_am_frequency_step"]
 
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="tuner",
-                property_name="band",
-                zone=zone,
-                value="AM",
-                queue_commands=queue_commands,
-            )
+        parsed.extend(
+            [
+                Response(
+                    raw=raw,
+                    response_command=command,
+                    base_property="tuner",
+                    property_name="band",
+                    zone=zone,
+                    value="AM",
+                    queue_commands=queue_commands,
+                ),
+                Response(
+                    raw=raw,
+                    response_command=command,
+                    base_property="tuner",
+                    property_name="frequency",
+                    zone=zone,
+                    value=freq,
+                    queue_commands=None,
+                ),
+            ]
         )
-
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="tuner",
-                property_name="frequency",
-                zone=zone,
-                value=freq,
-                queue_commands=None,
-            )
-        )
+        parsed.extend(TunerParsers._update_preset(params, zone))
         return parsed
 
     @staticmethod
-    def preset(raw: str, _params: dict, zone=Zones.Z1, command="PR") -> list:
-        """Response parser for tuner preset."""
-        t_class = raw[:1]
-        t_preset = int(raw[1:])
-
+    def preset(  # pylint: disable=unused-argument
+        raw: str,
+        _params: dict,
+        zone=Zones.Z1,
+        command="PR",
+    ) -> list:
+        """Response parser for tuner preset. Cache until next frequency update."""
         parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="tuner",
-                property_name="class",
-                zone=zone,
-                value=t_class,
-                queue_commands=None,  # AVR automatically sends frequency response
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="tuner",
-                property_name="preset",
-                zone=zone,
-                value=t_preset,
-                queue_commands=None,
-            )
+        TunerParsers._cached_preset_raw = raw
+        return parsed
+
+    @staticmethod
+    def _update_preset(_params: dict, zone=Zones.Z1, command="PR") -> list:
+        """Parse and update tuner preset from cached values."""
+        parsed = []
+        if TunerParsers._cached_preset_raw is None:
+            return parsed
+
+        raw = TunerParsers._cached_preset_raw
+        # pylint: disable=unsubscriptable-object
+        tuner_class = raw[:1]
+        tuner_preset = int(raw[1:])
+        TunerParsers._cached_preset_raw = None
+        parsed.extend(
+            [
+                Response(
+                    raw=raw,
+                    response_command=command,
+                    base_property="tuner",
+                    property_name="class",
+                    zone=zone,
+                    value=tuner_class,
+                    queue_commands=None,  ## AVR automatically sends frequency response
+                ),
+                Response(
+                    raw=raw,
+                    response_command=command,
+                    base_property="tuner",
+                    property_name="preset",
+                    zone=zone,
+                    value=tuner_preset,
+                    queue_commands=None,
+                ),
+            ]
         )
         return parsed
 
