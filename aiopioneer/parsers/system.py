@@ -52,8 +52,6 @@ class SystemParsers:
         if raw == SOURCE_TUNER:
             command_queue.append("query_tuner_frequency")
             command_queue.append("query_tuner_preset")
-            if params.get(PARAM_TUNER_AM_FREQ_STEP) is None:
-                command_queue.append("_calculate_am_frequency_step")
 
         parsed.append(
             Response(
