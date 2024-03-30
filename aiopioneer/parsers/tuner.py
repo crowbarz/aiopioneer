@@ -75,15 +75,21 @@ class TunerParsers:
         return parsed
 
     @staticmethod
-    def preset(  # pylint: disable=unused-argument
-        raw: str,
-        _params: dict,
-        zone=Zones.Z1,
-        command="PR",
-    ) -> list:
+    def preset(raw: str, _params: dict, zone=Zones.Z1, command="PR") -> list:
         """Response parser for tuner preset. Cache until next frequency update."""
         parsed = []
         TunerParsers._cached_preset_raw = raw
+        parsed.append(
+            Response(
+                raw=raw,
+                response_command=command,
+                base_property=None,
+                property_name=None,
+                zone=zone,
+                value=raw,
+                queue_commands=["query_tuner_frequency"],
+            )
+        )
         return parsed
 
     @staticmethod
