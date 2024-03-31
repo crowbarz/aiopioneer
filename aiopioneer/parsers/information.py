@@ -752,8 +752,10 @@ class InformationParsers:
         raw: str, _params: dict, zone=None, command="FL"
     ) -> list:
         """Response parser for AVR display text."""
-        display_str = "".join(
-            [chr(int(raw[i : i + 2], 16)) for i in range(2, len(raw) - 1, 2)]
+        display_str = (
+            "".join([chr(int(raw[i : i + 2], 16)) for i in range(2, len(raw) - 1, 2)])
+            .expandtabs(1)
+            .rstrip("\n")
         )
         parsed = []
         parsed.append(
