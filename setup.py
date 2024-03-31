@@ -30,5 +30,5 @@ setuptools.setup(
             "aiopioneer=aiopioneer.cli:main",
         ]
     },
-    python_requires=">=3.6",
+    python_requires=">=3.11",
 )
