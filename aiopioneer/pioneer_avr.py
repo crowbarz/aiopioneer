@@ -1825,6 +1825,20 @@ class PioneerAVR:
             ignore_error=False,
         )
 
+    async def tuner_previous_preset(self, zone: Zones | str = Zones.Z1) -> bool:
+        """Select the tuner preset."""
+        self._check_zone(zone)
+        return await self.send_command(
+            "decrease_tuner_preset", zone, ignore_error=False
+        )
+
+    async def tuner_next_preset(self, zone: Zones | str = Zones.Z1) -> bool:
+        """Select the tuner preset."""
+        self._check_zone(zone)
+        return await self.send_command(
+            "increase_tuner_preset", zone, ignore_error=False
+        )
+
     async def set_channel_levels(
         self, channel: str, level: float, zone: Zones | str = Zones.Z1
     ) -> bool:
