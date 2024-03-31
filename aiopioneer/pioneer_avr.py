@@ -1673,20 +1673,18 @@ class PioneerAVR:
 
         return rc
 
-    ## Tuner functions
-
-    async def _select_tuner_band(
+    async def select_tuner_band(
         self, band: str = "FM", zone: Zones | str = Zones.Z1
     ) -> bool:
         """Set the tuner band."""
 
         band = band.upper()
-        if self.tuner.get("band") is None or not SOURCE_TUNER in self.source.values():
+        if self.tuner.get("band") is None or SOURCE_TUNER not in self.source.values():
             raise SystemError("tuner is unavailable")
         if band not in ["AM", "FM"]:
             raise ValueError(f"tuner band {band} is invalid")
 
-        # Set the tuner band
+        ## Set the tuner band
         if band == self.tuner.get("band"):
             return True
         tuner_commands = {"AM": "set_tuner_band_am", "FM": "set_tuner_band_fm"}
@@ -1791,7 +1789,7 @@ class PioneerAVR:
     ) -> bool:
         """Set the tuner frequency and band."""
         band = band.upper()
-        if not await self._select_tuner_band(band, zone):
+        if not await self.select_tuner_band(band, zone):
             return False
         await self._command_queue_wait()  ## wait for AM step to be calculated
 
