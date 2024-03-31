@@ -3,6 +3,7 @@
 import logging
 
 from aiopioneer.const import Zones
+from .response import Response
 from .system import SystemParsers
 from .audio import AudioParsers
 from .tuner import TunerParsers
@@ -160,7 +161,7 @@ RESPONSE_DATA = [
 ]
 
 
-def process_raw_response(raw_resp: str, params: dict) -> list:
+def process_raw_response(raw_resp: str, params: dict) -> list[Response]:
     """Processes a raw response and looks up required functions from RESPONSE_DATA."""
     match_resp = next((r for r in RESPONSE_DATA if raw_resp.startswith(r[0])), None)
     if match_resp:
