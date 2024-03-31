@@ -81,7 +81,7 @@ from .const import (
     DSP_DIGITAL_FILTER,
 )
 
-from .parsers.parse import process_raw_response
+from .parsers import process_raw_response
 
 _LOGGER = logging.getLogger(__name__)
 
