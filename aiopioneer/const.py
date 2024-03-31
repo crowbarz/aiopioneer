@@ -1,13 +1,13 @@
 """Constants for aiopioneer."""
 
-from enum import Enum
+from enum import StrEnum
 
 DEFAULT_PORT = 8102
 VERSION = "0.5.0"
 
 
-class Zones(Enum):
-    """Valid aiopioneer zones"""
+class Zones(StrEnum):
+    """Valid aiopioneer zones."""
 
     ALL = "ALL"
     Z1 = "1"
@@ -15,8 +15,12 @@ class Zones(Enum):
     Z3 = "3"
     HDZ = "Z"
 
-    def __str__(self):
-        return self.value
+
+class TunerBand(StrEnum):
+    """Valid frequency bands."""
+
+    FM = "FM"
+    AM = "AM"
 
 
 SOURCE_TUNER = "02"
