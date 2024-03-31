@@ -1,7 +1,7 @@
 """aiopioneer response parsers for tuner parameters."""
 
 from aiopioneer.param import PARAM_TUNER_AM_FREQ_STEP
-from aiopioneer.const import Zones
+from aiopioneer.const import Zones, TunerBand
 from .response import Response
 
 
@@ -9,9 +9,10 @@ class TunerParsers:
     """Tuner response parsers."""
 
     _cached_preset_raw: str = None  # preset updated after tuner frequency update
+    _cached_frequency: float = None  # cache frequency to clear preset
 
     @staticmethod
-    def frequency_fm(raw: str, params: dict, zone=Zones.Z1, command="FR") -> list:
+    def frequency_fm(raw: str, params: dict, zone=Zones.ALL, command="FR") -> list:
         """Response parser for FM tuner frequency."""
         freq = float(raw) / 100
         parsed = []
@@ -23,7 +24,7 @@ class TunerParsers:
                     base_property="tuner",
                     property_name="band",
                     zone=zone,
-                    value="FM",
+                    value=TunerBand.FM,
                     queue_commands=None,
                 ),
                 Response(
@@ -37,11 +38,15 @@ class TunerParsers:
                 ),
             ]
         )
-        parsed.extend(TunerParsers._update_preset(params, zone))
+        if TunerParsers._cached_preset_raw:
+            parsed.extend(TunerParsers._update_preset(params, zone))
+        elif TunerParsers._cached_frequency != freq:
+            parsed.extend(TunerParsers._clear_preset(params, zone))
+        TunerParsers._cached_frequency = freq
         return parsed
 
     @staticmethod
-    def frequency_am(raw: str, params: dict, zone=Zones.Z1, command="FR") -> list:
+    def frequency_am(raw: str, params: dict, zone=Zones.ALL, command="FR") -> list:
         """Response parser AM tuner frequency."""
         freq = float(raw)
         parsed = []
@@ -57,7 +62,7 @@ class TunerParsers:
                     base_property="tuner",
                     property_name="band",
                     zone=zone,
-                    value="AM",
+                    value=TunerBand.AM,
                     queue_commands=queue_commands,
                 ),
                 Response(
@@ -75,7 +80,7 @@ class TunerParsers:
         return parsed
 
     @staticmethod
-    def preset(raw: str, _params: dict, zone=Zones.Z1, command="PR") -> list:
+    def preset(raw: str, _params: dict, zone=Zones.ALL, command="PR") -> list:
         """Response parser for tuner preset. Cache until next frequency update."""
         parsed = []
         TunerParsers._cached_preset_raw = raw
@@ -93,7 +98,7 @@ class TunerParsers:
         return parsed
 
     @staticmethod
-    def _update_preset(_params: dict, zone=Zones.Z1, command="PR") -> list:
+    def _update_preset(_params: dict, zone=Zones.ALL, command="PR") -> list:
         """Parse and update tuner preset from cached values."""
         parsed = []
         if TunerParsers._cached_preset_raw is None:
@@ -113,7 +118,7 @@ class TunerParsers:
                     property_name="class",
                     zone=zone,
                     value=tuner_class,
-                    queue_commands=None,  ## AVR automatically sends frequency response
+                    queue_commands=None,
                 ),
                 Response(
                     raw=raw,
@@ -122,6 +127,35 @@ class TunerParsers:
                     property_name="preset",
                     zone=zone,
                     value=tuner_preset,
+                    queue_commands=None,
+                ),
+            ]
+        )
+        return parsed
+
+    @staticmethod
+    def _clear_preset(_params: dict, zone=Zones.ALL, command="PR") -> list:
+        """Clear tuner presets."""
+        raw = ""
+        parsed = []
+        parsed.extend(
+            [
+                Response(
+                    raw=raw,
+                    response_command=command,
+                    base_property="tuner",
+                    property_name="class",
+                    zone=zone,
+                    value=None,
+                    queue_commands=None,
+                ),
+                Response(
+                    raw=raw,
+                    response_command=command,
+                    base_property="tuner",
+                    property_name="preset",
+                    zone=zone,
+                    value=None,
                     queue_commands=None,
                 ),
             ]

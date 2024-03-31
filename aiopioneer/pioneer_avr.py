@@ -53,6 +53,7 @@ from .util import (
 )
 from .const import (
     Zones,
+    TunerBand,
     DEFAULT_PORT,
     VERSION,
     SOURCE_TUNER,
@@ -1673,26 +1674,21 @@ class PioneerAVR:
 
         return rc
 
-    async def select_tuner_band(
-        self, band: str = "FM", zone: Zones | str = Zones.Z1
-    ) -> bool:
+    async def select_tuner_band(self, band: TunerBand = TunerBand.FM) -> bool:
         """Set the tuner band."""
-
-        band = band.upper()
+        zone = Zones.Z1
+        band = TunerBand(band)
         if self.tuner.get("band") is None or SOURCE_TUNER not in self.source.values():
             raise SystemError("tuner is unavailable")
-        if band not in ["AM", "FM"]:
-            raise ValueError(f"tuner band {band} is invalid")
 
         ## Set the tuner band
         if band == self.tuner.get("band"):
             return True
-        tuner_commands = {"AM": "set_tuner_band_am", "FM": "set_tuner_band_fm"}
-        return await self.send_command(
-            tuner_commands[band],
-            zone,
-            ignore_error=False,
-        )
+        tuner_commands = {
+            TunerBand.AM: "set_tuner_band_am",
+            TunerBand.FM: "set_tuner_band_fm",
+        }
+        return await self.send_command(tuner_commands[band], zone, ignore_error=False)
 
     async def _calculate_am_frequency_step(self) -> None:
         """
@@ -1785,11 +1781,12 @@ class PioneerAVR:
         return rc
 
     async def set_tuner_frequency(
-        self, band: str, frequency: float = None, zone: Zones | str = Zones.Z1
+        self, band: TunerBand, frequency: float = None
     ) -> bool:
         """Set the tuner frequency and band."""
-        band = band.upper()
-        if not await self.select_tuner_band(band, zone):
+        zone = Zones.Z1
+        band = TunerBand(band)
+        if not await self.select_tuner_band(band):
             return False
         await self._command_queue_wait()  ## wait for AM step to be calculated
 
@@ -1797,27 +1794,25 @@ class PioneerAVR:
             return True
         elif not isinstance(frequency, float):
             raise ValueError(f"invalid frequency {frequency}")
-        elif (band == "AM" and not 530 <= frequency <= 1700) or (
-            band == "FM" and not 87.5 <= frequency <= 108.0
+        elif (band == TunerBand.AM and not 530 <= frequency <= 1700) or (
+            band == TunerBand.FM and not 87.5 <= frequency <= 108.0
         ):
             raise ValueError(f"frequency {frequency} out of range for band {band}")
 
         if await self.send_command("operation_direct_access", zone, ignore_error=True):
             ## Set tuner frequency directly if command is supported
-            freq_str = str(int(frequency * (100 if band == "FM" else 1)))
+            freq_str = str(int(frequency * (100 if band == TunerBand.FM else 1)))
             for digit in freq_str:
                 if not await self.send_command(
                     "operation_tuner_digit", zone, prefix=digit, ignore_error=False
                 ):
                     raise SystemError(f"AVR rejected frequency set to {frequency}")
         else:
-            return await self._step_tuner_frequency(band, frequency, zone)
+            return await self._step_tuner_frequency(band, frequency)
 
-    async def select_tuner_preset(
-        self, tuner_class: str, preset: int, zone: Zones | str = Zones.Z1
-    ) -> bool:
+    async def select_tuner_preset(self, tuner_class: str, preset: int) -> bool:
         """Select the tuner preset."""
-        self._check_zone(zone)
+        zone = Zones.Z1
         return await self.send_command(
             "select_tuner_preset",
             zone,
@@ -1825,16 +1820,16 @@ class PioneerAVR:
             ignore_error=False,
         )
 
-    async def tuner_previous_preset(self, zone: Zones | str = Zones.Z1) -> bool:
+    async def tuner_previous_preset(self) -> bool:
         """Select the tuner preset."""
-        self._check_zone(zone)
+        zone = Zones.Z1
         return await self.send_command(
             "decrease_tuner_preset", zone, ignore_error=False
         )
 
-    async def tuner_next_preset(self, zone: Zones | str = Zones.Z1) -> bool:
+    async def tuner_next_preset(self) -> bool:
         """Select the tuner preset."""
-        self._check_zone(zone)
+        zone = Zones.Z1
         return await self.send_command(
             "increase_tuner_preset", zone, ignore_error=False
         )
