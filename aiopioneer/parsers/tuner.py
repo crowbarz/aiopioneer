@@ -8,13 +8,16 @@ from .response import Response
 class TunerParsers:
     """Tuner response parsers."""
 
-    _cached_preset_raw: str = None  # preset updated after tuner frequency update
-    _cached_frequency: float = None  # cache frequency to clear preset
+    _ignore_preset = True  # ignore first preset response
+    _current_preset_raw: str = None  # current value of preset
+    _cached_preset_raw: str = None  # cached preset, update after tuner frequency update
+    _current_freq: float = None  # current frequency, clear preset when changed
 
     @staticmethod
     def frequency_fm(raw: str, params: dict, zone=Zones.ALL, command="FR") -> list:
         """Response parser for FM tuner frequency."""
-        freq = float(raw) / 100
+        new_freq = float(raw) / 100
+        current_freq = TunerParsers._current_freq
         parsed = []
         parsed.extend(
             [
@@ -33,22 +36,23 @@ class TunerParsers:
                     base_property="tuner",
                     property_name="frequency",
                     zone=zone,
-                    value=freq,
+                    value=new_freq,
                     queue_commands=None,
                 ),
             ]
         )
         if TunerParsers._cached_preset_raw:
             parsed.extend(TunerParsers._update_preset(params, zone))
-        elif TunerParsers._cached_frequency != freq:
+        elif current_freq != new_freq:
             parsed.extend(TunerParsers._clear_preset(params, zone))
-        TunerParsers._cached_frequency = freq
+        TunerParsers._current_freq = new_freq
         return parsed
 
     @staticmethod
     def frequency_am(raw: str, params: dict, zone=Zones.ALL, command="FR") -> list:
         """Response parser AM tuner frequency."""
-        freq = float(raw)
+        new_freq = float(raw)
+        current_freq = TunerParsers._current_freq
         parsed = []
         queue_commands = None
         if params.get(PARAM_TUNER_AM_FREQ_STEP) is None:
@@ -71,12 +75,16 @@ class TunerParsers:
                     base_property="tuner",
                     property_name="frequency",
                     zone=zone,
-                    value=freq,
+                    value=new_freq,
                     queue_commands=None,
                 ),
             ]
         )
-        parsed.extend(TunerParsers._update_preset(params, zone))
+        if TunerParsers._cached_preset_raw:
+            parsed.extend(TunerParsers._update_preset(params, zone))
+        elif current_freq != new_freq:
+            parsed.extend(TunerParsers._clear_preset(params, zone))
+            TunerParsers._current_freq = new_freq
         return parsed
 
     @staticmethod
@@ -101,18 +109,27 @@ class TunerParsers:
     def _update_preset(_params: dict, zone=Zones.ALL, command="PR") -> list:
         """Parse and update tuner preset from cached values."""
         parsed = []
-        if TunerParsers._cached_preset_raw is None:
+        current_preset_raw = TunerParsers._current_preset_raw
+        cached_preset_raw = TunerParsers._cached_preset_raw
+        ignore_preset = TunerParsers._ignore_preset
+
+        TunerParsers._current_preset_raw = cached_preset_raw
+        if cached_preset_raw is None or current_preset_raw == cached_preset_raw:
+            return parsed
+        if ignore_preset:
+            ## Ignore first preset response
+            TunerParsers._cached_preset_raw = None
+            TunerParsers._ignore_preset = False
             return parsed
 
-        raw = TunerParsers._cached_preset_raw
         # pylint: disable=unsubscriptable-object
-        tuner_class = raw[:1]
-        tuner_preset = int(raw[1:])
+        tuner_class = cached_preset_raw[:1]
+        tuner_preset = int(cached_preset_raw[1:])
         TunerParsers._cached_preset_raw = None
         parsed.extend(
             [
                 Response(
-                    raw=raw,
+                    raw=cached_preset_raw,
                     response_command=command,
                     base_property="tuner",
                     property_name="class",
@@ -121,7 +138,7 @@ class TunerParsers:
                     queue_commands=None,
                 ),
                 Response(
-                    raw=raw,
+                    raw=cached_preset_raw,
                     response_command=command,
                     base_property="tuner",
                     property_name="preset",
@@ -160,6 +177,8 @@ class TunerParsers:
                 ),
             ]
         )
+        TunerParsers._current_preset_raw = None
+        TunerParsers._cached_preset_raw = None
         return parsed
 
     @staticmethod
