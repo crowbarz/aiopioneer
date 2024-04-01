@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def main(argv):
-    """ Main loop. """
+    """Main loop."""
     _LOGGER.debug(">> main()")
 
     host = ""
@@ -26,7 +26,7 @@ async def main(argv):
             host = arg
 
     if host == "":
-        _LOGGER.fatal(f"Host not specified.")
+        _LOGGER.fatal("Host not specified.")
         sys.exit(2)
 
     pioneer = PioneerAVR(host)
@@ -45,31 +45,27 @@ async def main(argv):
     print(f"AVR zones discovered: {pioneer.zones}")
     print("Discovering zones")
     await pioneer.build_source_dict()
-    
-    
+
     await pioneer.update()
     await asyncio.sleep(15)
     ## Turn on main zone for tests
     # await pioneer.turn_on("1")
 
-    #await pioneer.select_source("TUNER", "1")
-    #await pioneer.set_tuner_frequency("AM", 580, "1")
-    
+    # await pioneer.select_source("TUNER", "1")
+    # await pioneer.set_tuner_frequency("AM", 580, "1")
+
     await pioneer.set_dsp_settings(phase_control="off", zone="1")
 
     # print("...")
     # await pioneer.disconnect()
 
     while True:
-        for property, value in vars(pioneer).items():
-            print(property, ":", value)
-
-        print(pioneer.get_sound_modes("1"))
+        for prop, value in vars(pioneer).items():
+            print(prop, ":", value)
 
         await asyncio.sleep(60)
         print("Update ...")
         await pioneer.update()
-        
 
     # if not pioneer.available:
     #     try:
