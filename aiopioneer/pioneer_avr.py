@@ -366,10 +366,6 @@ class PioneerAVR:
                 retry += 1
                 try:
                     await self.connect()
-                    # 20201212 removed as connect already schedules full update
-                    # _LOGGER.debug("Scheduling full AVR status update")
-                    # self._full_update = True
-                    # await self.update()
                     if self.available:
                         break
                 except asyncio.CancelledError:  # pylint: disable=try-except-raise
@@ -483,6 +479,7 @@ class PioneerAVR:
                 break
             except Exception as exc:  # pylint: disable=broad-except
                 _LOGGER.error("listener exception%s: %s", action, str(exc))
+                _LOGGER.error(traceback.format_exc())
                 # continue listening on exception
 
         if running and self.available:
@@ -1013,87 +1010,68 @@ class PioneerAVR:
         """Parse response and update cached parameters."""
         updated_zones = set()
 
-        parsed_response: list = process_raw_response(response_raw, self._params)
+        parsed_response = process_raw_response(response_raw, self._params)
         if parsed_response is not None:
             for response in parsed_response:
                 if isfunction(response.base_property):
-                    ## Call PioneerAVR class function
+                    ## Call a function
                     response.base_property(self)
                 elif response.base_property is not None:
-                    current_value = getattr(self, response.base_property)
-                    if response.property_name is None and response.zone not in [
-                        Zones.ALL,
-                        None,
-                    ]:
-                        if current_value.get(response.zone.value) is not response.value:
-                            current_value[response.zone.value] = response.value
-                            setattr(self, response.base_property, current_value)
+                    current_base = getattr(self, response.base_property)
+                    is_global = response.zone in [Zones.ALL, None]
+                    if response.property_name is None and not is_global:
+                        current_value = current_base.get(response.zone)
+                        if current_value != response.value:
+                            current_base[response.zone] = response.value
+                            setattr(self, response.base_property, current_base)
                             _LOGGER.info(
-                                "Zone %s: %s: %s (%s)",
-                                response.zone.value,
+                                "Zone %s: %s: %s -> %s (%s)",
+                                response.zone,
                                 response.base_property,
-                                getattr(self, response.base_property)[
-                                    response.zone.value
-                                ],
+                                current_value,
+                                response.value,
                                 response.raw,
                             )
-
-                    elif response.property_name is not None and response.zone not in [
-                        Zones.ALL,
-                        None,
-                    ]:
-                        # Set default value first otherwise we hit an exception
-                        current_value.setdefault(response.zone.value, {})
-                        if (
-                            current_value.get(response.zone.value).get(
-                                response.property_name
-                            )
-                            is not response.value
-                        ):
-                            # Set current_value to response.value for setattr
-                            current_value[response.zone.value][
+                    elif response.property_name is not None and not is_global:
+                        ## Default zone dict first, otherwise we hit an exception
+                        current_base.setdefault(response.zone, {})
+                        current_prop = current_base.get(response.zone)
+                        current_value = current_prop.get(response.property_name)
+                        if current_value != response.value:
+                            current_base[response.zone][
                                 response.property_name
                             ] = response.value
-                            setattr(self, response.base_property, current_value)
+                            setattr(self, response.base_property, current_base)
                             _LOGGER.info(
-                                "Zone %s: %s.%s: %s (%s)",
-                                response.zone.value,
+                                "Zone %s: %s.%s: %s -> %s (%s)",
+                                response.zone,
                                 response.base_property,
                                 response.property_name,
-                                getattr(self, response.base_property)[
-                                    response.zone.value
-                                ][response.property_name],
+                                current_value,
+                                response.value,
                                 response.raw,
                             )
-
-                    elif response.property_name is None and response.zone in [
-                        Zones.ALL,
-                        None,
-                    ]:
-                        if current_value is not response.value:
-                            current_value = response.value
-                            setattr(self, response.base_property, current_value)
+                    elif response.property_name is None and is_global:
+                        if current_base != response.value:
+                            setattr(self, response.base_property, response.value)
                             _LOGGER.info(
-                                "Global: %s: %s (%s)",
+                                "Global: %s: %s -> %s (%s)",
                                 response.base_property,
-                                getattr(self, response.base_property),
+                                current_base,
+                                response.value,
                                 response.raw,
                             )
-
-                    else:
-                        if (
-                            current_value.get(response.property_name)
-                            is not response.value
-                        ):
-                            current_value[response.property_name] = response.value
-                            setattr(self, response.base_property, current_value)
+                    else:  # response.property_name is not None and is_global:
+                        current_value = current_base.get(response.property_name)
+                        if current_value != response.value:
+                            current_base[response.property_name] = response.value
+                            setattr(self, response.base_property, current_base)
                             _LOGGER.info(
-                                "Global: %s.%s: %s (%s)",
+                                "Global: %s.%s: %s -> %s (%s)",
                                 response.base_property,
                                 response.property_name,
-                                getattr(self, response.base_property)[
-                                    response.property_name
-                                ],
+                                current_value,
+                                response.value,
                                 response.raw,
                             )
 
@@ -1118,7 +1096,7 @@ class PioneerAVR:
                         "retrying device information query on Zone 1 first power on"
                     )
                     self.queue_device_info_query()
-                    self.queue_command("FULL_UPDATE")
+                    self.queue_command("_full_update")
                     self._defer_initial_update = None
                 elif (
                     (response.response_command in ["PWR", "FN", "AUB", "AUA"])
@@ -1141,7 +1119,7 @@ class PioneerAVR:
                         self.queue_command("query_video_information")
                     # Queue a full update
                     if self.tuner is None:
-                        self.queue_command("FULL_UPDATE")
+                        self.queue_command("_full_update")
 
         result = {"updated_zones": updated_zones}
 
@@ -1390,6 +1368,23 @@ class PioneerAVR:
     async def _execute_command_queue(self) -> None:
         """Execute commands from a queue."""
         debug_command = self._params[PARAM_DEBUG_COMMAND]
+
+        async def local_command(command: str, args: list[str]) -> None:
+            if debug_command:
+                _LOGGER.debug("running local command %s, args: %s", command, args)
+            match command_name:
+                case "_full_update":
+                    await self.update(full=True)
+                case "_calculate_am_frequency_step":
+                    await self._calculate_am_frequency_step()
+                case "_sleep":
+                    if len(args) != 1:
+                        raise ValueError("local command sleep requires 1 argument")
+                    delay = float(args[0])
+                    await asyncio.sleep(delay)
+                case _:
+                    raise ValueError(f"unknown local command: {command_name}")
+
         if debug_command:
             _LOGGER.debug(">> PioneerAVR._command_queue")
         while len(self._command_queue) > 0:
@@ -1397,13 +1392,16 @@ class PioneerAVR:
             command = self._command_queue[0]
             if debug_command:
                 _LOGGER.debug("command queue executing: %s", command)
-            if command == "FULL_UPDATE":
-                await self.update(full=True)
-            elif command == "_calculate_am_frequency_step":
-                await self._calculate_am_frequency_step()
-            elif command.startswith("_sleep("):
-                delay = float(command.split("(", 1)[1].split(")", 1)[0])
-                await asyncio.sleep(delay)
+            if command.startswith("_"):
+                command_tokens = command.split("(", 1)
+                command_name = command_tokens[0]
+                args = []
+                if len(command_tokens) > 1:
+                    args_raw = command_tokens[1].split(")", 1)
+                    args = [arg.strip() for arg in args_raw[0].split(",")]
+                    if len(args_raw) < 2 or args_raw[1] != "":
+                        raise ValueError(f"malformed local command: '{command}'")
+                await local_command(command, args)
             else:
                 await self.send_command(command, ignore_error=True)
             self._command_queue.pop(0)
@@ -1447,8 +1445,8 @@ class PioneerAVR:
         if self._params[PARAM_DEBUG_COMMAND]:
             _LOGGER.debug(">> PioneerAVR.queue_command(%s)", command)
         if not skip_if_queued or command not in self._command_queue:
-            if command == "FULL_UPDATE":
-                self._full_update = True
+            # if command == "_full_update":
+            #     self._full_update = True
             if insert_at >= 0:
                 self._command_queue.insert(insert_at, command)
             else:
