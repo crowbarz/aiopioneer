@@ -4,7 +4,6 @@ import re
 
 from aiopioneer.param import (
     PARAM_QUERY_SOURCES,
-    PARAM_TUNER_AM_FREQ_STEP,
     PARAM_MHL_SOURCE,
     PARAM_SPEAKER_SYSTEM_MODES,
 )
