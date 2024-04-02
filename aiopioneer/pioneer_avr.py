@@ -9,6 +9,7 @@ import logging
 import re
 import math
 import time
+import traceback
 
 from collections.abc import Callable
 from inspect import isfunction
@@ -117,6 +118,7 @@ class PioneerAVR:
         self.software_version = None
         self.mac_addr = None
         self.available = False
+        self.initial_update = None  # initial update completed
         self.zones = []
         self.power = {}
         self.volume = {}
@@ -170,7 +172,6 @@ class PioneerAVR:
         self._reconnect_task = None
         self._updater_task = None
         self._command_queue_task = None
-        self._defer_initial_update = None
         # Stores a list of commands to run after receiving an event from the AVR
         self._command_queue: list[str] = []
         self._power_zone_1 = None
@@ -741,10 +742,10 @@ class PioneerAVR:
                     self.max_volume["1"] = self._params[PARAM_MAX_VOLUME]
                     await asyncio.sleep(0)  # yield to listener task
 
-                    if not self.power["1"] and self._defer_initial_update is False:
+                    if not self.power["1"] and self.initial_update is None:
                         ## Defer initial update if Zone 1 is not powered on
                         _LOGGER.debug("deferring initial update")
-                        self._defer_initial_update = True
+                        self.initial_update = False
             else:
                 raise RuntimeError("Zone 1 not found on AVR")
 
@@ -1089,7 +1090,7 @@ class PioneerAVR:
                 if (
                     response.base_property == "power"
                     and response.value
-                    and self._defer_initial_update
+                    and not self.initial_update
                 ):
                     ## Perform full update on first power on of Zone 1
                     _LOGGER.info(
@@ -1268,6 +1269,10 @@ class PioneerAVR:
                     for zone in self.zones:
                         await self._update_zone(zone)
                     if full_update:
+                        if self.power["1"]:
+                            _LOGGER.info("completed initial update")
+                            self.initial_update = True
+
                         # Trigger updates to all zones on full update
                         self._call_zone_callbacks()
                 except Exception as exc:  # pylint: disable=broad-except
