@@ -2,7 +2,6 @@
 
 # pylint: disable=relative-beyond-top-level disable=too-many-lines
 
-
 import asyncio
 import copy
 import logging
@@ -84,6 +83,7 @@ from .const import (
 )
 
 from .parsers import process_raw_response
+from .parsers.response import Response
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,39 +117,40 @@ class PioneerAVR:
         self.model = None
         self.software_version = None
         self.mac_addr = None
-        self.available = False
+
+        self.available = False  # connected to avr
         self.initial_update = None  # initial update completed
-        self.zones = []
-        self.power = {}
-        self.volume = {}
-        self.max_volume = {}
-        self.mute = {}
-        self.source = {}
+        self.zones: list[Zones] = []
+        self.power: dict[Zones, bool] = {}
+        self.volume: dict[Zones, int] = {}
+        self.max_volume: dict[Zones, int] = {}
+        self.mute: dict[Zones, bool] = {}
+        self.source: dict[Zones, str] = {}
         self.listening_mode = ""
         self.listening_mode_raw = ""
-        self.media_control_mode = {}
+        self.media_control_mode: dict[Zones, str] = {}
 
         # FUNC: TONE
-        self.tone = {}
+        self.tone: dict[Zones, dict] = {}
 
         # FUNC: AMP
-        self.amp = {}
+        self.amp: dict[str, Any] = {}
 
         # FUNC: TUNER
-        self.tuner = {}
+        self.tuner: dict[str, Any] = {}
 
         # Complex object that holds multiple different props for the CHANNEL/DSP functions
-        self.channel_levels = {}
-        self.dsp = {}
-        self.video = {}
-        self.system = {}
-        self.audio = {}
+        self.channel_levels: dict[str, Any] = {}
+        self.dsp: dict[str, Any] = {}
+        self.video: dict[str, Any] = {}
+        self.system: dict[str, Any] = {}
+        self.audio: dict[str, Any] = {}
 
         # Parameters
         self._default_params = PARAM_DEFAULTS
         self._system_params = PARAM_DEFAULTS_SYSTEM
-        self._user_params = None
-        self._params = None
+        self._user_params: dict[str, Any] = None
+        self._params: dict[str, Any] = None
         self.set_user_params(params)
 
         # Internal state
@@ -159,7 +160,7 @@ class PioneerAVR:
         self._request_lock = asyncio.Lock()
         self._update_event = asyncio.Event()
         self._response_event = asyncio.Event()
-        self._response_queue = []
+        self._response_queue: list[Response] = []
         self._queue_responses = False
         self._reconnect = True
         self._full_update = True
@@ -172,11 +173,10 @@ class PioneerAVR:
         self._reconnect_task = None
         self._updater_task = None
         self._command_queue_task = None
-        # Stores a list of commands to run after receiving an event from the AVR
-        self._command_queue: list[str] = []
+        self._command_queue: list[str] = []  # queue of commands to execute
         self._power_zone_1 = None
-        self._source_name_to_id = {}
-        self._source_id_to_name = {}
+        self._source_name_to_id: dict[str, str] = {}
+        self._source_id_to_name: dict[str, str] = {}
         self._zone_callback = {}
         # self._update_callback = None
 
@@ -445,7 +445,7 @@ class PioneerAVR:
                 action = ""
                 power_on_volume_bounce = self._params[PARAM_POWER_ON_VOLUME_BOUNCE]
                 if power_on_volume_bounce and self._power_zone_1 is not None:
-                    if not self._power_zone_1 and self.power.get("1"):
+                    if not self._power_zone_1 and self.power.get(Zones.Z1):
                         ## Zone 1 powered on, schedule bounce task
                         _LOGGER.info("scheduling main zone volume workaround")
                         self.queue_command(
@@ -454,7 +454,7 @@ class PioneerAVR:
                         self.queue_command(
                             "volume_down", skip_if_queued=False, insert_at=1
                         )
-                self._power_zone_1 = self.power.get("1")  # cache value
+                self._power_zone_1 = self.power.get(Zones.Z1)  # cache value
 
                 # Implement a command queue so that we can queue commands if we
                 # need to update attributes that only get updated when we
@@ -672,7 +672,7 @@ class PioneerAVR:
     async def send_command(
         self,
         command: str,
-        zone: Zones | str = Zones.Z1,
+        zone: Zones = Zones.Z1,
         prefix: str = "",
         ignore_error: bool | None = None,
         rate_limit: bool = True,
@@ -692,7 +692,8 @@ class PioneerAVR:
                 rate_limit,
                 suffix,
             )
-        raw_command = PIONEER_COMMANDS.get(command, {}).get(str(zone))
+
+        raw_command = PIONEER_COMMANDS.get(command, {}).get(zone)
         try:
             if type(raw_command) is list:
                 if len(raw_command) == 2:
@@ -726,67 +727,75 @@ class PioneerAVR:
     async def query_zones(self, force_update: bool = False) -> None:
         """Query zones on Pioneer AVR by querying power status."""
         _LOGGER.info("querying available zones on AVR")
-        ignored_zones = self._params[PARAM_IGNORED_ZONES]
+        ignored_zones = [Zones(z) for z in self._params[PARAM_IGNORED_ZONES]]
         ignore_volume_check = self._params[PARAM_IGNORE_VOLUME_CHECK]
         added_zones = False
         # Defer updates to after query_zones has completed
         async with self._update_lock:
-            if await self.send_command("query_power", "1", ignore_error=True) and (
+            if await self.send_command("query_power", Zones.Z1, ignore_error=True) and (
                 ignore_volume_check
-                or await self.send_command("query_volume", "1", ignore_error=True)
+                or await self.send_command("query_volume", Zones.Z1, ignore_error=True)
             ):
-                if "1" not in self.zones and "1" not in ignored_zones:
+                if Zones.Z1 not in self.zones and Zones.Z1 not in ignored_zones:
                     _LOGGER.info("Zone 1 discovered")
-                    self.zones.append("1")
+                    self.zones.append(Zones.Z1)
                     added_zones = True
-                    self.max_volume["1"] = self._params[PARAM_MAX_VOLUME]
+                    self.max_volume[Zones.Z1] = self._params[PARAM_MAX_VOLUME]
                     await asyncio.sleep(0)  # yield to listener task
 
-                    if not self.power["1"] and self.initial_update is None:
+                    if not self.power[Zones.Z1] and self.initial_update is None:
                         ## Defer initial update if Zone 1 is not powered on
                         _LOGGER.debug("deferring initial update")
                         self.initial_update = False
             else:
                 raise RuntimeError("Zone 1 not found on AVR")
 
-            if await self.send_command("query_power", "2", ignore_error=True) and (
+            if await self.send_command("query_power", Zones.Z2, ignore_error=True) and (
                 ignore_volume_check
-                or await self.send_command("query_volume", "2", ignore_error=True)
+                or await self.send_command("query_volume", Zones.Z2, ignore_error=True)
             ):
-                if "2" not in self.zones and "2" not in ignored_zones:
+                if Zones.Z2 not in self.zones and Zones.Z2 not in ignored_zones:
                     _LOGGER.info("Zone 2 discovered")
-                    self.zones.append("2")
+                    self.zones.append(Zones.Z2)
                     added_zones = True
-                    self.max_volume["2"] = self._params[PARAM_MAX_VOLUME_ZONEX]
+                    self.max_volume[Zones.Z2.value] = self._params[
+                        PARAM_MAX_VOLUME_ZONEX
+                    ]
 
-            if await self.send_command("query_power", "3", ignore_error=True) and (
+            if await self.send_command("query_power", Zones.Z3, ignore_error=True) and (
                 ignore_volume_check
-                or await self.send_command("query_volume", "3", ignore_error=True)
+                or await self.send_command("query_volume", Zones.Z3, ignore_error=True)
             ):
-                if "3" not in self.zones and "3" not in ignored_zones:
+                if Zones.Z3 not in self.zones and Zones.Z3 not in ignored_zones:
                     _LOGGER.info("Zone 3 discovered")
-                    self.zones.append("3")
+                    self.zones.append(Zones.Z3)
                     added_zones = True
-                    self.max_volume["3"] = self._params[PARAM_MAX_VOLUME_ZONEX]
-            if await self.send_command("query_power", "Z", ignore_error=True) and (
+                    self.max_volume[Zones.Z3.value] = self._params[
+                        PARAM_MAX_VOLUME_ZONEX
+                    ]
+            if await self.send_command(
+                "query_power", Zones.HDZ, ignore_error=True
+            ) and (
                 ignore_volume_check
-                or await self.send_command("query_volume", "Z", ignore_error=True)
+                or await self.send_command("query_volume", Zones.HDZ, ignore_error=True)
             ):
-                if "Z" not in self.zones and "Z" not in ignored_zones:
+                if Zones.HDZ not in self.zones and Zones.HDZ not in ignored_zones:
                     _LOGGER.info("HDZone discovered")
-                    self.zones.append("Z")
+                    self.zones.append(Zones.HDZ)
                     added_zones = True
-                    self.max_volume["Z"] = self._params[PARAM_MAX_VOLUME_ZONEX]
+                    self.max_volume[Zones.HDZ.value] = self._params[
+                        PARAM_MAX_VOLUME_ZONEX
+                    ]
         if added_zones or force_update:
             await self.update(full=True)
 
     async def update_zones(self) -> None:
         """Update zones from ignored_zones and re-query zones."""
         removed_zones = False
-        for zone in self._params[PARAM_IGNORED_ZONES]:
+        for zone in [Zones(z) for z in self._params[PARAM_IGNORED_ZONES]]:
             if zone in self.zones:
-                zone_name = "HDZone" if zone == "Z" else zone
-                _LOGGER.info("Removing zone %s", zone_name)
+                zone_name = "HDZone" if zone == Zones.HDZ else zone
+                _LOGGER.info("removing zone %s", zone_name)
                 self.zones.remove(zone)
                 self._call_zone_callbacks([zone])  # update availability
                 removed_zones = True
@@ -824,10 +833,9 @@ class PioneerAVR:
         if not self._source_name_to_id:
             _LOGGER.warning("no input sources found on AVR")
 
-    def get_source_list(self, zone: str | Zones = Zones.Z1) -> list[str]:
+    def get_source_list(self, zone: Zones = Zones.Z1) -> list[str]:
         """Return list of available input sources."""
-
-        source_ids = self._params.get(PARAM_ZONE_SOURCES[Zones(zone)], [])
+        source_ids = self._params.get(PARAM_ZONE_SOURCES[zone], [])
         return list(
             self._source_name_to_id.keys()
             if not source_ids
@@ -838,12 +846,11 @@ class PioneerAVR:
             ]
         )
 
-    def get_source_dict(self, zone: str | Zones = None) -> dict[str, str]:
+    def get_source_dict(self, zone: Zones = None) -> dict[str, str]:
         """Return source id<->name translation tables."""
-
         if zone is None:
             return MappingProxyType(self._source_name_to_id)
-        source_ids = self._params.get(PARAM_ZONE_SOURCES[Zones(zone)], [])
+        source_ids = self._params.get(PARAM_ZONE_SOURCES[zone], [])
         return (
             self._source_name_to_id
             if not source_ids
@@ -867,12 +874,10 @@ class PioneerAVR:
         if source_name in self._source_name_to_id:
             self._source_name_to_id.pop(source_name)
 
-    def get_zone_listening_modes(
-        self, zone: str | Zones = Zones.Z1
-    ) -> dict[str, str] | None:
+    def get_zone_listening_modes(self, zone: Zones = Zones.Z1) -> dict[str, str] | None:
         """Return dict of valid listening modes and names for zone."""
         ## Listening modes only supported on main zone
-        if Zones(zone) is Zones.Z1:
+        if zone == Zones.Z1:
             multichannel = self.audio.get("input_multichannel")
             listening_modes = self._params.get(PARAM_AVAILABLE_LISTENING_MODES, {})
             zone_listening_modes = {}
@@ -932,16 +937,16 @@ class PioneerAVR:
             ]
         )
 
-    def get_supported_media_controls(self, zone: Zones | str) -> list[str] | None:
+    def get_supported_media_controls(self, zone: Zones) -> list[str] | None:
         """Return a list of all valid media control actions for a given zone.
         If the provided zone source is not currently compatible with media controls,
         null will be returned."""
-        if self.media_control_mode.get(str(zone)) is not None:
+        if self.media_control_mode.get(zone) is not None:
             return list(
                 [
                     k
                     for k in MEDIA_CONTROL_COMMANDS.get(
-                        self.media_control_mode.get(str(zone))
+                        self.media_control_mode.get(zone)
                     ).keys()
                 ]
             )
@@ -955,11 +960,6 @@ class PioneerAVR:
         for command in commands:
             await self.send_command(command, ignore_error=True)
         await asyncio.sleep(0)  # yield to updater task
-
-        ## Retry device info query on initial update
-        if not self.zones and self._defer_initial_update is None:
-            _LOGGER.debug("deferring device information query")
-            self._defer_initial_update = False
 
         self._set_default_params_model()  # Update default params for this model
         self._update_listening_modes()  # Update valid listening modes
@@ -980,30 +980,30 @@ class PioneerAVR:
         # It will report software version only if Zone 1 is powered on.
         # It is unknown how iControlAV5 determines this on a routed network.
 
-    # Callback functions
+    ## Callback functions
+
     def set_zone_callback(
-        self, zone: Zones | str, callback: Callable[..., None] | None = None
+        self, zone: Zones, callback: Callable[..., None] | None = None
     ) -> None:
         """Register a callback for a zone."""
-        if str(zone) in self.zones:
+        if zone in self.zones or zone == Zones.ALL:
             if callback:
-                self._zone_callback[str(zone)] = callback
+                self._zone_callback[zone] = callback
             else:
-                self._zone_callback.pop(str(zone))
+                self._zone_callback.pop(zone)
 
     def clear_zone_callbacks(self) -> None:
         """Clear all callbacks for a zone."""
         self._zone_callback = {}
 
-    def _call_zone_callbacks(self, zones: list[Zones | str] = None) -> None:
+    def _call_zone_callbacks(self, zones: list[Zones] | None = None) -> None:
         """Call callbacks to signal updated zone(s)."""
-        if not zones or Zones.ALL in zones:
-            zones = self.zones
+        if not zones:
+            zones = self.zones + [Zones.ALL]
         for zone in zones:
-            if str(zone) in self._zone_callback:
-                callback = self._zone_callback[str(zone)]
+            if zone in self._zone_callback:
+                callback = self._zone_callback[zone]
                 if callback:
-                    # _LOGGER.debug("calling callback for zone %s", zone)
                     callback()
 
     # Update functions
@@ -1098,23 +1098,20 @@ class PioneerAVR:
                     )
                     self.queue_device_info_query()
                     self.queue_command("_full_update")
-                    self._defer_initial_update = None
                 elif (
                     (response.response_command in ["PWR", "FN", "AUB", "AUA"])
                     and (not self._full_update)
                     and (not self._params.get(PARAM_DISABLE_AUTO_QUERY))
-                    and (
-                        self.power.get("1")
-                        or self.power.get("2")
-                        or self.power.get("3")
-                        or self.power.get(
-                            "Z"
-                        )  # These should only queue if the AVR is on
+                    and (  # These should only queue if the AVR is on
+                        self.power.get(Zones.Z1)
+                        or self.power.get(Zones.Z2)
+                        or self.power.get(Zones.Z3)
+                        or self.power.get(Zones.HDZ)
                     )
                 ):
                     ## TODO: not sure why check self.tuner here?
                     if self.tuner is not None:
-                        self.queue_command("_sleep(2)")
+                        self.queue_command("_sleep(4)")
                         self.queue_command("query_listening_mode")
                         self.queue_command("query_audio_information")
                         self.queue_command("query_video_information")
@@ -1197,15 +1194,15 @@ class PioneerAVR:
         # Zone 1 updates only, we loop through this to allow us to add commands
         # to read without needing to add it here, also only do this if the zone
         # is powered on
-        if Zones(zone) is Zones.Z1 and bool(self.power.get("1")):
+        if Zones(zone) is Zones.Z1 and bool(self.power.get(Zones.Z1)):
             for comm in query_commands:
-                if PIONEER_COMMANDS.get(comm).get("1"):
+                if PIONEER_COMMANDS.get(comm).get(Zones.Z1):
                     await self.send_command(comm, zone, ignore_error=True)
 
         # Zone 2 updates only, only available if zone 2 is on
-        if Zones(zone) is Zones.Z2 and bool(self.power.get("2")):
+        if Zones(zone) is Zones.Z2 and bool(self.power.get(Zones.Z2)):
             for comm in query_commands:
-                if PIONEER_COMMANDS.get(comm).get("2"):
+                if PIONEER_COMMANDS.get(comm).get(Zones.Z2):
                     await self.send_command(comm, zone, ignore_error=True)
 
         # CHANNEL updates are handled differently as it requires more complex
@@ -1216,7 +1213,7 @@ class PioneerAVR:
         if ("channels" in self._params.get(PARAM_ENABLED_FUNCTIONS)) and (
             not self._params.get(PARAM_DISABLE_AUTO_QUERY)
         ):
-            if bool(self.power.get("1")) and Zones(zone) is not Zones.HDZ:
+            if bool(self.power.get(Zones.Z1)) and Zones(zone) is not Zones.HDZ:
                 for k in CHANNEL_LEVELS_OBJ:
                     if len(k) == 1:
                         # Add two underscores
@@ -1263,13 +1260,12 @@ class PioneerAVR:
                     since_updated_str,
                 )
                 self._last_updated = now
-                self._full_update = False
                 try:
                     ## TODO: update audio, video and display information
                     for zone in self.zones:
                         await self._update_zone(zone)
                     if full_update:
-                        if self.power["1"]:
+                        if self.power[Zones.Z1]:
                             _LOGGER.info("completed initial update")
                             self.initial_update = True
 
@@ -1282,6 +1278,7 @@ class PioneerAVR:
                         str(exc),
                     )
                     _rc = False
+                self._full_update = False
             else:
                 # NOTE: any response from the AVR received within
                 # scan_interval, including keepalives and responses triggered
@@ -1331,26 +1328,25 @@ class PioneerAVR:
         else:
             return str(items[0])
 
-    def _check_zone(self, zone: Zones | str) -> None:
+    def _check_zone(self, zone: Zones) -> Zones:
         """Check that specified zone is valid."""
-        if str(zone) not in self.zones:
+        if zone not in self.zones:
             raise ValueError(f"zone {zone} does not exist on AVR")
+        return zone
 
-    async def turn_on(self, zone: Zones | str = Zones.Z1) -> bool | None:
+    async def turn_on(self, zone: Zones = Zones.Z1) -> bool | None:
         """Turn on the Pioneer AVR."""
-        self._check_zone(zone)
+        zone = self._check_zone(zone)
         return await self.send_command("turn_on", zone)
 
-    async def turn_off(self, zone: Zones | str = Zones.Z1) -> bool | None:
+    async def turn_off(self, zone: Zones = Zones.Z1) -> bool | None:
         """Turn off the Pioneer AVR."""
-        self._check_zone(zone)
+        zone = self._check_zone(zone)
         return await self.send_command("turn_off", zone)
 
-    async def select_source(
-        self, source: str, zone: Zones | str = Zones.Z1
-    ) -> bool | None:
+    async def select_source(self, source: str, zone: Zones = Zones.Z1) -> bool | None:
         """Select input source."""
-        self._check_zone(zone)
+        zone = self._check_zone(zone)
         source_id = self._source_name_to_id.get(source)
         if source_id:
             return await self.send_command(
@@ -1360,14 +1356,14 @@ class PioneerAVR:
             _LOGGER.error("invalid source %s for zone %s", source, zone)
             return False
 
-    async def volume_up(self, zone: Zones | str = Zones.Z1) -> bool | None:
+    async def volume_up(self, zone: Zones = Zones.Z1) -> bool | None:
         """Volume up media player."""
-        self._check_zone(zone)
+        zone = self._check_zone(zone)
         return await self.send_command("volume_up", zone, ignore_error=False)
 
-    async def volume_down(self, zone: Zones | str = Zones.Z1) -> bool | None:
+    async def volume_down(self, zone: Zones = Zones.Z1) -> bool | None:
         """Volume down media player."""
-        self._check_zone(zone)
+        zone = self._check_zone(zone)
         return await self.send_command("volume_down", zone, ignore_error=False)
 
     async def _execute_command_queue(self) -> None:
@@ -1464,9 +1460,9 @@ class PioneerAVR:
         self, target_volume: int, zone: Zones | str = Zones.Z1
     ) -> bool:
         """Set volume level (0..185 for Zone 1, 0..81 for other Zones)."""
-        self._check_zone(zone)
-        current_volume = self.volume.get(str(zone))
-        max_volume = self.max_volume[str(zone)]
+        zone = self._check_zone(zone)
+        current_volume = self.volume.get(zone.value)
+        max_volume = self.max_volume[zone.value]
         if target_volume < 0 or target_volume > max_volume:
             raise ValueError(f"volume {target_volume} out of range for zone {zone}")
         volume_step_only = self._params[PARAM_VOLUME_STEP_ONLY]
@@ -1479,7 +1475,7 @@ class PioneerAVR:
                     await self.volume_up(zone)
                     await asyncio.sleep(0)  # yield to listener task
                     volume_step_count += 1
-                    new_volume = self.volume.get(str(zone))
+                    new_volume = self.volume.get(zone.value)
                     if new_volume <= current_volume:  # going wrong way
                         _LOGGER.warning("set_volume_level stopped stepping up")
                         return False
@@ -1493,14 +1489,14 @@ class PioneerAVR:
                     await self.volume_down(zone)
                     await asyncio.sleep(0)  # yield to listener task
                     volume_step_count += 1
-                    new_volume = self.volume.get(str(zone))
+                    new_volume = self.volume.get(zone.value)
                     if new_volume >= current_volume:  # going wrong way
                         _LOGGER.warning("set_volume_level stopped stepping down")
                         return False
                     if volume_step_count > (start_volume - target_volume):
                         _LOGGER.warning("set_volume_level exceed max steps")
                         return False
-                    current_volume = self.volume.get(str(zone))
+                    current_volume = self.volume.get(zone.value)
             return True
 
         else:
@@ -1510,22 +1506,19 @@ class PioneerAVR:
                 "set_volume_level", zone, prefix=vol_prefix, ignore_error=False
             )
 
-    async def mute_on(self, zone: Zones | str = Zones.Z1) -> bool:
+    async def mute_on(self, zone: Zones = Zones.Z1) -> bool:
         """Mute AVR."""
-        self._check_zone(zone)
+        zone = self._check_zone(zone)
         return await self.send_command("mute_on", zone, ignore_error=False)
 
-    async def mute_off(self, zone: Zones | str = Zones.Z1) -> bool:
+    async def mute_off(self, zone: Zones = Zones.Z1) -> bool:
         """Unmute AVR."""
-        self._check_zone(zone)
+        zone = self._check_zone(zone)
         return await self.send_command("mute_off", zone, ignore_error=False)
 
-    async def set_listening_mode(
-        self, listening_mode: str, zone: Zones | str = Zones.Z1
-    ) -> bool:
+    async def set_listening_mode(self, listening_mode: str) -> bool:
         """Set the listening mode using the predefined list of options in params."""
-        self._check_zone(zone)
-
+        zone = Zones.Z1
         listening_modes = self.get_zone_listening_modes(zone)
         if listening_modes:
             for mode_id, mode_name in listening_modes.items():
@@ -1538,11 +1531,9 @@ class PioneerAVR:
                     )
         raise ValueError(f"listening mode {listening_mode} not available")
 
-    async def set_panel_lock(
-        self, panel_lock: str, zone: Zones | str = Zones.Z1
-    ) -> bool:
+    async def set_panel_lock(self, panel_lock: str, zone: Zones = Zones.Z1) -> bool:
         """Set the panel lock."""
-        self._check_zone(zone)
+        zone = self._check_zone(zone)
         return await self.send_command(
             "set_amp_panel_lock",
             zone,
@@ -1550,11 +1541,9 @@ class PioneerAVR:
             ignore_error=False,
         )
 
-    async def set_remote_lock(
-        self, remote_lock: bool, zone: Zones | str = Zones.Z1
-    ) -> bool:
+    async def set_remote_lock(self, remote_lock: bool, zone: Zones = Zones.Z1) -> bool:
         """Set the remote lock."""
-        self._check_zone(zone)
+        zone = self._check_zone(zone)
         return await self.send_command(
             "set_amp_remote_lock",
             zone,
@@ -1562,9 +1551,9 @@ class PioneerAVR:
             prefix=str(int(remote_lock)),
         )
 
-    async def set_dimmer(self, dimmer: str, zone: Zones | str = Zones.Z1) -> bool:
+    async def set_dimmer(self, dimmer: str, zone: Zones = Zones.Z1) -> bool:
         """Set the display dimmer."""
-        self._check_zone(zone)
+        zone = self._check_zone(zone)
         return await self.send_command(
             "set_amp_dimmer",
             zone,
@@ -1577,12 +1566,13 @@ class PioneerAVR:
         tone: str = None,
         treble: int = None,
         bass: int = None,
-        zone: Zones | str = Zones.Z1,
+        zone: Zones = Zones.Z1,
     ) -> bool | None:
         """Set the tone settings for a given zone."""
         ## Check the zone supports tone settings and that inputs are within range
+        zone = self._check_zone(zone)
         rc = True
-        if self.tone.get(str(zone)) is None:
+        if self.tone.get(zone.value) is None:
             return None
         if not -6 <= treble <= 6:
             raise ValueError(f"invalid treble value: {treble}")
@@ -1597,7 +1587,7 @@ class PioneerAVR:
                 ignore_error=False,
             )
         ## Set treble and bass only if zone tone status is set to "On"
-        if rc and self.tone.get(str(zone), {}).get("status") == "On":
+        if rc and self.tone.get(zone.value, {}).get("status") == "On":
             treble_str = f"{str(treble)}dB"
             bass_str = f"{str(bass)}dB"
             if treble is not None:
@@ -1623,12 +1613,12 @@ class PioneerAVR:
         hdmi_audio_output: bool = None,
         pqls: bool = None,
         amp: str = None,
-        zone: Zones | str = Zones.Z1,
+        zone: Zones = Zones.Z1,
     ) -> bool:
         """Set amplifier function settings for a given zone."""
-        self._check_zone(zone)
-
+        zone = self._check_zone(zone)
         rc = True
+
         # FUNC: SPEAKERS (use PARAM_SPEAKER_MODES)
         if self.amp.get("speakers") is not None and speaker_config is not None:
             rc = await self.send_command(
@@ -1736,10 +1726,9 @@ class PioneerAVR:
         self._update_params()
         await self.send_command("decrease_tuner_frequency", ignore_error=True)
 
-    async def _step_tuner_frequency(
-        self, band: str, frequency: float, zone: Zones | str = Zones.Z1
-    ) -> bool:
+    async def _step_tuner_frequency(self, band: str, frequency: float) -> bool:
         """Step the tuner frequency until requested frequency is reached."""
+        zone = Zones.Z1
         current_freq = self.tuner.get("frequency")
         if band == "AM":
             if (freq_step := self._params.get(PARAM_TUNER_AM_FREQ_STEP)) is None:
@@ -1838,19 +1827,16 @@ class PioneerAVR:
         )
 
     async def set_channel_levels(
-        self, channel: str, level: float, zone: Zones | str = Zones.Z1
+        self, channel: str, level: float, zone: Zones = Zones.Z1
     ) -> bool:
         """Set the level (gain) for amplifier channel in zone."""
-        self._check_zone(zone)
-
-        if self.channel_levels.get(str(zone)) is None:
-            raise ValueError(f"Invalid zone {zone}")
+        zone = self._check_zone(zone)
+        if self.channel_levels.get(zone.value) is None:
+            raise ValueError(f"channel level not supported for zone {zone}")
 
         # Check the channel exists
-        if self.channel_levels[str(zone)].get(channel.upper()) is None:
-            raise ValueError(
-                f"The provided channel is invalid ({channel}, {str(level)} for zone {zone}"
-            )
+        if self.channel_levels[zone.value].get(channel.upper()) is None:
+            raise ValueError(f"invalid channel {channel} for zone {zone}")
 
         # Append underscores depending on length
         if len(channel) == 1:
@@ -1866,12 +1852,12 @@ class PioneerAVR:
 
     async def set_video_settings(self, **arguments) -> bool:
         """Set video settings for a given zone."""
-        zone = str(arguments.get("zone"))
-        self._check_zone(zone)
+        zone = Zones(arguments.get("zone"))
+        zone = self._check_zone(zone)
 
         # This function is only valid for zone 1, no video settings are
         # available for zone 2, 3, 4 and HDZone
-        if zone != "1":
+        if zone != Zones.Z1:
             raise ValueError(f"Invalid zone {zone}")
 
         # This is a complex function and supports handles requests to update any
@@ -1939,10 +1925,9 @@ class PioneerAVR:
 
     async def set_dsp_settings(self, **arguments) -> bool:
         """Set the DSP settings for the amplifier."""
-        zone = str(arguments.get("zone"))
-        self._check_zone(zone)
-
-        if zone != "1":
+        zone = Zones(arguments.get("zone"))
+        zone = self._check_zone(zone)
+        if zone != Zones.Z1:
             raise ValueError(f"Invalid zone {zone}")
 
         for arg in arguments:
@@ -2016,13 +2001,13 @@ class PioneerAVR:
         ## TODO: check command rc, refactor to use match
         return True
 
-    async def media_control(self, action: str, zone: Zones | str = Zones.Z1) -> bool:
+    async def media_control(self, action: str, zone: Zones = Zones.Z1) -> bool:
         """
         Perform media control activities such as play, pause, stop, fast forward
         or rewind.
         """
-        self._check_zone(zone)
-        media_commands = self.media_control_mode.get(str(zone))
+        zone = self._check_zone(zone)
+        media_commands = self.media_control_mode.get(zone)
         if media_commands is not None:
             command = MEDIA_CONTROL_COMMANDS.get(media_commands, {}).get(action)
             if command is not None:
@@ -2031,12 +2016,12 @@ class PioneerAVR:
                 return await self.send_command(command, Zones.Z1, ignore_error=False)
             else:
                 raise NotImplementedError(
-                    f"Current source ({self.source.get(str(zone))} does not support "
+                    f"Current source ({self.source.get(zone.value)} does not support "
                     "action {action}"
                 )
         else:
             raise NotImplementedError(
-                f"Current source ({self.source.get(str(zone))}) does not support "
+                f"Current source ({self.source.get(zone.value)}) does not support "
                 "media_control activities"
             )
 

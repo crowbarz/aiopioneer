@@ -7,7 +7,7 @@ import json
 import argparse
 
 from aiopioneer import PioneerAVR
-from aiopioneer.const import DEFAULT_PORT
+from aiopioneer.const import Zones, DEFAULT_PORT
 from aiopioneer.param import (
     PARAM_DEBUG_LISTENER,
     PARAM_DEBUG_RESPONDER,
@@ -76,7 +76,7 @@ async def cli_main(args: argparse.Namespace):
         _LOGGER.info("AVR zones discovered: %s", pioneer.zones)
 
     reader, _writer = await connect_stdin_stdout()
-    zone = "1"
+    zone = Zones.Z1
     while True:
         print(f"Current zone is {zone}")
         res = await reader.readline()
@@ -90,7 +90,7 @@ async def cli_main(args: argparse.Namespace):
         cmd = tokens[0]
         arg = None if num_tokens == 1 else tokens[1]
         if cmd == "zone":
-            zone_new = arg
+            zone_new = Zones(arg)
             if zone_new and zone_new in pioneer.zones:
                 zone = zone_new
                 print(f"Setting current zone to {zone}")
@@ -215,7 +215,7 @@ async def cli_main(args: argparse.Namespace):
             try:
                 band = subargs[0]
                 frequency = float(subargs[1]) if len(subargs) > 1 else None
-                await pioneer.set_tuner_frequency(band, frequency, zone=zone)
+                await pioneer.set_tuner_frequency(band, frequency)
             except Exception as exc:  # pylint: disable=broad-except
                 print(
                     f'ERROR: Invalid parameters for set_tuner_frequency "{arg}": {exc}'
