@@ -745,7 +745,7 @@ class PioneerAVR:
 
                     if not self.power[Zones.Z1] and self.initial_update is None:
                         ## Defer initial update if Zone 1 is not powered on
-                        _LOGGER.debug("deferring initial update")
+                        _LOGGER.info("deferring initial update")
                         self.initial_update = False
             else:
                 raise RuntimeError("Zone 1 not found on AVR")
@@ -964,12 +964,6 @@ class PioneerAVR:
         self._set_default_params_model()  # Update default params for this model
         self._update_listening_modes()  # Update valid listening modes
 
-    def queue_device_info_query(self) -> None:
-        """Queue device information query from Pioneer AVR."""
-        commands = [k for k in PIONEER_COMMANDS if k.startswith("system_query_")]
-        for command in commands:
-            self.queue_command(command)
-
         # It is possible to query via HTML page if all info is not available
         # via API commands: http://avr/1000/system_information.asp
         # However, this is not compliant with Home Assistant ADR-0004:
@@ -1096,7 +1090,8 @@ class PioneerAVR:
                     _LOGGER.info(
                         "retrying device information query on Zone 1 first power on"
                     )
-                    self.queue_device_info_query()
+                    self.initial_update = None
+                    self.queue_command("_query_device_info")
                     self.queue_command("_full_update")
                 elif (
                     (
@@ -1266,7 +1261,7 @@ class PioneerAVR:
                         await self._update_zone(zone)
                     if full_update:
                         if self.power[Zones.Z1]:
-                            _LOGGER.debug("completed initial update")
+                            _LOGGER.info("completed initial update")
                             self.initial_update = True
 
                         # Trigger updates to all zones on full update
@@ -1374,6 +1369,8 @@ class PioneerAVR:
             if debug_command:
                 _LOGGER.debug("running local command %s, args: %s", command, args)
             match command_name:
+                case "_query_device_info":
+                    await self.query_device_info()
                 case "_full_update":
                     await self.update(full=True)
                 case "_calculate_am_frequency_step":
