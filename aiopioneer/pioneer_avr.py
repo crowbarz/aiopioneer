@@ -1076,9 +1076,9 @@ class PioneerAVR:
                                 response.raw,
                             )
 
-                    # Set updated_zones if response.zone is not None and not already added
-                    if response.zone is not None and response.zone not in updated_zones:
-                        updated_zones.add(response.zone)
+                # Set updated_zones if response.zone is not None and not already added
+                if response.zone is not None and response.zone not in updated_zones:
+                    updated_zones.add(response.zone)
 
                 # Add any requested extra commands to run
                 if response.command_queue is not None:
@@ -1099,15 +1099,13 @@ class PioneerAVR:
                     self.queue_device_info_query()
                     self.queue_command("_full_update")
                 elif (
-                    (response.response_command in ["PWR", "FN", "AUB", "AUA"])
+                    (
+                        response.base_property in ["power", "source"]
+                        or response.response_command in ["AUB", "AUA"]
+                    )
                     and (not self._full_update)
                     and (not self._params.get(PARAM_DISABLE_AUTO_QUERY))
-                    and (  # These should only queue if the AVR is on
-                        self.power.get(Zones.Z1)
-                        or self.power.get(Zones.Z2)
-                        or self.power.get(Zones.Z3)
-                        or self.power.get(Zones.HDZ)
-                    )
+                    and any(self.power.values())
                 ):
                     ## TODO: not sure why check self.tuner here?
                     if self.tuner is not None:
@@ -1115,8 +1113,8 @@ class PioneerAVR:
                         self.queue_command("query_listening_mode")
                         self.queue_command("query_audio_information")
                         self.queue_command("query_video_information")
-                    # Queue a full update
-                    if self.tuner is None:
+                    else:
+                        ## Queue a full update
                         self.queue_command("_full_update")
 
         result = {"updated_zones": updated_zones}

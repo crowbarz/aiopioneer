@@ -29,16 +29,27 @@ class SystemParsers:
     def power(raw: str, _params: dict, zone=Zones.Z1, command="PWR") -> list:
         """Response parser for zone power status."""
         parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="power",
-                property_name=None,
-                zone=zone,
-                value=(raw == "0"),
-                queue_commands=None,
-            )
+        parsed.extend(
+            [
+                Response(
+                    raw=raw,
+                    response_command=command,
+                    base_property="power",
+                    property_name=None,
+                    zone=zone,
+                    value=(raw == "0"),
+                    queue_commands=None,
+                ),
+                Response(  # also trigger global update
+                    raw=raw,
+                    response_command=command,
+                    base_property=None,
+                    property_name=None,
+                    zone=Zones.ALL,
+                    value=(raw == "0"),
+                    queue_commands=None,
+                ),
+            ]
         )
         return parsed
 
@@ -52,16 +63,27 @@ class SystemParsers:
             command_queue.append("query_tuner_frequency")
             command_queue.append("query_tuner_preset")
 
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="source",
-                property_name=None,
-                zone=zone,
-                value=raw,
-                queue_commands=command_queue,
-            )
+        parsed.extend(
+            [
+                Response(  # also trigger global update
+                    raw=raw,
+                    response_command=command,
+                    base_property="source",
+                    property_name=None,
+                    zone=zone,
+                    value=raw,
+                    queue_commands=command_queue,
+                ),
+                Response(
+                    raw=raw,
+                    response_command=command,
+                    base_property=None,
+                    property_name=None,
+                    zone=Zones.ALL,
+                    value=(raw == "0"),
+                    queue_commands=None,
+                ),
+            ]
         )
 
         ## Add a response for media_control_mode
