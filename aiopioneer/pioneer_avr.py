@@ -1132,8 +1132,8 @@ class PioneerAVR:
         while True:
             debug_updater = self._params[PARAM_DEBUG_UPDATER]
             try:
-                event.clear()
                 await self._updater_update()
+                event.clear()
                 # await asyncio.wait_for(event.wait(), timeout=self.scan_interval)
                 await safe_wait_for(event.wait(), timeout=self.scan_interval)
                 if debug_updater:
@@ -1143,10 +1143,12 @@ class PioneerAVR:
                     _LOGGER.debug(">> PioneerAVR._updater() timeout")
                 continue
             except asyncio.CancelledError:
+                event.clear()
                 if debug_updater:
                     _LOGGER.debug(">> PioneerAVR._updater() cancelled")
                 break
             except Exception as exc:  # pylint: disable=broad-except
+                event.clear()
                 _LOGGER.error(">> PioneerAVR._updater() exception: %s", str(exc))
                 break
         if debug_updater:
