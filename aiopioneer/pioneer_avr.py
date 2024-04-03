@@ -1090,7 +1090,7 @@ class PioneerAVR:
                 if (
                     response.base_property == "power"
                     and response.value
-                    and not self.initial_update
+                    and self.initial_update is False
                 ):
                     ## Perform full update on first power on of Zone 1
                     _LOGGER.info(
@@ -1266,7 +1266,7 @@ class PioneerAVR:
                         await self._update_zone(zone)
                     if full_update:
                         if self.power[Zones.Z1]:
-                            _LOGGER.info("completed initial update")
+                            _LOGGER.debug("completed initial update")
                             self.initial_update = True
 
                         # Trigger updates to all zones on full update
