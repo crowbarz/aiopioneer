@@ -1,6 +1,6 @@
 """ Pioneer AVR utils. """
+
 import asyncio
-import contextlib
 import socket
 import random
 import logging
