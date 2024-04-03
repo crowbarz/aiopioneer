@@ -1390,36 +1390,40 @@ class PioneerAVR:
 
         if debug_command:
             _LOGGER.debug(">> PioneerAVR._command_queue")
-        while len(self._command_queue) > 0:
-            # Keep command in queue until it has finished executing
-            command = self._command_queue[0]
-            if debug_command:
-                _LOGGER.debug("command queue executing: %s", command)
-            if command.startswith("_"):
-                command_tokens = command.split("(", 1)
-                command_name = command_tokens[0]
-                args = []
-                if len(command_tokens) > 1:
-                    args_raw = command_tokens[1].split(")", 1)
-                    args = [arg.strip() for arg in args_raw[0].split(",")]
-                    if len(args_raw) < 2 or args_raw[1] != "":
-                        raise ValueError(f"malformed local command: '{command}'")
-                await local_command(command, args)
-            else:
-                await self.send_command(command, ignore_error=True)
-            self._command_queue.pop(0)
+        async with self._update_lock:
+            while len(self._command_queue) > 0:
+                # Keep command in queue until it has finished executing
+                command = self._command_queue[0]
+                if debug_command:
+                    _LOGGER.debug("command queue executing: %s", command)
+                if command.startswith("_"):
+                    command_tokens = command.split("(", 1)
+                    command_name = command_tokens[0]
+                    args = []
+                    if len(command_tokens) > 1:
+                        args_raw = command_tokens[1].split(")", 1)
+                        args = [arg.strip() for arg in args_raw[0].split(",")]
+                        if len(args_raw) < 2 or args_raw[1] != "":
+                            raise ValueError(f"malformed local command: '{command}'")
+                    await local_command(command, args)
+                else:
+                    await self.send_command(command, ignore_error=True)
+                self._command_queue.pop(0)
 
         if debug_command:
             _LOGGER.debug("command queue finished")
 
     async def _command_queue_wait(self) -> None:
         """Wait for command queue to be flushed."""
-        if self._params[PARAM_DEBUG_COMMAND]:
+        debug_command = self._params[PARAM_DEBUG_COMMAND]
+        if debug_command:
             _LOGGER.debug(">> PioneerAVR._command_queue_wait()")
         if self._command_queue_task:
             if self._command_queue_task.done():
                 self._command_queue_task = None
             else:
+                if debug_command:
+                    _LOGGER.debug("waiting for command queue to be flushed")
                 await asyncio.wait([self._command_queue_task])
 
     async def _command_queue_cancel(self) -> None:
