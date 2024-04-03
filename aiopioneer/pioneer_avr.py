@@ -1231,9 +1231,9 @@ class PioneerAVR:
         if not self.zones:
             _LOGGER.debug("AVR zones not discovered yet, skipping update")
             return False
-        if self._update_lock.locked():
-            _LOGGER.debug("AVR updates locked, skipping update")
-            return False
+        # if self._update_lock.locked():
+        #     _LOGGER.debug("AVR updates locked, skipping update")
+        #     return False
 
         _rc = True
         async with self._update_lock:
@@ -1294,7 +1294,7 @@ class PioneerAVR:
             _LOGGER.debug(">> PioneerAVR._updater_update() completed")
         return _rc
 
-    async def update(self, full=False) -> None:
+    async def update(self, full=False, wait=True) -> None:
         """Update AVR cached status update. Schedule if updater is running."""
         if full:
             self._full_update = True
@@ -1303,8 +1303,15 @@ class PioneerAVR:
                 _LOGGER.debug(">> PioneerAVR.update(): signalling updater task")
             self._update_event.set()
             await asyncio.sleep(0)  # yield to updater task
+            if wait:
+                if self._params[PARAM_DEBUG_UPDATER]:
+                    _LOGGER.debug(">> PioneerAVR.update(): waiting for updater task")
+                async with self._update_lock:  # wait for update to complete
+                    pass
         else:
             # scan_interval not set, execute update synchronously
+            if wait:
+                _LOGGER.error("unable to update AVR in background")
             await self._updater_update()
 
     # State change functions
@@ -1372,7 +1379,7 @@ class PioneerAVR:
                 case "_query_device_info":
                     await self.query_device_info()
                 case "_full_update":
-                    await self.update(full=True)
+                    await self.update(full=True, wait=False)  # avoid deadlock
                 case "_calculate_am_frequency_step":
                     await self._calculate_am_frequency_step()
                 case "_sleep":
