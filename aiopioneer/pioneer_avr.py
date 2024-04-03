@@ -1453,16 +1453,16 @@ class PioneerAVR:
         """Add a new command to the queue to run."""
         if self._params[PARAM_DEBUG_COMMAND]:
             _LOGGER.debug(">> PioneerAVR.queue_command(%s)", command)
-        if not skip_if_queued or command not in self._command_queue:
-            # if command == "_full_update":
-            #     self._full_update = True
-            if insert_at >= 0:
-                self._command_queue.insert(insert_at, command)
-            else:
-                self._command_queue.append(command)
-        else:
+        if skip_if_queued and command in self._command_queue:
             if self._params[PARAM_DEBUG_COMMAND]:
                 _LOGGER.debug("command %s already queued, skipping", command)
+            return
+        if command.startswith("_full_update"):
+            self._full_update = True
+        if insert_at >= 0:
+            self._command_queue.insert(insert_at, command)
+        else:
+            self._command_queue.append(command)
 
     async def set_volume_level(
         self, target_volume: int, zone: Zones | str = Zones.Z1
