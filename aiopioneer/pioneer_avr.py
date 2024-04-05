@@ -325,10 +325,10 @@ class PioneerAVR:
             self.available = False
             self._call_zone_callbacks()
 
-            await self._listener_cancel()
-            await self._responder_cancel()
-            await self._updater_cancel()
             await self._command_queue_cancel()
+            await self._updater_cancel()
+            await self._responder_cancel()
+            await self._listener_cancel()
 
             writer = self._writer
             if writer:
@@ -338,7 +338,7 @@ class PioneerAVR:
                 try:
                     await self._writer.wait_closed()
                 except Exception as exc:  # pylint: disable=broad-except
-                    _LOGGER.debug("ignoring responder exception %s", str(exc))
+                    _LOGGER.debug("ignoring exception on disconnect: %s", str(exc))
             self._reader = None
             self._writer = None
             _LOGGER.info("AVR connection closed")
@@ -1144,8 +1144,8 @@ class PioneerAVR:
                 event.clear()
                 _LOGGER.error(">> PioneerAVR._updater() exception: %s", str(exc))
                 break
-        if debug_updater:
-            _LOGGER.debug(">> PioneerAVR._updater() completed")
+
+        _LOGGER.debug(">> PioneerAVR._updater() completed")
 
     async def _updater_schedule(self) -> None:
         """Schedule/reschedule the update task."""
