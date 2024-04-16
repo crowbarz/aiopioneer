@@ -676,10 +676,10 @@ class PioneerAVR:
         command: str,
         zone: Zones = Zones.Z1,
         prefix: str = "",
+        suffix: str = "",
         ignore_error: bool | None = None,
         rate_limit: bool = True,
-        suffix: str = "",
-    ) -> bool | None:
+    ) -> str | bool | None:
         """Send a command or request to the device."""
         # pylint: disable=unidiomatic-typecheck disable=logging-not-lazy
         debug_command = self._params[PARAM_DEBUG_COMMAND]
@@ -715,9 +715,8 @@ class PioneerAVR:
                     _LOGGER.error("invalid request %s for zone %s", raw_command, zone)
                     return None
             elif type(raw_command) is str:
-                return await self.send_raw_command(
-                    prefix + raw_command + suffix, rate_limit
-                )
+                await self.send_raw_command(prefix + raw_command + suffix, rate_limit)
+                return True
             else:
                 _LOGGER.warning("invalid command %s for zone %s", command, zone)
                 return None
@@ -1219,7 +1218,10 @@ class PioneerAVR:
                         # Add one underscore
                         k = k + "_"
                     await self.send_command(
-                        "set_channel_levels", zone, "?" + str(k), ignore_error=True
+                        "set_channel_levels",
+                        zone,
+                        prefix="?" + str(k),
+                        ignore_error=True,
                     )
 
     async def _updater_update(self) -> bool | None:
@@ -1339,12 +1341,12 @@ class PioneerAVR:
         return zone
 
     async def turn_on(self, zone: Zones = Zones.Z1) -> bool | None:
-        """Turn on the Pioneer AVR."""
+        """Turn on the Pioneer AVR zone."""
         zone = self._check_zone(zone)
         return await self.send_command("turn_on", zone)
 
     async def turn_off(self, zone: Zones = Zones.Z1) -> bool | None:
-        """Turn off the Pioneer AVR."""
+        """Turn off the Pioneer AVR zone."""
         zone = self._check_zone(zone)
         return await self.send_command("turn_off", zone)
 
@@ -1547,7 +1549,7 @@ class PioneerAVR:
         return await self.send_command(
             "set_amp_panel_lock",
             zone,
-            self._get_parameter_key_from_value(panel_lock, PANEL_LOCK),
+            prefix=self._get_parameter_key_from_value(panel_lock, PANEL_LOCK),
             ignore_error=False,
         )
 
@@ -1557,8 +1559,8 @@ class PioneerAVR:
         return await self.send_command(
             "set_amp_remote_lock",
             zone,
-            ignore_error=False,
             prefix=str(int(remote_lock)),
+            ignore_error=False,
         )
 
     async def set_dimmer(self, dimmer: str, zone: Zones = Zones.Z1) -> bool:
@@ -1567,7 +1569,7 @@ class PioneerAVR:
         return await self.send_command(
             "set_amp_dimmer",
             zone,
-            self._get_parameter_key_from_value(dimmer, DIMMER_MODES),
+            prefix=self._get_parameter_key_from_value(dimmer, DIMMER_MODES),
             ignore_error=False,
         )
 
@@ -1593,7 +1595,7 @@ class PioneerAVR:
             rc = await self.send_command(
                 "set_tone_mode",
                 zone,
-                self._get_parameter_key_from_value(tone, TONE_MODES),
+                prefix=self._get_parameter_key_from_value(tone, TONE_MODES),
                 ignore_error=False,
             )
         ## Set treble and bass only if zone tone status is set to "On"
@@ -1604,14 +1606,16 @@ class PioneerAVR:
                 rc = await self.send_command(
                     "set_tone_treble",
                     zone,
-                    self._get_parameter_key_from_value(treble_str, TONE_DB_VALUES),
+                    prefix=self._get_parameter_key_from_value(
+                        treble_str, TONE_DB_VALUES
+                    ),
                     ignore_error=False,
                 )
             if rc and bass is not None:
                 rc = await self.send_command(
                     "set_tone_bass",
                     zone,
-                    self._get_parameter_key_from_value(bass_str, TONE_DB_VALUES),
+                    prefix=self._get_parameter_key_from_value(bass_str, TONE_DB_VALUES),
                     ignore_error=False,
                 )
         return bool(rc)
@@ -1634,7 +1638,9 @@ class PioneerAVR:
             rc = await self.send_command(
                 "set_amp_speaker_status",
                 zone,
-                self._get_parameter_key_from_value(speaker_config, SPEAKER_MODES),
+                prefix=self._get_parameter_key_from_value(
+                    speaker_config, SPEAKER_MODES
+                ),
                 ignore_error=False,
             )
 
@@ -1643,7 +1649,7 @@ class PioneerAVR:
             rc = await self.send_command(
                 "set_amp_hdmi_out_status",
                 zone,
-                self._get_parameter_key_from_value(hdmi_out, HDMI_OUT_MODES),
+                prefix=self._get_parameter_key_from_value(hdmi_out, HDMI_OUT_MODES),
                 ignore_error=False,
             )
 
@@ -1656,14 +1662,14 @@ class PioneerAVR:
             rc = await self.send_command(
                 "set_amp_hdmi_audio_status",
                 zone,
-                str(int(hdmi_audio_output)),
+                prefix=str(int(hdmi_audio_output)),
                 ignore_error=False,
             )
 
         # FUNC: PQLS (simple bool, True is auto, False is off)
         if rc and self.amp.get("pqls") is not None and pqls is not None:
             rc = await self.send_command(
-                "set_amp_pqls_status", zone, str(int(pqls)), ignore_error=False
+                "set_amp_pqls_status", zone, prefix=str(int(pqls)), ignore_error=False
             )
 
         # FUNC: AMP (use PARAM_AMP_MODES)
@@ -1671,7 +1677,7 @@ class PioneerAVR:
             rc = await self.send_command(
                 "set_amp_status",
                 zone,
-                self._get_parameter_key_from_value(amp, AMP_MODES),
+                prefix=self._get_parameter_key_from_value(amp, AMP_MODES),
                 ignore_error=False,
             )
 
@@ -1818,19 +1824,19 @@ class PioneerAVR:
         return await self.send_command(
             "select_tuner_preset",
             zone,
-            str(tuner_class).upper() + str(preset).upper().zfill(2),
+            prefix=str(tuner_class).upper() + str(preset).upper().zfill(2),
             ignore_error=False,
         )
 
     async def tuner_previous_preset(self) -> bool:
-        """Select the tuner preset."""
+        """Select the previous tuner preset."""
         zone = Zones.Z1
         return await self.send_command(
             "decrease_tuner_preset", zone, ignore_error=False
         )
 
     async def tuner_next_preset(self) -> bool:
-        """Select the tuner preset."""
+        """Select the next tuner preset."""
         zone = Zones.Z1
         return await self.send_command(
             "increase_tuner_preset", zone, ignore_error=False
@@ -1857,7 +1863,7 @@ class PioneerAVR:
         # convert the float to correct int
         level = int((level * 2) + 50)
         return await self.send_command(
-            "set_channel_levels", zone, channel + str(level), ignore_error=False
+            "set_channel_levels", zone, prefix=channel + str(level), ignore_error=False
         )
 
     async def set_video_settings(self, **arguments) -> bool:
@@ -1926,7 +1932,7 @@ class PioneerAVR:
                         await self.send_command(
                             "set_video_" + arg,
                             zone,
-                            str(arguments.get(arg)),
+                            prefix=str(arguments.get(arg)),
                             ignore_error=False,
                         )
 
@@ -2004,7 +2010,7 @@ class PioneerAVR:
                         await self.send_command(
                             "set_dsp_" + arg,
                             zone,
-                            str(arguments.get(arg)),
+                            prefix=str(arguments.get(arg)),
                             ignore_error=False,
                         )
 
