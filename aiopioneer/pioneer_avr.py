@@ -1158,7 +1158,7 @@ class PioneerAVR:
         await cancel_task(self._updater_task, "updater", debug=debug_updater)
         self._updater_task = None
 
-    async def _update_zone(self, zone: Zones | str) -> None:
+    async def _update_zone(self, zone: Zones) -> None:
         """Update an AVR zone."""
         # Check for timeouts, but ignore errors (eg. ?V will
         # return E02 immediately after power on)
@@ -1186,13 +1186,13 @@ class PioneerAVR:
         # Zone 1 updates only, we loop through this to allow us to add commands
         # to read without needing to add it here, also only do this if the zone
         # is powered on
-        if Zones(zone) is Zones.Z1 and bool(self.power.get(Zones.Z1)):
+        if zone == Zones.Z1 and bool(self.power.get(Zones.Z1)):
             for comm in query_commands:
                 if PIONEER_COMMANDS.get(comm).get(Zones.Z1):
                     await self.send_command(comm, zone, ignore_error=True)
 
         # Zone 2 updates only, only available if zone 2 is on
-        if Zones(zone) is Zones.Z2 and bool(self.power.get(Zones.Z2)):
+        if zone == Zones.Z2 and bool(self.power.get(Zones.Z2)):
             for comm in query_commands:
                 if PIONEER_COMMANDS.get(comm).get(Zones.Z2):
                     await self.send_command(comm, zone, ignore_error=True)
@@ -1205,7 +1205,7 @@ class PioneerAVR:
         if ("channels" in self._params.get(PARAM_ENABLED_FUNCTIONS)) and (
             not self._params.get(PARAM_DISABLE_AUTO_QUERY)
         ):
-            if bool(self.power.get(Zones.Z1)) and Zones(zone) is not Zones.HDZ:
+            if bool(self.power.get(Zones.Z1)) and zone != Zones.HDZ:
                 for k in CHANNEL_LEVELS_OBJ:
                     if len(k) == 1:
                         # Add two underscores
@@ -1468,7 +1468,7 @@ class PioneerAVR:
             self._command_queue.append(command)
 
     async def set_volume_level(
-        self, target_volume: int, zone: Zones | str = Zones.Z1
+        self, target_volume: int, zone: Zones = Zones.Z1
     ) -> bool:
         """Set volume level (0..185 for Zone 1, 0..81 for other Zones)."""
         zone = self._check_zone(zone)
@@ -1676,7 +1676,8 @@ class PioneerAVR:
 
     async def select_tuner_band(self, band: TunerBand = TunerBand.FM) -> bool:
         """Set the tuner band."""
-        band = TunerBand(band)
+        if not isinstance(band, TunerBand):
+            raise ValueError(f"invalid TunerBand specified: {band}")
         if self.tuner.get("band") is None or SOURCE_TUNER not in self.source.values():
             raise SystemError("tuner is unavailable")
 
@@ -1782,7 +1783,6 @@ class PioneerAVR:
         self, band: TunerBand, frequency: float = None
     ) -> bool:
         """Set the tuner frequency and band."""
-        band = TunerBand(band)
         if not await self.select_tuner_band(band):
             return False
         await self._command_queue_wait()  ## wait for AM step to be calculated
