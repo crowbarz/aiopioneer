@@ -461,8 +461,7 @@ class PioneerAVR:
                 # Implement a command queue so that we can queue commands if we
                 # need to update attributes that only get updated when we
                 # request them to change.
-                if len(self._command_queue) > 0:
-                    self._command_queue_schedule()
+                self.command_queue_schedule()
 
                 # NOTE: to avoid deadlocks, do not run any operations that
                 # depend on further responses (returned by the listener) within
@@ -1441,10 +1440,13 @@ class PioneerAVR:
         self._command_queue_task = None
         self._command_queue = []
 
-    def _command_queue_schedule(self) -> None:
+    def command_queue_schedule(self) -> None:
         """Schedule commands to queue."""
         if self._params[PARAM_DEBUG_COMMAND]:
             _LOGGER.debug(">> PioneerAVR._command_queue_schedule()")
+        if len(self._command_queue) == 0:
+            return
+
         ## NOTE: does not create new task if one already exists
         if self._command_queue_task is None or self._command_queue_task.done():
             self._command_queue_task = asyncio.create_task(
