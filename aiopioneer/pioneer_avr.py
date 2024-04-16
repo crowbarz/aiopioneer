@@ -874,20 +874,17 @@ class PioneerAVR:
         if source_name in self._source_name_to_id:
             self._source_name_to_id.pop(source_name)
 
-    def get_zone_listening_modes(self, zone: Zones = Zones.Z1) -> dict[str, str] | None:
-        """Return dict of valid listening modes and names for zone."""
-        ## Listening modes only supported on main zone
-        if zone == Zones.Z1:
-            multichannel = self.audio.get("input_multichannel")
-            listening_modes = self._params.get(PARAM_AVAILABLE_LISTENING_MODES, {})
-            zone_listening_modes = {}
-            for mode_id, mode_details in listening_modes.items():
-                if (multichannel and mode_details[2]) or (
-                    not multichannel and mode_details[1]
-                ):
-                    zone_listening_modes |= {mode_id: mode_details[0]}
-            return zone_listening_modes
-        return None
+    def get_zone_listening_modes(self) -> dict[str, str] | None:
+        """Return dict of valid listening modes and names for Zone 1."""
+        multichannel = self.audio.get("input_multichannel")
+        listening_modes = self._params.get(PARAM_AVAILABLE_LISTENING_MODES, {})
+        zone_listening_modes = {}
+        for mode_id, mode_details in listening_modes.items():
+            if (multichannel and mode_details[2]) or (
+                not multichannel and mode_details[1]
+            ):
+                zone_listening_modes |= {mode_id: mode_details[0]}
+        return zone_listening_modes
 
     def _update_listening_modes(self) -> None:
         """Update list of valid listening modes for AVR."""
@@ -1532,45 +1529,37 @@ class PioneerAVR:
 
     async def set_listening_mode(self, listening_mode: str) -> bool:
         """Set the listening mode using the predefined list of options in params."""
-        zone = Zones.Z1
-        listening_modes = self.get_zone_listening_modes(zone)
+        listening_modes = self.get_zone_listening_modes()
         if listening_modes:
             for mode_id, mode_name in listening_modes.items():
                 if mode_name == listening_mode:
                     return await self.send_command(
                         "set_listening_mode",
-                        zone,
                         prefix=mode_id,
                         ignore_error=False,
                     )
         raise ValueError(f"listening mode {listening_mode} not available")
 
-    async def set_panel_lock(self, panel_lock: str, zone: Zones = Zones.Z1) -> bool:
+    async def set_panel_lock(self, panel_lock: str) -> bool:
         """Set the panel lock."""
-        zone = self._check_zone(zone)
         return await self.send_command(
             "set_amp_panel_lock",
-            zone,
             prefix=self._get_parameter_key_from_value(panel_lock, PANEL_LOCK),
             ignore_error=False,
         )
 
-    async def set_remote_lock(self, remote_lock: bool, zone: Zones = Zones.Z1) -> bool:
+    async def set_remote_lock(self, remote_lock: bool) -> bool:
         """Set the remote lock."""
-        zone = self._check_zone(zone)
         return await self.send_command(
             "set_amp_remote_lock",
-            zone,
             prefix=str(int(remote_lock)),
             ignore_error=False,
         )
 
-    async def set_dimmer(self, dimmer: str, zone: Zones = Zones.Z1) -> bool:
+    async def set_dimmer(self, dimmer: str) -> bool:
         """Set the display dimmer."""
-        zone = self._check_zone(zone)
         return await self.send_command(
             "set_amp_dimmer",
-            zone,
             prefix=self._get_parameter_key_from_value(dimmer, DIMMER_MODES),
             ignore_error=False,
         )
@@ -1687,7 +1676,6 @@ class PioneerAVR:
 
     async def select_tuner_band(self, band: TunerBand = TunerBand.FM) -> bool:
         """Set the tuner band."""
-        zone = Zones.Z1
         band = TunerBand(band)
         if self.tuner.get("band") is None or SOURCE_TUNER not in self.source.values():
             raise SystemError("tuner is unavailable")
@@ -1699,7 +1687,7 @@ class PioneerAVR:
             TunerBand.AM: "set_tuner_band_am",
             TunerBand.FM: "set_tuner_band_fm",
         }
-        return await self.send_command(tuner_commands[band], zone, ignore_error=False)
+        return await self.send_command(tuner_commands[band], ignore_error=False)
 
     async def _calculate_am_frequency_step(self) -> None:
         """
@@ -1794,7 +1782,6 @@ class PioneerAVR:
         self, band: TunerBand, frequency: float = None
     ) -> bool:
         """Set the tuner frequency and band."""
-        zone = Zones.Z1
         band = TunerBand(band)
         if not await self.select_tuner_band(band):
             return False
@@ -1809,12 +1796,12 @@ class PioneerAVR:
         ):
             raise ValueError(f"frequency {frequency} out of range for band {band}")
 
-        if await self.send_command("operation_direct_access", zone, ignore_error=True):
+        if await self.send_command("operation_direct_access", ignore_error=True):
             ## Set tuner frequency directly if command is supported
             freq_str = str(int(frequency * (100 if band == TunerBand.FM else 1)))
             for digit in freq_str:
                 if not await self.send_command(
-                    "operation_tuner_digit", zone, prefix=digit, ignore_error=False
+                    "operation_tuner_digit", prefix=digit, ignore_error=False
                 ):
                     raise SystemError(f"AVR rejected frequency set to {frequency}")
         else:
@@ -1822,27 +1809,19 @@ class PioneerAVR:
 
     async def select_tuner_preset(self, tuner_class: str, preset: int) -> bool:
         """Select the tuner preset."""
-        zone = Zones.Z1
         return await self.send_command(
             "select_tuner_preset",
-            zone,
             prefix=str(tuner_class).upper() + str(preset).upper().zfill(2),
             ignore_error=False,
         )
 
     async def tuner_previous_preset(self) -> bool:
         """Select the previous tuner preset."""
-        zone = Zones.Z1
-        return await self.send_command(
-            "decrease_tuner_preset", zone, ignore_error=False
-        )
+        return await self.send_command("decrease_tuner_preset", ignore_error=False)
 
     async def tuner_next_preset(self) -> bool:
         """Select the next tuner preset."""
-        zone = Zones.Z1
-        return await self.send_command(
-            "increase_tuner_preset", zone, ignore_error=False
-        )
+        return await self.send_command("increase_tuner_preset", ignore_error=False)
 
     async def set_channel_levels(
         self, channel: str, level: float, zone: Zones = Zones.Z1
