@@ -54,8 +54,10 @@ from .util import (
 from .const import (
     Zones,
     TunerBand,
-    DEFAULT_PORT,
     VERSION,
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    DEFAULT_SCAN_INTERVAL,
     SOURCE_TUNER,
     LISTENING_MODES,
     DIMMER_MODES,
@@ -93,11 +95,11 @@ class PioneerAVR:
 
     def __init__(
         self,
-        host,
-        port=DEFAULT_PORT,
-        timeout=2,
-        scan_interval=60,
-        params=None,
+        host: str,
+        port: int = DEFAULT_PORT,
+        timeout: float = DEFAULT_TIMEOUT,
+        scan_interval: int = DEFAULT_SCAN_INTERVAL,
+        params: dict[str, str] = None,
     ):
         """Initialise the Pioneer AVR interface."""
         _LOGGER.info("Starting aiopioneer %s", VERSION)
@@ -338,7 +340,7 @@ class PioneerAVR:
                 try:
                     await self._writer.wait_closed()
                 except Exception as exc:  # pylint: disable=broad-except
-                    _LOGGER.debug("ignoring exception on disconnect: %s", str(exc))
+                    _LOGGER.debug("ignoring disconnect exception: %s", str(exc))
             self._reader = None
             self._writer = None
             _LOGGER.info("AVR connection closed")

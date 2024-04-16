@@ -2,6 +2,8 @@
 
 from enum import StrEnum
 
+DEFAULT_TIMEOUT = 2
+DEFAULT_SCAN_INTERVAL = 60
 DEFAULT_PORT = 8102
 VERSION = "0.5.0"
 
