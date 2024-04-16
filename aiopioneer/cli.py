@@ -220,6 +220,10 @@ async def cli_main(args: argparse.Namespace):
                 print(
                     f'ERROR: Invalid parameters for set_tuner_frequency "{arg}": {exc}'
                 )
+        elif cmd == "tuner_previous_preset":
+            await pioneer.tuner_previous_preset()
+        elif cmd == "tuner_next_preset":
+            await pioneer.tuner_next_preset()
         elif cmd in ["send_raw_command", ">"]:
             if arg:
                 print(f"Sending raw command {arg}")
