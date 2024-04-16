@@ -128,7 +128,7 @@ async def cli_main(args: argparse.Namespace):
             print(f"Source list: {json.dumps(pioneer.get_source_list())}")
         elif cmd == "get_zone_listening_modes":
             print(
-                f"Available listening modes: {json.dumps(pioneer.get_zone_listening_modes())}"
+                f"Available listening modes: {json.dumps(pioneer.get_listening_modes())}"
             )
         elif cmd == "get_params":
             print(f"Params: {json.dumps(pioneer.get_params())}")

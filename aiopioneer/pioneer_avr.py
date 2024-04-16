@@ -874,7 +874,7 @@ class PioneerAVR:
         if source_name in self._source_name_to_id:
             self._source_name_to_id.pop(source_name)
 
-    def get_zone_listening_modes(self) -> dict[str, str] | None:
+    def get_listening_modes(self) -> dict[str, str] | None:
         """Return dict of valid listening modes and names for Zone 1."""
         multichannel = self.audio.get("input_multichannel")
         listening_modes = self._params.get(PARAM_AVAILABLE_LISTENING_MODES, {})
@@ -984,7 +984,7 @@ class PioneerAVR:
                 self._zone_callback.pop(zone)
 
     def clear_zone_callbacks(self) -> None:
-        """Clear all callbacks for a zone."""
+        """Clear callbacks for all zones."""
         self._zone_callback = {}
 
     def _call_zone_callbacks(self, zones: list[Zones] | None = None) -> None:
@@ -1529,7 +1529,7 @@ class PioneerAVR:
 
     async def set_listening_mode(self, listening_mode: str) -> bool:
         """Set the listening mode using the predefined list of options in params."""
-        listening_modes = self.get_zone_listening_modes()
+        listening_modes = self.get_listening_modes()
         if listening_modes:
             for mode_id, mode_name in listening_modes.items():
                 if mode_name == listening_mode:
@@ -1849,8 +1849,7 @@ class PioneerAVR:
 
     async def set_video_settings(self, **arguments) -> bool:
         """Set video settings for a given zone."""
-        zone = Zones(arguments.get("zone"))
-        zone = self._check_zone(zone)
+        zone = self._check_zone(arguments.get("zone"))
 
         # This function is only valid for zone 1, no video settings are
         # available for zone 2, 3, 4 and HDZone
@@ -1922,8 +1921,7 @@ class PioneerAVR:
 
     async def set_dsp_settings(self, **arguments) -> bool:
         """Set the DSP settings for the amplifier."""
-        zone = Zones(arguments.get("zone"))
-        zone = self._check_zone(zone)
+        zone = self._check_zone(arguments.get("zone"))
         if zone != Zones.Z1:
             raise ValueError(f"Invalid zone {zone}")
 
