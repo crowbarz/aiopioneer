@@ -41,7 +41,7 @@ There are several types of parameters that modify the library's functionality. T
 
 Where a parameter is specified at more than one level, the higher priority parameter takes precedence. So a user specified parameter will override any value that is determined by the AVR model.
 
-> **NOTE:** YAML syntax is used in the table below. Use Python equivalents (`false` -> `False`, `true` -> `True`, `null` -> `None` etc.) when calling the Python API directly, and JSON syntax if manually specifying via the Home Assistant integration.
+**NOTE:** YAML syntax is used in the table below. Use Python equivalents (`false` -> `False`, `true` -> `True`, `null` -> `None` etc.) when calling the Python API directly, and JSON syntax if manually specifying via the Home Assistant integration.
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
@@ -82,252 +82,251 @@ The library exposes a Python API through the **PioneerAVR** class. The class met
 
 `PioneerAVR.__init__(`_host_, _port_ = DEFAULT_PORT, _timeout_: **float** = DEFAULT_TIMEOUT, _scan_interval_: **int** = DEFAULT_SCAN_INTERVAL, _params_: **dict[str, str]** = **None** `)`
 
-> Constructor for the **PioneerAVR** class. The connection parameters are used when `PioneerAVR.connect` is called. After connection is established, the AVR will be polled every _scan_interval_ seconds. Optional user parameters are provided via _params_.
+Constructor for the **PioneerAVR** class. The connection parameters are used when `PioneerAVR.connect` is called. After connection is established, the AVR will be polled every _scan_interval_ seconds. Optional user parameters are provided via _params_.
 
 _awaitable_ `PioneerAVR.connect(`_reconnect_: **bool** = True`)`
 
-> Establish a connection to the AVR. Set _reconnect_ to **True** to attempt to re-establish the connection on disconnect.
+Establish a connection to the AVR. Set _reconnect_ to **True** to attempt to re-establish the connection on disconnect.
 
 _awaitable_ `PioneerAVR.disconnect()`
 
-> Disconnect from the AVR. Attempt to re-establish the connection if enabled.
+Disconnect from the AVR. Attempt to re-establish the connection if enabled.
 
 _awaitable_ `PioneerAVR.shutdown()`
 
-> Permanently disconnect from the AVR. Does not attempt reconnection.
+Permanently disconnect from the AVR. Does not attempt reconnection.
 
 _awaitable_ `PioneerAVR.set_timeout(`_timeout_: **float**`)`
 
-> Set command timeout. Used also to set the socket keepalive timeout.
+Set command timeout. Used also to set the socket keepalive timeout.
 
 ### Update methods
 
 _awaitable_ `PioneerAVR.update(`_full_: **bool** = **False**, _wait_: **bool** = **True**`)`
 
-> Request an update of the AVR, and wait for the update to complete if _wait_ is **True**.
-> If _full_ is **True**, then a full update is performed irrespective of when the previous update was performed. Otherwise, an update is performed if the scan interval has elapsed.
-> If a scan interval is set, then an update is scheduled in the updater task. Otherwise the update is performed synchronously (_wait_ cannot be set to **False** in this case).
+Request an update of the AVR, and wait for the update to complete if _wait_ is **True**. <br/>
+If _full_ is **True**, then a full update is performed irrespective of when the previous update was performed. Otherwise, an update is performed if the scan interval has elapsed. <br/>
+If a scan interval is set, then an update is scheduled in the updater task. Otherwise the update is performed synchronously (_wait_ cannot be set to **False** in this case).
 
 _awaitable_ `PioneerAVR.set_scan_interval(`_scan_interval_: **int**`)`
 
-<ul>Set the scan interval to _scan_interval_ and restart the updater task.
-</ul>
+Set the scan interval to _scan_interval_ and restart the updater task.
 
 _awaitable_ `PioneerAVR.update_zones()`
 
-> Update zones from `ignored_zones` parameter and re-query zones from the AVR.
+Update zones from `ignored_zones` parameter and re-query zones from the AVR.
 
 ### AVR system methods
 
 _awaitable_ `PioneerAVR.turn_on(`_zone_: Zones = Zones.Z1`)` -> **bool** | **None**:
 
-> Turn on the Pioneer AVR zone.
+Turn on the Pioneer AVR zone.
 
 _awaitable_ `PioneerAVR.turn_off(`_zone_: Zones = Zones.Z1`)` -> **bool** | **None**:
 
-> Turn off the Pioneer AVR zone.
+Turn off the Pioneer AVR zone.
 
 _awaitable_ `PioneerAVR.query_device_info()`
 
-> Query the AVR for device information. Updates the model parameters if device model is changed.
+Query the AVR for device information. Updates the model parameters if device model is changed.
 
 _awaitable_ `PioneerAVR.query_zones(`_force_update_: **bool** = **True**`)`
 
-> Query the AVR for available zones by querying the power status for each zone and checking if the AVR responds.
-> Ignores zones listed in the `ignored_zones` parameter.
-> If the `ignore_volume_check` parameter is not set, then additionally query the zone volume as well.
+Query the AVR for available zones by querying the power status for each zone and checking if the AVR responds.
+Ignores zones listed in the `ignored_zones` parameter. <br/>
+If the `ignore_volume_check` parameter is not set, then additionally query the zone volume as well.
 
 _awaitable_ `PioneerAVR.set_panel_lock(`_panel_lock_: **str**, _zone_: Zones = Zones.Z1`)` -> **bool** | **None**:
 
-> Set the panel lock.
+Set the panel lock.
 
 _awaitable_ `PioneerAVR.set_remote_lock(`_remote_lock_: **bool**, _zone_: Zones = Zones.Z1`)` -> **bool** | **None**:
 
-> Set the remote lock.
+Set the remote lock.
 
 _awaitable_ `PioneerAVR.set_dimmer(`_dimmer_: **str**, _zone_: Zones = Zones.Z1`)` -> **bool** | **None**:
 
-> Set the display dimmer.
+Set the display dimmer.
 
 ### AVR source methods
 
 _awaitable_ `PioneerAVR.select_source(`_source_name_: **str**, _zone_: Zones = Zones.Z1`)` -> **bool** | **None**:
 
-> Set the input source for _zone_ to _source_name_.
+Set the input source for _zone_ to _source_name_.
 
 _awaitable_ `PioneerAVR.build_source_dict()`
 
-> Query the available sources names from the AVR.
-> Parameter `max_source_id` determines the highest source ID that is queried.
+Query the available sources names from the AVR. <br/>
+Parameter `max_source_id` determines the highest source ID that is queried.
 
 `PioneerAVR.set_source_dict(`_sources_: **dict**[**str**, **str**]`)`
 
-> Manually set the available sources to the dict _sources_, where the keys are source IDs (padded to 2 chars) and the values are the corresponding source names.
+Manually set the available sources to the dict _sources_, where the keys are source IDs (padded to 2 chars) and the values are the corresponding source names.
 
 `PioneerAVR.get_source_list(`_zone_: Zones = Zones.Z1`)` -> **list**[**str**]
 
-> Return the set of currently available source names for _zone_. The source names can be used with the `select_source` method.
+Return the set of currently available source names for _zone_. The source names can be used with the `select_source` method.
 
 `PioneerAVR.get_source_dict(`_zone_: Zones = **None**`)` -> **dict**[**str**, **str**]
 
-> Return a dict of currently available source names to source ID mappings for _zone_.
-> If _zone_ is **None**, then return the dict of all available source names to source ID mappings.
+Return a dict of currently available source names to source ID mappings for _zone_. <br/>
+If _zone_ is **None**, then return the dict of all available source names to source ID mappings.
 
 `PioneerAVR.get_source_name(`_source_id_: **str**`)` -> **str**
 
-> Return the source name for _source_id_.
+Return the source name for _source_id_.
 
 _awaitable_ `PioneerAVR.set_source_name(`_source_id_: **str**, _source_name_: **str** = "", _default_: **bool** = **False**`)` -> **bool**
 
-> Renames _source_id_ to _source_name_ on the AVR.
-> If _default_ is **True**, reset _source_id_ to the default source name.
+Renames _source_id_ to _source_name_ on the AVR. <br/>
+If _default_ is **True**, reset _source_id_ to the default source name.
 
 `PioneerAVR.clear_source_id(`_source_id_: **str**`)`
 
-> Clear the name mapping for _source_id_.
+Clear the name mapping for _source_id_.
 
 ### AVR command methods
 
 _awaitable_ `PioneerAVR.send_command(`_command_: **str**, _zone_: Zones = Zones.Z1, _prefix_: **str** = "", _suffix_: **str** = "", _ignore_error_: **bool** | **None** = **None**, _rate_limit_: **bool** = **True**`)` -> **bool** | **None**
 
-> Send command _command_ for zone _zone_ to the AVR, prefixed with _prefix_ and/or suffixed with _suffix_ if specified.
-> If _command_ does not generate a response, then returns **True** if the command was successfully sent.
-> Otherwise, returns the response received from the AVR, **None** if timed out, or **False** if an error response was received.
-> If _ignore_error_ is **None** (default), then raise an exception on error. If _ignore_error_ is **True**, then log the error as level debug, otherwise log the error as level error.
-> If _rate_limit_ is **True**, then rate limit the commands sent to the AVR in accordance with the `command_delay` parameter.
+Send command _command_ for zone _zone_ to the AVR, prefixed with _prefix_ and/or suffixed with _suffix_ if specified. <br/>
+If _command_ does not generate a response, then returns **True** if the command was successfully sent.
+Otherwise, returns the response received from the AVR, **None** if timed out, or **False** if an error response was received. <br/>
+If _ignore_error_ is **None** (default), then raise an exception on error. If _ignore_error_ is **True**, then log the error as level debug, otherwise log the error as level error. <br/>
+If _rate_limit_ is **True**, then rate limit the commands sent to the AVR in accordance with the `command_delay` parameter.
 
 `PioneerAVR.queue_command(`_command_: **str**, _skip_if_queued_: **bool** = **True**, _insert_at_: **int** = -1`)` -> **None**
 
-> Add _command_ to the command queue, to to be sent in the background to the AVR when method `command_queue_schedule` is invoked.
-> Insert the command at queue position _insert_at_ if specified (inserts at end of the queue by default).
+Add _command_ to the command queue, to to be sent in the background to the AVR when method `command_queue_schedule` is invoked.
+Insert the command at queue position _insert_at_ if specified (inserts at end of the queue by default).
 
 _awaitable_ `PioneerAVR.send_raw_command(`_command_: **str**, _rate_limit_: **bool** = True`)`
 
-> Send a raw command _command_ to the AVR.
-> If _rate_limit_ is **True**, then rate limit the commands sent to the AVR in accordance with the `command_delay` parameter.
+Send a raw command _command_ to the AVR.
+If _rate_limit_ is **True**, then rate limit the commands sent to the AVR in accordance with the `command_delay` parameter.
 
 _awaitable_ `PioneerAVR.send_raw_request(`_command_: **str**, _response_prefix_: **str**, _ignore_error_: **bool** | **None** = **None**, _rate_limit_: **bool** = **True**`)` -> **str** | **bool** | **None**
 
-> Send a raw command _command_ to the AVR and wait for a response with prefix _response_prefix_.
-> Returns the response received from the AVR, **None** if timed out, or **False** if an error response was received.
-> If _ignore_error_ is **None** (default), then raise an exception on error. If _ignore_error_ is **True**, then log the error as level debug, otherwise log the error as level error.
-> If _rate_limit_ is **True**, then rate limit the commands sent to the AVR in accordance with the `command_delay` parameter.
+Send a raw command _command_ to the AVR and wait for a response with prefix _response_prefix_.
+Returns the response received from the AVR, **None** if timed out, or **False** if an error response was received. <br/>
+If _ignore_error_ is **None** (default), then raise an exception on error. If _ignore_error_ is **True**, then log the error as level debug, otherwise log the error as level error. <br/>
+If _rate_limit_ is **True**, then rate limit the commands sent to the AVR in accordance with the `command_delay` parameter.
 
 ### AVR tuner methods
 
 _awaitable_ `PioneerAVR.select_tuner_band(`_band_: TunerBand = TunerBand.FM`)` -> **bool**
 
-> Set the tuner band to _band_.
+Set the tuner band to _band_.
 
 _awaitable_ `PioneerAVR.set_tuner_frequency(`_band_: TunerBand, _frequency_: **float** = **None**`)` -> **bool**
 
-> Set the tuner band to _band_ and tuner frequency to _frequency_.
-> Step the frequency up or down if it cannot be set directly.
+Set the tuner band to _band_ and tuner frequency to _frequency_.
+Step the frequency up or down if it cannot be set directly.
 
 _awaitable_ `PioneerAVR.select_tuner_preset(`_tuner_class_: **str**, _preset_: **int**`)` -> **bool**:
 
-> Select the tuner preset _preset_ in class _tuner_class_.
+Select the tuner preset _preset_ in class _tuner_class_.
 
 _awaitable_ `PioneerAVR.tuner_previous_preset()`
 
-> Select the previous tuner preset.
+Select the previous tuner preset.
 
 _awaitable_ `PioneerAVR.tuner_next_preset()`
 
-> Select the next tuner preset.
+Select the next tuner preset.
 
 ### AVR audio/video methods
 
 _awaitable_ `PioneerAVR.set_listening_mode(`_listening_mode_: **str**`)` -> **bool**
 
-> Set the listening mode to _listening_mode_.
-> Must be a listening mode valid for the current sound input as returned by `get_listening_modes`.
+Set the listening mode to _listening_mode_.
+Must be a listening mode valid for the current sound input as returned by `get_listening_modes`.
 
 `PioneerAVR.get_listening_modes()` -> **dict**[**str**, **str**] | **None**
 
-> Return dict of valid listening mode mapping to names for the AVR.
+Return dict of valid listening mode mapping to names for the AVR.
 
 _awaitable_ `PioneerAVR.set_volume_level(`_target_volume_: **int**, zone: Zones = Zones.Z1`)`
 
-> Set the volume level for zone _zone_ to _target_volume_.
-> _target_volume_ must be between 0 and 185 inclusive for Zone 1, and between 0 and 81 inclusive for all  other zones.
+Set the volume level for zone _zone_ to _target_volume_.
+_target_volume_ must be between 0 and 185 inclusive for Zone 1, and between 0 and 81 inclusive for all  other zones.
 
 _awaitable_ `PioneerAVR.mute_on(`_zone_: Zones = Zones.Z1`)` -> **bool**
 
-> Turn mute on for zone _zone_.
+Turn mute on for zone _zone_.
 
 _awaitable_ `PioneerAVR.mute_off(`_zone_: Zones = Zones.Z1`)` -> **bool**
 
-> Turn mute off for zone _zone_.
+Turn mute off for zone _zone_.
 
 _awaitable_ `PioneerAVR.set_tone_settings(`_tone_: **str** = **None**, _treble_: **int** = **None**, _bass_: **int** = **None**, _zone_: Zones = Zones.Z1 `)` -> **bool** | **None**
 
-> Set the tone settings for zone _zone_ to _tone_. When _tone_ is set to `On`, _treble_ specifies the treble and _bass_ specifies the bass.
+Set the tone settings for zone _zone_ to _tone_. When _tone_ is set to `On`, _treble_ specifies the treble and _bass_ specifies the bass.
 
 _awaitable_ `PioneerAVR.set_amp_settings(`_speaker_config_: **str** = **None**, _hdmi_out_: **str** = **None**, _hdmi_audio_output_: **bool** = **None**, _pqls_: **bool** = **None**, _amp_: **str** = **None**, _zone_: Zones = Zones.Z1`)` -> **bool**
 
-> Set amplifier function settings for zone _zone_.
+Set amplifier function settings for zone _zone_.
 
 `PioneerAVR.get_ipod_control_commands()` -> list[str]
 
-> Return a list of all valid iPod control modes.
+Return a list of all valid iPod control modes.
 
 `PioneerAVR.get_tuner_control_commands()` -> list[str]
 
-> Return a list of all valid tuner control commands.
+Return a list of all valid tuner control commands.
 
 `PioneerAVR.get_supported_media_controls(`_zone_: Zones`)` -> list[str]
 
-> Return a list of all valid media control actions for zone _zone_.
-> Return **None** if the provided zone source is not currently compatible with media controls.
+Return a list of all valid media control actions for zone _zone_.
+Return **None** if the provided zone source is not currently compatible with media controls.
 
 _awaitable_ `PioneerAVR.set_channel_levels(`_channel_: **str**, _level_: **float**, _zone_: Zones = Zones.Z1`)` -> **bool**
 
-> Set the level (gain) for amplifier channel in zone _zone_.
+Set the level (gain) for amplifier channel in zone _zone_.
 
 _awaitable_ `PioneerAVR.set_video_settings(`_zone_: Zones, **_arguments_`)` -> **bool**
 
-> Set video settings for zone _zone_.
+Set video settings for zone _zone_.
 
 _awaitable_ `PioneerAVR.set_dsp_settings(`_zone_: Zones, **_arguments_`)` -> **bool**
 
-> Set the DSP settings for the amplifier for zone _zone_.
+Set the DSP settings for the amplifier for zone _zone_.
 
 _awaitable_ `PioneerAVR.media_control(`_action_: **str**, _zone_: Zones = Zones.Z1`)` -> **bool**
 
-> Perform media control activities such as play, pause, stop, fast forward or rewind.
+Perform media control activities such as play, pause, stop, fast forward or rewind.
 
 ### AVR zone callback methods
 
 `PioneerAVR.set_zone_callback(`_zone_: Zones, _callback_: **Callable**[..., **None**]`)`
 
-> Register callback _callback_ for zone _zone_.
+Register callback _callback_ for zone _zone_.
 
 `PioneerAVR.clear_zone_callbacks()`
 
-> Clear callbacks for all zones.
+Clear callbacks for all zones.
 
 ### Param methods
 
 `PioneerAVR.set_user_params(`_params_: **dict**[**str**, **Any**] = **None**`)` -> **None**
 
-> Set user parameters and update current parameters.
+Set user parameters and update current parameters.
 
 `PioneerAVR.get_param(`_param_name_: **str**`)` -> **Any**
 
-> Get the value of the specified parameter.
+Get the value of the specified parameter.
 
 `PioneerAVR.get_params()` -> **dict**[**str**, **Any**]
 
-> Get a copy of all current parameters.
+Get a copy of all current parameters.
 
 `PioneerAVR.get_user_params()` -> **dict**[**str**, **Any**]
 
-> Get a copy of user parameters.
+Get a copy of user parameters.
 
 `PioneerAVR.get_default_params()` -> **dict**[**str**, **Any**]
 
-> Get a copy of current default parameters.
+Get a copy of current default parameters.
 
 ### Attributes
 
