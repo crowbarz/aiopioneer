@@ -213,7 +213,7 @@ class PioneerAVR:
         merge(self._params, self._system_params)
 
     def set_user_params(self, params: dict[str, Any] = None) -> None:
-        """Set parameters and merge with defaults."""
+        """Set user parameters and update current parameters."""
         _LOGGER.debug(">> PioneerAVR.set_user_params(%s)", params)
         self._user_params = copy.deepcopy(params) if params is not None else {}
         self._update_params()
@@ -235,8 +235,8 @@ class PioneerAVR:
         self._update_params()
 
     def get_param(self, param_name: str) -> Any:
-        """Get a copy of all current parameters."""
-        return self._params[param_name]
+        """Get the value of the specified parameter."""
+        return self._params.get(param_name)
 
     def get_params(self) -> dict[str, Any]:
         """Get a copy of all current parameters."""
