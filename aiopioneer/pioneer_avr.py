@@ -1527,7 +1527,7 @@ class PioneerAVR:
         zone = self._check_zone(zone)
         return await self.send_command("mute_off", zone, ignore_error=False)
 
-    async def set_listening_mode(self, listening_mode: str) -> bool:
+    async def select_listening_mode(self, listening_mode: str) -> bool:
         """Set the listening mode using the predefined list of options in params."""
         listening_modes = self.get_listening_modes()
         if listening_modes:

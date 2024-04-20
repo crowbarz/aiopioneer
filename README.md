@@ -237,7 +237,7 @@ Select the next tuner preset.
 
 ### AVR audio/video methods
 
-_awaitable_ `PioneerAVR.set_listening_mode(`_listening_mode_: **str**`)` -> **bool**
+_awaitable_ `PioneerAVR.select_listening_mode(`_listening_mode_: **str**`)` -> **bool**
 
 Set the listening mode to _listening_mode_.
 Must be a listening mode valid for the current sound input as returned by `get_listening_modes`.
@@ -406,7 +406,7 @@ The CLI accepts all API commands, as well as the following:
 | `get_scan_interval` | | Return the current scan interval.
 | `set_volume_level` | _volume_level_ (int) | Set the volume level for the current zone.
 | `select_source` | _source_name_ | Set the input source for the current zone.
-| `set_listening_mode` | _listening_mode_ | (>0.5) Set the listening mode to the specified mode.
+| `select_listening_mode` | _listening_mode_ | (>0.5) Set the listening mode to the specified mode.
 | `set_tuner_frequency` | _band_ _frequency_ | Set the tuner band and (optionally) frequency.
 | `tuner_previous_preset` | | Select the previous] tuner preset
 | `tuner_next_preset` | | Select the next tuner preset
@@ -459,6 +459,7 @@ The list below shows the source ID that corresponds to each AVR source:
   `update` now waits for the update to finish by default \
   `set_tuner_preset` has been renamed to `select_tuner_preset` \
   `get_zone_listening_modes` has been renamed to `get_listening_modes` \
+  `set_listening_mode` has been renamed to `select_listening_mode` \
   `tuner_*`, `get_zone_listening_modes`, `set_panel_lock`, `set_remote_lock` and `set_dimmer` methods no longer accept a zone argument \
   The `suffix` argument of the `send_command` method has been reordered after the `prefix` argument \
   Response codes marked `---` now return **None**  \

@@ -209,7 +209,7 @@ async def cli_main(args: argparse.Namespace):
             await pioneer.select_source(source, zone=zone)
         elif cmd == "set_listening_mode":
             listening_mode = arg if arg else ""
-            await pioneer.set_listening_mode(listening_mode)
+            await pioneer.select_listening_mode(listening_mode)
         elif cmd == "set_tuner_frequency":
             subargs = arg.split(" ", maxsplit=1)
             try:
