@@ -2,10 +2,10 @@
 
 from enum import StrEnum
 
+VERSION = "0.6.0rc1"
 DEFAULT_TIMEOUT = 2
 DEFAULT_SCAN_INTERVAL = 60
 DEFAULT_PORT = 8102
-VERSION = "0.5.0"
 
 
 class Zones(StrEnum):
