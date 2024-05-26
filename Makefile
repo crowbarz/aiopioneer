@@ -16,8 +16,13 @@ dist: sdist
 	python -m twine upload dist/*
 
 main:
-	@echo Pushing dev to main for version $(VERSION)
+	@echo Merging dev to main for version $(VERSION)
 	git checkout main
 	git merge --ff-only dev
 	git push
 	git checkout dev
+
+local:
+	@echo Pushing dev and main to local for version $(VERSION)
+	git push local dev
+	git push local main
