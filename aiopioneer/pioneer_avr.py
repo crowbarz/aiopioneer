@@ -44,6 +44,14 @@ from .param import (
     PARAM_AVAILABLE_LISTENING_MODES,
 )
 from .commands import PIONEER_COMMANDS
+from .exceptions import (
+    PioneerException,
+    AVRUnavailableException,
+    AVRUnknownCommandException,
+    AVRResponseTimeoutException,
+    AVRCommandErrorException,
+    PioneerExceptionFormatText,
+)
 from .util import (
     merge,
     sock_set_keepalive,
@@ -589,7 +597,7 @@ class PioneerAVR:
                 rate_limit,
             )
         if not self.available:
-            raise RuntimeError("AVR connection not available")
+            raise AVRUnavailableException
 
         if rate_limit:
             # Rate limit commands
@@ -607,9 +615,7 @@ class PioneerAVR:
         await self._writer.drain()
         self._last_command = time.time()
 
-    async def _wait_for_response(
-        self, command: str, response_prefix: str, ignore_error: bool
-    ) -> str | bool:
+    async def _wait_for_response(self, command: str, response_prefix: str) -> str:
         """Wait for a response to a request."""
         debug_command = self._params[PARAM_DEBUG_COMMAND]
 
@@ -624,31 +630,22 @@ class PioneerAVR:
                         )
                     return response
                 if response.startswith("E"):
-                    err = f"AVR command {command} returned error: {response}"
-                    if ignore_error is None:
-                        raise RuntimeError(err)
-                    if ignore_error:
-                        _LOGGER.debug(err)
-                    else:
-                        _LOGGER.error(err)
-                    return False
+                    raise AVRCommandErrorException(response)
             self._response_queue = []
 
     async def send_raw_request(
         self,
         command: str,
         response_prefix: str,
-        ignore_error: bool | None = None,
         rate_limit: bool = True,
-    ) -> str | bool | None:
+    ) -> str:
         """Send a raw command to the AVR and return the response."""
         debug_command = self._params[PARAM_DEBUG_COMMAND]
         if debug_command:
             _LOGGER.debug(
-                '>> PioneerAVR.send_raw_request("%s", %s, ignore_error=%s, rate_limit=%s)',
+                '>> PioneerAVR.send_raw_request("%s", %s, rate_limit=%s)',
                 command,
                 response_prefix,
-                ignore_error,
                 rate_limit,
             )
         async with self._request_lock:  ## Only send one request at a time
@@ -661,13 +658,12 @@ class PioneerAVR:
             try:
                 # response = await asyncio.wait_for(
                 response = await safe_wait_for(
-                    self._wait_for_response(command, response_prefix, ignore_error),
+                    self._wait_for_response(command, response_prefix),
                     timeout=self._timeout,
                 )
                 await asyncio.sleep(0)  # yield to listener task
-            except asyncio.TimeoutError:  # response timer expired
-                _LOGGER.debug("AVR command %s timed out", command)
-                response = None
+            except asyncio.TimeoutError as exc:  # response timer expired
+                raise AVRResponseTimeoutException from exc
 
             self._queue_responses = False
             self._response_queue = []
@@ -697,8 +693,8 @@ class PioneerAVR:
                 suffix,
             )
 
-        raw_command = PIONEER_COMMANDS.get(command, {}).get(zone)
-        try:
+        async def _send_command():
+            raw_command = PIONEER_COMMANDS.get(command, {}).get(zone)
             if type(raw_command) is list:
                 if len(raw_command) == 2:
                     # Handle command as request
@@ -706,25 +702,38 @@ class PioneerAVR:
                     raw_command = raw_command[0]
                     response = await self.send_raw_request(
                         prefix + raw_command + suffix,
-                        expected_response,
-                        ignore_error,
-                        rate_limit,
+                        response_prefix=expected_response,
+                        rate_limit=rate_limit,
                     )
                     if debug_command:
                         _LOGGER.debug("send_command received response: %s", response)
                     return response
-                else:
-                    _LOGGER.error("invalid request %s for zone %s", raw_command, zone)
-                    return None
+                raise AVRUnknownCommandException
             elif type(raw_command) is str:
-                await self.send_raw_command(prefix + raw_command + suffix, rate_limit)
+                await self.send_raw_command(
+                    prefix + raw_command + suffix, rate_limit=rate_limit
+                )
                 return True
-            else:
-                _LOGGER.warning("invalid command %s for zone %s", command, zone)
-                return None
-        except RuntimeError as exc:
-            _LOGGER.error("cannot execute %s command: %s", command, exc)
-            return False
+            raise AVRUnknownCommandException
+
+        if ignore_error is None:
+            ## Do not handle exceptions
+            return await _send_command()
+
+        # pylint: disable=broad-exception-caught
+        try:
+            return await _send_command()
+        except (PioneerException, Exception) as exc:
+            translation_key = getattr(exc, "translation_key", "unknown_exception")
+            err = PioneerExceptionFormatText.get(translation_key, "unknown_exception")
+            err_txt = err.format(command=command, zone=str(zone), exc=str(exc))
+            rc = False if isinstance(exc, AVRCommandErrorException) else None
+
+        if ignore_error:
+            _LOGGER.debug(err_txt)
+        else:
+            _LOGGER.error(err_txt)
+        return rc
 
     # Initialisation functions
     async def query_zones(self, force_update: bool = False) -> None:
@@ -819,12 +828,15 @@ class PioneerAVR:
         _LOGGER.info("querying AVR source names")
         async with self._update_lock:
             for src_id in range(self._params[PARAM_MAX_SOURCE_ID] + 1):
-                response = await self.send_raw_request(
-                    "?RGB" + str(src_id).zfill(2),
-                    "RGB",
-                    ignore_error=True,
-                    rate_limit=False,
-                )
+                try:
+                    response = await self.send_command(
+                        "system_query_source_name",
+                        suffix=str(src_id).zfill(2),
+                        rate_limit=False,
+                    )
+                except (AVRCommandErrorException, AVRResponseTimeoutException):
+                    pass
+                await asyncio.sleep(0)  # yield to updater task
 
                 if response is None:
                     timeouts += 1
@@ -1571,7 +1583,6 @@ class PioneerAVR:
         """Set the tone settings for a given zone."""
         ## Check the zone supports tone settings and that inputs are within range
         zone = self._check_zone(zone)
-        rc = True
         if self.tone.get(zone.value) is None:
             raise SystemError(f"tone controls are not available for zone {zone}")
         if not -6 <= treble <= 6:

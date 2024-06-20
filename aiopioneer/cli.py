@@ -246,7 +246,9 @@ async def cli_main(args: argparse.Namespace):
                 + (f", prefix {prefix}" if prefix else "")
                 + (f", suffix {suffix}" if suffix else "")
             )
-            await pioneer.send_command(cmd, zone=cur_zone, prefix=prefix, suffix=suffix)
+            await pioneer.send_command(
+                cmd, zone=cur_zone, prefix=prefix, suffix=suffix, ignore_error=True
+            )
         else:
             print(f"ERROR: Unknown command {cmd}")
 

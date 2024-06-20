@@ -293,6 +293,7 @@ PIONEER_COMMANDS = {
     "operation_amp_channel_select": {Zones.Z1: "CLC"},
     "operation_amp_home_menu": {Zones.Z1: "HM"},
     "operation_amp_key_off": {Zones.Z1: "KOF"},
+    "system_query_source_name": {Zones.Z1: ["?RGB", "RGB"]},
     "set_source_name": {Zones.Z1: ["1RGB", "RGB"]},
     "set_default_source_name": {Zones.Z1: ["0RGB", "RGB"]},
 }
