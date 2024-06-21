@@ -1725,7 +1725,7 @@ class PioneerAVR:
             count -= 1
         if new_freq == current_freq and count == 0:
             _LOGGER.error(
-                "cannot calculate tuner AM frequency step: unable to step volume"
+                "cannot calculate tuner AM frequency step: unable to step frequency"
             )
             return
 
