@@ -1336,37 +1336,37 @@ class PioneerAVR:
             raise ValueError(f"zone {zone} does not exist on AVR")
         return zone
 
-    async def turn_on(self, zone: Zones = Zones.Z1) -> bool | None:
+    async def turn_on(self, zone: Zones = Zones.Z1) -> None:
         """Turn on the Pioneer AVR zone."""
         zone = self._check_zone(zone)
-        return await self.send_command("turn_on", zone)
+        await self.send_command("turn_on", zone)
 
-    async def turn_off(self, zone: Zones = Zones.Z1) -> bool | None:
+    async def turn_off(self, zone: Zones = Zones.Z1) -> None:
         """Turn off the Pioneer AVR zone."""
         zone = self._check_zone(zone)
-        return await self.send_command("turn_off", zone)
+        await self.send_command("turn_off", zone)
 
-    async def select_source(self, source: str, zone: Zones = Zones.Z1) -> bool | None:
+    async def select_source(
+        self, source: str = None, source_id: str = None, zone: Zones = Zones.Z1
+    ) -> None:
         """Select input source."""
         zone = self._check_zone(zone)
-        source_id = self._source_name_to_id.get(source)
-        if source_id:
-            return await self.send_command(
-                "select_source", zone, prefix=source_id, ignore_error=False
-            )
-        else:
-            _LOGGER.error("invalid source %s for zone %s", source, zone)
-            return False
+        if source_id is None:
+            source_id = self._source_name_to_id.get(source)
+        if source_id is None:
+            raise ValueError(f"invalid source {source} for zone {zone}")
 
-    async def volume_up(self, zone: Zones = Zones.Z1) -> bool | None:
+        await self.send_command("select_source", zone, prefix=source_id)
+
+    async def volume_up(self, zone: Zones = Zones.Z1) -> None:
         """Volume up media player."""
         zone = self._check_zone(zone)
-        return await self.send_command("volume_up", zone, ignore_error=False)
+        await self.send_command("volume_up", zone)
 
-    async def volume_down(self, zone: Zones = Zones.Z1) -> bool | None:
+    async def volume_down(self, zone: Zones = Zones.Z1) -> None:
         """Volume down media player."""
         zone = self._check_zone(zone)
-        return await self.send_command("volume_down", zone, ignore_error=False)
+        await self.send_command("volume_down", zone)
 
     async def _execute_command_queue(self) -> None:
         """Execute commands from a queue."""
@@ -1511,55 +1511,54 @@ class PioneerAVR:
         else:
             vol_len = 3 if Zones(zone) is Zones.Z1 else 2
             vol_prefix = str(target_volume).zfill(vol_len)
-            return await self.send_command(
-                "set_volume_level", zone, prefix=vol_prefix, ignore_error=False
+            return bool(
+                await self.send_command(
+                    "set_volume_level", zone, prefix=vol_prefix, ignore_error=False
+                )
             )
 
-    async def mute_on(self, zone: Zones = Zones.Z1) -> bool:
+    async def mute_on(self, zone: Zones = Zones.Z1) -> None:
         """Mute AVR."""
         zone = self._check_zone(zone)
-        return await self.send_command("mute_on", zone, ignore_error=False)
+        await self.send_command("mute_on", zone, ignore_error=False)
 
-    async def mute_off(self, zone: Zones = Zones.Z1) -> bool:
+    async def mute_off(self, zone: Zones = Zones.Z1) -> None:
         """Unmute AVR."""
         zone = self._check_zone(zone)
-        return await self.send_command("mute_off", zone, ignore_error=False)
+        await self.send_command("mute_off", zone, ignore_error=False)
 
-    async def select_listening_mode(self, listening_mode: str) -> bool:
+    async def select_listening_mode(
+        self, mode_name: str = None, mode_id: str = None
+    ) -> None:
         """Set the listening mode using the predefined list of options in params."""
-        listening_modes = self.get_listening_modes()
-        if listening_modes:
-            for mode_id, mode_name in listening_modes.items():
-                if mode_name == listening_mode:
-                    return await self.send_command(
-                        "set_listening_mode",
-                        prefix=mode_id,
-                        ignore_error=False,
-                    )
-        raise ValueError(f"listening mode {listening_mode} not available")
 
-    async def set_panel_lock(self, panel_lock: str) -> bool:
+        if mode_name and mode_id is None:
+            listening_modes = self.get_listening_modes()
+            if listening_modes:
+                for mode_id_item, mode_name_item in listening_modes.items():
+                    if mode_name == mode_name_item:
+                        mode_id = mode_id_item
+                        break
+        if mode_id is None:
+            raise ValueError(f"listening mode {mode_name} not available")
+        await self.send_command("set_listening_mode", prefix=mode_id)
+
+    async def set_panel_lock(self, panel_lock: str) -> None:
         """Set the panel lock."""
-        return await self.send_command(
+        await self.send_command(
             "set_amp_panel_lock",
             prefix=self._get_parameter_key_from_value(panel_lock, PANEL_LOCK),
-            ignore_error=False,
         )
 
-    async def set_remote_lock(self, remote_lock: bool) -> bool:
+    async def set_remote_lock(self, remote_lock: bool) -> None:
         """Set the remote lock."""
-        return await self.send_command(
-            "set_amp_remote_lock",
-            prefix=str(int(remote_lock)),
-            ignore_error=False,
-        )
+        await self.send_command("set_amp_remote_lock", prefix=str(int(remote_lock)))
 
-    async def set_dimmer(self, dimmer: str) -> bool:
+    async def set_dimmer(self, dimmer: str) -> None:
         """Set the display dimmer."""
-        return await self.send_command(
+        await self.send_command(
             "set_amp_dimmer",
             prefix=self._get_parameter_key_from_value(dimmer, DIMMER_MODES),
-            ignore_error=False,
         )
 
     async def set_tone_settings(
@@ -1568,46 +1567,42 @@ class PioneerAVR:
         treble: int = None,
         bass: int = None,
         zone: Zones = Zones.Z1,
-    ) -> bool | None:
+    ) -> None:
         """Set the tone settings for a given zone."""
         ## Check the zone supports tone settings and that inputs are within range
         zone = self._check_zone(zone)
         rc = True
         if self.tone.get(zone.value) is None:
-            return None
+            raise SystemError(f"tone controls are not available for zone {zone}")
         if not -6 <= treble <= 6:
             raise ValueError(f"invalid treble value: {treble}")
         if not -6 <= bass <= 6:
             raise ValueError(f"invalid bass value: {bass}")
 
         if tone is not None:
-            rc = await self.send_command(
+            await self.send_command(
                 "set_tone_mode",
                 zone,
                 prefix=self._get_parameter_key_from_value(tone, TONE_MODES),
-                ignore_error=False,
             )
         ## Set treble and bass only if zone tone status is set to "On"
-        if rc and self.tone.get(zone.value, {}).get("status") == "On":
+        if self.tone.get(zone.value, {}).get("status") == "On":
             treble_str = f"{str(treble)}dB"
             bass_str = f"{str(bass)}dB"
             if treble is not None:
-                rc = await self.send_command(
+                await self.send_command(
                     "set_tone_treble",
                     zone,
                     prefix=self._get_parameter_key_from_value(
                         treble_str, TONE_DB_VALUES
                     ),
-                    ignore_error=False,
                 )
-            if rc and bass is not None:
-                rc = await self.send_command(
+            if bass is not None:
+                await self.send_command(
                     "set_tone_bass",
                     zone,
                     prefix=self._get_parameter_key_from_value(bass_str, TONE_DB_VALUES),
-                    ignore_error=False,
                 )
-        return bool(rc)
 
     async def set_amp_settings(
         self,
@@ -1617,62 +1612,49 @@ class PioneerAVR:
         pqls: bool = None,
         amp: str = None,
         zone: Zones = Zones.Z1,
-    ) -> bool:
+    ) -> None:
         """Set amplifier function settings for a given zone."""
         zone = self._check_zone(zone)
-        rc = True
 
         # FUNC: SPEAKERS (use PARAM_SPEAKER_MODES)
         if self.amp.get("speakers") is not None and speaker_config is not None:
-            rc = await self.send_command(
+            await self.send_command(
                 "set_amp_speaker_status",
                 zone,
                 prefix=self._get_parameter_key_from_value(
                     speaker_config, SPEAKER_MODES
                 ),
-                ignore_error=False,
             )
 
         # FUNC: HDMI OUTPUT SELECT (use PARAM_HDMI_OUT_MODES)
-        if rc and self.amp.get("hdmi_out") is not None and hdmi_out is not None:
-            rc = await self.send_command(
+        if self.amp.get("hdmi_out") is not None and hdmi_out is not None:
+            await self.send_command(
                 "set_amp_hdmi_out_status",
                 zone,
                 prefix=self._get_parameter_key_from_value(hdmi_out, HDMI_OUT_MODES),
-                ignore_error=False,
             )
 
         # FUNC: HDMI AUDIO (simple bool, True is on, otherwise audio only goes to amp)
-        if (
-            rc
-            and self.amp.get("hdmi_audio") is not None
-            and hdmi_audio_output is not None
-        ):
-            rc = await self.send_command(
+        if self.amp.get("hdmi_audio") is not None and hdmi_audio_output is not None:
+            await self.send_command(
                 "set_amp_hdmi_audio_status",
                 zone,
                 prefix=str(int(hdmi_audio_output)),
-                ignore_error=False,
             )
 
         # FUNC: PQLS (simple bool, True is auto, False is off)
-        if rc and self.amp.get("pqls") is not None and pqls is not None:
-            rc = await self.send_command(
-                "set_amp_pqls_status", zone, prefix=str(int(pqls)), ignore_error=False
-            )
+        if self.amp.get("pqls") is not None and pqls is not None:
+            await self.send_command("set_amp_pqls_status", zone, prefix=str(int(pqls)))
 
         # FUNC: AMP (use PARAM_AMP_MODES)
-        if rc and self.amp.get("status") is not None and amp is not None:
-            rc = await self.send_command(
+        if self.amp.get("status") is not None and amp is not None:
+            await self.send_command(
                 "set_amp_status",
                 zone,
                 prefix=self._get_parameter_key_from_value(amp, AMP_MODES),
-                ignore_error=False,
             )
 
-        return rc
-
-    async def select_tuner_band(self, band: TunerBand = TunerBand.FM) -> bool:
+    async def select_tuner_band(self, band: TunerBand = TunerBand.FM) -> None:
         """Set the tuner band."""
         if not isinstance(band, TunerBand):
             raise ValueError(f"invalid TunerBand specified: {band}")
@@ -1681,12 +1663,12 @@ class PioneerAVR:
 
         ## Set the tuner band
         if band == self.tuner.get("band"):
-            return True
+            return
         tuner_commands = {
             TunerBand.AM: "set_tuner_band_am",
             TunerBand.FM: "set_tuner_band_fm",
         }
-        return await self.send_command(tuner_commands[band], ignore_error=False)
+        await self.send_command(tuner_commands[band])
 
     async def _calculate_am_frequency_step(self) -> None:
         """
@@ -1731,7 +1713,7 @@ class PioneerAVR:
         self._update_params()
         await self.send_command("decrease_tuner_frequency", ignore_error=True)
 
-    async def _step_tuner_frequency(self, band: str, frequency: float) -> bool:
+    async def _step_tuner_frequency(self, band: str, frequency: float) -> None:
         """Step the tuner frequency until requested frequency is reached."""
         zone = Zones.Z1
         current_freq = self.tuner.get("frequency")
@@ -1773,26 +1755,19 @@ class PioneerAVR:
                 count -= 1
 
         if count == 0:
-            _LOGGER.warning("maximum frequency step count exceeded")
-            rc = False
-        return rc
+            raise RuntimeError("maximum frequency step count exceeded")
 
-    async def set_tuner_frequency(
-        self, band: TunerBand, frequency: float = None
-    ) -> bool:
+    async def set_tuner_frequency(self, band: TunerBand, frequency: float) -> None:
         """Set the tuner frequency and band."""
-        if not await self.select_tuner_band(band):
-            return False
-        await self._command_queue_wait()  ## wait for AM step to be calculated
-
-        if frequency is None:
-            return True
-        elif not isinstance(frequency, float):
+        if not isinstance(frequency, float):
             raise ValueError(f"invalid frequency {frequency}")
         elif (band == TunerBand.AM and not 530 <= frequency <= 1700) or (
             band == TunerBand.FM and not 87.5 <= frequency <= 108.0
         ):
             raise ValueError(f"frequency {frequency} out of range for band {band}")
+
+        await self.select_tuner_band(band)
+        await self._command_queue_wait()  ## wait for AM step to be calculated
 
         if await self.send_command("operation_direct_access", ignore_error=True):
             ## Set tuner frequency directly if command is supported
@@ -1803,31 +1778,30 @@ class PioneerAVR:
                 ):
                     raise SystemError(f"AVR rejected frequency set to {frequency}")
         else:
-            return await self._step_tuner_frequency(band, frequency)
+            await self._step_tuner_frequency(band, frequency)
 
-    async def select_tuner_preset(self, tuner_class: str, preset: int) -> bool:
+    async def select_tuner_preset(self, tuner_class: str, preset: int) -> None:
         """Select the tuner preset."""
-        return await self.send_command(
+        await self.send_command(
             "select_tuner_preset",
             prefix=str(tuner_class).upper() + str(preset).upper().zfill(2),
-            ignore_error=False,
         )
 
-    async def tuner_previous_preset(self) -> bool:
+    async def tuner_previous_preset(self) -> None:
         """Select the previous tuner preset."""
-        return await self.send_command("decrease_tuner_preset", ignore_error=False)
+        await self.send_command("decrease_tuner_preset")
 
-    async def tuner_next_preset(self) -> bool:
+    async def tuner_next_preset(self) -> None:
         """Select the next tuner preset."""
-        return await self.send_command("increase_tuner_preset", ignore_error=False)
+        await self.send_command("increase_tuner_preset")
 
     async def set_channel_levels(
         self, channel: str, level: float, zone: Zones = Zones.Z1
-    ) -> bool:
+    ) -> None:
         """Set the level (gain) for amplifier channel in zone."""
         zone = self._check_zone(zone)
         if self.channel_levels.get(zone.value) is None:
-            raise ValueError(f"channel level not supported for zone {zone}")
+            raise ValueError(f"channel levesl not supported for zone {zone}")
 
         # Check the channel exists
         if self.channel_levels[zone.value].get(channel.upper()) is None:
@@ -1841,21 +1815,20 @@ class PioneerAVR:
 
         # convert the float to correct int
         level = int((level * 2) + 50)
-        return await self.send_command(
-            "set_channel_levels", zone, prefix=channel + str(level), ignore_error=False
-        )
+        await self.send_command("set_channel_levels", zone, prefix=channel + str(level))
 
-    async def set_video_settings(self, **arguments) -> bool:
+    async def set_video_settings(self, **arguments) -> None:
         """Set video settings for a given zone."""
         zone = self._check_zone(arguments.get("zone"))
 
         # This function is only valid for zone 1, no video settings are
         # available for zone 2, 3, 4 and HDZone
         if zone != Zones.Z1:
-            raise ValueError(f"Invalid zone {zone}")
+            raise ValueError(f"video settings not supporte for zone {zone}")
 
         # This is a complex function and supports handles requests to update any
         # video related parameters
+        ## TODO: refactor to use match and possibly subfunctions
         for arg in arguments:
             if arg != "zone":
                 if arguments.get(arg) is not None:
@@ -1914,15 +1887,13 @@ class PioneerAVR:
                             ignore_error=False,
                         )
 
-        ## TODO: check command rc, refactor to use match
-        return True
-
-    async def set_dsp_settings(self, **arguments) -> bool:
+    async def set_dsp_settings(self, **arguments) -> None:
         """Set the DSP settings for the amplifier."""
         zone = self._check_zone(arguments.get("zone"))
         if zone != Zones.Z1:
-            raise ValueError(f"Invalid zone {zone}")
+            raise ValueError(f"DSP settings not supported for zone {zone}")
 
+        ## TODO: refactor to use match and possibly subfunctions
         for arg in arguments:
             if arg != "zone":
                 if arguments.get(arg) is not None:
@@ -1991,10 +1962,7 @@ class PioneerAVR:
                             ignore_error=False,
                         )
 
-        ## TODO: check command rc, refactor to use match
-        return True
-
-    async def media_control(self, action: str, zone: Zones = Zones.Z1) -> bool:
+    async def media_control(self, action: str, zone: Zones = Zones.Z1) -> None:
         """
         Perform media control activities such as play, pause, stop, fast forward
         or rewind.
@@ -2006,7 +1974,7 @@ class PioneerAVR:
             if command is not None:
                 # These commands are ALWAYS sent to zone 1 because each zone
                 # does not have unique commands
-                return await self.send_command(command, Zones.Z1, ignore_error=False)
+                await self.send_command(command, Zones.Z1, ignore_error=False)
             else:
                 raise NotImplementedError(
                     f"Current source ({self.source.get(zone.value)} does not support "
@@ -2020,24 +1988,21 @@ class PioneerAVR:
 
     async def set_source_name(
         self, source_id: str, source_name: str = "", default: bool = False
-    ) -> bool:
+    ) -> None:
         """Renames a given input, set the default parameter to true to reset to default."""
         if default:
-            return await self.send_command(
+            await self.send_command(
                 "set_default_source_name", Zones.Z1, suffix=source_id
             )
+            return
 
         if len(source_name) > 14:
             raise ValueError(
-                f"New source name ({source_name}) length too long. "
-                "Up to 14 characters are allowed"
+                f"new source name {source_name} is longer than 14 characters"
             )
         if self._source_id_to_name.get(source_id) == source_name:
-            return True
+            return
 
-        return await self.send_command(
-            "set_source_name",
-            Zones.Z1,
-            prefix=source_name,
-            suffix=source_id,
+        await self.send_command(
+            "set_source_name", Zones.Z1, prefix=source_name, suffix=source_id
         )
