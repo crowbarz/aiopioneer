@@ -355,6 +355,7 @@ class PioneerAVR:
         self._reconnect = False
         await self._reconnect_cancel()
         await self.disconnect()
+        await asyncio.sleep(0)  # yield to pending shutdown tasks
 
     async def reconnect(self) -> None:
         """Reconnect to an AVR."""
@@ -658,10 +659,12 @@ class PioneerAVR:
             self._response_event.clear()
             await self.send_raw_command(command, rate_limit=rate_limit)
             try:
+                # response = await asyncio.wait_for(
                 response = await safe_wait_for(
                     self._wait_for_response(command, response_prefix, ignore_error),
                     timeout=self._timeout,
                 )
+                await asyncio.sleep(0)  # yield to listener task
             except asyncio.TimeoutError:  # response timer expired
                 _LOGGER.debug("AVR command %s timed out", command)
                 response = None
@@ -741,7 +744,6 @@ class PioneerAVR:
                     self.zones.append(Zones.Z1)
                     added_zones = True
                     self.max_volume[Zones.Z1] = self._params[PARAM_MAX_VOLUME]
-                    await asyncio.sleep(0)  # yield to listener task
 
                     if not self.power[Zones.Z1] and self.initial_update is None:
                         ## Defer initial update if Zone 1 is not powered on
@@ -823,7 +825,6 @@ class PioneerAVR:
                     ignore_error=True,
                     rate_limit=False,
                 )
-                await asyncio.sleep(0)  # yield to updater task
 
                 if response is None:
                     timeouts += 1
@@ -956,7 +957,6 @@ class PioneerAVR:
         commands = [k for k in PIONEER_COMMANDS if k.startswith("system_query_")]
         for command in commands:
             await self.send_command(command, ignore_error=True)
-        await asyncio.sleep(0)  # yield to updater task
 
         self._set_default_params_model()  # Update default params for this model
         self._update_listening_modes()  # Update valid listening modes
@@ -1484,7 +1484,6 @@ class PioneerAVR:
                 while current_volume < target_volume:
                     _LOGGER.debug("current volume: %d", current_volume)
                     await self.volume_up(zone)
-                    await asyncio.sleep(0)  # yield to listener task
                     volume_step_count += 1
                     new_volume = self.volume.get(zone.value)
                     if new_volume <= current_volume:  # going wrong way
@@ -1498,7 +1497,6 @@ class PioneerAVR:
                 while current_volume > target_volume:
                     _LOGGER.debug("current volume: %d", current_volume)
                     await self.volume_down(zone)
-                    await asyncio.sleep(0)  # yield to listener task
                     volume_step_count += 1
                     new_volume = self.volume.get(zone.value)
                     if new_volume >= current_volume:  # going wrong way
