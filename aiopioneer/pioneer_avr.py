@@ -310,7 +310,7 @@ class PioneerAVR:
             await self._updater_schedule()
 
     async def disconnect(self) -> None:
-        """Shutdown and close telnet connection to AVR."""
+        """Shutdown and close connection to AVR."""
         _LOGGER.debug(">> PioneerAVR.disconnect() started")
 
         if self._disconnect_lock.locked():
