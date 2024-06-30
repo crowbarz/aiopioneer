@@ -1584,7 +1584,7 @@ class PioneerAVR:
         ## Check the zone supports tone settings and that inputs are within range
         zone = self._check_zone(zone)
         if self.tone.get(zone.value) is None:
-            raise SystemError(f"tone controls are not available for zone {zone}")
+            raise RuntimeError(f"tone controls are not available for zone {zone}")
         if not -6 <= treble <= 6:
             raise ValueError(f"invalid treble value: {treble}")
         if not -6 <= bass <= 6:
@@ -1670,7 +1670,7 @@ class PioneerAVR:
         if not isinstance(band, TunerBand):
             raise ValueError(f"invalid TunerBand specified: {band}")
         if self.tuner.get("band") is None or SOURCE_TUNER not in self.source.values():
-            raise SystemError("tuner is unavailable")
+            raise RuntimeError("tuner is unavailable")
 
         ## Set the tuner band
         if band == self.tuner.get("band"):
@@ -1697,7 +1697,7 @@ class PioneerAVR:
         if not (
             SOURCE_TUNER in self.source.values() and self.tuner.get("band") == "AM"
         ):
-            raise SystemError(
+            raise RuntimeError(
                 "cannot calculate AM frequency step: tuner is unavailable"
             )
 
@@ -1787,7 +1787,7 @@ class PioneerAVR:
                 if not await self.send_command(
                     "operation_tuner_digit", prefix=digit, ignore_error=False
                 ):
-                    raise SystemError(f"AVR rejected frequency set to {frequency}")
+                    raise RuntimeError(f"AVR rejected frequency set to {frequency}")
         else:
             await self._step_tuner_frequency(band, frequency)
 
