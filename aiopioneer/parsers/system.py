@@ -65,7 +65,7 @@ class SystemParsers:
 
         parsed.extend(
             [
-                Response(  # also trigger global update
+                Response(
                     raw=raw,
                     response_command=command,
                     base_property="source",
@@ -74,7 +74,7 @@ class SystemParsers:
                     value=raw,
                     queue_commands=command_queue,
                 ),
-                Response(
+                Response(  # trigger global update
                     raw=raw,
                     response_command=command,
                     base_property=None,
