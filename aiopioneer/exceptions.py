@@ -23,7 +23,7 @@ class AVRResponseTimeoutError(PioneerError):
     translation_key = "response_timeout"
 
 
-class AVRCommandErrorError(PioneerError):
+class AVRCommandError(PioneerError):
     """AVR command returned an error."""
 
     translation_key = "command_error"

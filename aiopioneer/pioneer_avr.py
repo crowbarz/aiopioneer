@@ -49,7 +49,7 @@ from .exceptions import (
     AVRUnavailableError,
     AVRUnknownCommandError,
     AVRResponseTimeoutError,
-    AVRCommandErrorError,
+    AVRCommandError,
     PioneerErrorFormatText,
 )
 from .util import (
@@ -630,7 +630,7 @@ class PioneerAVR:
                         )
                     return response
                 if response.startswith("E"):
-                    raise AVRCommandErrorError(response)
+                    raise AVRCommandError(response)
             self._response_queue = []
 
     async def send_raw_request(
@@ -727,7 +727,7 @@ class PioneerAVR:
             translation_key = getattr(exc, "translation_key", "unknown_exception")
             err = PioneerErrorFormatText.get(translation_key, "unknown_exception")
             err_txt = err.format(command=command, zone=str(zone), exc=str(exc))
-            rc = False if isinstance(exc, AVRCommandErrorError) else None
+            rc = False if isinstance(exc, AVRCommandError) else None
 
         if ignore_error:
             _LOGGER.debug(err_txt)
@@ -834,7 +834,7 @@ class PioneerAVR:
                         suffix=str(src_id).zfill(2),
                         rate_limit=False,
                     )
-                except (AVRCommandErrorError, AVRResponseTimeoutError):
+                except (AVRCommandError, AVRResponseTimeoutError):
                     pass
                 await asyncio.sleep(0)  # yield to updater task
 
