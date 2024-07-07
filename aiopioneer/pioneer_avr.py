@@ -45,12 +45,12 @@ from .param import (
 )
 from .commands import PIONEER_COMMANDS
 from .exceptions import (
-    PioneerException,
-    AVRUnavailableException,
-    AVRUnknownCommandException,
-    AVRResponseTimeoutException,
-    AVRCommandErrorException,
-    PioneerExceptionFormatText,
+    PioneerError,
+    AVRUnavailableError,
+    AVRUnknownCommandError,
+    AVRResponseTimeoutError,
+    AVRCommandErrorError,
+    PioneerErrorFormatText,
 )
 from .util import (
     merge,
@@ -597,7 +597,7 @@ class PioneerAVR:
                 rate_limit,
             )
         if not self.available:
-            raise AVRUnavailableException
+            raise AVRUnavailableError
 
         if rate_limit:
             # Rate limit commands
@@ -630,7 +630,7 @@ class PioneerAVR:
                         )
                     return response
                 if response.startswith("E"):
-                    raise AVRCommandErrorException(response)
+                    raise AVRCommandErrorError(response)
             self._response_queue = []
 
     async def send_raw_request(
@@ -663,7 +663,7 @@ class PioneerAVR:
                 )
                 await asyncio.sleep(0)  # yield to listener task
             except asyncio.TimeoutError as exc:  # response timer expired
-                raise AVRResponseTimeoutException from exc
+                raise AVRResponseTimeoutError from exc
 
             self._queue_responses = False
             self._response_queue = []
@@ -708,13 +708,13 @@ class PioneerAVR:
                     if debug_command:
                         _LOGGER.debug("send_command received response: %s", response)
                     return response
-                raise AVRUnknownCommandException
+                raise AVRUnknownCommandError
             elif type(raw_command) is str:
                 await self.send_raw_command(
                     prefix + raw_command + suffix, rate_limit=rate_limit
                 )
                 return True
-            raise AVRUnknownCommandException
+            raise AVRUnknownCommandError
 
         if ignore_error is None:
             ## Do not handle exceptions
@@ -723,11 +723,11 @@ class PioneerAVR:
         # pylint: disable=broad-exception-caught
         try:
             return await _send_command()
-        except (PioneerException, Exception) as exc:
+        except (PioneerError, Exception) as exc:
             translation_key = getattr(exc, "translation_key", "unknown_exception")
-            err = PioneerExceptionFormatText.get(translation_key, "unknown_exception")
+            err = PioneerErrorFormatText.get(translation_key, "unknown_exception")
             err_txt = err.format(command=command, zone=str(zone), exc=str(exc))
-            rc = False if isinstance(exc, AVRCommandErrorException) else None
+            rc = False if isinstance(exc, AVRCommandErrorError) else None
 
         if ignore_error:
             _LOGGER.debug(err_txt)
@@ -834,7 +834,7 @@ class PioneerAVR:
                         suffix=str(src_id).zfill(2),
                         rate_limit=False,
                     )
-                except (AVRCommandErrorException, AVRResponseTimeoutException):
+                except (AVRCommandErrorError, AVRResponseTimeoutError):
                     pass
                 await asyncio.sleep(0)  # yield to updater task
 

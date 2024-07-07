@@ -1,35 +1,35 @@
 """ Pioneer AVR exceptions. """
 
 
-class PioneerException(RuntimeError):
+class PioneerError(RuntimeError):
     """Generic Pioneer AVR exception."""
 
 
-class AVRUnavailableException(PioneerException):
+class AVRUnavailableError(PioneerError):
     """AVR connection not available exception."""
 
     translation_key = "avr_unavailable"
 
 
-class AVRUnknownCommandException(PioneerException):
+class AVRUnknownCommandError(PioneerError):
     """Invalid AVR command requested exception."""
 
     translation_key = "unknown_command"
 
 
-class AVRResponseTimeoutException(PioneerException):
+class AVRResponseTimeoutError(PioneerError):
     """Expected AVR response was not received."""
 
     translation_key = "response_timeout"
 
 
-class AVRCommandErrorException(PioneerException):
+class AVRCommandErrorError(PioneerError):
     """AVR command returned an error."""
 
     translation_key = "command_error"
 
 
-PioneerExceptionFormatText = {
+PioneerErrorFormatText = {
     "avr_unavailable": "AVR connection is not available",
     "unknown_command": "Unknown AVR command {command} for zone {zone}",
     "response_timeout": "AVR command {command} timed out",
