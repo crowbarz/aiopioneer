@@ -805,7 +805,7 @@ class PioneerAVR:
         removed_zones = False
         for zone in [Zones(z) for z in self._params[PARAM_IGNORED_ZONES]]:
             if zone in self.zones:
-                zone_name = "HDZone" if zone == Zones.HDZ else zone
+                zone_name = "HDZone" if zone is Zones.HDZ else zone
                 _LOGGER.info("removing zone %s", zone_name)
                 self.zones.remove(zone)
                 self._call_zone_callbacks([zone])  # update availability
@@ -989,7 +989,7 @@ class PioneerAVR:
         self, zone: Zones, callback: Callable[..., None] | None = None
     ) -> None:
         """Register a callback for a zone."""
-        if zone in self.zones or zone == Zones.ALL:
+        if zone in self.zones or zone is Zones.ALL:
             if callback:
                 self._zone_callback[zone] = callback
             else:
@@ -1199,13 +1199,13 @@ class PioneerAVR:
         # Zone 1 updates only, we loop through this to allow us to add commands
         # to read without needing to add it here, also only do this if the zone
         # is powered on
-        if zone == Zones.Z1 and bool(self.power.get(Zones.Z1)):
+        if zone is Zones.Z1 and bool(self.power.get(Zones.Z1)):
             for comm in query_commands:
                 if PIONEER_COMMANDS.get(comm).get(Zones.Z1):
                     await self.send_command(comm, zone, ignore_error=True)
 
         # Zone 2 updates only, only available if zone 2 is on
-        if zone == Zones.Z2 and bool(self.power.get(Zones.Z2)):
+        if zone is Zones.Z2 and bool(self.power.get(Zones.Z2)):
             for comm in query_commands:
                 if PIONEER_COMMANDS.get(comm).get(Zones.Z2):
                     await self.send_command(comm, zone, ignore_error=True)
