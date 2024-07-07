@@ -1093,6 +1093,7 @@ class PioneerAVR:
                 if (
                     response.base_property == "power"
                     and response.value
+                    and response.zone is Zones.Z1
                     and self.initial_update is False
                 ):
                     ## Perform full update on first power on of Zone 1
