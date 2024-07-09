@@ -1218,7 +1218,7 @@ class PioneerAVR:
         if ("channels" in self._params.get(PARAM_ENABLED_FUNCTIONS)) and (
             not self._params.get(PARAM_DISABLE_AUTO_QUERY)
         ):
-            if bool(self.power.get(Zones.Z1)) and zone != Zones.HDZ:
+            if bool(self.power.get(Zones.Z1)) and zone is not Zones.HDZ:
                 for k in CHANNEL_LEVELS_OBJ:
                     if len(k) == 1:
                         # Add two underscores
@@ -1835,7 +1835,7 @@ class PioneerAVR:
 
         # This function is only valid for zone 1, no video settings are
         # available for zone 2, 3, 4 and HDZone
-        if zone != Zones.Z1:
+        if zone is not Zones.Z1:
             raise ValueError(f"video settings not supporte for zone {zone}")
 
         # This is a complex function and supports handles requests to update any
@@ -1902,7 +1902,7 @@ class PioneerAVR:
     async def set_dsp_settings(self, **arguments) -> None:
         """Set the DSP settings for the amplifier."""
         zone = self._check_zone(arguments.get("zone"))
-        if zone != Zones.Z1:
+        if zone is not Zones.Z1:
             raise ValueError(f"DSP settings not supported for zone {zone}")
 
         ## TODO: refactor to use match and possibly subfunctions
