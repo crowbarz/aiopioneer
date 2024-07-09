@@ -151,9 +151,9 @@ Set the display dimmer.
 
 ### AVR source methods
 
-_awaitable_ `PioneerAVR.select_source(`_source_name_: **str**, _zone_: Zones = Zones.Z1`)`:
+_awaitable_ `PioneerAVR.select_source(`_source_: **str** = **None**, _source_id_: **str** = **None**, _zone_: Zones = Zones.Z1`)`:
 
-Set the input source for _zone_ to _source_name_.
+Set the input source for _zone_ to name _source_name_ or ID _source_id_ (requires one argument.)
 
 _awaitable_ `PioneerAVR.build_source_dict()`
 
@@ -239,9 +239,9 @@ Select the next tuner preset.
 
 ### AVR audio/video methods
 
-_awaitable_ `PioneerAVR.select_listening_mode(`_mode_name_: **str**, _mode_id_: **str**`)` -> **bool**
+_awaitable_ `PioneerAVR.select_listening_mode(`_mode_name_: **str** = **None**, _mode_id_: **str** = **None**`)` -> **bool**
 
-Set the listening mode to name _mode_name_, or ID _mode_id_.
+Set the listening mode to name _mode_name_, or ID _mode_id_ (requires one argument.)
 Must be a listening mode valid for the current sound input as returned by `get_listening_modes`.
 
 `PioneerAVR.get_listening_modes()` -> **dict**[**str**, **str**] | **None**
