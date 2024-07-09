@@ -1,4 +1,5 @@
 <!-- markdownlint-disable MD033 MD041 -->
+# aiopioneer
 
 Python library for controlling a Pioneer AVR via its built-in API.
 
@@ -118,11 +119,11 @@ Update zones from `ignored_zones` parameter and re-query zones from the AVR.
 
 ### AVR system methods
 
-_awaitable_ `PioneerAVR.turn_on(`_zone_: Zones = Zones.Z1`)` -> **bool** | **None**:
+_awaitable_ `PioneerAVR.turn_on(`_zone_: Zones = Zones.Z1`)`:
 
 Turn on the Pioneer AVR zone.
 
-_awaitable_ `PioneerAVR.turn_off(`_zone_: Zones = Zones.Z1`)` -> **bool** | **None**:
+_awaitable_ `PioneerAVR.turn_off(`_zone_: Zones = Zones.Z1`)`:
 
 Turn off the Pioneer AVR zone.
 
@@ -136,21 +137,21 @@ Query the AVR for available zones by querying the power status for each zone and
 Ignores zones listed in the `ignored_zones` parameter. <br/>
 If the `ignore_volume_check` parameter is not set, then additionally query the zone volume as well.
 
-_awaitable_ `PioneerAVR.set_panel_lock(`_panel_lock_: **str**, _zone_: Zones = Zones.Z1`)` -> **bool** | **None**:
+_awaitable_ `PioneerAVR.set_panel_lock(`_panel_lock_: **str**`)`:
 
 Set the panel lock.
 
-_awaitable_ `PioneerAVR.set_remote_lock(`_remote_lock_: **bool**, _zone_: Zones = Zones.Z1`)` -> **bool** | **None**:
+_awaitable_ `PioneerAVR.set_remote_lock(`_remote_lock_: **bool**`)`:
 
 Set the remote lock.
 
-_awaitable_ `PioneerAVR.set_dimmer(`_dimmer_: **str**, _zone_: Zones = Zones.Z1`)` -> **bool** | **None**:
+_awaitable_ `PioneerAVR.set_dimmer(`_dimmer_: **str**, _zone_: Zones = Zones.Z1`)`:
 
 Set the display dimmer.
 
 ### AVR source methods
 
-_awaitable_ `PioneerAVR.select_source(`_source_name_: **str**, _zone_: Zones = Zones.Z1`)` -> **bool** | **None**:
+_awaitable_ `PioneerAVR.select_source(`_source_name_: **str**, _zone_: Zones = Zones.Z1`)`:
 
 Set the input source for _zone_ to _source_name_.
 
@@ -187,12 +188,13 @@ Clear the name mapping for _source_id_.
 
 ### AVR command methods
 
-_awaitable_ `PioneerAVR.send_command(`_command_: **str**, _zone_: Zones = Zones.Z1, _prefix_: **str** = "", _suffix_: **str** = "", _ignore_error_: **bool** | **None** = **None**, _rate_limit_: **bool** = **True**`)` -> **bool** | **None**
+_awaitable_ `PioneerAVR.send_command(`_command_: **str**, _zone_: Zones = Zones.Z1, _prefix_: **str** = "", _suffix_: **str** = "", _ignore_erro* = **None**, _rate_limit_: **bool** = **True**`)` -> **bool** | **None**
 
 Send command _command_ for zone _zone_ to the AVR, prefixed with _prefix_ and/or suffixed with _suffix_ if specified. <br/>
 If _command_ does not generate a response, then returns **True** if the command was successfully sent.
 Otherwise, returns the response received from the AVR, **None** if timed out, or **False** if an error response was received. <br/>
 If _ignore_error_ is **None** (default), then raise an exception on error. If _ignore_error_ is **True**, then log the error as level debug, otherwise log the error as level error. <br/>
+Raises `AVRResponseTimeoutError` on timeout, and `AVRCommandError` if the request returned an error.<br/>
 If _rate_limit_ is **True**, then rate limit the commands sent to the AVR in accordance with the `command_delay` parameter.
 
 `PioneerAVR.queue_command(`_command_: **str**, _skip_if_queued_: **bool** = **True**, _insert_at_: **int** = -1`)` -> **None**
@@ -205,11 +207,11 @@ _awaitable_ `PioneerAVR.send_raw_command(`_command_: **str**, _rate_limit_: **bo
 Send a raw command _command_ to the AVR.
 If _rate_limit_ is **True**, then rate limit the commands sent to the AVR in accordance with the `command_delay` parameter.
 
-_awaitable_ `PioneerAVR.send_raw_request(`_command_: **str**, _response_prefix_: **str**, _ignore_error_: **bool** | **None** = **None**, _rate_limit_: **bool** = **True**`)` -> **str** | **bool** | **None**
+_awaitable_ `PioneerAVR.send_raw_request(`_command_: **str**, _response_prefix_: **str**, _rate_limit_: **bool** = **True**`)` -> **str** | **bool** | **None**
 
 Send a raw command _command_ to the AVR and wait for a response with prefix _response_prefix_.
-Returns the response received from the AVR, **None** if timed out, or **False** if an error response was received. <br/>
-If _ignore_error_ is **None** (default), then raise an exception on error. If _ignore_error_ is **True**, then log the error as level debug, otherwise log the error as level error. <br/>
+Returns the response received from the AVR.<br/>
+Raises `AVRResponseTimeoutError` on timeout, and `AVRCommandError` if the request returned an error.<br/>
 If _rate_limit_ is **True**, then rate limit the commands sent to the AVR in accordance with the `command_delay` parameter.
 
 ### AVR tuner methods
@@ -237,9 +239,9 @@ Select the next tuner preset.
 
 ### AVR audio/video methods
 
-_awaitable_ `PioneerAVR.select_listening_mode(`_listening_mode_: **str**`)` -> **bool**
+_awaitable_ `PioneerAVR.select_listening_mode(`_mode_name_: **str**, _mode_id_: **str**`)` -> **bool**
 
-Set the listening mode to _listening_mode_.
+Set the listening mode to name _mode_name_, or ID _mode_id_.
 Must be a listening mode valid for the current sound input as returned by `get_listening_modes`.
 
 `PioneerAVR.get_listening_modes()` -> **dict**[**str**, **str**] | **None**
@@ -259,7 +261,7 @@ _awaitable_ `PioneerAVR.mute_off(`_zone_: Zones = Zones.Z1`)` -> **bool**
 
 Turn mute off for zone _zone_.
 
-_awaitable_ `PioneerAVR.set_tone_settings(`_tone_: **str** = **None**, _treble_: **int** = **None**, _bass_: **int** = **None**, _zone_: Zones = Zones.Z1 `)` -> **bool** | **None**
+_awaitable_ `PioneerAVR.set_tone_settings(`_tone_: **str** = **None**, _treble_: **int** = **None**, _bass_: **int** = **None**, _zone_: Zones = Zones.Z1 `)`*
 
 Set the tone settings for zone _zone_ to _tone_. When _tone_ is set to `On`, _treble_ specifies the treble and _bass_ specifies the bass.
 
@@ -451,38 +453,49 @@ The list below shows the source ID that corresponds to each AVR source:
 
 ## Breaking changes
 
-- **0.6**\
-  Python requirement bumped to 3.11 for StrEnum \
-  `Zones` enum now used on all methods accepting zone arguments (except in params) \
-  Zone argument removed from tuner methods as tuner is independent of zone \
-  `TunerBand` enum now used to specify a tuner band \
-  `update` now waits for the update to finish by default \
-  `set_tuner_preset` has been renamed to `select_tuner_preset` \
-  `get_zone_listening_modes` has been renamed to `get_listening_modes` \
-  `set_listening_mode` has been renamed to `select_listening_mode` \
-  `tuner_*`, `get_zone_listening_modes`, `set_panel_lock`, `set_remote_lock` and `set_dimmer` methods no longer accept a zone argument \
-  The `suffix` argument of the `send_command` method has been reordered after the `prefix` argument \
-  Response codes marked `---` now return **None**  \
-  Dimmer mode, tone mode and dB strings have been updated
+### 0.7
 
-- **0.5**\
-  `get_sound_modes` was renamed to `get_zone_listening_modes` to reflect Pioneer AVR terminology.\
-  `disable_autoquery` was renamed `disable_auto_query` to better match the underlying variable name.\
-  `amplifier_speaker_system_modes` and `disabled_amplifier_listening_modes` were shortened to `amp_speaker_system_modes` and `disabled_amp_listening_modes` respectively.
+- Most PioneerAVR methods now raise exceptions derived from `PioneerError` when an error is encountered, rather than returning `false`, `None` or similar error value. Some instances that currently raise `ValueError` or `SystemError` will also raise `PioneerError` subclasses in the near future
+- `send_raw_request` no longer accepts an argument `ignore_error` and will always raise exceptions on error. Use `ignore_error` with `send_command` to have exceptions handled for you
+- asyncio yields have been optimised and minimised, which may cause certain sequences of operations to happen in a different order
 
-- **0.4**\
-  `zone_z_sources` was renamed `hdzone_sources` for even more consistency.
+### 0.6
 
-- **0.3**\
-  `zone_h_sources` was renamed `zone_z_sources` for consistency.
+- Python requirement bumped to 3.11 for `StrEnum`
+- `Zones` enum now used on all methods accepting zone arguments (except in params)
+- Zone argument removed from tuner methods as tuner is independent of zone
+- `TunerBand` enum now used to specify a tuner band
+- `update` now waits for the update to finish by default
+- `set_tuner_preset` has been renamed to `select_tuner_preset`
+- `get_zone_listening_modes` has been renamed to `get_listening_modes`
+- `set_listening_mode` has been renamed to `select_listening_mode`
+- `tuner_*`, `get_zone_listening_modes`, `set_panel_lock`, `set_remote_lock` and `set_dimmer` methods no longer accept a zone argument
+- The `suffix` argument of the `send_command` method has been reordered after the `prefix` argument
+- Response codes marked `---` now return **None**
+- Dimmer mode, tone mode and dB strings have been updated
 
-- **0.2**\
-  `volume_step_delta` has been removed entirely.
+### 0.5
 
-  By default, a number of additional queries are sent at module startup to the AVR to gather amp, tuner and channel levels attributes. If your AVR does not handle these additional queries well, they can be disabled by setting parameter `disable_autoquery` to `true`.
+- `get_sound_modes` was renamed to `get_zone_listening_modes` to reflect Pioneer AVR terminology
+- `disable_autoquery` was renamed `disable_auto_query` to better match the underlying variable name
+- `amplifier_speaker_system_modes` and `disabled_amplifier_listening_modes` were shortened to `amp_speaker_system_modes` and `disabled_amp_listening_modes` respectively
 
-- **0.1**\
-  `_PioneerAVR.__init__()` no longer accepts `command_delay`, `volume_workaround` and `volume_steps` arguments. Configure these parameters using the equivalent `PARAM_*` keys in the `params` dict, passed in via the constructure or set via `set_user_params()`.
+### 0.4
+
+- `zone_z_sources` was renamed `hdzone_sources` for even more consistency
+
+### 0.3
+
+- `zone_h_sources` was renamed `zone_z_sources` for consistency
+
+### 0.2
+
+- `volume_step_delta` has been removed entirely
+- By default, a number of additional queries are sent at module startup to the AVR to gather amp, tuner and channel levels attributes. If your AVR does not handle these additional queries well, they can be disabled by setting parameter `disable_autoquery` to `true`
+
+### 0.1
+
+- `_PioneerAVR.__init__()` no longer accepts `command_delay`, `volume_workaround` and `volume_steps` arguments. Configure these parameters using the equivalent `PARAM_*` keys in the `params` dict, passed in via the constructure or set via `set_user_params()`
 
 ## References
 
