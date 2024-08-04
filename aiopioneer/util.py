@@ -92,7 +92,7 @@ async def safe_wait_for(awt, timeout=None):
         except asyncio.CancelledError:
             ## TODO: what if wait_for is cancelled when waiting for task to be cancelled?
             pass
-        raise asyncio.TimeoutError()
+        raise TimeoutError()
     except asyncio.CancelledError as exc:
         raise exc
 

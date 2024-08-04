@@ -662,7 +662,7 @@ class PioneerAVR:
                     timeout=self._timeout,
                 )
                 await asyncio.sleep(0)  # yield to listener task
-            except asyncio.TimeoutError as exc:  # response timer expired
+            except TimeoutError as exc:  # response timer expired
                 raise AVRResponseTimeoutError from exc
 
             self._queue_responses = False
@@ -1141,7 +1141,7 @@ class PioneerAVR:
                 await safe_wait_for(event.wait(), timeout=self.scan_interval)
                 if debug_updater:
                     _LOGGER.debug(">> PioneerAVR._updater() signalled")
-            except asyncio.TimeoutError:  # update timer expired
+            except TimeoutError:  # update timer expired
                 if debug_updater:
                     _LOGGER.debug(">> PioneerAVR._updater() timeout")
                 continue
