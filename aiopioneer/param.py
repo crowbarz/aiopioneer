@@ -363,6 +363,14 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
             },
         ),
         (
+            r"^VSX-1130",
+            {
+                PARAM_EXTRA_LISTENING_MODES: {
+                    "0040": ["Dolby Surround", True, True],
+                },
+            },
+        ),
+        (
             r"^VSX-S510",
             {
                 PARAM_VOLUME_STEP_ONLY: True,
