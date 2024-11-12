@@ -835,7 +835,7 @@ class PioneerAVR:
                         rate_limit=False,
                     )
                 except (AVRCommandError, AVRResponseTimeoutError):
-                    pass
+                    response = None
                 await asyncio.sleep(0)  # yield to updater task
 
                 if response is None:
