@@ -1188,10 +1188,12 @@ class PioneerAVR:
         # All zone updates
         if (
             await self.send_command("query_power", zone, ignore_error=True) is None
-            or await self.send_command("query_volume", zone, ignore_error=True) is None
-            or await self.send_command("query_mute", zone, ignore_error=True) is None
-            or await self.send_command("query_source_id", zone, ignore_error=True)
-            is None
+            or bool(self.power.get(zone)) and (
+                await self.send_command("query_volume", zone, ignore_error=True) is None
+                or await self.send_command("query_mute", zone, ignore_error=True) is None
+                or await self.send_command("query_source_id", zone, ignore_error=True)
+                is None
+            )
         ):
             # Timeout occurred, indicates AVR disconnected
             raise TimeoutError("Timeout waiting for data")
