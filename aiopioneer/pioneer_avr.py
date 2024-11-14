@@ -1173,67 +1173,51 @@ class PioneerAVR:
 
     async def _update_zone(self, zone: Zones) -> None:
         """Update an AVR zone."""
-        # Check for timeouts, but ignore errors (eg. ?V will
-        # return E02 immediately after power on)
-
-        query_commands = []
-        if not self._params.get(PARAM_DISABLE_AUTO_QUERY):
-            query_commands = [
-                k
-                for k in PIONEER_COMMANDS
-                if (k.startswith("query_"))
-                and (k.split("_")[1] in self._params.get(PARAM_ENABLED_FUNCTIONS))
-            ]
+        # Run updates only if zone is powered on
+        await self.send_command("query_power", zone)
+        if not bool(self.power.get(zone)):
+            return
 
         # All zone updates
+        # Check for timeouts, but ignore errors (eg. ?V will
+        # return E02 immediately after power on)
         if (
-            await self.send_command("query_power", zone, ignore_error=True) is None
-            or bool(self.power.get(zone)) and (
-                await self.send_command("query_volume", zone, ignore_error=True) is None
-                or await self.send_command("query_mute", zone, ignore_error=True) is None
-                or await self.send_command("query_source_id", zone, ignore_error=True)
-                is None
-            )
+            await self.send_command("query_volume", zone, ignore_error=True) is None
+            or await self.send_command("query_mute", zone, ignore_error=True) is None
+            or await self.send_command("query_source_id", zone, ignore_error=True)
+            is None
         ):
             # Timeout occurred, indicates AVR disconnected
             raise TimeoutError("Timeout waiting for data")
 
-        # Zone 1 updates only, we loop through this to allow us to add commands
-        # to read without needing to add it here, also only do this if the zone
-        # is powered on
-        if zone is Zones.Z1 and bool(self.power.get(Zones.Z1)):
-            for comm in query_commands:
-                if PIONEER_COMMANDS.get(comm).get(Zones.Z1):
-                    await self.send_command(comm, zone, ignore_error=True)
+        # Zone-specific updates, if enabled
+        if self._params.get(PARAM_DISABLE_AUTO_QUERY):
+            return
 
-        # Zone 2 updates only, only available if zone 2 is on
-        if zone is Zones.Z2 and bool(self.power.get(Zones.Z2)):
-            for comm in query_commands:
-                if PIONEER_COMMANDS.get(comm).get(Zones.Z2):
+        # we loop through this to allow us to add commands
+        # to read without needing to add it here
+        for comm, supported_zones in PIONEER_COMMANDS.items():
+            if zone in supported_zones:
+                if (
+                    comm.startswith("query_")
+                    and comm.split("_")[1] in self._params.get(PARAM_ENABLED_FUNCTIONS)
+                ):
                     await self.send_command(comm, zone, ignore_error=True)
-
-        # CHANNEL updates are handled differently as it requires more complex
-        # logic to send the commands we use the set_channel_levels command
-        # and prefix the query to it.
-        # Only run this if the main zone is on
-        # HDZone does not have any channels
-        if ("channels" in self._params.get(PARAM_ENABLED_FUNCTIONS)) and (
-            not self._params.get(PARAM_DISABLE_AUTO_QUERY)
-        ):
-            if bool(self.power.get(Zones.Z1)) and zone is not Zones.HDZ:
-                for k in CHANNEL_LEVELS_OBJ:
-                    if len(k) == 1:
-                        # Add two underscores
-                        k = k + "__"
-                    elif len(k) == 2:
-                        # Add one underscore
-                        k = k + "_"
-                    await self.send_command(
-                        "set_channel_levels",
-                        zone,
-                        prefix="?" + str(k),
-                        ignore_error=True,
-                    )
+                elif (
+                    comm == "set_channel_levels"
+                    and "channels" in self._params.get(PARAM_ENABLED_FUNCTIONS)
+                    and bool(self.power.get(Zones.Z1))
+                ):
+                    # CHANNEL updates are handled differently as it requires more complex
+                    # logic to send the commands we use the set_channel_levels command
+                    # and prefix the query to it.
+                    for k in CHANNEL_LEVELS_OBJ:
+                        await self.send_command(
+                            comm,
+                            zone,
+                            prefix="?" + k.ljust(3, "_"),
+                            ignore_error=True,
+                        )
 
     async def _updater_update(self) -> bool | None:
         """Update AVR cached status."""
