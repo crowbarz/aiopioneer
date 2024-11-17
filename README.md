@@ -57,7 +57,7 @@ Where a parameter is specified at more than one level, the higher priority param
 | `zone_1_sources` | list | `[]` | (>0.4) Customises the available sources for use with Zone 1. Defaults to all available sources.
 | `zone_2_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with Zone 2 (some AVRs do not support all sources).
 | `zone_3_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with Zone 3 (some AVRs do not support all sources).
-| `hdzone_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61)` | Customises the available sources for use with HDZone (some AVRs do not support all sources).
+| `hdzone_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with HDZone (some AVRs do not support all sources).
 | `hdzone_volume_requirements` | list | `["13", "15", "05", "25"]` | A list of sources that HDZone must be set to for volume control, some AVRs do not support HDZone volume at all (see `ignore_volume_check` above) and some only allow control of certain sources.
 | `amp_speaker_system_modes` | dict | `....` | Customises the names of speaker system modes. Different generations of AVR will name zones slighty differently. For example, the SC-LX57 names speaker system mode `15` as `5.1ch Bi-Amp + ZONE2` however this can also be called `5.2ch Bi-Amp + HDZONE` on newer AVRs.
 | `extra_amp_listening_modes` | dict | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/const.py#L24) | (>0.5) Additional listening modes that are added to the list of all possible listening modes for the AVR. This list is used to decode the listening mode ID returned by the AVR. See the source for the format for listening mode definition.
@@ -376,6 +376,7 @@ Invoke the CLI with the following arguments:
 | `+Z`<br>`--no-query-zones` | None | skip AVR zone query
 
 The CLI accepts all API commands, as well as the following:
+
 | Command | Argument | Description
 | --- | --- | ---
 | `exit` or `quit` | | Exit the CLI.
@@ -410,7 +411,7 @@ The CLI accepts all API commands, as well as the following:
 | `select_source` | _source_name_ | Set the input source for the current zone.
 | `select_listening_mode` | _listening_mode_ | (>0.5) Set the listening mode to the specified mode.
 | `set_tuner_frequency` | _band_ _frequency_ | Set the tuner band and (optionally) frequency.
-| `tuner_previous_preset` | | Select the previous] tuner preset
+| `tuner_previous_preset` | | Select the previous tuner preset
 | `tuner_next_preset` | | Select the next tuner preset
 | `send_raw_command` or `>` | _raw_command_ | Send the raw command _raw_command_ to the AVR.
 
