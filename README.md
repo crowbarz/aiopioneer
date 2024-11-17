@@ -425,6 +425,7 @@ The list below shows the source ID that corresponds to each AVR source:
 | 25 | BD
 | 04 | DVD
 | 06 | SAT/CBL
+| 10 | VIDEO
 | 15 | DVR/BDR
 | 19 | HDMI 1
 | 20 | HDMI 2
@@ -433,6 +434,7 @@ The list below shows the source ID that corresponds to each AVR source:
 | 23 | HDMI 5
 | 24 | HDMI 6
 | 34 | HDMI 7
+| 49 | GAME
 | 26 | NETWORK (cyclic)
 | 38 | INTERNET RADIO
 | 53 | Spotify
