@@ -1385,7 +1385,9 @@ class PioneerAVR:
         """Execute commands from a queue."""
         debug_command = self._params[PARAM_DEBUG_COMMAND]
 
-        async def local_command(command: str, args: list[str]) -> None:
+        async def local_command(
+            command: str, command_name: str, args: list[str]
+        ) -> None:
             if debug_command:
                 _LOGGER.debug("running local command %s, args: %s", command, args)
             match command_name:
@@ -1420,7 +1422,7 @@ class PioneerAVR:
                         args = [arg.strip() for arg in args_raw[0].split(",")]
                         if len(args_raw) < 2 or args_raw[1] != "":
                             raise ValueError(f"malformed local command: '{command}'")
-                    await local_command(command, args)
+                    await local_command(command, command_name, args)
                 else:
                     await self.send_command(command, ignore_error=True)
                 self._command_queue.pop(0)
