@@ -129,7 +129,7 @@ class PioneerAVR:
         self.mac_addr = None
 
         self.available = False  # connected to avr
-        self.initial_update = None  # initial update completed
+        self.initial_refresh: list[Zones] = []  # initial update completed
         self.zones: list[Zones] = []
         self.power: dict[Zones, bool] = {}
         self.volume: dict[Zones, int] = {}
@@ -173,7 +173,7 @@ class PioneerAVR:
         self._response_queue: list[Response] = []
         self._queue_responses = False
         self._reconnect = True
-        self._full_update = True
+        self._refresh_zones: list[Zones] = []
         self._last_updated = None
         self._last_command = None
         self._reader = None
@@ -188,7 +188,6 @@ class PioneerAVR:
         self._source_name_to_id: dict[str, str] = {}
         self._source_id_to_name: dict[str, str] = {}
         self._zone_callback = {}
-        # self._update_callback = None
 
     def __del__(self):
         _LOGGER.debug(">> PioneerAVR.__del__()")
@@ -753,11 +752,6 @@ class PioneerAVR:
                     self.zones.append(Zones.Z1)
                     added_zones = True
                     self.max_volume[Zones.Z1] = self._params[PARAM_MAX_VOLUME]
-
-                    if not self.power[Zones.Z1] and self.initial_update is None:
-                        ## Defer initial update if Zone 1 is not powered on
-                        _LOGGER.info("deferring initial update")
-                        self.initial_update = False
             else:
                 raise RuntimeError("Zone 1 not found on AVR")
 
@@ -1017,11 +1011,12 @@ class PioneerAVR:
         parsed_response = process_raw_response(response_raw, self._params)
         if parsed_response is not None:
             for response in parsed_response:
+                current_base = current_value = None
                 if isfunction(response.base_property):
                     ## Call a function
                     response.base_property(self)
                 elif response.base_property is not None:
-                    current_base = getattr(self, response.base_property)
+                    current_base = current_value = getattr(self, response.base_property)
                     is_global = response.zone in [Zones.ALL, None]
                     if response.property_name is None and not is_global:
                         current_value = current_base.get(response.zone)
@@ -1093,22 +1088,23 @@ class PioneerAVR:
                 if (
                     response.base_property == "power"
                     and response.value
-                    and response.zone is Zones.Z1
-                    and self.initial_update is False
+                    and response.zone not in self.initial_refresh
+                    and current_value is not None  ## don't update on zone discovery
                 ):
-                    ## Perform full update on first power on of Zone 1
-                    _LOGGER.info(
-                        "retrying device information query on Zone 1 first power on"
-                    )
-                    self.initial_update = None
-                    self.queue_command("_query_device_info")
-                    self.queue_command("_full_update")
+                    ## Perform full update on zone first power on
+                    self.queue_command("_sleep(2)")
+                    if response.zone is Zones.Z1:
+                        _LOGGER.info(
+                            "retrying device information query on Zone 1 first power on"
+                        )
+                        self.queue_command("_query_device_info")
+                    self.queue_command(f"_update_zone({response.zone})")
                 elif (
                     (
                         response.base_property in ["power", "source"]
                         or response.response_command in ["AUB", "AUA"]
                     )
-                    and (not self._full_update)
+                    and (not self._refresh_zones)
                     and (not self._params.get(PARAM_DISABLE_AUTO_QUERY))
                     and any(self.power.values())
                 ):
@@ -1162,7 +1158,7 @@ class PioneerAVR:
         if self.scan_interval:
             _LOGGER.debug(">> PioneerAVR._updater_schedule()")
             await self._updater_cancel()
-            self._full_update = True  # always perform full update on schedule
+            self._refresh_zones = self.zones  # always perform full update on schedule
             self._updater_task = asyncio.create_task(self._updater())
 
     async def _updater_cancel(self) -> None:
@@ -1171,7 +1167,7 @@ class PioneerAVR:
         await cancel_task(self._updater_task, "updater", debug=debug_updater)
         self._updater_task = None
 
-    async def _update_zone(self, zone: Zones) -> None:
+    async def _refresh_zone(self, zone: Zones) -> None:
         """Update an AVR zone."""
         # Check for timeouts, but ignore errors (eg. ?V will
         # return E02 immediately after power on)
@@ -1252,41 +1248,40 @@ class PioneerAVR:
         async with self._update_lock:
             # Update only if scan_interval has passed
             now = time.time()
-            full_update = self._full_update
-            scan_interval = self.scan_interval
-            since_updated = scan_interval + 1
-            since_updated_str = "never"
+            refresh_zones = self._refresh_zones
+            since_refreshed = self.scan_interval + 1
+            since_refreshed_str = "never"
             if self._last_updated:
-                since_updated = now - self._last_updated
-                since_updated_str = f"{since_updated:.3f}s ago"
+                since_refreshed = now - self._last_updated
+                since_refreshed_str = f"{since_refreshed:.3f}s ago"
+            if not self.scan_interval or since_refreshed > self.scan_interval:
+                refresh_zones = self.zones
 
-            if full_update or not scan_interval or since_updated > scan_interval:
+            if refresh_zones:
                 _LOGGER.info(
-                    "updating AVR status (full=%s, zones=%s, last updated %s)",
-                    full_update,
-                    self.zones,
-                    since_updated_str,
+                    "refreshing AVR status (zones=%s, last refreshed %s)",
+                    refresh_zones,
+                    since_refreshed_str,
                 )
                 self._last_updated = now
                 try:
                     ## TODO: update audio, video and display information
-                    for zone in self.zones:
-                        await self._update_zone(zone)
-                    if full_update:
-                        if self.power[Zones.Z1]:
-                            _LOGGER.info("completed initial update")
-                            self.initial_update = True
+                    for zone in refresh_zones:
+                        await self._refresh_zone(zone)
+                        if self.power[zone] and zone not in self.initial_refresh:
+                            _LOGGER.info("completed initial refresh for zone %s", zone)
+                            self.initial_refresh.append(zone)
 
                         # Trigger updates to all zones on full update
                         self._call_zone_callbacks()
                 except Exception as exc:  # pylint: disable=broad-except
                     _LOGGER.error(
-                        "could not update AVR status: %s: %s",
+                        "could not refresh AVR status: %s: %s",
                         type(exc).__name__,
                         str(exc),
                     )
                     _rc = False
-                self._full_update = False
+                self._refresh_zones = []
             else:
                 # NOTE: any response from the AVR received within
                 # scan_interval, including keepalives and responses triggered
@@ -1299,7 +1294,8 @@ class PioneerAVR:
                 # connected to port 23.
                 _rc = None
                 if debug_updater:
-                    _LOGGER.debug("skipping update: last updated %s", since_updated_str)
+                    log_skip = "skipping refresh: last refreshed %s"
+                    _LOGGER.debug(log_skip, since_refreshed_str)
         if _rc is False:
             # Disconnect on error
             await self.disconnect()
@@ -1307,10 +1303,12 @@ class PioneerAVR:
             _LOGGER.debug(">> PioneerAVR._updater_update() completed")
         return _rc
 
-    async def update(self, full=False, wait=True) -> None:
+    async def update(self, full=False, zones: list[Zones] = None, wait=True) -> None:
         """Update AVR cached status update. Schedule if updater is running."""
         if full:
-            self._full_update = True
+            self._refresh_zones = self.zones
+        elif zones:
+            self._refresh_zones = zones
         if self._updater_task:
             if self._params[PARAM_DEBUG_UPDATER]:
                 _LOGGER.debug(">> PioneerAVR.update(): signalling updater task")
@@ -1395,6 +1393,13 @@ class PioneerAVR:
                     await self.query_device_info()
                 case "_full_update":
                     await self.update(full=True, wait=False)  # avoid deadlock
+                case "_update_zone":
+                    if len(args) != 1:
+                        raise ValueError(
+                            "local command update_zone requires 1 argument"
+                        )
+                    zone = Zones(args[0])
+                    await self.update(zones=zone, wait=False)  # avoid deadlock
                 case "_calculate_am_frequency_step":
                     await self._calculate_am_frequency_step()
                 case "_sleep":
@@ -1476,7 +1481,7 @@ class PioneerAVR:
                 _LOGGER.debug("command %s already queued, skipping", command)
             return
         if command.startswith("_full_update"):
-            self._full_update = True
+            self._refresh_zones = self.zones
         if insert_at >= 0:
             self._command_queue.insert(insert_at, command)
         else:
