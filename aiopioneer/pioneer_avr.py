@@ -129,7 +129,7 @@ class PioneerAVR:
         self.mac_addr = None
 
         self.available = False  # connected to avr
-        self.initial_refresh: list[Zones] = []  # initial update completed
+        self.initial_refresh: list[Zones] = []
         self.zones: list[Zones] = []
         self.power: dict[Zones, bool] = {}
         self.volume: dict[Zones, int] = {}
@@ -1056,21 +1056,21 @@ class PioneerAVR:
                         self.queue_command(command)
 
                 # Some specific overrides for the command queue, these are only
-                # requested if we are not doing a full update
+                # requested if we are not doing a full refresh
                 if (
                     response.base_property == "power"
                     and response.value
                     and response.zone not in self.initial_refresh
-                    and current_value is not None  ## don't update on zone discovery
+                    and not self._update_lock.locked()
                 ):
-                    ## Perform full update on zone first power on
+                    ## Perform full refresh on zone first power on
                     self.queue_command("_sleep(2)")
                     if response.zone is Zones.Z1:
                         _LOGGER.info(
                             "retrying device information query on Zone 1 first power on"
                         )
                         self.queue_command("_query_device_info")
-                    self.queue_command(f"_update_zone({response.zone})")
+                    self.queue_command(f"_refresh_zone({response.zone})")
                 elif (
                     (
                         response.base_property in ["power", "source"]
@@ -1079,16 +1079,9 @@ class PioneerAVR:
                     and (not self._refresh_zones)
                     and (not self._params.get(PARAM_DISABLE_AUTO_QUERY))
                     and any(self.power.values())
+                    and not self._update_lock.locked()
                 ):
-                    ## TODO: not sure why check self.tuner here?
-                    if self.tuner is not None:
-                        self.queue_command("_sleep(4)")
-                        self.queue_command("query_listening_mode")
-                        self.queue_command("query_audio_information")
-                        self.queue_command("query_video_information")
-                    else:
-                        ## Queue a full update
-                        self.queue_command("_full_update")
+                    self.queue_command("_delayed_query_av_information")
 
         result = {"updated_zones": updated_zones}
 
@@ -1129,7 +1122,7 @@ class PioneerAVR:
         """Schedule/reschedule the update task."""
         _LOGGER.debug(">> PioneerAVR._updater_schedule()")
         await self._updater_cancel()
-        self._refresh_zones = self.zones  # always perform full update on schedule
+        self._refresh_zones = self.zones  # always perform full refresh on schedule
         self._updater_task = asyncio.create_task(self._updater())
 
     async def _updater_cancel(self) -> None:
@@ -1236,15 +1229,15 @@ class PioneerAVR:
                 )
                 self._last_updated = now
                 try:
-                    ## TODO: update audio, video and display information
                     for zone in refresh_zones:
                         await self._refresh_zone(zone)
                         if self.power[zone] and zone not in self.initial_refresh:
                             _LOGGER.info("completed initial refresh for zone %s", zone)
                             self.initial_refresh.append(zone)
 
-                        # Trigger updates to all zones on full update
-                        self._call_zone_callbacks()
+                    # Trigger callbacks to all zones on full refresh
+                    self._call_zone_callbacks(zones=[Zones.ALL])
+                    self.queue_command("_query_av_information")
                 except Exception as exc:  # pylint: disable=broad-except
                     _LOGGER.error(
                         "could not refresh AVR status: %s: %s",
@@ -1275,7 +1268,7 @@ class PioneerAVR:
         return _rc
 
     async def update(self, full=False, zones: list[Zones] = None, wait=True) -> None:
-        """Update AVR cached status update. Schedule if updater is running."""
+        """Update AVR cached status update."""
         if full:
             self._refresh_zones = self.zones
         elif zones:
@@ -1359,15 +1352,23 @@ class PioneerAVR:
             match command_name:
                 case "_query_device_info":
                     await self.query_device_info()
-                case "_full_update":
+                case "_full_refresh":
                     await self.update(full=True, wait=False)  # avoid deadlock
-                case "_update_zone":
+                case "_refresh_zone":
                     if len(args) != 1:
                         raise ValueError(
-                            "local command update_zone requires 1 argument"
+                            "local command refresh_zone requires 1 argument"
                         )
                     zone = Zones(args[0])
                     await self.update(zones=zone, wait=False)  # avoid deadlock
+                case "_delayed_query_av_information":
+                    self.queue_command("_sleep(4)", insert_at=1)
+                    self.queue_command("_query_av_information", insert_at=2)
+                case "_query_av_information":
+                    if any(self.power.values()):
+                        await self.send_command("query_listening_mode")
+                        await self.send_command("query_audio_information")
+                        await self.send_command("query_video_information")
                 case "_calculate_am_frequency_step":
                     await self._calculate_am_frequency_step()
                 case "_sleep":
@@ -1384,8 +1385,7 @@ class PioneerAVR:
             while len(self._command_queue) > 0:
                 # Keep command in queue until it has finished executing
                 command = self._command_queue[0]
-                if debug_command:
-                    _LOGGER.debug("command queue executing: %s", command)
+                _LOGGER.debug("command queue executing: %s", command)
                 if command.startswith("_"):
                     command_tokens = command.split("(", 1)
                     command_name = command_tokens[0]
@@ -1445,10 +1445,10 @@ class PioneerAVR:
         if self._params[PARAM_DEBUG_COMMAND]:
             _LOGGER.debug(">> PioneerAVR.queue_command(%s)", command)
         if skip_if_queued and command in self._command_queue:
-            if self._params[PARAM_DEBUG_COMMAND]:
-                _LOGGER.debug("command %s already queued, skipping", command)
+            _LOGGER.debug("command %s already queued, skipping", command)
             return
-        if command.startswith("_full_update"):
+        _LOGGER.debug("queuing command %s", command)
+        if command.startswith("_full_refresh"):
             self._refresh_zones = self.zones
         if insert_at >= 0:
             self._command_queue.insert(insert_at, command)
