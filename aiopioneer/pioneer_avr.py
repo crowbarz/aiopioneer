@@ -740,57 +740,29 @@ class PioneerAVR:
         _LOGGER.info("querying available zones on AVR")
         ignored_zones = [Zones(z) for z in self._params[PARAM_IGNORED_ZONES]]
         ignore_volume_check = self._params[PARAM_IGNORE_VOLUME_CHECK]
-        added_zones = False
         # Defer updates to after query_zones has completed
+
+        async def query_zone(zone: Zones, max_volume: int) -> bool | None:
+            if await self.send_command("query_power", zone, ignore_error=True) and (
+                ignore_volume_check
+                or await self.send_command("query_volume", zone, ignore_error=True)
+            ):
+                if zone not in self.zones and zone not in ignored_zones:
+                    _LOGGER.info("Zone %s discovered", zone)
+                    self.zones.append(zone)
+                    self.max_volume[zone.value] = max_volume
+                    return True
+                return False
+            return None
+
         async with self._update_lock:
-            if await self.send_command("query_power", Zones.Z1, ignore_error=True) and (
-                ignore_volume_check
-                or await self.send_command("query_volume", Zones.Z1, ignore_error=True)
-            ):
-                if Zones.Z1 not in self.zones and Zones.Z1 not in ignored_zones:
-                    _LOGGER.info("Zone 1 discovered")
-                    self.zones.append(Zones.Z1)
-                    added_zones = True
-                    self.max_volume[Zones.Z1] = self._params[PARAM_MAX_VOLUME]
-            else:
+            added_zones = await query_zone(Zones.Z1, self._params[PARAM_MAX_VOLUME])
+            if added_zones is None:
                 raise RuntimeError("Zone 1 not found on AVR")
+            for zone in [Zones.Z2, Zones.Z3, Zones.HDZ]:
+                if await query_zone(zone, self._params[PARAM_MAX_VOLUME_ZONEX]):
+                    added_zones = True
 
-            if await self.send_command("query_power", Zones.Z2, ignore_error=True) and (
-                ignore_volume_check
-                or await self.send_command("query_volume", Zones.Z2, ignore_error=True)
-            ):
-                if Zones.Z2 not in self.zones and Zones.Z2 not in ignored_zones:
-                    _LOGGER.info("Zone 2 discovered")
-                    self.zones.append(Zones.Z2)
-                    added_zones = True
-                    self.max_volume[Zones.Z2.value] = self._params[
-                        PARAM_MAX_VOLUME_ZONEX
-                    ]
-
-            if await self.send_command("query_power", Zones.Z3, ignore_error=True) and (
-                ignore_volume_check
-                or await self.send_command("query_volume", Zones.Z3, ignore_error=True)
-            ):
-                if Zones.Z3 not in self.zones and Zones.Z3 not in ignored_zones:
-                    _LOGGER.info("Zone 3 discovered")
-                    self.zones.append(Zones.Z3)
-                    added_zones = True
-                    self.max_volume[Zones.Z3.value] = self._params[
-                        PARAM_MAX_VOLUME_ZONEX
-                    ]
-            if await self.send_command(
-                "query_power", Zones.HDZ, ignore_error=True
-            ) and (
-                ignore_volume_check
-                or await self.send_command("query_volume", Zones.HDZ, ignore_error=True)
-            ):
-                if Zones.HDZ not in self.zones and Zones.HDZ not in ignored_zones:
-                    _LOGGER.info("HDZone discovered")
-                    self.zones.append(Zones.HDZ)
-                    added_zones = True
-                    self.max_volume[Zones.HDZ.value] = self._params[
-                        PARAM_MAX_VOLUME_ZONEX
-                    ]
         if added_zones or force_update:
             await self.update(full=True)
 
