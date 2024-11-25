@@ -1134,7 +1134,7 @@ class PioneerAVR:
                 await self._updater_update()
                 event.clear()
                 # await asyncio.wait_for(event.wait(), timeout=self.scan_interval)
-                await safe_wait_for(event.wait(), timeout=self.scan_interval)
+                await safe_wait_for(event.wait(), timeout=self.scan_interval or None)
                 if debug_updater:
                     _LOGGER.debug(">> PioneerAVR._updater() signalled")
             except TimeoutError:  # update timer expired
@@ -1155,11 +1155,10 @@ class PioneerAVR:
 
     async def _updater_schedule(self) -> None:
         """Schedule/reschedule the update task."""
-        if self.scan_interval:
-            _LOGGER.debug(">> PioneerAVR._updater_schedule()")
-            await self._updater_cancel()
-            self._refresh_zones = self.zones  # always perform full update on schedule
-            self._updater_task = asyncio.create_task(self._updater())
+        _LOGGER.debug(">> PioneerAVR._updater_schedule()")
+        await self._updater_cancel()
+        self._refresh_zones = self.zones  # always perform full update on schedule
+        self._updater_task = asyncio.create_task(self._updater())
 
     async def _updater_cancel(self) -> None:
         """Cancel the updater task."""
@@ -1320,10 +1319,7 @@ class PioneerAVR:
                 async with self._update_lock:  # wait for update to complete
                     pass
         else:
-            # scan_interval not set, execute update synchronously
-            if wait:
-                _LOGGER.error("unable to update AVR in background")
-            await self._updater_update()
+            _LOGGER.error("AVR updater task not running")
 
     # State change functions
 
