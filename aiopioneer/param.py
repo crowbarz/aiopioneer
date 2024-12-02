@@ -2,8 +2,18 @@
 
 # pylint: disable=too-many-lines
 
+import copy
+import logging
+import re
+
 from collections import OrderedDict
-from .const import Zones
+from typing import Any
+
+from .const import Zones, LISTENING_MODES
+from .util import merge
+
+_LOGGER = logging.getLogger(__name__)
+
 
 PARAM_IGNORED_ZONES = "ignored_zones"
 PARAM_COMMAND_DELAY = "command_delay"
@@ -666,3 +676,109 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (r"^VSX-830", {PARAM_HDZONE_VOLUME_REQUIREMENTS: []}),
     ]
 )
+
+
+class PioneerAVRParams:
+    """Pioneer AVR params class."""
+
+    def __init__(self, params: dict[str, str] = None):
+        """Initialise the Pioneer AVR params."""
+
+        ## Public properties
+        self.model = None
+
+        self._default_params = PARAM_DEFAULTS
+        self._system_params = PARAM_DEFAULTS_SYSTEM
+        self._user_params: dict[str, Any] = {}
+        self._params: dict[str, Any] = {}
+        self.set_user_params(params)
+
+    ## Parameter management functions
+    def update_params(self) -> None:
+        """Set current parameters."""
+        self._params = {}
+        merge(self._params, self._default_params)
+        merge(self._params, self._user_params, force_overwrite=True)
+        if (
+            self._params.get(PARAM_TUNER_AM_FREQ_STEP)
+            and PARAM_TUNER_AM_FREQ_STEP in self._system_params
+        ):
+            ## defer PARAM_TUNER_AM_FREQ_STEP to _user_params if specified
+            del self._system_params[PARAM_TUNER_AM_FREQ_STEP]
+        merge(self._params, self._system_params)
+
+    def set_user_params(self, params: dict[str, Any] = None) -> None:
+        """Set user parameters and update current parameters."""
+        _LOGGER.debug(">> PioneerAVR.set_user_params(%s)", params)
+        self._user_params = copy.deepcopy(params) if params is not None else {}
+        self.update_params()
+        self._update_listening_modes()
+
+    def _set_default_params_model(self) -> None:
+        """Set default parameters based on device model."""
+        model = self.model
+        self._default_params = PARAM_DEFAULTS
+        if model is not None and model != "unknown":
+            for model_regex, model_params in PARAM_MODEL_DEFAULTS.items():
+                if re.search(model_regex, model):
+                    _LOGGER.info(
+                        "applying default parameters for model %s (%s)",
+                        model,
+                        model_regex,
+                    )
+                    merge(self._default_params, model_params, force_overwrite=True)
+        self.update_params()
+
+    def get_param(self, param_name: str) -> Any:
+        """Get the value of the specified parameter."""
+        return self._params.get(param_name)
+
+    def get_params(self) -> dict[str, Any]:
+        """Get a copy of all current parameters."""
+        ## NOTE: can't use MappingProxyTypeType because of mutable dict values
+        return copy.deepcopy(self._params)
+
+    def get_user_params(self) -> dict[str, Any]:
+        """Get a copy of user parameters."""
+        return copy.deepcopy(self._user_params)
+
+    def get_default_params(self) -> dict[str, Any]:
+        """Get a copy of current default parameters."""
+        return copy.deepcopy(self._default_params)
+
+    @property
+    def query_sources(self) -> bool:
+        """Whether sources have been queried from AVR."""
+        return self._system_params.get(PARAM_QUERY_SOURCES)
+
+    def _set_query_sources(self, value: bool) -> None:
+        self._system_params[PARAM_QUERY_SOURCES] = value
+        self.update_params()
+
+    def _update_listening_modes(self) -> None:
+        """Update list of valid listening modes for AVR."""
+        all_listening_modes = LISTENING_MODES | self._params.get(
+            PARAM_EXTRA_LISTENING_MODES, {}
+        )
+        disabled_listening_modes = self._params.get(PARAM_DISABLED_LISTENING_MODES)
+        enabled_listening_modes = self._params.get(PARAM_ENABLED_LISTENING_MODES)
+        available_listening_modes = {}
+        available_listening_mode_names = []
+
+        for mode_id, mode_details in all_listening_modes.items():
+            if mode_id in disabled_listening_modes or (
+                enabled_listening_modes and mode_id not in enabled_listening_modes
+            ):
+                pass
+            elif mode_details[0] in available_listening_mode_names:
+                _LOGGER.error(
+                    "ignored duplicate listening mode name: %s", mode_details[0]
+                )
+            else:
+                available_listening_modes |= {mode_id: mode_details}
+                available_listening_mode_names.append(mode_details[0])
+
+        _LOGGER.info("determining available listening modes")
+        self._system_params[PARAM_ALL_LISTENING_MODES] = all_listening_modes
+        self._system_params[PARAM_AVAILABLE_LISTENING_MODES] = available_listening_modes
+        self.update_params()
