@@ -10,10 +10,10 @@ usage:
 sdist:
 	@echo Creating sdist for version $(VERSION)
 	-rm dist/*
-	python setup.py sdist
+	python3 -m build
 
 dist: sdist
-	python -m twine upload dist/*
+	python3 -m twine upload dist/*
 
 main:
 	@echo Merging dev to main for version $(VERSION)
