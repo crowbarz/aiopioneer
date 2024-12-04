@@ -117,7 +117,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         await asyncio.sleep(0)  # yield to updater task
 
     async def on_disconnect(self) -> None:
-        """Stop AVR"""
+        """Stop AVR tasks on disconnection."""
         self._call_zone_callbacks()
         await self._command_queue_cancel()
         await self._updater_cancel()
@@ -471,9 +471,8 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         # to read without needing to add it here
         for comm, supported_zones in PIONEER_COMMANDS.items():
             if zone in supported_zones:
-                if (
-                    comm.startswith("query_")
-                    and comm.split("_")[1] in self._params.get(PARAM_ENABLED_FUNCTIONS)
+                if comm.startswith("query_") and comm.split("_")[1] in self._params.get(
+                    PARAM_ENABLED_FUNCTIONS
                 ):
                     await self.send_command(comm, zone, ignore_error=True)
                 elif (
