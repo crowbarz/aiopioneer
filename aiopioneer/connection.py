@@ -157,6 +157,7 @@ class PioneerAVRConnection(PioneerAVRParams):
         """Stop tasks on disconnect."""
         await self._responder_cancel()
         await self._listener_cancel()
+        await asyncio.sleep(0)  # yield to responder and listener tasks
 
     async def shutdown(self) -> None:
         """Shutdown the client."""

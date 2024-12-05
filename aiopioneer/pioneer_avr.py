@@ -121,6 +121,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         self._call_zone_callbacks()
         await self._command_queue_cancel()
         await self._updater_cancel()
+        await asyncio.sleep(0)  # yield to command queue and updater tasks
         await super().on_disconnect()
 
     async def set_scan_interval(self, scan_interval: int) -> None:
