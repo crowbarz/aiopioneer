@@ -28,7 +28,7 @@ Homepage = "https://github.com/crowbarz/aiopioneer"
 Issues = "https://github.com/crowbarz/aiopioneer/issues"
 
 [project.scripts]
-aiopioneer = "aiopioneer.aiopioneer.cli:main"
+aiopioneer = "aiopioneer.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["aiopioneer"]
