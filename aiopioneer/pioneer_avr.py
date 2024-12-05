@@ -188,7 +188,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
             for src_id in range(self._params[PARAM_MAX_SOURCE_ID] + 1):
                 try:
                     response = await self.send_command(
-                        "system_query_source_name",
+                        "query_source_name",
                         suffix=str(src_id).zfill(2),
                         rate_limit=False,
                     )
