@@ -245,6 +245,7 @@ class PioneerAVRConnection(PioneerAVRParams):
                 response = await self._read_response()
                 if response is None:
                     # Connection closed or exception, exit task
+                    _LOGGER.debug(">> PioneerAVR._connection_listener() exiting")
                     break
 
                 # Check for empty response
@@ -271,8 +272,7 @@ class PioneerAVRConnection(PioneerAVRParams):
                 self.handle_response(updated_zones)
 
             except asyncio.CancelledError:
-                if debug_listener:
-                    _LOGGER.debug(">> PioneerAVR._connection_listener() cancelled")
+                _LOGGER.debug(">> PioneerAVR._connection_listener() cancelled")
                 running = False
                 break
             except Exception as exc:  # pylint: disable=broad-except
@@ -282,6 +282,7 @@ class PioneerAVRConnection(PioneerAVRParams):
 
         if running and self.available:
             # Trigger disconnection if not already disconnected
+            _LOGGER.debug(">> PioneerAVR._connection_listener() triggering disconnect")
             await self.disconnect()
 
         _LOGGER.debug(">> PioneerAVR._connection_listener() completed")
@@ -362,13 +363,13 @@ class PioneerAVRConnection(PioneerAVRParams):
                 raw_response = await responder_task
         except (EOFError, TimeoutError):
             ## Connection closed
-            if debug_responder:
-                _LOGGER.debug("%s: connection closed", task_name)
+            _LOGGER.debug("%s: connection closed", task_name)
             return None
         except Exception as exc:  # pylint: disable=broad-except
             _LOGGER.error("%s: exception: %s", task_name, str(exc))
             return None
         if raw_response is None:  # task cancelled
+            _LOGGER.debug("%s: responder task cancelled", task_name)
             return None
         response = raw_response.decode().strip()
         if debug_responder:
