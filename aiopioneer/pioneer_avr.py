@@ -216,6 +216,13 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                 zone_listening_modes |= {mode_id: mode_details[0]}
         return zone_listening_modes
 
+    async def query_device_model(self) -> None:
+        """Query device model from Pioneer AVR."""
+        _LOGGER.info("querying device model")
+        if await self.send_command("query_model", ignore_error=True):
+            self._set_default_params_model()  # Update default params for this model
+            self._update_listening_modes()  # Update valid listening modes
+
     async def query_device_info(self) -> None:
         """Query device information from Pioneer AVR."""
         _LOGGER.info("querying device information")
@@ -223,18 +230,15 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         for command in commands:
             await self.send_command(command, ignore_error=True)
 
-        self._set_default_params_model()  # Update default params for this model
-        self._update_listening_modes()  # Update valid listening modes
-
-        # It is possible to query via HTML page if all info is not available
-        # via API commands: http://avr/1000/system_information.asp
-        # However, this is not compliant with Home Assistant ADR-0004:
-        #
-        # https://github.com/home-assistant/architecture/blob/master/adr/0004-webscraping.md
-        #
-        # VSX-930 will report model and software version, but not MAC address.
-        # It is unknown how iControlAV5 determines this on a routed network.
-        # It will report software version only if Zone 1 is powered on.
+        ## It is possible to query via HTML page if all info is not available
+        ## via API commands: http://avr/1000/system_information.asp
+        ## However, this is not compliant with Home Assistant ADR-0004:
+        ##
+        ## https://github.com/home-assistant/architecture/blob/master/adr/0004-webscraping.md
+        ##
+        ## VSX-930 will report model and software version, but not MAC address.
+        ## It will report software version only if Zone 1 is powered on.
+        ## It is unknown how iControlAV5 determines this on a routed network.
 
     ## Client callback functions
     def set_zone_callback(
@@ -352,9 +356,6 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                     ## Perform full refresh on zone first power on
                     self.queue_command("_sleep(2)")
                     if response.zone is Zones.Z1:
-                        _LOGGER.info(
-                            "retrying device information query on Zone 1 first power on"
-                        )
                         self.queue_command("_query_device_info")
                     self.queue_command(f"_refresh_zone({response.zone})")
                 elif (

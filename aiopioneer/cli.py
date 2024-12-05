@@ -69,8 +69,7 @@ async def cli_main(args: argparse.Namespace):
     print(f"Setting default params to: {params}")
     pioneer.set_user_params(params)
 
-    if args.query_device_info:
-        await pioneer.query_device_info()
+    await pioneer.query_device_model()
     if args.query_zones:
         await pioneer.query_zones()
         _LOGGER.info("AVR zones discovered: %s", pioneer.zones)
@@ -284,14 +283,6 @@ def main():
     )
     parser.add_argument(
         "-p", "--port", type=int, help="port for AVR connection", default=DEFAULT_PORT
-    )
-    parser.add_argument(
-        "+Q",
-        "--no-query-device-info",
-        dest="query_device_info",
-        help="skip AVR device info query",
-        action="store_false",
-        default=True,
     )
     parser.add_argument(
         "+Z",
