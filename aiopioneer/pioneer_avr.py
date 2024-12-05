@@ -188,7 +188,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
             for src_id in range(self._params[PARAM_MAX_SOURCE_ID] + 1):
                 try:
                     response = await self.send_command(
-                        "system_query_source_name",
+                        "query_source_name",
                         suffix=str(src_id).zfill(2),
                         rate_limit=False,
                     )
@@ -233,8 +233,8 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         # https://github.com/home-assistant/architecture/blob/master/adr/0004-webscraping.md
         #
         # VSX-930 will report model and software version, but not MAC address.
-        # It will report software version only if Zone 1 is powered on.
         # It is unknown how iControlAV5 determines this on a routed network.
+        # It will report software version only if Zone 1 is powered on.
 
     ## Client callback functions
     def set_zone_callback(
