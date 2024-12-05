@@ -586,59 +586,6 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         else:
             _LOGGER.error("AVR updater task not running")
 
-    ## State change functions
-    def _get_parameter_key_from_value(
-        self, val: str, parameters: dict, loose_match: bool = False
-    ) -> str:
-        items = None
-        if loose_match:
-            items = [k for k, v in parameters.items() if val in v]
-        else:
-            items = [k for k, v in parameters.items() if v == val]
-
-        if len(items) == 0:
-            raise ValueError(f"Parameter {val} does not exist for this option")
-        else:
-            return str(items[0])
-
-    def _check_zone(self, zone: Zones) -> Zones:
-        """Check that specified zone is valid."""
-        if zone not in self.zones:
-            raise ValueError(f"zone {zone} does not exist on AVR")
-        return zone
-
-    async def turn_on(self, zone: Zones = Zones.Z1) -> None:
-        """Turn on the Pioneer AVR zone."""
-        zone = self._check_zone(zone)
-        await self.send_command("turn_on", zone)
-
-    async def turn_off(self, zone: Zones = Zones.Z1) -> None:
-        """Turn off the Pioneer AVR zone."""
-        zone = self._check_zone(zone)
-        await self.send_command("turn_off", zone)
-
-    async def select_source(
-        self, source: str = None, source_id: str = None, zone: Zones = Zones.Z1
-    ) -> None:
-        """Select input source."""
-        zone = self._check_zone(zone)
-        if source_id is None:
-            source_id = self._source_name_to_id.get(source)
-        if source_id is None:
-            raise ValueError(f"invalid source {source} for zone {zone}")
-
-        await self.send_command("select_source", zone, prefix=source_id)
-
-    async def volume_up(self, zone: Zones = Zones.Z1) -> None:
-        """Volume up media player."""
-        zone = self._check_zone(zone)
-        await self.send_command("volume_up", zone)
-
-    async def volume_down(self, zone: Zones = Zones.Z1) -> None:
-        """Volume down media player."""
-        zone = self._check_zone(zone)
-        await self.send_command("volume_down", zone)
-
     ## Command queue
     async def _execute_command_queue(self) -> None:
         """Execute commands from a queue."""
@@ -755,7 +702,59 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         else:
             self._command_queue.append(command)
 
-    ## Additional AVR methods
+    ## AVR methods
+    def _get_parameter_key_from_value(
+        self, val: str, parameters: dict, loose_match: bool = False
+    ) -> str:
+        items = None
+        if loose_match:
+            items = [k for k, v in parameters.items() if val in v]
+        else:
+            items = [k for k, v in parameters.items() if v == val]
+
+        if len(items) == 0:
+            raise ValueError(f"Parameter {val} does not exist for this option")
+        else:
+            return str(items[0])
+
+    def _check_zone(self, zone: Zones) -> Zones:
+        """Check that specified zone is valid."""
+        if zone not in self.zones:
+            raise ValueError(f"zone {zone} does not exist on AVR")
+        return zone
+
+    async def turn_on(self, zone: Zones = Zones.Z1) -> None:
+        """Turn on the Pioneer AVR zone."""
+        zone = self._check_zone(zone)
+        await self.send_command("turn_on", zone)
+
+    async def turn_off(self, zone: Zones = Zones.Z1) -> None:
+        """Turn off the Pioneer AVR zone."""
+        zone = self._check_zone(zone)
+        await self.send_command("turn_off", zone)
+
+    async def select_source(
+        self, source: str = None, source_id: str = None, zone: Zones = Zones.Z1
+    ) -> None:
+        """Select input source."""
+        zone = self._check_zone(zone)
+        if source_id is None:
+            source_id = self._source_name_to_id.get(source)
+        if source_id is None:
+            raise ValueError(f"invalid source {source} for zone {zone}")
+
+        await self.send_command("select_source", zone, prefix=source_id)
+
+    async def volume_up(self, zone: Zones = Zones.Z1) -> None:
+        """Volume up media player."""
+        zone = self._check_zone(zone)
+        await self.send_command("volume_up", zone)
+
+    async def volume_down(self, zone: Zones = Zones.Z1) -> None:
+        """Volume down media player."""
+        zone = self._check_zone(zone)
+        await self.send_command("volume_down", zone)
+
     async def set_volume_level(
         self, target_volume: int, zone: Zones = Zones.Z1
     ) -> bool:
