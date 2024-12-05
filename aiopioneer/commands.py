@@ -3,9 +3,9 @@
 from .const import Zones
 
 PIONEER_COMMANDS = {
+    "query_model": {Zones.Z1: ["?RGD", "RGD"]},
     "system_query_mac_addr": {Zones.Z1: ["?SVB", "SVB"]},
     "system_query_software_version": {Zones.Z1: ["?SSI", "SSI"]},
-    "system_query_model": {Zones.Z1: ["?RGD", "RGD"]},
     "turn_on": {
         Zones.Z1: ["PO", "PWR"],
         Zones.Z2: ["APO", "APR"],
