@@ -356,9 +356,9 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                 ):
                     ## Perform full refresh on zone first power on
                     self.queue_command("_sleep(2)")
+                    self.queue_command(f"_refresh_zone({response.zone})")
                     if response.zone is Zones.Z1:
                         self.queue_command("_query_device_info")
-                    self.queue_command(f"_refresh_zone({response.zone})")
                 elif (
                     (
                         response.base_property in ["power", "source"]
@@ -369,7 +369,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                     and any(self.power.values())
                     and not self._update_lock.locked()
                 ):
-                    self.queue_command("_delayed_query_av_information")
+                    self.queue_command("_delayed_query_basic_information")
 
         return updated_zones
 
@@ -538,7 +538,6 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
 
                     # Trigger callbacks to all zones on full refresh
                     self._call_zone_callbacks(zones=[Zones.ALL])
-                    self.queue_command("_query_av_information")
                 except Exception as exc:  # pylint: disable=broad-except
                     _LOGGER.error(
                         "could not refresh AVR status: %s: %s",
@@ -609,14 +608,14 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                         )
                     zone = Zones(args[0])
                     await self.update(zones=zone, wait=False)  # avoid deadlock
-                case "_delayed_query_av_information":
+                case "_delayed_query_basic_information":
                     self.queue_command("_sleep(4)", insert_at=1)
-                    self.queue_command("_query_av_information", insert_at=2)
-                case "_query_av_information":
+                    self.queue_command("_query_basic_information", insert_at=2)
+                case "_query_basic_information":
                     if any(self.power.values()):
                         await self.send_command("query_listening_mode")
-                        await self.send_command("query_audio_information")
-                        await self.send_command("query_video_information")
+                        await self.send_command("query_basic_audio_information")
+                        await self.send_command("query_basic_video_information")
                 case "_calculate_am_frequency_step":
                     await self._calculate_am_frequency_step()
                 case "_sleep":
