@@ -25,6 +25,7 @@ from .param import (
     PARAM_ENABLED_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY,
     PARAM_TUNER_AM_FREQ_STEP,
+    PARAM_QUERY_SOURCES,
 )
 from .commands import PIONEER_COMMANDS
 from .connection import PioneerAVRConnection
@@ -179,7 +180,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
     async def build_source_dict(self) -> None:
         """Generate source id<->name translation tables."""
         timeouts = 0
-        self._set_query_sources(True)
+        self.set_system_param(PARAM_QUERY_SOURCES, True)
         self._source_name_to_id = {}
         self._source_id_to_name = {}
         await self._command_queue_wait()  ## wait for command queue to complete
@@ -220,8 +221,8 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         """Query device model from Pioneer AVR."""
         _LOGGER.info("querying device model")
         if await self.send_command("query_model", ignore_error=True):
-            self._set_default_params_model()  # Update default params for this model
-            self._update_listening_modes()  # Update valid listening modes
+            self.set_default_params_model()  # Update default params for this model
+            self.update_listening_modes()  # Update valid listening modes
 
     async def query_device_info(self) -> None:
         """Query device information from Pioneer AVR."""
@@ -996,8 +997,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
             )
             return
 
-        self._system_params[PARAM_TUNER_AM_FREQ_STEP] = new_freq - current_freq
-        self.update_params()
+        self.set_system_param(PARAM_TUNER_AM_FREQ_STEP, new_freq - current_freq)
         await self.send_command("decrease_tuner_frequency", ignore_error=True)
 
     async def _step_tuner_frequency(self, band: str, frequency: float) -> None:

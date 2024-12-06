@@ -63,13 +63,10 @@ async def cli_main(args: argparse.Namespace):
         _LOGGER.error("could not connect to AVR: %s: %s", type(exc).__name__, exc.args)
         return False
 
-    set_log_level("debug")
-    params = pioneer.get_user_params()
-    params[PARAM_DEBUG_LISTENER] = True
-    print(f"Setting default params to: {params}")
-    pioneer.set_user_params(params)
-
     await pioneer.query_device_model()
+    set_log_level("debug")
+    print(f"Using default params: {pioneer.user_params}")
+    pioneer.set_user_param(PARAM_DEBUG_LISTENER, True)
     if args.query_zones:
         await pioneer.query_zones()
         _LOGGER.info("AVR zones discovered: %s", pioneer.zones)
@@ -130,9 +127,9 @@ async def cli_main(args: argparse.Namespace):
                 f"Available listening modes: {json.dumps(pioneer.get_listening_modes())}"
             )
         elif cmd == "get_params":
-            print(f"Params: {json.dumps(pioneer.get_params())}")
+            print(f"Params: {json.dumps(pioneer.params_all)}")
         elif cmd == "get_user_params":
-            print(f"User Params: {json.dumps(pioneer.get_user_params())}")
+            print(f"User Params: {json.dumps(pioneer.user_params)}")
         elif cmd == "set_user_params":
             try:
                 params = json.loads(arg)
@@ -166,28 +163,20 @@ async def cli_main(args: argparse.Namespace):
 
         elif cmd == "debug_listener":
             arg_bool = get_bool_arg(arg)
-            params = pioneer.get_user_params()
-            params[PARAM_DEBUG_LISTENER] = arg_bool
             print(f"Setting debug_listener to: {arg_bool}")
-            pioneer.set_user_params(params)
+            pioneer.set_user_param(PARAM_DEBUG_LISTENER, arg_bool)
         elif cmd == "debug_responder":
             arg_bool = get_bool_arg(arg)
-            params = pioneer.get_user_params()
-            params[PARAM_DEBUG_RESPONDER] = arg_bool
             print(f"Setting debug_responder to: {arg_bool}")
-            pioneer.set_user_params(params)
+            pioneer.set_user_param(PARAM_DEBUG_RESPONDER, arg_bool)
         elif cmd == "debug_updater":
             arg_bool = get_bool_arg(arg)
-            params = pioneer.get_user_params()
-            params[PARAM_DEBUG_UPDATER] = arg_bool
             print(f"Setting debug_updater to: {arg_bool}")
-            pioneer.set_user_params(params)
+            pioneer.set_user_param(PARAM_DEBUG_UPDATER, arg_bool)
         elif cmd == "debug_command":
             arg_bool = get_bool_arg(arg)
-            params = pioneer.get_user_params()
-            params[PARAM_DEBUG_COMMAND] = arg_bool
             print(f"Setting debug_command to: {arg_bool}")
-            pioneer.set_user_params(params)
+            pioneer.set_user_param(PARAM_DEBUG_COMMAND, arg_bool)
         elif cmd == "set_scan_interval":
             try:
                 scan_interval = float(arg)

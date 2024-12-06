@@ -694,7 +694,7 @@ class PioneerAVRParams:
         self.set_user_params(params)
 
     ## Parameter management functions
-    def update_params(self) -> None:
+    def _update_params(self) -> None:
         """Set current parameters."""
         self._params = {}
         merge(self._params, self._default_params)
@@ -707,14 +707,7 @@ class PioneerAVRParams:
             del self._system_params[PARAM_TUNER_AM_FREQ_STEP]
         merge(self._params, self._system_params)
 
-    def set_user_params(self, params: dict[str, Any] = None) -> None:
-        """Set user parameters and update current parameters."""
-        _LOGGER.debug(">> PioneerAVR.set_user_params(%s)", params)
-        self._user_params = copy.deepcopy(params) if params is not None else {}
-        self.update_params()
-        self._update_listening_modes()
-
-    def _set_default_params_model(self) -> None:
+    def set_default_params_model(self) -> None:
         """Set default parameters based on device model."""
         model = self.model
         self._default_params = PARAM_DEFAULTS
@@ -727,35 +720,47 @@ class PioneerAVRParams:
                         model_regex,
                     )
                     merge(self._default_params, model_params, force_overwrite=True)
-        self.update_params()
+        self._update_params()
+
+    def set_user_params(self, params: dict[str, Any] = None) -> None:
+        """Set user parameters and update current parameters."""
+        _LOGGER.debug(">> PioneerAVR.set_user_params(%s)", params)
+        self._user_params = copy.deepcopy(params) if params is not None else {}
+        self._update_params()
+        self.update_listening_modes()
+
+    def set_user_param(self, param: str, value: Any) -> None:
+        """Set a user parameter."""
+        self._user_params[param] = value
+        self._update_params()
+        self.update_listening_modes()
+
+    def set_system_param(self, param: str, value: bool) -> None:
+        """Set system parameter."""
+        self._system_params[param] = value
+        self._update_params()
+
+    @property
+    def default_params(self) -> dict[str, Any]:
+        """Get a copy of current default parameters."""
+        return copy.deepcopy(self._default_params)
+
+    @property
+    def user_params(self) -> dict[str, Any]:
+        """Get a copy of user parameters."""
+        return copy.deepcopy(self._user_params)
+
+    @property
+    def params_all(self) -> dict[str, Any]:
+        """Get a copy of all current parameters."""
+        ## NOTE: can't use MappingProxyTypeType because of mutable dict values
+        return copy.deepcopy(self._params)
 
     def get_param(self, param_name: str) -> Any:
         """Get the value of the specified parameter."""
         return self._params.get(param_name)
 
-    def get_params(self) -> dict[str, Any]:
-        """Get a copy of all current parameters."""
-        ## NOTE: can't use MappingProxyTypeType because of mutable dict values
-        return copy.deepcopy(self._params)
-
-    def get_user_params(self) -> dict[str, Any]:
-        """Get a copy of user parameters."""
-        return copy.deepcopy(self._user_params)
-
-    def get_default_params(self) -> dict[str, Any]:
-        """Get a copy of current default parameters."""
-        return copy.deepcopy(self._default_params)
-
-    @property
-    def query_sources(self) -> bool:
-        """Whether sources have been queried from AVR."""
-        return self._system_params.get(PARAM_QUERY_SOURCES)
-
-    def _set_query_sources(self, value: bool) -> None:
-        self._system_params[PARAM_QUERY_SOURCES] = value
-        self.update_params()
-
-    def _update_listening_modes(self) -> None:
+    def update_listening_modes(self) -> None:
         """Update list of valid listening modes for AVR."""
         all_listening_modes = LISTENING_MODES | self._params.get(
             PARAM_EXTRA_LISTENING_MODES, {}
@@ -781,4 +786,4 @@ class PioneerAVRParams:
         _LOGGER.info("determining available listening modes")
         self._system_params[PARAM_ALL_LISTENING_MODES] = all_listening_modes
         self._system_params[PARAM_AVAILABLE_LISTENING_MODES] = available_listening_modes
-        self.update_params()
+        self._update_params()

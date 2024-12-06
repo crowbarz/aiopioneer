@@ -7,7 +7,7 @@ from types import MappingProxyType
 
 from .commands import PIONEER_COMMANDS
 from .const import Zones, MEDIA_CONTROL_COMMANDS
-from .param import PioneerAVRParams, PARAM_ZONE_SOURCES
+from .param import PioneerAVRParams, PARAM_ZONE_SOURCES, PARAM_QUERY_SOURCES
 
 
 class PioneerAVRProperties(PioneerAVRParams):
@@ -42,7 +42,7 @@ class PioneerAVRProperties(PioneerAVRParams):
 
     def set_source_dict(self, sources: dict[str, str]) -> None:
         """Manually set source id<->name translation tables."""
-        self._set_query_sources(False)
+        self.set_system_param(PARAM_QUERY_SOURCES, False)
         self._source_name_to_id = copy.deepcopy(sources)
         self._source_id_to_name = {v: k for k, v in sources.items()}
 
