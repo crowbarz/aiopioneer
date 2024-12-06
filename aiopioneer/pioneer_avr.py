@@ -1088,21 +1088,14 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         """Set the level (gain) for amplifier channel in zone."""
         zone = self._check_zone(zone)
         if self.channel_levels.get(zone.value) is None:
-            raise ValueError(f"channel levesl not supported for zone {zone}")
+            raise ValueError(f"channel levels not supported for zone {zone}")
 
-        # Check the channel exists
+        ## Check the channel exists
         if self.channel_levels[zone.value].get(channel.upper()) is None:
             raise ValueError(f"invalid channel {channel} for zone {zone}")
 
-        # Append underscores depending on length
-        if len(channel) == 1:
-            channel = channel + "__"
-        elif len(channel) == 2:
-            channel = channel + "_"
-
-        # convert the float to correct int
-        level = int((level * 2) + 50)
-        await self.send_command("set_channel_levels", zone, prefix=channel + str(level))
+        prefix = channel.ljust(3, "_") + str(int((level * 2) + 50))
+        await self.send_command("set_channel_levels", zone, prefix=prefix)
 
     async def set_video_settings(self, **arguments) -> None:
         """Set video settings for a given zone."""
