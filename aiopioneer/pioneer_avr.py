@@ -1336,29 +1336,33 @@ class PioneerAVR:
 
         async def local_command(
             command: str, command_name: str, args: list[str]
-        ) -> None:
+        ) -> set:
             if debug_command:
                 _LOGGER.debug("running local command %s, args: %s", command, args)
             match command_name:
                 case "_query_device_info":
                     await self.query_device_info()
                 case "_full_refresh":
-                    await self.update(full=True, wait=False)  # avoid deadlock
+                    return set(self.zones)
                 case "_refresh_zone":
                     if len(args) != 1:
                         raise ValueError(
                             "local command refresh_zone requires 1 argument"
                         )
-                    zone = Zones(args[0])
-                    await self.update(zones=zone, wait=False)  # avoid deadlock
+                    return {Zones(args[0])}
+
+                    # await self.update(zones=zone, wait=False)  # avoid deadlock
                 case "_delayed_query_av_information":
                     self.queue_command("_sleep(4)", insert_at=1)
                     self.queue_command("_query_av_information", insert_at=2)
                 case "_query_av_information":
                     if any(self.power.values()):
-                        await self.send_command("query_listening_mode")
-                        await self.send_command("query_audio_information")
-                        await self.send_command("query_video_information")
+                        for cmd in [
+                            "query_listening_mode",
+                            "query_audio_information",
+                            "query_video_information",
+                        ]:
+                            await self.send_command(cmd, ignore_error=True)
                 case "_calculate_am_frequency_step":
                     await self._calculate_am_frequency_step()
                 case "_sleep":
@@ -1368,30 +1372,47 @@ class PioneerAVR:
                     await asyncio.sleep(delay)
                 case _:
                     raise ValueError(f"unknown local command: {command_name}")
+            return set()
 
+        updated_zones = set()
         if debug_command:
-            _LOGGER.debug(">> PioneerAVR._command_queue")
+            _LOGGER.debug(">> PioneerAVR._command_queue() started")
         async with self._update_lock:
             while len(self._command_queue) > 0:
                 # Keep command in queue until it has finished executing
                 command = self._command_queue[0]
-                _LOGGER.debug("command queue executing: %s", command)
-                if command.startswith("_"):
-                    command_tokens = command.split("(", 1)
-                    command_name = command_tokens[0]
-                    args = []
-                    if len(command_tokens) > 1:
-                        args_raw = command_tokens[1].split(")", 1)
-                        args = [arg.strip() for arg in args_raw[0].split(",")]
-                        if len(args_raw) < 2 or args_raw[1] != "":
-                            raise ValueError(f"malformed local command: '{command}'")
-                    await local_command(command, command_name, args)
-                else:
-                    await self.send_command(command, ignore_error=True)
+                _LOGGER.debug("command queue executing %s", command)
+                try:
+                    if command.startswith("_"):
+                        command_tokens = command.split("(", 1)
+                        command_name = command_tokens[0]
+                        args = []
+                        if len(command_tokens) > 1:
+                            args_raw = command_tokens[1].split(")", 1)
+                            args = [arg.strip() for arg in args_raw[0].split(",")]
+                            if len(args_raw) < 2 or args_raw[1] != "":
+                                raise ValueError(
+                                    f"malformed local command: '{command}'"
+                                )
+                        updated_zones |= await local_command(
+                            command, command_name, args
+                        )
+                    else:
+                        await self.send_command(command, ignore_error=False)
+                except Exception as exc:  # pylint: disable=broad-except
+                    _LOGGER.error(
+                        "exception executing command %s: %s: %s",
+                        command,
+                        type(exc).__name__,
+                        str(exc),
+                    )
                 self._command_queue.pop(0)
 
+        if updated_zones:
+            _LOGGER.debug("refreshing zones %s on command queue flush", updated_zones)
+            await self.update(zones=updated_zones)  # run refresh outside update lock
         if debug_command:
-            _LOGGER.debug("command queue finished")
+            _LOGGER.debug(">> PioneerAVR._command_queue() completed")
 
     async def _command_queue_wait(self) -> None:
         """Wait for command queue to be flushed."""
