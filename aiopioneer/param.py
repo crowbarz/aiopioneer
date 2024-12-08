@@ -71,25 +71,27 @@ PARAM_ALL_LISTENING_MODES = "all_listening_modes"
 PARAM_AVAILABLE_LISTENING_MODES = "available_listening_modes"
 
 DEFAULT_PARAM_ENABLED_FUNCTIONS = [
+    "basic",
+    "audio",
     "amp",
     "dsp",
-    "tuner",
     "tone",
     "channels",
     "video",
+    "tuner",
     "system",
-    "audio",
     "display",
 ]
 
 PARAM_ENABLED_FUNCTIONS_NO_VIDEO = [
+    "basic",
+    "audio",
     "amp",
     "dsp",
-    "tuner",
     "tone",
     "channels",
+    "tuner",
     "system",
-    "audio",
     "display",
 ]
 
