@@ -439,7 +439,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         _LOGGER.debug(">> PioneerAVR._updater_schedule()")
         await self._updater_cancel()
         self._refresh_zones = self.zones  # always perform full refresh on schedule
-        self._updater_task = asyncio.create_task(self._updater())
+        self._updater_task = asyncio.create_task(self._updater(), name="avr_updater")
 
     async def _updater_cancel(self) -> None:
         """Cancel the updater task."""
@@ -701,7 +701,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         ## NOTE: does not create new task if one already exists
         if self._command_queue_task is None or self._command_queue_task.done():
             self._command_queue_task = asyncio.create_task(
-                self._execute_command_queue()
+                self._execute_command_queue(), name="avr_command_queue"
             )
 
     def queue_command(

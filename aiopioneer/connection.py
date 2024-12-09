@@ -223,7 +223,9 @@ class PioneerAVRConnection(PioneerAVRParams):
                     reconnect_task = None  # trigger new task creation
             if reconnect_task is None:
                 _LOGGER.info("reconnecting to AVR")
-                reconnect_task = asyncio.create_task(self.reconnect())
+                reconnect_task = asyncio.create_task(
+                    self.reconnect(), name="avr_reconnect"
+                )
                 self._reconnect_task = reconnect_task
             else:
                 _LOGGER.error("AVR listener reconnection already running")
@@ -300,7 +302,9 @@ class PioneerAVRConnection(PioneerAVRParams):
         if self._params[PARAM_DEBUG_LISTENER]:
             _LOGGER.debug(">> PioneerAVR._listener_schedule()")
         await self._listener_cancel()
-        self._listener_task = asyncio.create_task(self._connection_listener())
+        self._listener_task = asyncio.create_task(
+            self._connection_listener(), name="avr_listener"
+        )
 
     async def _listener_cancel(self) -> None:
         """Cancel the listener task."""
@@ -331,7 +335,9 @@ class PioneerAVRConnection(PioneerAVRParams):
             if responder_task.done():
                 responder_task = None  # trigger new task creation
         if responder_task is None:
-            responder_task = asyncio.create_task(self._reader_readuntil())
+            responder_task = asyncio.create_task(
+                self._reader_readuntil(), name="avr_responder"
+            )
             # responder_task = asyncio.create_task(self._reader.readuntil(b"\n"))
             self._responder_task = responder_task
             if debug_responder:
