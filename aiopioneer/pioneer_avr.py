@@ -532,6 +532,8 @@ class PioneerAVR:
         responder_task = self._responder_task
         if responder_task:
             if responder_task.done():
+                if exc := responder_task.exception():
+                    _LOGGER.error("responder task exception: %s", exc)
                 responder_task = None  # trigger new task creation
         if responder_task is None:
             responder_task = asyncio.create_task(self._reader_readuntil())
@@ -1098,8 +1100,11 @@ class PioneerAVR:
             try:
                 await self._updater_update()
                 event.clear()
-                # await asyncio.wait_for(event.wait(), timeout=self.scan_interval)
-                await safe_wait_for(event.wait(), timeout=self.scan_interval or None)
+                await safe_wait_for(
+                    event.wait(),
+                    timeout=self.scan_interval or None,
+                    name="avr_update_timer",
+                )
                 if debug_updater:
                     _LOGGER.debug(">> PioneerAVR._updater() signalled")
             except TimeoutError:  # update timer expired
@@ -1158,9 +1163,8 @@ class PioneerAVR:
         # to read without needing to add it here
         for comm, supported_zones in PIONEER_COMMANDS.items():
             if zone in supported_zones:
-                if (
-                    comm.startswith("query_")
-                    and comm.split("_")[1] in self._params.get(PARAM_ENABLED_FUNCTIONS)
+                if comm.startswith("query_") and comm.split("_")[1] in self._params.get(
+                    PARAM_ENABLED_FUNCTIONS
                 ):
                     await self.send_command(comm, zone, ignore_error=True)
                 elif (
@@ -1396,6 +1400,8 @@ class PioneerAVR:
             _LOGGER.debug(">> PioneerAVR._command_queue_wait()")
         if self._command_queue_task:
             if self._command_queue_task.done():
+                if exc := self._command_queue_task.exception():
+                    _LOGGER.error("command queue task exception: %s", exc)
                 self._command_queue_task = None
             else:
                 if debug_command:
@@ -1419,7 +1425,12 @@ class PioneerAVR:
             return
 
         ## NOTE: does not create new task if one already exists
-        if self._command_queue_task is None or self._command_queue_task.done():
+        if self._command_queue_task:
+            if self._command_queue_task.done():
+                if exc := self._command_queue_task.exception():
+                    _LOGGER.error("responder task exception: %s", exc)
+                self._command_queue_task = None
+        if self._command_queue_task is None:
             self._command_queue_task = asyncio.create_task(
                 self._execute_command_queue()
             )

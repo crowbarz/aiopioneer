@@ -75,15 +75,17 @@ def get_backoff_delay(retry_count):
     return delay
 
 
-async def safe_wait_for(awt, timeout=None):
+async def safe_wait_for(awt, timeout: float = None, name: str = None):
     """
     asyncio.wait_for() that re-raises cancellation even if aw is complete.
     Work around issue: https://bugs.python.org/issue42130
     """
-    task = asyncio.create_task(awt)
+    task = asyncio.create_task(awt, name=name)
     try:
         await asyncio.wait({task}, timeout=timeout)
         if task.done():
+            if exc := task.exception():
+                raise exc  ## re-raise exception from task
             return task.result()
         ## timed out
         try:
@@ -97,7 +99,7 @@ async def safe_wait_for(awt, timeout=None):
         raise exc
 
 
-async def cancel_task(task, task_name=None, debug=False):
+async def cancel_task(task: asyncio.Task, task_name: str = None, debug: bool = False):
     """Cancels a task and waits for it to finish."""
     if task:
         if task_name is None:
@@ -127,19 +129,16 @@ async def cancel_task(task, task_name=None, debug=False):
                 if debug:
                     _LOGGER.debug(">> cancel_task(%s): cancelled exception", task_name)
             except Exception as exc:  # pylint: disable=broad-except
-                if debug:
-                    _LOGGER.debug(
-                        ">> cancel_task(%s): returned exception: %s", task_name, exc
-                    )
+                _LOGGER.error(
+                    ">> cancel_task(%s): returned exception: %s", task_name, exc
+                )
             else:
                 if debug:
                     _LOGGER.debug(">> cancel_task(%s): completed", task_name)
         else:
             if debug:
                 _LOGGER.debug(">> cancel_task(%s): already completed", task_name)
-            exc = task.exception()
-            if exc:
-                if debug:
-                    _LOGGER.debug(
-                        ">> cancel_task(%s): returned exception: %s", task_name, exc
-                    )
+            if exc := task.exception():
+                _LOGGER.error(
+                    ">> cancel_task(%s): returned exception: %s", task_name, exc
+                )
