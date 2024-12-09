@@ -220,6 +220,8 @@ class PioneerAVRConnection(PioneerAVRParams):
             if reconnect_task:
                 await asyncio.sleep(0)  # yield to reconnect task if running
                 if reconnect_task.done():
+                    if exc := reconnect_task.exception():
+                        _LOGGER.error("reconnect task exception: %s", exc)
                     reconnect_task = None  # trigger new task creation
             if reconnect_task is None:
                 _LOGGER.info("reconnecting to AVR")
@@ -333,6 +335,8 @@ class PioneerAVRConnection(PioneerAVRParams):
         responder_task = self._responder_task
         if responder_task:
             if responder_task.done():
+                if exc := responder_task.exception():
+                    _LOGGER.error("responder task exception: %s", exc)
                 responder_task = None  # trigger new task creation
         if responder_task is None:
             responder_task = asyncio.create_task(
@@ -462,6 +466,7 @@ class PioneerAVRConnection(PioneerAVRParams):
                 response = await safe_wait_for(
                     self._wait_for_response(command, response_prefix),
                     timeout=self._timeout,
+                    name="avr_wait_for_response",
                 )
                 await asyncio.sleep(0)  # yield to listener task
             except TimeoutError as exc:  # response timer expired
