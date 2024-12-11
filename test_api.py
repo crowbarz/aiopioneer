@@ -39,7 +39,8 @@ async def main(argv):
 
     await pioneer.query_device_info()
     print(
-        f"AVR device info: model={pioneer.model}, mac_addr={pioneer.mac_addr}, software_version={pioneer.software_version}"
+        f"AVR device info: model={pioneer.model}, "
+        + f"mac_addr={pioneer.mac_addr}, software_version={pioneer.software_version}"
     )
     await pioneer.query_zones()
     print(f"AVR zones discovered: {pioneer.zones}")
