@@ -73,7 +73,7 @@ from .parsers import process_raw_response
 _LOGGER = logging.getLogger(__name__)
 
 
-class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
+class PioneerAVR(PioneerAVRConnection):
     """Pioneer AVR interface."""
 
     def __init__(
@@ -88,6 +88,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         _LOGGER.info("Starting aiopioneer %s", VERSION)
         _LOGGER.debug(">> PioneerAVR.__init__()")
         self.params = PioneerAVRParams(params)
+        self.properties = PioneerAVRProperties(self.params)
         super().__init__(
             params=self.params,
             host=host,
@@ -95,12 +96,8 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
             timeout=timeout,
             scan_interval=scan_interval,
         )
-        PioneerAVRProperties.__init__(self, self.params)
 
         ## Public properties
-        self.software_version = None
-        self.mac_addr = None
-        self.zones: list[Zones] = []
         self.initial_refresh: list[Zones] = []
 
         ## Internal state
@@ -152,10 +149,10 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                 ignore_volume_check
                 or await self.send_command("query_volume", zone, ignore_error=True)
             ):
-                if zone not in self.zones and zone not in ignored_zones:
+                if zone not in self.properties.zones and zone not in ignored_zones:
                     _LOGGER.info("Zone %s discovered", zone)
-                    self.zones.append(zone)
-                    self.max_volume[zone.value] = max_volume
+                    self.properties.zones.append(zone)
+                    self.properties.max_volume[zone.value] = max_volume
                     return True
                 return False
             return None
@@ -179,10 +176,10 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         """Update zones from ignored_zones and re-query zones."""
         removed_zones = False
         for zone in [Zones(z) for z in self.params.get_param(PARAM_IGNORED_ZONES)]:
-            if zone in self.zones:
+            if zone in self.properties.zones:
                 zone_name = "HDZone" if zone is Zones.HDZ else zone
                 _LOGGER.info("removing zone %s", zone_name)
-                self.zones.remove(zone)
+                self.properties.zones.remove(zone)
                 self._call_zone_callbacks([zone])  # update availability
                 removed_zones = True
         await self.query_zones(force_update=removed_zones)
@@ -191,8 +188,8 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         """Generate source id<->name translation tables."""
         timeouts = 0
         self.params.set_system_param(PARAM_QUERY_SOURCES, True)
-        self._source_name_to_id = {}
-        self._source_id_to_name = {}
+        self.properties.source_name_to_id = {}
+        self.properties.source_id_to_name = {}
         await self._command_queue_wait()  ## wait for command queue to complete
         _LOGGER.info("querying AVR source names")
         async with self._update_lock:
@@ -212,12 +209,12 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                     _LOGGER.debug("timeout %d retrieving source %s", timeouts, src_id)
                 elif response is not False:
                     timeouts = 0
-        if not self._source_name_to_id:
+        if not self.properties.source_name_to_id:
             _LOGGER.warning("no input sources found on AVR")
 
     def get_listening_modes(self) -> dict[str, str] | None:
         """Return dict of valid listening modes and names for Zone 1."""
-        multichannel = self.audio.get("input_multichannel")
+        multichannel = self.properties.audio.get("input_multichannel")
         listening_modes = self.params.get_param(PARAM_AVAILABLE_LISTENING_MODES, {})
         zone_listening_modes = {}
         for mode_id, mode_details in listening_modes.items():
@@ -232,7 +229,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         _LOGGER.info("querying device model")
         if await self.send_command("query_model", ignore_error=True):
             self.params.set_default_params_model(
-                self.model
+                self.properties.model
             )  # Update default params for this model
             self.params.update_listening_modes()  # Update valid listening modes
 
@@ -258,7 +255,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         self, zone: Zones, callback: Callable[..., None] | None = None
     ) -> None:
         """Register a callback for a zone."""
-        if zone in self.zones or zone is Zones.ALL:
+        if zone in self.properties.zones or zone is Zones.ALL:
             if callback:
                 self._zone_callback[zone] = callback
             else:
@@ -271,7 +268,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
     def _call_zone_callbacks(self, zones: list[Zones] | None = None) -> None:
         """Call callbacks to signal updated zone(s)."""
         if not zones:
-            zones = self.zones + [Zones.ALL]
+            zones = self.properties.zones + [Zones.ALL]
         for zone in zones:
             if zone in self._zone_callback:
                 callback = self._zone_callback[zone]
@@ -292,13 +289,17 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                     ## Call a function
                     response.base_property(self)
                 elif response.base_property is not None:
-                    current_base = current_value = getattr(self, response.base_property)
+                    current_base = current_value = getattr(
+                        self.properties, response.base_property
+                    )
                     is_global = response.zone in [Zones.ALL, None]
                     if response.property_name is None and not is_global:
                         current_value = current_base.get(response.zone)
                         if current_value != response.value:
                             current_base[response.zone] = response.value
-                            setattr(self, response.base_property, current_base)
+                            setattr(
+                                self.properties, response.base_property, current_base
+                            )
                             _LOGGER.info(
                                 "Zone %s: %s: %s -> %s (%s)",
                                 response.zone,
@@ -316,7 +317,9 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                             current_base[response.zone][
                                 response.property_name
                             ] = response.value
-                            setattr(self, response.base_property, current_base)
+                            setattr(
+                                self.properties, response.base_property, current_base
+                            )
                             _LOGGER.info(
                                 "Zone %s: %s.%s: %s -> %s (%s)",
                                 response.zone,
@@ -328,7 +331,9 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                             )
                     elif response.property_name is None and is_global:
                         if current_base != response.value:
-                            setattr(self, response.base_property, response.value)
+                            setattr(
+                                self.properties, response.base_property, response.value
+                            )
                             _LOGGER.info(
                                 "Global: %s: %s -> %s (%s)",
                                 response.base_property,
@@ -340,7 +345,9 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                         current_value = current_base.get(response.property_name)
                         if current_value != response.value:
                             current_base[response.property_name] = response.value
-                            setattr(self, response.base_property, current_base)
+                            setattr(
+                                self.properties, response.base_property, current_base
+                            )
                             _LOGGER.info(
                                 "Global: %s.%s: %s -> %s (%s)",
                                 response.base_property,
@@ -379,7 +386,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                     )
                     and (not self._refresh_zones)
                     and (not self.params.get_param(PARAM_DISABLE_AUTO_QUERY))
-                    and any(self.power.values())
+                    and any(self.properties.power.values())
                     and not self._update_lock.locked()
                 ):
                     self.queue_command("_delayed_query_basic_information")
@@ -393,12 +400,12 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         ## Detect Zone 1 power on for volume workaround
         power_on_volume_bounce = self.params.get_param(PARAM_POWER_ON_VOLUME_BOUNCE)
         if power_on_volume_bounce and self._power_zone_1 is not None:
-            if not self._power_zone_1 and self.power.get(Zones.Z1):
+            if not self._power_zone_1 and self.properties.power.get(Zones.Z1):
                 ## Zone 1 powered on, schedule bounce task
                 _LOGGER.info("scheduling main zone volume workaround")
                 self.queue_command("volume_up", skip_if_queued=False, insert_at=0)
                 self.queue_command("volume_down", skip_if_queued=False, insert_at=1)
-        self._power_zone_1 = self.power.get(Zones.Z1)  # cache value
+        self._power_zone_1 = self.properties.power.get(Zones.Z1)  # cache value
 
         # Implement a command queue so that we can queue commands if we
         # need to update attributes that only get updated when we
@@ -454,7 +461,9 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         """Schedule/reschedule the update task."""
         _LOGGER.debug(">> PioneerAVR._updater_schedule()")
         await self._updater_cancel()
-        self._refresh_zones = self.zones  # always perform full refresh on schedule
+        self._refresh_zones = (
+            self.properties.zones
+        )  # always perform full refresh on schedule
         self._updater_task = asyncio.create_task(self._updater(), name="avr_updater")
 
     async def _updater_cancel(self) -> None:
@@ -467,7 +476,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         """Update an AVR zone."""
         # Run updates only if zone is powered on
         await self.send_command("query_power", zone)
-        if not bool(self.power.get(zone)):
+        if not bool(self.properties.power.get(zone)):
             return
 
         # All zone updates
@@ -497,7 +506,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                 elif (
                     comm == "set_channel_levels"
                     and "channels" in self.params.get_param(PARAM_ENABLED_FUNCTIONS)
-                    and bool(self.power.get(Zones.Z1))
+                    and bool(self.properties.power.get(Zones.Z1))
                 ):
                     # CHANNEL updates are handled differently as it requires more complex
                     # logic to send the commands we use the set_channel_levels command
@@ -518,7 +527,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         if not self.available:
             _LOGGER.debug("AVR not connected, skipping update")
             return False
-        if not self.zones:
+        if not self.properties.zones:
             _LOGGER.debug("AVR zones not discovered yet, skipping update")
             return False
         # if self._update_lock.locked():
@@ -536,7 +545,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                 since_refreshed = now - self.last_updated
                 since_refreshed_str = f"{since_refreshed:.3f}s ago"
             if not self.scan_interval or since_refreshed > self.scan_interval:
-                refresh_zones = self.zones
+                refresh_zones = self.properties.zones
 
             if refresh_zones:
                 _LOGGER.info(
@@ -548,7 +557,10 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                 try:
                     for zone in refresh_zones:
                         await self._refresh_zone(zone)
-                        if self.power[zone] and zone not in self.initial_refresh:
+                        if (
+                            self.properties.power[zone]
+                            and zone not in self.initial_refresh
+                        ):
                             _LOGGER.info("completed initial refresh for zone %s", zone)
                             self.initial_refresh.append(zone)
 
@@ -586,7 +598,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
     async def update(self, full=False, zones: list[Zones] = None, wait=True) -> None:
         """Update AVR cached status update."""
         if full:
-            self._refresh_zones = self.zones
+            self._refresh_zones = self.properties.zones
         elif zones:
             self._refresh_zones = zones
         if self._updater_task:
@@ -616,7 +628,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                 case "_query_device_info":
                     await self.query_device_info()
                 case "_full_refresh":
-                    return set(self.zones)
+                    return set(self.properties.zones)
                 case "_refresh_zone":
                     if len(args) != 1:
                         raise ValueError(
@@ -627,7 +639,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                     self.queue_command("_sleep(4)", insert_at=1)
                     self.queue_command("_query_basic_information", insert_at=2)
                 case "_query_basic_information":
-                    if any(self.power.values()):
+                    if any(self.properties.power.values()):
                         for cmd in [
                             "query_listening_mode",
                             "query_audio_information",
@@ -738,7 +750,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
             return
         _LOGGER.debug("queuing command %s", command)
         if command.startswith("_full_refresh"):
-            self._refresh_zones = self.zones
+            self._refresh_zones = self.properties.zones
         if insert_at >= 0:
             self._command_queue.insert(insert_at, command)
         else:
@@ -761,7 +773,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
 
     def _check_zone(self, zone: Zones) -> Zones:
         """Check that specified zone is valid."""
-        if zone not in self.zones:
+        if zone not in self.properties.zones:
             raise ValueError(f"zone {zone} does not exist on AVR")
         return zone
 
@@ -781,7 +793,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         """Select input source."""
         zone = self._check_zone(zone)
         if source_id is None:
-            source_id = self._source_name_to_id.get(source)
+            source_id = self.properties.source_name_to_id.get(source)
         if source_id is None:
             raise ValueError(f"invalid source {source} for zone {zone}")
 
@@ -802,8 +814,8 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
     ) -> bool:
         """Set volume level (0..185 for Zone 1, 0..81 for other Zones)."""
         zone = self._check_zone(zone)
-        current_volume = self.volume.get(zone.value)
-        max_volume = self.max_volume[zone.value]
+        current_volume = self.properties.volume.get(zone.value)
+        max_volume = self.properties.max_volume[zone.value]
         if target_volume < 0 or target_volume > max_volume:
             raise ValueError(f"volume {target_volume} out of range for zone {zone}")
         volume_step_only = self.params.get_param(PARAM_VOLUME_STEP_ONLY)
@@ -815,7 +827,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                     _LOGGER.debug("current volume: %d", current_volume)
                     await self.volume_up(zone)
                     volume_step_count += 1
-                    new_volume = self.volume.get(zone.value)
+                    new_volume = self.properties.volume.get(zone.value)
                     if new_volume <= current_volume:  # going wrong way
                         _LOGGER.warning("set_volume_level stopped stepping up")
                         return False
@@ -828,14 +840,14 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                     _LOGGER.debug("current volume: %d", current_volume)
                     await self.volume_down(zone)
                     volume_step_count += 1
-                    new_volume = self.volume.get(zone.value)
+                    new_volume = self.properties.volume.get(zone.value)
                     if new_volume >= current_volume:  # going wrong way
                         _LOGGER.warning("set_volume_level stopped stepping down")
                         return False
                     if volume_step_count > (start_volume - target_volume):
                         _LOGGER.warning("set_volume_level exceed max steps")
                         return False
-                    current_volume = self.volume.get(zone.value)
+                    current_volume = self.properties.volume.get(zone.value)
             return True
 
         else:
@@ -901,7 +913,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         """Set the tone settings for a given zone."""
         ## Check the zone supports tone settings and that inputs are within range
         zone = self._check_zone(zone)
-        if self.tone.get(zone.value) is None:
+        if self.properties.tone.get(zone.value) is None:
             raise RuntimeError(f"tone controls are not available for zone {zone}")
         if not -6 <= treble <= 6:
             raise ValueError(f"invalid treble value: {treble}")
@@ -915,7 +927,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                 prefix=self._get_parameter_key_from_value(tone, TONE_MODES),
             )
         ## Set treble and bass only if zone tone status is set to "On"
-        if self.tone.get(zone.value, {}).get("status") == "On":
+        if self.properties.tone.get(zone.value, {}).get("status") == "On":
             treble_str = f"{str(treble)}dB"
             bass_str = f"{str(bass)}dB"
             if treble is not None:
@@ -946,7 +958,10 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         zone = self._check_zone(zone)
 
         # FUNC: SPEAKERS (use PARAM_SPEAKER_MODES)
-        if self.amp.get("speakers") is not None and speaker_config is not None:
+        if (
+            self.properties.amp.get("speakers") is not None
+            and speaker_config is not None
+        ):
             await self.send_command(
                 "set_amp_speaker_status",
                 zone,
@@ -956,7 +971,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
             )
 
         # FUNC: HDMI OUTPUT SELECT (use PARAM_HDMI_OUT_MODES)
-        if self.amp.get("hdmi_out") is not None and hdmi_out is not None:
+        if self.properties.amp.get("hdmi_out") is not None and hdmi_out is not None:
             await self.send_command(
                 "set_amp_hdmi_out_status",
                 zone,
@@ -964,7 +979,10 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
             )
 
         # FUNC: HDMI AUDIO (simple bool, True is on, otherwise audio only goes to amp)
-        if self.amp.get("hdmi_audio") is not None and hdmi_audio_output is not None:
+        if (
+            self.properties.amp.get("hdmi_audio") is not None
+            and hdmi_audio_output is not None
+        ):
             await self.send_command(
                 "set_amp_hdmi_audio_status",
                 zone,
@@ -972,11 +990,11 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
             )
 
         # FUNC: PQLS (simple bool, True is auto, False is off)
-        if self.amp.get("pqls") is not None and pqls is not None:
+        if self.properties.amp.get("pqls") is not None and pqls is not None:
             await self.send_command("set_amp_pqls_status", zone, prefix=str(int(pqls)))
 
         # FUNC: AMP (use PARAM_AMP_MODES)
-        if self.amp.get("status") is not None and amp is not None:
+        if self.properties.amp.get("status") is not None and amp is not None:
             await self.send_command(
                 "set_amp_status",
                 zone,
@@ -987,11 +1005,14 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         """Set the tuner band."""
         if not isinstance(band, TunerBand):
             raise ValueError(f"invalid TunerBand specified: {band}")
-        if self.tuner.get("band") is None or SOURCE_TUNER not in self.source.values():
+        if (
+            self.properties.tuner.get("band") is None
+            or SOURCE_TUNER not in self.properties.source.values()
+        ):
             raise RuntimeError("tuner is unavailable")
 
         ## Set the tuner band
-        if band == self.tuner.get("band"):
+        if band == self.properties.tuner.get("band"):
             return
         tuner_commands = {
             TunerBand.AM: "set_tuner_band_am",
@@ -1013,7 +1034,8 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
 
         ## Check that tuner is active and band is set to AM
         if not (
-            SOURCE_TUNER in self.source.values() and self.tuner.get("band") == "AM"
+            SOURCE_TUNER in self.properties.source.values()
+            and self.properties.tuner.get("band") == "AM"
         ):
             raise RuntimeError(
                 "cannot calculate AM frequency step: tuner is unavailable"
@@ -1025,12 +1047,12 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
             return
 
         ## Step frequency once and calculate difference
-        current_freq = self.tuner.get("frequency")
+        current_freq = self.properties.tuner.get("frequency")
         new_freq = current_freq
         count = 3
         while new_freq == current_freq and count > 0:
             await self.send_command("increase_tuner_frequency", ignore_error=True)
-            new_freq = self.tuner.get("frequency")
+            new_freq = self.properties.tuner.get("frequency")
             count -= 1
         if new_freq == current_freq and count == 0:
             _LOGGER.error(
@@ -1044,7 +1066,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
     async def _step_tuner_frequency(self, band: str, frequency: float) -> None:
         """Step the tuner frequency until requested frequency is reached."""
         zone = Zones.Z1
-        current_freq = self.tuner.get("frequency")
+        current_freq = self.properties.tuner.get("frequency")
         if band == "AM":
             if (freq_step := self.params.get_param(PARAM_TUNER_AM_FREQ_STEP)) is None:
                 raise ValueError(
@@ -1070,7 +1092,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                 )
                 if rc is None:  ## ignore timeouts
                     rc = True
-                current_freq = self.tuner.get("frequency")
+                current_freq = self.properties.tuner.get("frequency")
                 count -= 1
         elif target_freq < current_freq:
             while current_freq > target_freq and count > 0 and rc:
@@ -1079,7 +1101,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                 )
                 if rc is None:  ## ignore timeouts
                     rc = True
-                current_freq = self.tuner.get("frequency")
+                current_freq = self.properties.tuner.get("frequency")
                 count -= 1
 
         if count == 0:
@@ -1128,11 +1150,11 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
     ) -> None:
         """Set the level (gain) for amplifier channel in zone."""
         zone = self._check_zone(zone)
-        if self.channel_levels.get(zone.value) is None:
+        if self.properties.channel_levels.get(zone.value) is None:
             raise ValueError(f"channel levels not supported for zone {zone}")
 
         ## Check the channel exists
-        if self.channel_levels[zone.value].get(channel.upper()) is None:
+        if self.properties.channel_levels[zone.value].get(channel.upper()) is None:
             raise ValueError(f"invalid channel {channel} for zone {zone}")
 
         prefix = channel.ljust(3, "_") + str(int((level * 2) + 50))
@@ -1153,7 +1175,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         for arg in arguments:
             if arg != "zone":
                 if arguments.get(arg) is not None:
-                    if self.video.get(arg) is not arguments.get(arg):
+                    if self.properties.video.get(arg) is not arguments.get(arg):
                         if isinstance(arguments.get(arg), str):
                             # Functions to do a lookup here
                             if arg == "resolution":
@@ -1218,7 +1240,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         for arg in arguments:
             if arg != "zone":
                 if arguments.get(arg) is not None:
-                    if self.dsp.get(arg) is not arguments.get(arg):
+                    if self.properties.dsp.get(arg) is not arguments.get(arg):
                         if isinstance(arguments.get(arg), str):
                             # Functions to do a lookup here
                             if arg == "phase_control":
@@ -1289,7 +1311,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         or rewind.
         """
         zone = self._check_zone(zone)
-        media_commands = self.media_control_mode.get(zone)
+        media_commands = self.properties.media_control_mode.get(zone)
         if media_commands is not None:
             command = MEDIA_CONTROL_COMMANDS.get(media_commands, {}).get(action)
             if command is not None:
@@ -1298,12 +1320,12 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                 await self.send_command(command, Zones.Z1, ignore_error=False)
             else:
                 raise NotImplementedError(
-                    f"Current source ({self.source.get(zone.value)} does not support "
+                    f"Current source ({self.properties.source.get(zone.value)} does not support "
                     "action {action}"
                 )
         else:
             raise NotImplementedError(
-                f"Current source ({self.source.get(zone.value)}) does not support "
+                f"Current source ({self.properties.source.get(zone.value)}) does not support "
                 "media_control activities"
             )
 
@@ -1321,7 +1343,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
             raise ValueError(
                 f"new source name {source_name} is longer than 14 characters"
             )
-        if self._source_id_to_name.get(source_id) == source_name:
+        if self.properties.source_id_to_name.get(source_id) == source_name:
             return
 
         await self.send_command(

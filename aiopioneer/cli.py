@@ -69,7 +69,7 @@ async def cli_main(args: argparse.Namespace):
     pioneer.params.set_user_param(PARAM_DEBUG_LISTENER, True)
     if args.query_zones:
         await pioneer.query_zones()
-        _LOGGER.info("AVR zones discovered: %s", pioneer.zones)
+        _LOGGER.info("AVR zones discovered: %s", pioneer.properties.zones)
 
     reader, _writer = await connect_stdin_stdout()
     zone = Zones.Z1
@@ -87,7 +87,7 @@ async def cli_main(args: argparse.Namespace):
         arg = None if num_tokens == 1 else tokens[1]
         if cmd == "zone":
             zone_new = Zones(arg)
-            if zone_new and zone_new in pioneer.zones:
+            if zone_new and zone_new in pioneer.properties.zones:
                 zone = zone_new
                 print(f"Setting current zone to {zone}")
             else:
@@ -104,24 +104,24 @@ async def cli_main(args: argparse.Namespace):
         elif cmd == "query_device_info":
             await pioneer.query_device_info()
             print(
-                f"Device info: model={pioneer.model}, "
-                f"mac_addr={pioneer.mac_addr}, "
-                f"software_version={pioneer.software_version}"
+                f"Device info: model={pioneer.properties.model}, "
+                f"mac_addr={pioneer.properties.mac_addr}, "
+                f"software_version={pioneer.properties.software_version}"
             )
         elif cmd == "query_zones":
             await pioneer.query_zones()
-            print(f"Zones discovered: {pioneer.zones}")
+            print(f"Zones discovered: {pioneer.properties.zones}")
         elif cmd == "build_source_dict":
             await pioneer.build_source_dict()
         elif cmd == "set_source_dict":
             try:
                 source_dict = json.loads(arg)
                 print(f"Setting source dict to: {json.dumps(source_dict)}")
-                pioneer.set_source_dict(source_dict)
+                pioneer.properties.set_source_dict(source_dict)
             except json.JSONDecodeError:
                 print(f'ERROR: Invalid JSON source dict: "{arg}""')
         elif cmd == "get_source_list":
-            print(f"Source list: {json.dumps(pioneer.get_source_list())}")
+            print(f"Source list: {json.dumps(pioneer.properties.get_source_list())}")
         elif cmd == "get_zone_listening_modes":
             print(
                 f"Available listening modes: {json.dumps(pioneer.get_listening_modes())}"
@@ -140,26 +140,26 @@ async def cli_main(args: argparse.Namespace):
 
         elif cmd == "get_tone":
             audio_attrs = {
-                "listening_mode": pioneer.listening_mode,
-                "listening_mode_raw": pioneer.listening_mode_raw,
-                "media_control_mode": pioneer.media_control_mode,
-                "tone": pioneer.tone,
+                "listening_mode": pioneer.properties.listening_mode,
+                "listening_mode_raw": pioneer.properties.listening_mode_raw,
+                "media_control_mode": pioneer.properties.media_control_mode,
+                "tone": pioneer.properties.tone,
             }
             print(json.dumps(audio_attrs))
         elif cmd == "get_amp":
-            print(json.dumps(pioneer.amp))
+            print(json.dumps(pioneer.properties.amp))
         elif cmd == "get_tuner":
-            print(json.dumps(pioneer.tuner))
+            print(json.dumps(pioneer.properties.tuner))
         elif cmd == "get_channel_levels":
-            print(json.dumps(pioneer.channel_levels))
+            print(json.dumps(pioneer.properties.channel_levels))
         elif cmd == "get_dsp":
-            print(json.dumps(pioneer.dsp))
+            print(json.dumps(pioneer.properties.dsp))
         elif cmd == "get_video":
-            print(json.dumps(pioneer.video))
+            print(json.dumps(pioneer.properties.video))
         elif cmd == "get_audio":
-            print(json.dumps(pioneer.audio))
+            print(json.dumps(pioneer.properties.audio))
         elif cmd == "get_system":
-            print(json.dumps(pioneer.system))
+            print(json.dumps(pioneer.properties.system))
 
         elif cmd == "debug_listener":
             arg_bool = get_bool_arg(arg)
