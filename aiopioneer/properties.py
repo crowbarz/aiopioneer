@@ -10,11 +10,11 @@ from .const import Zones, MEDIA_CONTROL_COMMANDS
 from .param import PioneerAVRParams, PARAM_ZONE_SOURCES, PARAM_QUERY_SOURCES
 
 
-class PioneerAVRProperties(PioneerAVRParams):
+class PioneerAVRProperties:
     """Pioneer AVR properties class."""
 
-    def __init__(self, params: dict[str, str] = None):
-        super().__init__(params)
+    def __init__(self, params: PioneerAVRParams):
+        self.params = params
 
         ## AVR base properties
         self.model = None
@@ -43,13 +43,13 @@ class PioneerAVRProperties(PioneerAVRParams):
 
     def set_source_dict(self, sources: dict[str, str]) -> None:
         """Manually set source id<->name translation tables."""
-        self.set_system_param(PARAM_QUERY_SOURCES, False)
+        self.params.set_system_param(PARAM_QUERY_SOURCES, False)
         self._source_name_to_id = copy.deepcopy(sources)
         self._source_id_to_name = {v: k for k, v in sources.items()}
 
     def get_source_list(self, zone: Zones = Zones.Z1) -> list[str]:
         """Return list of available input sources."""
-        source_ids = self._params.get(PARAM_ZONE_SOURCES[zone], [])
+        source_ids = self.params.get_param(PARAM_ZONE_SOURCES[zone], [])
         return list(
             self._source_name_to_id.keys()
             if not source_ids
@@ -64,7 +64,7 @@ class PioneerAVRProperties(PioneerAVRParams):
         """Return source id<->name translation tables."""
         if zone is None:
             return MappingProxyType(self._source_name_to_id)
-        source_ids = self._params.get(PARAM_ZONE_SOURCES[zone], [])
+        source_ids = self.params.get_param(PARAM_ZONE_SOURCES[zone], [])
         return (
             self._source_name_to_id
             if not source_ids

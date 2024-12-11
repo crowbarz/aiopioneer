@@ -33,6 +33,7 @@ from .exceptions import (
     AVRResponseTimeoutError,
     AVRCommandError,
 )
+from .param import PioneerAVRParams
 from .properties import PioneerAVRProperties
 from .util import cancel_task, safe_wait_for
 from .const import (
@@ -86,10 +87,15 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         """Initialise the Pioneer AVR interface."""
         _LOGGER.info("Starting aiopioneer %s", VERSION)
         _LOGGER.debug(">> PioneerAVR.__init__()")
+        self.params = PioneerAVRParams(params)
         super().__init__(
-            host=host, port=port, timeout=timeout, scan_interval=scan_interval
+            params=self.params,
+            host=host,
+            port=port,
+            timeout=timeout,
+            scan_interval=scan_interval,
         )
-        PioneerAVRProperties.__init__(self, params)
+        PioneerAVRProperties.__init__(self, self.params)
 
         ## Public properties
         self.software_version = None
@@ -137,8 +143,8 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
     async def query_zones(self, force_update: bool = False) -> None:
         """Query zones on Pioneer AVR by querying power status."""
         _LOGGER.info("querying available zones on AVR")
-        ignored_zones = [Zones(z) for z in self._params[PARAM_IGNORED_ZONES]]
-        ignore_volume_check = self._params[PARAM_IGNORE_VOLUME_CHECK]
+        ignored_zones = [Zones(z) for z in self.params.get_param(PARAM_IGNORED_ZONES)]
+        ignore_volume_check = self.params.get_param(PARAM_IGNORE_VOLUME_CHECK)
         # Defer updates to after query_zones has completed
 
         async def query_zone(zone: Zones, max_volume: int) -> bool | None:
@@ -155,11 +161,15 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
             return None
 
         async with self._update_lock:
-            added_zones = await query_zone(Zones.Z1, self._params[PARAM_MAX_VOLUME])
+            added_zones = await query_zone(
+                Zones.Z1, self.params.get_param(PARAM_MAX_VOLUME)
+            )
             if added_zones is None:
                 raise RuntimeError("Zone 1 not found on AVR")
             for zone in [Zones.Z2, Zones.Z3, Zones.HDZ]:
-                if await query_zone(zone, self._params[PARAM_MAX_VOLUME_ZONEX]):
+                if await query_zone(
+                    zone, self.params.get_param(PARAM_MAX_VOLUME_ZONEX)
+                ):
                     added_zones = True
 
         if added_zones or force_update:
@@ -168,7 +178,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
     async def update_zones(self) -> None:
         """Update zones from ignored_zones and re-query zones."""
         removed_zones = False
-        for zone in [Zones(z) for z in self._params[PARAM_IGNORED_ZONES]]:
+        for zone in [Zones(z) for z in self.params.get_param(PARAM_IGNORED_ZONES)]:
             if zone in self.zones:
                 zone_name = "HDZone" if zone is Zones.HDZ else zone
                 _LOGGER.info("removing zone %s", zone_name)
@@ -180,13 +190,13 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
     async def build_source_dict(self) -> None:
         """Generate source id<->name translation tables."""
         timeouts = 0
-        self.set_system_param(PARAM_QUERY_SOURCES, True)
+        self.params.set_system_param(PARAM_QUERY_SOURCES, True)
         self._source_name_to_id = {}
         self._source_id_to_name = {}
         await self._command_queue_wait()  ## wait for command queue to complete
         _LOGGER.info("querying AVR source names")
         async with self._update_lock:
-            for src_id in range(self._params[PARAM_MAX_SOURCE_ID] + 1):
+            for src_id in range(self.params.get_param(PARAM_MAX_SOURCE_ID) + 1):
                 try:
                     response = await self.send_command(
                         "query_source_name",
@@ -208,7 +218,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
     def get_listening_modes(self) -> dict[str, str] | None:
         """Return dict of valid listening modes and names for Zone 1."""
         multichannel = self.audio.get("input_multichannel")
-        listening_modes = self._params.get(PARAM_AVAILABLE_LISTENING_MODES, {})
+        listening_modes = self.params.get_param(PARAM_AVAILABLE_LISTENING_MODES, {})
         zone_listening_modes = {}
         for mode_id, mode_details in listening_modes.items():
             if (multichannel and mode_details[2]) or (
@@ -224,7 +234,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
             self.params.set_default_params_model(
                 self.model
             )  # Update default params for this model
-            self.update_listening_modes()  # Update valid listening modes
+            self.params.update_listening_modes()  # Update valid listening modes
 
     async def query_device_info(self) -> None:
         """Query device information from Pioneer AVR."""
@@ -273,7 +283,8 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         """Parse response and update cached parameters."""
         updated_zones = set()
 
-        parsed_response = process_raw_response(response_raw, self._params)
+        ## TODO: use PioneerAVRParams object rather than dict
+        parsed_response = process_raw_response(response_raw, self.params.params_all)
         if parsed_response is not None:
             for response in parsed_response:
                 current_base = current_value = None
@@ -367,7 +378,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                         or response.response_command in ["AUB", "AUA"]
                     )
                     and (not self._refresh_zones)
-                    and (not self._params.get(PARAM_DISABLE_AUTO_QUERY))
+                    and (not self.params.get_param(PARAM_DISABLE_AUTO_QUERY))
                     and any(self.power.values())
                     and not self._update_lock.locked()
                 ):
@@ -380,7 +391,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         ## TODO: move workarounds in parse_response to here
 
         ## Detect Zone 1 power on for volume workaround
-        power_on_volume_bounce = self._params[PARAM_POWER_ON_VOLUME_BOUNCE]
+        power_on_volume_bounce = self.params.get_param(PARAM_POWER_ON_VOLUME_BOUNCE)
         if power_on_volume_bounce and self._power_zone_1 is not None:
             if not self._power_zone_1 and self.power.get(Zones.Z1):
                 ## Zone 1 powered on, schedule bounce task
@@ -407,12 +418,12 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
     ## AVR Updater
     async def _updater(self) -> None:
         """Perform update every scan_interval."""
-        debug_updater = self._params[PARAM_DEBUG_UPDATER]
+        debug_updater = self.params.get_param(PARAM_DEBUG_UPDATER)
         if debug_updater:
             _LOGGER.debug(">> PioneerAVR._updater() started")
         event = self._update_event
         while True:
-            debug_updater = self._params[PARAM_DEBUG_UPDATER]
+            debug_updater = self.params.get_param(PARAM_DEBUG_UPDATER)
             try:
                 await self._updater_update()
                 event.clear()
@@ -448,7 +459,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
 
     async def _updater_cancel(self) -> None:
         """Cancel the updater task."""
-        debug_updater = self._params[PARAM_DEBUG_UPDATER]
+        debug_updater = self.params.get_param(PARAM_DEBUG_UPDATER)
         await cancel_task(self._updater_task, "updater", debug=debug_updater)
         self._updater_task = None
 
@@ -472,20 +483,20 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
             raise TimeoutError("Timeout waiting for data")
 
         # Zone-specific updates, if enabled
-        if self._params.get(PARAM_DISABLE_AUTO_QUERY):
+        if self.params.get_param(PARAM_DISABLE_AUTO_QUERY):
             return
 
         # we loop through this to allow us to add commands
         # to read without needing to add it here
         for comm, supported_zones in PIONEER_COMMANDS.items():
             if zone in supported_zones:
-                if comm.startswith("query_") and comm.split("_")[1] in self._params.get(
-                    PARAM_ENABLED_FUNCTIONS
-                ):
+                if comm.startswith("query_") and comm.split("_")[
+                    1
+                ] in self.params.get_param(PARAM_ENABLED_FUNCTIONS):
                     await self.send_command(comm, zone, ignore_error=True)
                 elif (
                     comm == "set_channel_levels"
-                    and "channels" in self._params.get(PARAM_ENABLED_FUNCTIONS)
+                    and "channels" in self.params.get_param(PARAM_ENABLED_FUNCTIONS)
                     and bool(self.power.get(Zones.Z1))
                 ):
                     # CHANNEL updates are handled differently as it requires more complex
@@ -501,7 +512,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
 
     async def _updater_update(self) -> bool | None:
         """Update AVR cached status."""
-        debug_updater = self._params[PARAM_DEBUG_UPDATER]
+        debug_updater = self.params.get_param(PARAM_DEBUG_UPDATER)
         if debug_updater:
             _LOGGER.debug(">> PioneerAVR._updater_update() started")
         if not self.available:
@@ -579,12 +590,12 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         elif zones:
             self._refresh_zones = zones
         if self._updater_task:
-            if self._params[PARAM_DEBUG_UPDATER]:
+            if self.params.get_param(PARAM_DEBUG_UPDATER):
                 _LOGGER.debug(">> PioneerAVR.update(): signalling updater task")
             self._update_event.set()
             await asyncio.sleep(0)  # yield to updater task
             if wait:
-                if self._params[PARAM_DEBUG_UPDATER]:
+                if self.params.get_param(PARAM_DEBUG_UPDATER):
                     _LOGGER.debug(">> PioneerAVR.update(): waiting for updater task")
                 async with self._update_lock:  # wait for update to complete
                     pass
@@ -594,7 +605,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
     ## Command queue
     async def _execute_command_queue(self) -> None:
         """Execute commands from a queue."""
-        debug_command = self._params[PARAM_DEBUG_COMMAND]
+        debug_command = self.params.get_param(PARAM_DEBUG_COMMAND)
 
         async def local_command(
             command: str, command_name: str, args: list[str]
@@ -676,7 +687,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
 
     async def _command_queue_wait(self) -> None:
         """Wait for command queue to be flushed."""
-        debug_command = self._params[PARAM_DEBUG_COMMAND]
+        debug_command = self.params.get_param(PARAM_DEBUG_COMMAND)
         if debug_command:
             _LOGGER.debug(">> PioneerAVR._command_queue_wait()")
         if self._command_queue_task:
@@ -691,7 +702,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
 
     async def _command_queue_cancel(self) -> None:
         """Cancel any pending commands and the task itself."""
-        debug_command = self._params[PARAM_DEBUG_COMMAND]
+        debug_command = self.params.get_param(PARAM_DEBUG_COMMAND)
         await cancel_task(
             self._command_queue_task, "command_queue", debug=debug_command
         )
@@ -700,7 +711,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
 
     def command_queue_schedule(self) -> None:
         """Schedule commands to queue."""
-        if self._params[PARAM_DEBUG_COMMAND]:
+        if self.params.get_param(PARAM_DEBUG_COMMAND):
             _LOGGER.debug(">> PioneerAVR._command_queue_schedule()")
         if len(self._command_queue) == 0:
             return
@@ -720,7 +731,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         self, command: str, skip_if_queued: bool = True, insert_at: int = -1
     ) -> None:
         """Add a new command to the queue to run."""
-        if self._params[PARAM_DEBUG_COMMAND]:
+        if self.params.get_param(PARAM_DEBUG_COMMAND):
             _LOGGER.debug(">> PioneerAVR.queue_command(%s)", command)
         if skip_if_queued and command in self._command_queue:
             _LOGGER.debug("command %s already queued, skipping", command)
@@ -795,7 +806,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         max_volume = self.max_volume[zone.value]
         if target_volume < 0 or target_volume > max_volume:
             raise ValueError(f"volume {target_volume} out of range for zone {zone}")
-        volume_step_only = self._params[PARAM_VOLUME_STEP_ONLY]
+        volume_step_only = self.params.get_param(PARAM_VOLUME_STEP_ONLY)
         if volume_step_only:
             start_volume = current_volume
             volume_step_count = 0
@@ -993,11 +1004,11 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         Automatically calculate the AM frequency step by stepping the frequency
         up and then down.
         """
-        debug_command = self._params[PARAM_DEBUG_COMMAND]
+        debug_command = self.params.get_param(PARAM_DEBUG_COMMAND)
         if debug_command:
             _LOGGER.debug(">> PioneerAVR._calculate_am_frequency_step() ")
 
-        if self._params.get(PARAM_TUNER_AM_FREQ_STEP):
+        if self.params.get_param(PARAM_TUNER_AM_FREQ_STEP):
             return
 
         ## Check that tuner is active and band is set to AM
@@ -1010,7 +1021,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
 
         ## Try sending the query_tuner_am_step command first.
         await self.send_command(command="query_tuner_am_step", ignore_error=True)
-        if self._params.get(PARAM_TUNER_AM_FREQ_STEP):
+        if self.params.get_param(PARAM_TUNER_AM_FREQ_STEP):
             return
 
         ## Step frequency once and calculate difference
@@ -1027,7 +1038,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
             )
             return
 
-        self.set_system_param(PARAM_TUNER_AM_FREQ_STEP, new_freq - current_freq)
+        self.params.set_system_param(PARAM_TUNER_AM_FREQ_STEP, new_freq - current_freq)
         await self.send_command("decrease_tuner_frequency", ignore_error=True)
 
     async def _step_tuner_frequency(self, band: str, frequency: float) -> None:
@@ -1035,7 +1046,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         zone = Zones.Z1
         current_freq = self.tuner.get("frequency")
         if band == "AM":
-            if (freq_step := self._params.get(PARAM_TUNER_AM_FREQ_STEP)) is None:
+            if (freq_step := self.params.get_param(PARAM_TUNER_AM_FREQ_STEP)) is None:
                 raise ValueError(
                     "unknown AM tuner frequency step, param 'am_frequency_step' required"
                 )
@@ -1149,7 +1160,7 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
                                 arguments[arg] = self._get_parameter_key_from_value(
                                     arguments.get(arg), VIDEO_RESOLUTION_MODES
                                 )
-                                if arguments[arg] not in self._params.get(
+                                if arguments[arg] not in self.params.get_param(
                                     PARAM_VIDEO_RESOLUTION_MODES
                                 ):
                                     raise ValueError(
