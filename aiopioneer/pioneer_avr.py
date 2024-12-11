@@ -221,7 +221,9 @@ class PioneerAVR(PioneerAVRConnection, PioneerAVRProperties):
         """Query device model from Pioneer AVR."""
         _LOGGER.info("querying device model")
         if await self.send_command("query_model", ignore_error=True):
-            self.set_default_params_model()  # Update default params for this model
+            self.params.set_default_params_model(
+                self.model
+            )  # Update default params for this model
             self.update_listening_modes()  # Update valid listening modes
 
     async def query_device_info(self) -> None:

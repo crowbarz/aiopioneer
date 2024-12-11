@@ -17,6 +17,7 @@ class PioneerAVRProperties(PioneerAVRParams):
         super().__init__(params)
 
         ## AVR base properties
+        self.model = None
         self.power: dict[Zones, bool] = {}
         self.volume: dict[Zones, int] = {}
         self.max_volume: dict[Zones, int] = {}

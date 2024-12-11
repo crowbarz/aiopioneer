@@ -686,9 +686,6 @@ class PioneerAVRParams:
     def __init__(self, params: dict[str, str] = None):
         """Initialise the Pioneer AVR params."""
 
-        ## Public properties
-        self.model = None
-
         self._default_params = PARAM_DEFAULTS
         self._system_params = PARAM_DEFAULTS_SYSTEM
         self._user_params: dict[str, Any] = {}
@@ -709,9 +706,8 @@ class PioneerAVRParams:
             del self._system_params[PARAM_TUNER_AM_FREQ_STEP]
         merge(self._params, self._system_params)
 
-    def set_default_params_model(self) -> None:
+    def set_default_params_model(self, model: str) -> None:
         """Set default parameters based on device model."""
-        model = self.model
         self._default_params = PARAM_DEFAULTS
         if model is not None and model != "unknown":
             for model_regex, model_params in PARAM_MODEL_DEFAULTS.items():
@@ -758,9 +754,9 @@ class PioneerAVRParams:
         ## NOTE: can't use MappingProxyTypeType because of mutable dict values
         return copy.deepcopy(self._params)
 
-    def get_param(self, param_name: str) -> Any:
+    def get_param(self, param_name: str, default: Any = None) -> Any:
         """Get the value of the specified parameter."""
-        return self._params.get(param_name)
+        return self._params.get(param_name, default)
 
     def update_listening_modes(self) -> None:
         """Update list of valid listening modes for AVR."""
