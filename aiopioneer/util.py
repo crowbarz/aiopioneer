@@ -84,15 +84,12 @@ async def safe_wait_for(awt, timeout: float = None, name: str = None):
     try:
         await asyncio.wait({task}, timeout=timeout)
         if task.done():
-            if exc := task.exception():
-                raise exc  ## re-raise exception from task
             return task.result()
         ## timed out
         try:
             task.cancel()
             await task
         except asyncio.CancelledError:
-            ## TODO: what if wait_for is cancelled when waiting for task to be cancelled?
             pass
         raise TimeoutError()
     except asyncio.CancelledError as exc:
@@ -129,9 +126,7 @@ async def cancel_task(task: asyncio.Task, task_name: str = None, debug: bool = F
                 if debug:
                     _LOGGER.debug(">> cancel_task(%s): cancelled exception", task_name)
             except Exception as exc:  # pylint: disable=broad-except
-                _LOGGER.error(
-                    ">> cancel_task(%s): returned exception: %s", task_name, exc
-                )
+                _LOGGER.error(">> cancel_task(%s): exception: %s", task_name, repr(exc))
             else:
                 if debug:
                     _LOGGER.debug(">> cancel_task(%s): completed", task_name)
@@ -140,5 +135,5 @@ async def cancel_task(task: asyncio.Task, task_name: str = None, debug: bool = F
                 _LOGGER.debug(">> cancel_task(%s): already completed", task_name)
             if exc := task.exception():
                 _LOGGER.error(
-                    ">> cancel_task(%s): returned exception: %s", task_name, exc
+                    ">> cancel_task(%s): task exception: %s", task_name, repr(exc)
                 )

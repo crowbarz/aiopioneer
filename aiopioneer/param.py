@@ -27,6 +27,7 @@ PARAM_DEBUG_LISTENER = "debug_listener"
 PARAM_DEBUG_RESPONDER = "debug_responder"
 PARAM_DEBUG_UPDATER = "debug_updater"
 PARAM_DEBUG_COMMAND = "debug_command"
+PARAM_DEBUG_COMMAND_QUEUE = "debug_command_queue"
 PARAM_ZONE_1_SOURCES = "zone_1_sources"  ## All possible valid input sources for Zone 1
 PARAM_ZONE_2_SOURCES = "zone_2_sources"  ## All possible valid input sources for Zone 2
 PARAM_ZONE_3_SOURCES = "zone_3_sources"  ## All possible valid input sources for Zone 3
@@ -113,6 +114,7 @@ PARAM_DEFAULTS = {
     PARAM_DEBUG_RESPONDER: False,
     PARAM_DEBUG_UPDATER: False,
     PARAM_DEBUG_COMMAND: False,
+    PARAM_DEBUG_COMMAND_QUEUE: False,
     PARAM_ENABLED_FUNCTIONS: DEFAULT_PARAM_ENABLED_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY: False,
     PARAM_ZONE_1_SOURCES: [],

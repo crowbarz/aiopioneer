@@ -13,6 +13,7 @@ from aiopioneer.param import (
     PARAM_DEBUG_RESPONDER,
     PARAM_DEBUG_UPDATER,
     PARAM_DEBUG_COMMAND,
+    PARAM_DEBUG_COMMAND_QUEUE,
 )
 from aiopioneer.pioneer_avr import PIONEER_COMMANDS
 
@@ -60,7 +61,7 @@ async def cli_main(args: argparse.Namespace):
     try:
         await pioneer.connect(reconnect=False)
     except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.error("could not connect to AVR: %s: %s", type(exc).__name__, exc.args)
+        _LOGGER.error("could not connect to AVR: %s", repr(exc))
         return False
 
     await pioneer.query_device_model()
@@ -86,21 +87,24 @@ async def cli_main(args: argparse.Namespace):
         cmd = tokens[0]
         arg = None if num_tokens == 1 else tokens[1]
         if cmd == "zone":
-            zone_new = Zones(arg)
-            if zone_new and zone_new in pioneer.properties.zones:
-                zone = zone_new
-                print(f"Setting current zone to {zone}")
-            else:
-                print(f"ERROR: Unknown zone {zone_new}")
+            try:
+                zone_new = Zones(arg)
+                if zone_new in pioneer.properties.zones:
+                    zone = zone_new
+                    print(f"Setting current zone to {zone}")
+                else:
+                    print(f"ERROR: Zone {zone} not available")
+            except ValueError:
+                print(f"ERROR: Unknown zone {arg}")
         elif cmd == "exit" or cmd == "quit":
             print("Exiting")
             break
         elif cmd == "log_level":
             set_log_level(arg)
         elif cmd == "update":
-            await pioneer.update()
+            await pioneer.update(zones=[zone])
         elif cmd == "update_full":
-            await pioneer.update(full=True)
+            await pioneer.update()
         elif cmd == "query_device_info":
             await pioneer.query_device_info()
             print(
@@ -177,6 +181,10 @@ async def cli_main(args: argparse.Namespace):
             arg_bool = get_bool_arg(arg)
             print(f"Setting debug_command to: {arg_bool}")
             pioneer.params.set_user_param(PARAM_DEBUG_COMMAND, arg_bool)
+        elif cmd == "debug_command_queue":
+            arg_bool = get_bool_arg(arg)
+            print(f"Setting debug_command_queue to: {arg_bool}")
+            pioneer.params.set_user_param(PARAM_DEBUG_COMMAND_QUEUE, arg_bool)
         elif cmd == "set_scan_interval":
             try:
                 scan_interval = float(arg)
@@ -191,7 +199,7 @@ async def cli_main(args: argparse.Namespace):
                 volume_level = int(arg)
                 await pioneer.set_volume_level(volume_level, zone=zone)
             except Exception as exc:  # pylint: disable=broad-except
-                print(f'ERROR: Invalid volume level "{arg}": {exc}')
+                print(f'ERROR: Invalid volume level "{arg}": {repr(exc)}')
         elif cmd == "select_source":
             source = arg if arg else ""
             await pioneer.select_source(source, zone=zone)
@@ -206,7 +214,7 @@ async def cli_main(args: argparse.Namespace):
                 await pioneer.set_tuner_frequency(band, frequency)
             except Exception as exc:  # pylint: disable=broad-except
                 print(
-                    f'ERROR: Invalid parameters for set_tuner_frequency "{arg}": {exc}'
+                    f'ERROR: Invalid parameters for set_tuner_frequency "{arg}": {repr(exc)}'
                 )
         elif cmd == "tuner_previous_preset":
             await pioneer.tuner_previous_preset()
