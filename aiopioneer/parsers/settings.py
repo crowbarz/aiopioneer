@@ -578,7 +578,7 @@ class SettingsParsers:
                 Response(
                     raw=raw,
                     response_command=command,
-                    base_property="ip_control_port_{index}",
+                    base_property=f"ip_control_port_{index}",
                     property_name=None,
                     zone=zone,
                     value="disabled" if port == "99999" else port,
