@@ -359,6 +359,7 @@ Listed below are the public attributes of a `PioneerAVR` object. Use a Zones enu
 | `video` | | Current AVR video parameters
 | `audio` | | Current AVR audio parameters
 | `system` | | AVR system attributes
+| `ip_control_port_n` | **str** | IP control ports configured on the AVR (where `n` is the port index)
 
 ## Command line interface (CLI) (>= 0.1.3, CLI arguments >= 0.3)
 
