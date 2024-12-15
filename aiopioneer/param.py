@@ -735,7 +735,7 @@ class PioneerAVRParams:
         self._update_params()
         self.update_listening_modes()
 
-    def set_system_param(self, param: str, value: bool) -> None:
+    def set_system_param(self, param: str, value: Any) -> None:
         """Set system parameter."""
         self._system_params[param] = value
         self._update_params()
