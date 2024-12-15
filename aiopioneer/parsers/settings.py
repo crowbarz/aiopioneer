@@ -619,8 +619,8 @@ class SettingsParsers:
                 Response(
                     raw=raw,
                     response_command=command,
-                    base_property=f"ip_control_port_{index}",
-                    property_name=None,
+                    base_property="system",
+                    property_name=f"ip_control_port_{index}",
                     zone=zone,
                     value="disabled" if port == "99999" else port,
                     queue_commands=None,
