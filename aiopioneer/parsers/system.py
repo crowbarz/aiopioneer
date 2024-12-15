@@ -2,12 +2,7 @@
 
 import re
 
-from aiopioneer.param import (
-    PARAM_QUERY_SOURCES,
-    PARAM_MHL_SOURCE,
-    PARAM_SPEAKER_SYSTEM_MODES,
-)
-from aiopioneer.const import (
+from ..const import (
     SOURCE_TUNER,
     MEDIA_CONTROL_SOURCES,
     SPEAKER_MODES,
@@ -19,6 +14,12 @@ from aiopioneer.const import (
     DIMMER_MODES,
     Zones,
 )
+from ..param import (
+    PioneerAVRParams,
+    PARAM_QUERY_SOURCES,
+    PARAM_MHL_SOURCE,
+    PARAM_SPEAKER_SYSTEM_MODES,
+)
 from .response import Response
 
 
@@ -26,9 +27,14 @@ class SystemParsers:
     """Core system parsers."""
 
     @staticmethod
-    def power(raw: str, _params: dict, zone=Zones.Z1, command="PWR") -> list:
+    def power(
+        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="PWR"
+    ) -> list[Response]:
         """Response parser for zone power status."""
         parsed = []
+        command_queue = []
+        if power_state := raw == "0":
+            command_queue.append(["_oob", "_power_on", zone])
         parsed.extend(
             [
                 Response(
@@ -37,8 +43,8 @@ class SystemParsers:
                     base_property="power",
                     property_name=None,
                     zone=zone,
-                    value=(raw == "0"),
-                    queue_commands=None,
+                    value=power_state,
+                    queue_commands=command_queue,
                 ),
                 Response(  # also trigger global update
                     raw=raw,
@@ -46,7 +52,7 @@ class SystemParsers:
                     base_property=None,
                     property_name=None,
                     zone=Zones.ALL,
-                    value=(raw == "0"),
+                    value=power_state,
                     queue_commands=None,
                 ),
             ]
@@ -54,14 +60,16 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def input_source(raw: str, params: dict, zone=Zones.Z1, command="FN") -> list:
+    def input_source(
+        raw: str, params: PioneerAVRParams, zone=Zones.Z1, command="FN"
+    ) -> list[Response]:
         """Response parser for current zone source input."""
         raw = "".join(filter(str.isnumeric, raw))  # select only numeric values from raw
         parsed = []
         command_queue = []
         if raw == SOURCE_TUNER:
-            command_queue.append("query_tuner_frequency")
-            command_queue.append("query_tuner_preset")
+            command_queue.extend(["query_tuner_frequency", "query_tuner_preset"])
+        command_queue.append(["_oob", "_delayed_query_basic", 2])
 
         parsed.extend(
             [
@@ -99,7 +107,7 @@ class SystemParsers:
                     queue_commands=None,
                 )
             )
-        elif raw is params.get(PARAM_MHL_SOURCE):
+        elif raw is params.get_param(PARAM_MHL_SOURCE):
             ## This source is a MHL source
             parsed.append(
                 Response(
@@ -127,7 +135,9 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def volume(raw: str, _params: dict, zone=Zones.Z1, command="VOL") -> list:
+    def volume(
+        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="VOL"
+    ) -> list[Response]:
         """Response parser for zone volume setting."""
         raw = "".join(filter(str.isnumeric, raw))  # select only numeric values from raw
         parsed = []
@@ -145,7 +155,9 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def mute(raw: str, _params: dict, zone=Zones.Z1, command="MUT") -> list:
+    def mute(
+        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="MUT"
+    ) -> list[Response]:
         """Response parser for zone mute status."""
         raw = "".join(filter(str.isnumeric, raw))  # select only numeric values from raw
         parsed = []
@@ -163,7 +175,9 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def speaker_modes(raw: str, _params: dict, zone=None, command="SPK") -> list:
+    def speaker_modes(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SPK"
+    ) -> list[Response]:
         """Response parser for speaker mode. (Zone 1 only)"""
         parsed = []
         parsed.append(
@@ -180,7 +194,9 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def hdmi_out(raw: str, _params: dict, zone=None, command="HO") -> list:
+    def hdmi_out(
+        raw: str, _params: PioneerAVRParams, zone=None, command="HO"
+    ) -> list[Response]:
         """Response parser for HDMI out setting. (Zone 1 only)"""
         parsed = []
         parsed.append(
@@ -197,7 +213,9 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def hdmi_audio(raw: str, _params: dict, zone=None, command="HA") -> list:
+    def hdmi_audio(
+        raw: str, _params: PioneerAVRParams, zone=None, command="HA"
+    ) -> list[Response]:
         """Response parser for HDMI audio mode. (Zone 1 only)"""
         parsed = []
         parsed.append(
@@ -214,7 +232,9 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def pqls(raw: str, _params: dict, zone=None, command="PQ") -> list:
+    def pqls(
+        raw: str, _params: PioneerAVRParams, zone=None, command="PQ"
+    ) -> list[Response]:
         """Response parser for PQLS mode. (Zone 1 only)"""
         parsed = []
         parsed.append(
@@ -231,7 +251,9 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def dimmer(raw: str, _params: dict, zone=None, command="SAA") -> list:
+    def dimmer(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SAA"
+    ) -> list[Response]:
         """Response parser for display dimmer. (Zone 1 only)"""
         parsed = []
         parsed.append(
@@ -248,7 +270,9 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def sleep(raw: str, _params: dict, zone=None, command="SAB") -> list:
+    def sleep(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SAB"
+    ) -> list[Response]:
         """Response parser for sleep timer. (Zone 1 only)"""
         parsed = []
         parsed.append(
@@ -265,7 +289,9 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def amp_status(raw: str, _params: dict, zone=None, command="SAC") -> list:
+    def amp_status(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SAC"
+    ) -> list[Response]:
         """Response parser for AMP status. (Zone 1 only)"""
         parsed = []
         parsed.append(
@@ -282,7 +308,9 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def panel_lock(raw: str, _params: dict, zone=None, command="PKL") -> list:
+    def panel_lock(
+        raw: str, _params: PioneerAVRParams, zone=None, command="PKL"
+    ) -> list[Response]:
         """Response parser for panel lock. (Zone 1 only)"""
         parsed = []
         parsed.append(
@@ -299,7 +327,9 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def remote_lock(raw: str, _params: dict, zone=None, command="RML") -> list:
+    def remote_lock(
+        raw: str, _params: PioneerAVRParams, zone=None, command="RML"
+    ) -> list[Response]:
         """Response parser for remote lock. (Zone 1 only)"""
         parsed = []
         parsed.append(
@@ -316,7 +346,9 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def speaker_system(raw: str, params: dict, zone=None, command="SSF") -> list:
+    def speaker_system(
+        raw: str, params: PioneerAVRParams, zone=None, command="SSF"
+    ) -> list[Response]:
         """Response parser for speaker system mode. (Zone 1 only)"""
         parsed = []
         parsed.append(
@@ -326,7 +358,7 @@ class SystemParsers:
                 base_property="system",
                 property_name="speaker_system",
                 zone=zone,
-                value=params.get(PARAM_SPEAKER_SYSTEM_MODES).get(raw),
+                value=params.get_param(PARAM_SPEAKER_SYSTEM_MODES).get(raw),
                 queue_commands=None,
             )
         )
@@ -344,7 +376,9 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def mac_address(raw: str, _params: dict, zone=None, command="SVB") -> list:
+    def mac_address(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SVB"
+    ) -> list[Response]:
         """Response parser for system MAC address."""
         parsed = []
         parsed.append(
@@ -361,7 +395,9 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def software_version(raw: str, _params: dict, zone=None, command="SSI") -> list:
+    def software_version(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SSI"
+    ) -> list[Response]:
         """Response parser for system software version."""
         parsed = []
         matches = re.search(r'"([^)]*)"', raw)
@@ -392,7 +428,9 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def avr_model(raw: str, _params: dict, zone=None, command="RGD") -> list:
+    def avr_model(
+        raw: str, _params: PioneerAVRParams, zone=None, command="RGD"
+    ) -> list[Response]:
         """Response parser for AVR model."""
         parsed = []
         matches = re.search(r"<([^>/]{5,})(/.[^>]*)?>", raw)
@@ -423,13 +461,15 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def input_name(raw: str, params: dict, zone=None, command="RGB") -> list:
+    def input_name(
+        raw: str, params: PioneerAVRParams, zone=None, command="RGB"
+    ) -> list[Response]:
         """Response parser for input friendly names."""
         source_number = raw[:2]
         source_name = raw[3:]
 
         parsed = []
-        if not params[PARAM_QUERY_SOURCES]:
+        if not params.get_param(PARAM_QUERY_SOURCES):
             ## Only update AVR source mappings if AVR sources are being queried
             return parsed
         ## Clear current source ID from source mappings via PioneerAVR.clear_source_id
@@ -471,10 +511,11 @@ class SystemParsers:
     ## The below responses are yet to be decoded properly due to little Pioneer documentation
     @staticmethod
     def audio_parameter_prohibitation(
-        raw: str, _params: dict, zone=None, command="AUA"
-    ) -> list:
+        raw: str, _params: PioneerAVRParams, zone=None, command="AUA"
+    ) -> list[Response]:
         """Response parser for audio param prohibitation. (Zone 1 only)"""
         parsed = []
+        command_queue = ["_delayed_query_basic", 2]
         parsed.append(
             Response(
                 raw=raw,
@@ -483,17 +524,18 @@ class SystemParsers:
                 property_name=None,
                 zone=zone,
                 value=None,
-                queue_commands=None,
+                queue_commands=command_queue,
             )
         )
         return parsed
 
     @staticmethod
     def audio_parameter_working(
-        raw: str, _params: dict, zone=None, command="AUB"
-    ) -> list:
+        raw: str, _params: PioneerAVRParams, zone=None, command="AUB"
+    ) -> list[Response]:
         """Response parser for audio param working. (Zone 1 only)"""
         parsed = []
+        command_queue = ["_delayed_query_basic", 2]
         parsed.append(
             Response(
                 raw=raw,
@@ -502,7 +544,7 @@ class SystemParsers:
                 property_name=None,
                 zone=zone,
                 value=None,
-                queue_commands=None,
+                queue_commands=command_queue,
             )
         )
         return parsed

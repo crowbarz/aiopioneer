@@ -8,7 +8,6 @@ import math
 import time
 
 from collections.abc import Callable
-from inspect import isfunction
 
 from .param import (
     PARAM_IGNORED_ZONES,
@@ -104,8 +103,7 @@ class PioneerAVR(PioneerAVRConnection):
         self._update_lock = asyncio.Lock()
         self._updater_task = None
         self._command_queue_task = None
-        self._command_queue: list[str] = []  # queue of commands to execute
-        self._power_zone_1 = None
+        self._command_queue: list = []  # queue of commands to execute
         self._zone_callback = {}
 
     ## Connection/disconnection
@@ -251,149 +249,22 @@ class PioneerAVR(PioneerAVRConnection):
                     callback()
 
     ## Response handling callbacks
-    def parse_response(self, response_raw: str) -> set:
+    def parse_response(self, response_raw: str) -> None:
         """Parse response and update cached parameters."""
-        updated_zones = set()
-
-        ## TODO: use PioneerAVRParams object rather than dict
-        parsed_response = process_raw_response(response_raw, self.params.params_all)
-        if parsed_response is not None:
-            for response in parsed_response:
-                current_base = current_value = None
-                if isfunction(response.base_property):
-                    ## Call a function
-                    response.base_property(self)
-                elif response.base_property is not None:
-                    current_base = current_value = getattr(
-                        self.properties, response.base_property
-                    )
-                    is_global = response.zone in [Zones.ALL, None]
-                    if response.property_name is None and not is_global:
-                        current_value = current_base.get(response.zone)
-                        if current_value != response.value:
-                            current_base[response.zone] = response.value
-                            setattr(
-                                self.properties, response.base_property, current_base
-                            )
-                            _LOGGER.info(
-                                "Zone %s: %s: %s -> %s (%s)",
-                                response.zone,
-                                response.base_property,
-                                current_value,
-                                response.value,
-                                response.raw,
-                            )
-                    elif response.property_name is not None and not is_global:
-                        ## Default zone dict first, otherwise we hit an exception
-                        current_base.setdefault(response.zone, {})
-                        current_prop = current_base.get(response.zone)
-                        current_value = current_prop.get(response.property_name)
-                        if current_value != response.value:
-                            current_base[response.zone][
-                                response.property_name
-                            ] = response.value
-                            setattr(
-                                self.properties, response.base_property, current_base
-                            )
-                            _LOGGER.info(
-                                "Zone %s: %s.%s: %s -> %s (%s)",
-                                response.zone,
-                                response.base_property,
-                                response.property_name,
-                                current_value,
-                                response.value,
-                                response.raw,
-                            )
-                    elif response.property_name is None and is_global:
-                        if current_base != response.value:
-                            setattr(
-                                self.properties, response.base_property, response.value
-                            )
-                            _LOGGER.info(
-                                "Global: %s: %s -> %s (%s)",
-                                response.base_property,
-                                current_base,
-                                response.value,
-                                response.raw,
-                            )
-                    else:  # response.property_name is not None and is_global:
-                        current_value = current_base.get(response.property_name)
-                        if current_value != response.value:
-                            current_base[response.property_name] = response.value
-                            setattr(
-                                self.properties, response.base_property, current_base
-                            )
-                            _LOGGER.info(
-                                "Global: %s.%s: %s -> %s (%s)",
-                                response.base_property,
-                                response.property_name,
-                                current_value,
-                                response.value,
-                                response.raw,
-                            )
-
-                # Set updated_zones if response.zone is not None and not already added
-                if response.zone is not None and response.zone not in updated_zones:
-                    updated_zones.add(response.zone)
-
-                # Add any requested extra commands to run
-                if response.command_queue is not None:
-                    for command in response.command_queue:
-                        self.queue_command(command)
-
-                # Some specific overrides for the command queue, these are only
-                # requested if we are not doing a full refresh
-                if (
-                    response.base_property == "power"
-                    and response.value
-                    and response.zone not in self.initial_refresh
-                    and not self._update_lock.locked()
-                ):
-                    ## Perform full refresh on zone first power on
-                    self.queue_command("_sleep(2)")
-                    self.queue_command(f"_refresh_zone({response.zone})")
-                elif (
-                    (
-                        response.base_property in ["power", "source"]
-                        or response.response_command in ["AUB", "AUA"]
-                    )
-                    and not self.params.get_param(PARAM_DISABLE_AUTO_QUERY)
-                    and any(self.properties.power.values())
-                    and not self._update_lock.locked()
-                ):
-                    self.queue_command("_delayed_query_basic_information")
-
-        return updated_zones
-
-    def handle_response(self, updated_zones: set) -> None:
-        """Handle responses."""
-        ## TODO: move workarounds in parse_response to here
-
-        ## Detect Zone 1 power on for volume workaround
-        power_on_volume_bounce = self.params.get_param(PARAM_POWER_ON_VOLUME_BOUNCE)
-        if power_on_volume_bounce and self._power_zone_1 is not None:
-            if not self._power_zone_1 and self.properties.power.get(Zones.Z1):
-                ## Zone 1 powered on, schedule bounce task
-                _LOGGER.info("scheduling main zone volume workaround")
-                self.queue_command("volume_up", skip_if_queued=False, insert_at=0)
-                self.queue_command("volume_down", skip_if_queued=False, insert_at=1)
-        self._power_zone_1 = self.properties.power.get(Zones.Z1)  # cache value
-
-        # Implement a command queue so that we can queue commands if we
-        # need to update attributes that only get updated when we
-        # request them to change.
-        # self.command_queue_schedule()
-        ## Now scheduled within queue_command
-
-        # NOTE: to avoid deadlocks, do not run any operations that
-        # depend on further responses (returned by the listener) within
-        # the listener loop.
-
-        if updated_zones:
-            # Call zone callbacks for updated zones
+        updated_zones, command_queue = process_raw_response(
+            response_raw, self.params, self.properties
+        )
+        if command_queue:  ## Add any requested extra commands to run
+            for command in command_queue:
+                if isinstance(command, list):
+                    cmd = command[0]
+                    if cmd == "_oob":
+                        if not self._update_lock.locked():
+                            self.queue_command(command[1:])
+                        continue
+                self.queue_command(command)
+        if updated_zones:  ## Call zone callbacks for updated zones
             self._call_zone_callbacks(updated_zones)
-            # NOTE: updating zone 1 does not reset its scan interval -
-            # scan interval is set to a regular timer
 
     ## AVR Updater
     async def _updater(self) -> None:
@@ -533,23 +404,48 @@ class PioneerAVR(PioneerAVRConnection):
         """Execute commands from a queue."""
         debug_command_queue = self.params.get_param(PARAM_DEBUG_COMMAND_QUEUE)
 
-        async def local_command(
-            command: str, command_name: str, args: list[str]
-        ) -> None:
-            if debug_command_queue:
-                _LOGGER.debug("running local command %s, args: %s", command, args)
-            match command_name:
+        def check_args(command: str, args: list, num_args: int) -> None:
+            """Check expected number of arguments have been provided."""
+            if num_args != len(args):
+                args_desc = "argument" if num_args == 1 else "arguments"
+                raise ValueError(f"{command} requires {num_args} {args_desc}")
+
+        async def local_command(command: str, args: list) -> None:
+            match command:
+                case "_power_on":
+                    check_args(command, args, 1)
+                    zone = Zones(args[0])
+                    if zone not in self.initial_refresh:
+                        _LOGGER.info("scheduling initial refresh")
+                        self.queue_command(["_sleep", 2], insert_at=1)
+                        self.queue_command(["_refresh_zone", zone], insert_at=2)
+                    else:
+                        self.queue_command(["_delayed_query_basic", 4], insert_at=1)
+                    if zone is Zones.Z1 and self.params.get_param(
+                        PARAM_POWER_ON_VOLUME_BOUNCE
+                    ):
+                        ## NOTE: volume workaround scheduled ahead of initial refresh
+                        _LOGGER.info("scheduling Zone 1 volume workaround")
+                        self.queue_command(
+                            "volume_up", skip_if_queued=False, insert_at=1
+                        )
+                        self.queue_command(
+                            "volume_down", skip_if_queued=False, insert_at=2
+                        )
                 case "_full_refresh":
                     await self._refresh_zones(zones=self.properties.zones)
                 case "_refresh_zone":
-                    if len(args) != 1:
-                        raise ValueError("_refresh_zone requires zone argument")
+                    check_args(command, args, 1)
                     await self._refresh_zones(zones=[Zones(args[0])])
-                case "_delayed_query_basic_information":
-                    self.queue_command("_sleep(4)", insert_at=1)
-                    self.queue_command("_query_basic_information", insert_at=2)
-                case "_query_basic_information":
-                    if any(self.properties.power.values()):
+                case "_delayed_query_basic":
+                    check_args(command, args, 1)
+                    if not self.params.get_param(PARAM_DISABLE_AUTO_QUERY):
+                        self.queue_command(["_sleep", args[0]], insert_at=1)
+                        self.queue_command("_query_basic", insert_at=2)
+                case "_query_basic":
+                    if any(
+                        self.properties.power.values()
+                    ) and not self.params.get_param(PARAM_DISABLE_AUTO_QUERY):
                         for cmd in [
                             "query_listening_mode",
                             "query_basic_audio_information",
@@ -559,33 +455,27 @@ class PioneerAVR(PioneerAVRConnection):
                 case "_calculate_am_frequency_step":
                     await self._calculate_am_frequency_step()
                 case "_sleep":
-                    if len(args) != 1:
-                        raise ValueError("_sleep requires delay argument")
-                    delay = float(args[0])
-                    await asyncio.sleep(delay)
+                    check_args(command, args, 1)
+                    await asyncio.sleep(args[0])
                 case _:
-                    raise ValueError(f"unknown local command: {command_name}")
+                    raise ValueError(f"unknown local command: {command}")
 
         if debug_command_queue:
             _LOGGER.debug(">> command queue started")
         async with self._update_lock:
             while len(self._command_queue) > 0:
                 ## Keep command in queue until it has finished executing
-                command = self._command_queue[0]
+                command: str | list = self._command_queue[0]
                 _LOGGER.debug("command queue executing %s", command)
                 try:
+                    args = []
+                    if isinstance(command, list):
+                        args = command[1:]
+                        command = command[0]
+                    elif not isinstance(command, str):
+                        raise ValueError(f"malformed command: {command}")
                     if command.startswith("_"):
-                        command_tokens = command.split("(", 1)
-                        command_name = command_tokens[0]
-                        args = []
-                        if len(command_tokens) > 1:
-                            args_raw = command_tokens[1].split(")", 1)
-                            args = [arg.strip() for arg in args_raw[0].split(",")]
-                            if len(args_raw) < 2 or args_raw[1] != "":
-                                raise ValueError(
-                                    f"malformed local command: '{command}'"
-                                )
-                        await local_command(command, command_name, args)
+                        await local_command(command, args)
                     else:
                         await self.send_command(command, ignore_error=False)
                 except Exception as exc:  # pylint: disable=broad-except
@@ -638,7 +528,7 @@ class PioneerAVR(PioneerAVRConnection):
             )
 
     def queue_command(
-        self, command: str, skip_if_queued: bool = True, insert_at: int = -1
+        self, command: str | list, skip_if_queued: bool = True, insert_at: int = -1
     ) -> None:
         """Add a new command to the queue to run."""
         if skip_if_queued and command in self._command_queue:

@@ -275,16 +275,13 @@ class PioneerAVRConnection:
 
                 ## Parse response, update cached properties
                 action = " parsing response " + response
-                updated_zones = self.parse_response(response)
+                self.parse_response(response)
 
                 ## Queue raw response and signal response handler
                 if self._queue_responses:
                     self._response_queue.append(response)
                     self._response_event.set()
                     ## Do not yield, process all responses first
-
-                action = " handling response"
-                self.handle_response(updated_zones)
 
             except asyncio.CancelledError:
                 _LOGGER.debug(">> listener cancelled")
@@ -305,10 +302,6 @@ class PioneerAVRConnection:
     def parse_response(self, response_raw: str) -> set:
         """Callback function for response parser."""
         raise RuntimeError("parse_response not implemented")
-
-    def handle_response(self, updated_zones: set) -> None:
-        """Callback function for response handler."""
-        raise RuntimeError("handle_response not implemented")
 
     async def _listener_schedule(self) -> None:
         """Schedule the listener task."""
