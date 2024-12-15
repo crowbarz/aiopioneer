@@ -91,7 +91,8 @@ class PioneerAVRProperties:
         if source_name in self.source_name_to_id:
             self.source_name_to_id.pop(source_name)
 
-    def get_ipod_control_commands(self) -> list[str]:
+    @property
+    def ipod_control_commands(self) -> list[str]:
         """Return a list of all valid iPod control modes."""
         return list(
             [
@@ -101,7 +102,8 @@ class PioneerAVRProperties:
             ]
         )
 
-    def get_tuner_control_commands(self) -> list[str]:
+    @property
+    def tuner_control_commands(self) -> list[str]:
         """Return a list of all valid tuner control commands."""
         return list(
             [
