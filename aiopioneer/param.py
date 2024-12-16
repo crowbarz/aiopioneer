@@ -23,6 +23,7 @@ PARAM_MAX_VOLUME_ZONEX = "max_volume_zonex"
 PARAM_POWER_ON_VOLUME_BOUNCE = "power_on_volume_bounce"
 PARAM_VOLUME_STEP_ONLY = "volume_step_only"
 PARAM_IGNORE_VOLUME_CHECK = "ignore_volume_check"
+PARAM_ALWAYS_POLL = "always_poll"
 PARAM_DEBUG_LISTENER = "debug_listener"
 PARAM_DEBUG_RESPONDER = "debug_responder"
 PARAM_DEBUG_UPDATER = "debug_updater"
@@ -124,6 +125,7 @@ PARAM_DEFAULTS = {
     PARAM_POWER_ON_VOLUME_BOUNCE: False,
     PARAM_VOLUME_STEP_ONLY: False,
     PARAM_IGNORE_VOLUME_CHECK: False,
+    PARAM_ALWAYS_POLL: False,
     PARAM_DEBUG_LISTENER: False,
     PARAM_DEBUG_RESPONDER: False,
     PARAM_DEBUG_UPDATER: False,

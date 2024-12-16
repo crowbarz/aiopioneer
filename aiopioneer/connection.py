@@ -10,6 +10,7 @@ import traceback
 from .param import (
     PioneerAVRParams,
     PARAM_COMMAND_DELAY,
+    PARAM_ALWAYS_POLL,
     PARAM_DEBUG_LISTENER,
     PARAM_DEBUG_RESPONDER,
     PARAM_DEBUG_COMMAND,
@@ -259,10 +260,10 @@ class PioneerAVRConnection:
                 ## connected to port 23.
                 ##
                 ## Check for empty response
-                ## TODO: add param to consider AVR response as update (default: True)
-                self.last_updated = time.time()  # include empty responses
+                if not self.params.get_param(PARAM_ALWAYS_POLL):
+                    self.last_updated = time.time()  # consider responses as refresh
                 if response is not None and not response:
-                    # Skip processing empty responses (keepalives)
+                    ## Skip processing empty responses (keepalives)
                     if debug_listener:
                         _LOGGER.debug("ignoring empty response")
                     continue
