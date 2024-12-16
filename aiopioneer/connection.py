@@ -299,7 +299,7 @@ class PioneerAVRConnection:
 
         _LOGGER.debug(">> connection listener completed")
 
-    def parse_response(self, response_raw: str) -> set:
+    def parse_response(self, response_raw: str) -> None:
         """Callback function for response parser."""
         raise RuntimeError("parse_response not implemented")
 
