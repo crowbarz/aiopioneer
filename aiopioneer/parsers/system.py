@@ -515,7 +515,7 @@ class SystemParsers:
     ) -> list[Response]:
         """Response parser for audio param prohibitation. (Zone 1 only)"""
         parsed = []
-        command_queue = ["_delayed_query_basic", 2]
+        command_queue = [["_delayed_query_basic", 2]]
         parsed.append(
             Response(
                 raw=raw,
@@ -535,7 +535,7 @@ class SystemParsers:
     ) -> list[Response]:
         """Response parser for audio param working. (Zone 1 only)"""
         parsed = []
-        command_queue = ["_delayed_query_basic", 2]
+        command_queue = [["_delayed_query_basic", 2]]
         parsed.append(
             Response(
                 raw=raw,
