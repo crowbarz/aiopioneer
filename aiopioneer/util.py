@@ -96,23 +96,17 @@ async def safe_wait_for(awt, timeout: float = None, name: str = None):
         raise exc
 
 
-async def cancel_task(task: asyncio.Task, task_name: str = None, debug: bool = False):
+async def cancel_task(
+    task: asyncio.Task, task_name: str = None, debug=False, ignore_exception=False
+):
     """Cancels a task and waits for it to finish."""
     if task:
         if task_name is None:
             task_name = task.get_name()
-        ## Trap exception if not called from a task
-        current_task = None
-        try:
-            current_task = asyncio.Task.current_task()
-        except AttributeError:
-            pass
-        if current_task is not None and task == current_task:
-            if debug:
-                _LOGGER.debug(
-                    ">> cancel_task(%s): ignoring cancellation of current task",
-                    task_name,
-                )
+        if task is asyncio.current_task():
+            _LOGGER.debug(
+                ">> cancel_task(%s): ignoring cancellation of current task", task_name
+            )
             return
         if not task.done():
             if debug:
@@ -123,10 +117,13 @@ async def cancel_task(task: asyncio.Task, task_name: str = None, debug: bool = F
             try:
                 await task
             except asyncio.CancelledError:
-                if debug:
-                    _LOGGER.debug(">> cancel_task(%s): cancelled exception", task_name)
+                _LOGGER.debug(">> cancel_task(%s): cancelled exception", task_name)
             except Exception as exc:  # pylint: disable=broad-except
-                _LOGGER.error(">> cancel_task(%s): exception: %s", task_name, repr(exc))
+                log_except = ">> cancel_task(%s): exception: %s"
+                if not ignore_exception:
+                    _LOGGER.error(log_except, task_name, repr(exc))
+                else:
+                    _LOGGER.debug(log_except, task_name, repr(exc))
             else:
                 if debug:
                     _LOGGER.debug(">> cancel_task(%s): completed", task_name)
@@ -134,6 +131,8 @@ async def cancel_task(task: asyncio.Task, task_name: str = None, debug: bool = F
             if debug:
                 _LOGGER.debug(">> cancel_task(%s): already completed", task_name)
             if exc := task.exception():
-                _LOGGER.error(
-                    ">> cancel_task(%s): task exception: %s", task_name, repr(exc)
-                )
+                log_task_except = ">> cancel_task(%s): task exception: %s"
+                if not ignore_exception:
+                    _LOGGER.error(log_task_except, task_name, repr(exc))
+                else:
+                    _LOGGER.debug(log_task_except, task_name, repr(exc))

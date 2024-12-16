@@ -157,8 +157,8 @@ class PioneerAVRConnection:
 
     async def on_disconnect(self) -> None:
         """Stop tasks on disconnect."""
-        await self._responder_cancel()
-        await self._listener_cancel()
+        await self._responder_cancel(ignore_exception=True)
+        await self._listener_cancel(ignore_exception=True)
         await asyncio.sleep(0)  # yield to responder and listener tasks
 
     async def shutdown(self) -> None:
@@ -232,9 +232,11 @@ class PioneerAVRConnection:
             else:
                 _LOGGER.error("AVR listener reconnection already running")
 
-    async def _reconnect_cancel(self) -> None:
+    async def _reconnect_cancel(self, ignore_exception=False) -> None:
         """Cancel any active reconnect task."""
-        await cancel_task(self._reconnect_task, "reconnect")
+        await cancel_task(
+            self._reconnect_task, "reconnect", ignore_exception=ignore_exception
+        )
         self._reconnect_task = None
 
     async def _connection_listener(self) -> None:
@@ -308,10 +310,15 @@ class PioneerAVRConnection:
             self._connection_listener(), name="avr_listener"
         )
 
-    async def _listener_cancel(self) -> None:
+    async def _listener_cancel(self, ignore_exception=False) -> None:
         """Cancel the listener task."""
         debug_listener = self.params.get_param(PARAM_DEBUG_LISTENER)
-        await cancel_task(self._listener_task, "listener", debug=debug_listener)
+        await cancel_task(
+            self._listener_task,
+            "listener",
+            debug=debug_listener,
+            ignore_exception=ignore_exception,
+        )
         self._listener_task = None
 
     ## Reader co-routine
@@ -362,10 +369,15 @@ class PioneerAVRConnection:
             _LOGGER.debug("responder received response: %s", response)
         return response
 
-    async def _responder_cancel(self) -> None:
+    async def _responder_cancel(self, ignore_exception=False) -> None:
         """Cancel any active responder task."""
         debug_responder = self.params.get_param(PARAM_DEBUG_RESPONDER)
-        await cancel_task(self._responder_task, "responder", debug=debug_responder)
+        await cancel_task(
+            self._responder_task,
+            "responder",
+            debug=debug_responder,
+            ignore_exception=ignore_exception,
+        )
         self._responder_task = None
 
     ## Send commands and requests to AVR

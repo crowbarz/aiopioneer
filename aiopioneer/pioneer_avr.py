@@ -114,8 +114,8 @@ class PioneerAVR(PioneerAVRConnection):
     async def on_disconnect(self) -> None:
         """Stop AVR tasks on disconnection."""
         self._call_zone_callbacks()
-        await self._command_queue_cancel()
-        await self._updater_cancel()
+        await self._command_queue_cancel(ignore_exception=True)
+        await self._updater_cancel(ignore_exception=True)
         await asyncio.sleep(0)  # yield to command queue and updater tasks
         await super().on_disconnect()
 
@@ -303,10 +303,15 @@ class PioneerAVR(PioneerAVRConnection):
                 self._updater(), name="avr_updater"
             )
 
-    async def _updater_cancel(self) -> None:
+    async def _updater_cancel(self, ignore_exception=False) -> None:
         """Cancel the updater task."""
         debug_updater = self.params.get_param(PARAM_DEBUG_UPDATER)
-        await cancel_task(self._updater_task, "updater", debug=debug_updater)
+        await cancel_task(
+            self._updater_task,
+            "updater",
+            debug=debug_updater,
+            ignore_exception=ignore_exception,
+        )
         self._updater_task = None
 
     async def _refresh_zone(self, zone: Zones) -> None:
@@ -503,11 +508,14 @@ class PioneerAVR(PioneerAVRConnection):
                     _LOGGER.debug("waiting for command queue to be flushed")
                 await asyncio.wait([self._command_queue_task])
 
-    async def _command_queue_cancel(self) -> None:
+    async def _command_queue_cancel(self, ignore_exception=False) -> None:
         """Cancel any pending commands and the task itself."""
         debug_command_queue = self.params.get_param(PARAM_DEBUG_COMMAND_QUEUE)
         await cancel_task(
-            self._command_queue_task, "command_queue", debug=debug_command_queue
+            self._command_queue_task,
+            "command_queue",
+            debug=debug_command_queue,
+            ignore_exception=ignore_exception,
         )
         self._command_queue_task = None
         self._command_queue = []
