@@ -241,17 +241,11 @@ class PioneerAVRConnection:
         """AVR connection listener. Parse responses and update state."""
         if self.params.get_param(PARAM_DEBUG_LISTENER):
             _LOGGER.debug(">> listener started")
-        running = True
         while self.available:
+            action = "listening for responses"
             debug_listener = self.params.get_param(PARAM_DEBUG_LISTENER)
-            action = " listening for responses"
             try:
                 response = await self._read_response()
-                if response is None:
-                    # Connection closed or exception, exit task
-                    _LOGGER.debug(">> listener detected connection closed")
-                    break
-
                 ## NOTE: any response from the AVR received within the
                 ## scan_interval, including keepalives and responses triggered
                 ## via the remote and by other clients, will cause the next
@@ -265,7 +259,7 @@ class PioneerAVRConnection:
                 ## Check for empty response
                 ## TODO: add param to consider AVR response as update (default: True)
                 self.last_updated = time.time()  # include empty responses
-                if not response:
+                if response is not None and not response:
                     # Skip processing empty responses (keepalives)
                     if debug_listener:
                         _LOGGER.debug("ignoring empty response")
@@ -274,7 +268,7 @@ class PioneerAVRConnection:
                     _LOGGER.debug("received AVR response: %s", response)
 
                 ## Parse response, update cached properties
-                action = " parsing response " + response
+                action = "parsing response " + response
                 self.parse_response(response)
 
                 ## Queue raw response and signal response handler
@@ -284,20 +278,22 @@ class PioneerAVRConnection:
                     ## Do not yield, process all responses first
 
             except asyncio.CancelledError:
-                _LOGGER.debug(">> listener cancelled")
-                running = False
+                _LOGGER.debug(">> listener task cancelled")
+                break
+            except (EOFError, TimeoutError):
+                _LOGGER.debug(">> listener detected connection closed")
                 break
             except Exception as exc:  # pylint: disable=broad-except
-                _LOGGER.error("listener task exception%s: %s", action, repr(exc))
+                _LOGGER.error("listener task exception %s: %s", action, repr(exc))
                 _LOGGER.error(traceback.format_exc())
                 # continue listening on exception
 
-        if running and self.available:
-            # Trigger disconnection if not already disconnected
+        if not self._disconnect_lock.locked():
+            # Trigger disconnection if not already disconnecting
             _LOGGER.debug(">> listener triggering disconnect")
             await self.disconnect()
 
-        _LOGGER.debug(">> connection listener completed")
+        _LOGGER.debug(">> listener completed")
 
     def parse_response(self, response_raw: str) -> None:
         """Callback function for response parser."""
@@ -324,8 +320,7 @@ class PioneerAVRConnection:
         try:
             return await self._reader.readuntil(b"\n")
         except asyncio.CancelledError:
-            if self.params.get_param(PARAM_DEBUG_RESPONDER):
-                _LOGGER.debug(">> responder task cancelled")
+            _LOGGER.debug(">> responder task cancelled")
             return None
 
     ## Read responses from AVR
@@ -356,35 +351,13 @@ class PioneerAVRConnection:
                 _LOGGER.debug("using existing responder task")
 
         ## Wait for result and process
-        try:
-            if timeout:
-                if debug_responder:
-                    _LOGGER.debug("responder waiting for data (timeout=%s)", timeout)
-                done, _pending = await asyncio.wait(  # pylint: disable=unused-variable
-                    [responder_task], timeout=timeout
-                )
-                if done:
-                    raw_response = responder_task.result()
-                    if exc := responder_task.exception():
-                        _LOGGER.error("responder task exception: %s", repr(exc))
-                else:
-                    _LOGGER.debug("responder timed out waiting for data")
-                    return None
-            else:
-                if debug_responder:
-                    _LOGGER.debug("responder waiting for data")
-                raw_response = await responder_task
-        except (EOFError, TimeoutError):
-            ## Connection closed
-            _LOGGER.debug("responder detected connection closed")
-            return None
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.error("responder exception: %s", repr(exc))
-            return None
-        if raw_response is None:  # task cancelled
-            _LOGGER.debug("responder task cancelled")
-            return None
-        response = raw_response.decode().strip()
+        if debug_responder:
+            _LOGGER.debug("responder waiting for data (timeout=%s)", timeout)
+        done, _ = await asyncio.wait([responder_task], timeout=timeout or None)
+        if not done:
+            _LOGGER.debug("responder timed out waiting for data")
+            return None  ## NOTE: does not cancel responder task
+        response = responder_task.result().decode().strip()
         if debug_responder:
             _LOGGER.debug("responder received response: %s", response)
         return response
