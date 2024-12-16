@@ -35,6 +35,9 @@ class SystemParsers:
         command_queue = []
         if power_state := raw == "0":
             command_queue.append(["_oob", "_power_on", zone])
+        else:
+            command_queue.append(["_oob", "_delayed_query_basic", 2])
+
         parsed.extend(
             [
                 Response(
