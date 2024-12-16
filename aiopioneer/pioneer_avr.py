@@ -497,6 +497,7 @@ class PioneerAVR(PioneerAVRConnection):
 
     async def _command_queue_wait(self) -> None:
         """Wait for command queue to be flushed."""
+        asyncio.sleep(0)  # yield to command queue task
         debug_command_queue = self.params.get_param(PARAM_DEBUG_COMMAND_QUEUE)
         if self._command_queue_task:
             if self._command_queue_task.done():
