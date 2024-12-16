@@ -167,62 +167,71 @@ RESPONSE_DATA = [
 def _process_response(properties: PioneerAVRProperties, response: Response) -> None:
     """Process a parsed response."""
     current_base = current_value = None
-    if response.base_property is not None:
-        current_base = current_value = getattr(properties, response.base_property)
-        is_global = response.zone in [Zones.ALL, None]
-        if response.property_name is None and not is_global:
-            current_value = current_base.get(response.zone)
-            if current_value != response.value:
-                current_base[response.zone] = response.value
-                setattr(properties, response.base_property, current_base)
-                _LOGGER.info(
-                    "Zone %s: %s: %s -> %s (%s)",
-                    response.zone,
-                    response.base_property,
-                    current_value,
-                    response.value,
-                    response.raw,
-                )
-        elif response.property_name is not None and not is_global:
-            ## Default zone dict first, otherwise we hit an exception
-            current_base.setdefault(response.zone, {})
-            current_prop = current_base.get(response.zone)
-            current_value = current_prop.get(response.property_name)
-            if current_value != response.value:
-                current_base[response.zone][response.property_name] = response.value
-                setattr(properties, response.base_property, current_base)
-                _LOGGER.info(
-                    "Zone %s: %s.%s: %s -> %s (%s)",
-                    response.zone,
-                    response.base_property,
-                    response.property_name,
-                    current_value,
-                    response.value,
-                    response.raw,
-                )
-        elif response.property_name is None and is_global:
-            if current_base != response.value:
-                setattr(properties, response.base_property, response.value)
-                _LOGGER.info(
-                    "Global: %s: %s -> %s (%s)",
-                    response.base_property,
-                    current_base,
-                    response.value,
-                    response.raw,
-                )
-        else:  # response.property_name is not None and is_global:
-            current_value = current_base.get(response.property_name)
-            if current_value != response.value:
-                current_base[response.property_name] = response.value
-                setattr(properties, response.base_property, current_base)
-                _LOGGER.info(
-                    "Global: %s.%s: %s -> %s (%s)",
-                    response.base_property,
-                    response.property_name,
-                    current_value,
-                    response.value,
-                    response.raw,
-                )
+
+    if response.base_property is None:
+        return
+
+    if response.base_property.startswith("_"):
+        match response.base_property:
+            case "_clear_source_id":
+                properties.clear_source_id(response.value)
+        return
+
+    current_base = current_value = getattr(properties, response.base_property)
+    is_global = response.zone in [Zones.ALL, None]
+    if response.property_name is None and not is_global:
+        current_value = current_base.get(response.zone)
+        if current_value != response.value:
+            current_base[response.zone] = response.value
+            setattr(properties, response.base_property, current_base)
+            _LOGGER.info(
+                "Zone %s: %s: %s -> %s (%s)",
+                response.zone,
+                response.base_property,
+                current_value,
+                response.value,
+                response.raw,
+            )
+    elif response.property_name is not None and not is_global:
+        ## Default zone dict first, otherwise we hit an exception
+        current_base.setdefault(response.zone, {})
+        current_prop = current_base.get(response.zone)
+        current_value = current_prop.get(response.property_name)
+        if current_value != response.value:
+            current_base[response.zone][response.property_name] = response.value
+            setattr(properties, response.base_property, current_base)
+            _LOGGER.info(
+                "Zone %s: %s.%s: %s -> %s (%s)",
+                response.zone,
+                response.base_property,
+                response.property_name,
+                current_value,
+                response.value,
+                response.raw,
+            )
+    elif response.property_name is None and is_global:
+        if current_base != response.value:
+            setattr(properties, response.base_property, response.value)
+            _LOGGER.info(
+                "Global: %s: %s -> %s (%s)",
+                response.base_property,
+                current_base,
+                response.value,
+                response.raw,
+            )
+    else:  # response.property_name is not None and is_global:
+        current_value = current_base.get(response.property_name)
+        if current_value != response.value:
+            current_base[response.property_name] = response.value
+            setattr(properties, response.base_property, current_base)
+            _LOGGER.info(
+                "Global: %s.%s: %s -> %s (%s)",
+                response.base_property,
+                response.property_name,
+                current_value,
+                response.value,
+                response.raw,
+            )
 
 
 def process_raw_response(

@@ -82,7 +82,7 @@ class SystemParsers:
                     value=raw,
                     queue_commands=command_queue,
                 ),
-                Response(  # trigger global update
+                Response(  # also trigger global update
                     raw=raw,
                     response_command=command,
                     base_property=None,
@@ -477,8 +477,8 @@ class SystemParsers:
             Response(
                 raw=raw,
                 response_command=command,
-                base_property=lambda self: self.clear_source_id(source_number),
-                property_name=source_name,
+                base_property="_clear_source_id",
+                property_name=None,
                 zone=zone,
                 value=source_number,
                 queue_commands=None,
