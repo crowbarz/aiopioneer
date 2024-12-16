@@ -374,9 +374,7 @@ class PioneerAVR(PioneerAVRConnection):
         try:
             for zone in zones:
                 await self._refresh_zone(zone)
-                zones_initial_refresh: set[Zones] = self.params.get_system_param(
-                    PARAM_ZONES_INITIAL_REFRESH, set()
-                )
+                zones_initial_refresh = self.params.zones_initial_refresh
                 if self.properties.power[zone] and zone not in zones_initial_refresh:
                     if zone is Zones.Z1:
                         await self.query_device_info()
@@ -420,10 +418,7 @@ class PioneerAVR(PioneerAVRConnection):
                 case "_power_on":
                     check_args(command, args, 1)
                     zone = Zones(args[0])
-                    zones_initial_refresh: set[Zones] = self.params.get_system_param(
-                        PARAM_ZONES_INITIAL_REFRESH, set()
-                    )
-                    if zone not in zones_initial_refresh:
+                    if zone not in self.params.zones_initial_refresh:
                         _LOGGER.info("scheduling initial refresh")
                         self.queue_command(["_sleep", 2], insert_at=1)
                         self.queue_command(["_refresh_zone", zone], insert_at=2)

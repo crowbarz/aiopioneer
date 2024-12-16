@@ -708,6 +708,12 @@ class PioneerAVRParams:
         self._params: dict[str, Any] = {}
         self.set_user_params(params)
 
+    ## Public parameters
+    @property
+    def zones_initial_refresh(self) -> set[Zones]:
+        """Return set of zones that have completed initial refresh."""
+        return self.get_system_param(PARAM_ZONES_INITIAL_REFRESH, set())
+
     ## Parameter management functions
     def _update_params(self) -> None:
         """Set current parameters."""
