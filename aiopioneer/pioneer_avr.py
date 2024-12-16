@@ -25,6 +25,7 @@ from .param import (
     PARAM_DISABLE_AUTO_QUERY,
     PARAM_TUNER_AM_FREQ_STEP,
     PARAM_QUERY_SOURCES,
+    PARAM_ZONES_INITIAL_REFRESH,
 )
 from .commands import PIONEER_COMMANDS
 from .connection import PioneerAVRConnection
@@ -95,9 +96,6 @@ class PioneerAVR(PioneerAVRConnection):
             timeout=timeout,
             scan_interval=scan_interval,
         )
-
-        ## Public properties
-        self.initial_refresh: set[Zones] = set()
 
         ## Internal state
         self._update_lock = asyncio.Lock()
@@ -376,11 +374,18 @@ class PioneerAVR(PioneerAVRConnection):
         try:
             for zone in zones:
                 await self._refresh_zone(zone)
-                if self.properties.power[zone] and zone not in self.initial_refresh:
+                zones_initial_refresh: set[Zones] = self.params.get_system_param(
+                    PARAM_ZONES_INITIAL_REFRESH, set()
+                )
+                if self.properties.power[zone] and zone not in zones_initial_refresh:
                     if zone is Zones.Z1:
                         await self.query_device_info()
                     _LOGGER.info("completed initial refresh for zone %s", zone)
-                    self.initial_refresh.add(zone)
+                    zones_initial_refresh.add(zone)
+                    self.params.set_system_param(
+                        PARAM_ZONES_INITIAL_REFRESH, zones_initial_refresh
+                    )
+                    self._call_zone_callbacks(zones=[zone])
 
             ## Trigger callbacks to all zones on refresh
             self._call_zone_callbacks(zones=[Zones.ALL])
@@ -415,7 +420,10 @@ class PioneerAVR(PioneerAVRConnection):
                 case "_power_on":
                     check_args(command, args, 1)
                     zone = Zones(args[0])
-                    if zone not in self.initial_refresh:
+                    zones_initial_refresh: set[Zones] = self.params.get_system_param(
+                        PARAM_ZONES_INITIAL_REFRESH, set()
+                    )
+                    if zone not in zones_initial_refresh:
                         _LOGGER.info("scheduling initial refresh")
                         self.queue_command(["_sleep", 2], insert_at=1)
                         self.queue_command(["_refresh_zone", zone], insert_at=2)
