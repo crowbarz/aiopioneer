@@ -529,7 +529,7 @@ class PioneerAVR(PioneerAVRConnection):
         if self._command_queue_task:
             if self._command_queue_task.done():
                 if exc := self._command_queue_task.exception():
-                    _LOGGER.error("responder task exception: %s", repr(exc))
+                    _LOGGER.error("command queue task exception: %s", repr(exc))
                 self._command_queue_task = None
         if self._command_queue_task is None:
             if self.params.get_param(PARAM_DEBUG_COMMAND_QUEUE):
