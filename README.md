@@ -73,6 +73,7 @@ Where a parameter is specified at more than one level, the higher priority param
 | `debug_responder` | bool | `false` | Enables additional debug logging for the responder task.
 | `debug_updater` | bool | `false` | Enables additional debug logging for the updater task.
 | `debug_command` | bool | `false` | Enables additional debug logging for commands sent and responses received.
+| `debug_command_queue` | bool | `false` | Enables additional debug logging for the command queue task.
 
 If your model of AVR always needs specific parameters to be set for the library to function properly, then please create a PR to add a custom profile for the AVR model.
 
