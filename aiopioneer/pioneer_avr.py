@@ -308,7 +308,6 @@ class PioneerAVR(PioneerAVRConnection):
         debug_updater = self.params.get_param(PARAM_DEBUG_UPDATER)
         await cancel_task(
             self._updater_task,
-            "updater",
             debug=debug_updater,
             ignore_exception=ignore_exception,
         )
@@ -514,7 +513,6 @@ class PioneerAVR(PioneerAVRConnection):
         debug_command_queue = self.params.get_param(PARAM_DEBUG_COMMAND_QUEUE)
         await cancel_task(
             self._command_queue_task,
-            "command_queue",
             debug=debug_command_queue,
             ignore_exception=ignore_exception,
         )
