@@ -128,6 +128,7 @@ class PioneerAVRConnection:
 
         if not self.available:
             _LOGGER.warning("AVR not connected, skipping disconnect")
+            return
         if self._disconnect_lock.locked():
             raise RuntimeError("AVR connection is already disconnecting")
 
@@ -169,7 +170,7 @@ class PioneerAVRConnection:
         await asyncio.sleep(0)  # yield to pending shutdown tasks
         _LOGGER.debug(">> shutdown completed")
 
-    async def reconnect(self) -> None:
+    async def _reconnect_avr(self) -> None:
         """Reconnect to an AVR."""
         _LOGGER.debug(">> reconnect started")
         retry = 0
@@ -177,7 +178,7 @@ class PioneerAVRConnection:
             while not self.available:
                 retry += 1
                 delay = get_backoff_delay(retry)
-                log_retry = "waiting %ds before retrying connection #%d"
+                log_retry = "waiting %.3fs before retrying connection #%d"
                 _LOGGER.debug(log_retry, delay, retry)
                 await asyncio.sleep(delay)
 
@@ -227,7 +228,7 @@ class PioneerAVRConnection:
             if reconnect_task is None:
                 _LOGGER.info("reconnecting to AVR")
                 reconnect_task = asyncio.create_task(
-                    self.reconnect(), name="avr_reconnect"
+                    self._reconnect_avr(), name="avr_reconnect"
                 )
                 self._reconnect_task = reconnect_task
             else:
