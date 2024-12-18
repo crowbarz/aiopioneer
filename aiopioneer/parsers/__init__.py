@@ -175,7 +175,10 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
         match response.base_property:
             case "_clear_source_id":
                 properties.clear_source_id(response.value)
-        return
+                return
+            case "_get_source_name":
+                response.base_property = "source_name"
+                response.value = properties.get_source_name(response.value)
 
     current_base = current_value = getattr(properties, response.base_property)
     is_global = response.zone in [Zones.ALL, None]

@@ -26,6 +26,7 @@ class PioneerAVRProperties:
         self.max_volume: dict[Zones, int] = {}
         self.mute: dict[Zones, bool] = {}
         self.source: dict[Zones, str] = {}
+        self.source_name: dict[Zones, str] = {}
         self.listening_mode = ""
         self.listening_mode_raw = ""
         self.media_control_mode: dict[Zones, str] = {}

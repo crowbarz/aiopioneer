@@ -85,13 +85,22 @@ class SystemParsers:
                     value=raw,
                     queue_commands=command_queue,
                 ),
+                Response(
+                    raw=raw,
+                    response_command=command,
+                    base_property="_get_source_name",
+                    property_name=None,
+                    zone=zone,
+                    value=raw,
+                    queue_commands=command_queue,
+                ),
                 Response(  # also trigger global update
                     raw=raw,
                     response_command=command,
                     base_property=None,
                     property_name=None,
                     zone=Zones.ALL,
-                    value=(raw == "0"),
+                    value=raw,
                     queue_commands=None,
                 ),
             ]
