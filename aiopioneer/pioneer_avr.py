@@ -802,7 +802,7 @@ class PioneerAVR(PioneerAVRConnection):
             raise ValueError(f"invalid TunerBand specified: {band}")
         if (
             self.properties.tuner.get("band") is None
-            or SOURCE_TUNER not in self.properties.source.values()
+            or SOURCE_TUNER not in self.properties.source_id.values()
         ):
             raise RuntimeError("tuner is unavailable")
 
@@ -828,7 +828,7 @@ class PioneerAVR(PioneerAVRConnection):
 
         ## Check that tuner is active and band is set to AM
         if not (
-            SOURCE_TUNER in self.properties.source.values()
+            SOURCE_TUNER in self.properties.source_id.values()
             and self.properties.tuner.get("band") == "AM"
         ):
             raise RuntimeError(
@@ -1114,12 +1114,12 @@ class PioneerAVR(PioneerAVRConnection):
                 await self.send_command(command, Zones.Z1, ignore_error=False)
             else:
                 raise NotImplementedError(
-                    f"Current source ({self.properties.source.get(zone.value)} does not support "
+                    f"Current source ({self.properties.source_id.get(zone.value)} does not support "
                     "action {action}"
                 )
         else:
             raise NotImplementedError(
-                f"Current source ({self.properties.source.get(zone.value)}) does not support "
+                f"Current source ({self.properties.source_id.get(zone.value)}) does not support "
                 "media_control activities"
             )
 
