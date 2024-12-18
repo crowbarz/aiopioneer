@@ -10,14 +10,17 @@ from .const import Zones, MEDIA_CONTROL_COMMANDS
 from .param import PioneerAVRParams, PARAM_ZONE_SOURCES, PARAM_QUERY_SOURCES
 
 
-class PioneerAVRProperties(PioneerAVRParams):
+class PioneerAVRProperties:
     """Pioneer AVR properties class."""
 
-    def __init__(self, params: dict[str, str] = None):
-        super().__init__(params)
+    def __init__(self, params: PioneerAVRParams):
+        self.params = params
 
         ## AVR base properties
         self.model = None
+        self.software_version = None
+        self.mac_addr: str = None
+        self.zones: list[Zones] = []
         self.power: dict[Zones, bool] = {}
         self.volume: dict[Zones, int] = {}
         self.max_volume: dict[Zones, int] = {}
@@ -38,55 +41,55 @@ class PioneerAVRProperties(PioneerAVRParams):
         self.channel_levels: dict[str, Any] = {}
 
         ## Source name mappings
-        self._source_name_to_id: dict[str, str] = {}
-        self._source_id_to_name: dict[str, str] = {}
+        self.source_name_to_id: dict[str, str] = {}
+        self.source_id_to_name: dict[str, str] = {}
 
     def set_source_dict(self, sources: dict[str, str]) -> None:
         """Manually set source id<->name translation tables."""
-        self.set_system_param(PARAM_QUERY_SOURCES, False)
-        self._source_name_to_id = copy.deepcopy(sources)
-        self._source_id_to_name = {v: k for k, v in sources.items()}
+        self.params.set_system_param(PARAM_QUERY_SOURCES, False)
+        self.source_name_to_id = copy.deepcopy(sources)
+        self.source_id_to_name = {v: k for k, v in sources.items()}
 
     def get_source_list(self, zone: Zones = Zones.Z1) -> list[str]:
         """Return list of available input sources."""
-        source_ids = self._params.get(PARAM_ZONE_SOURCES[zone], [])
+        source_ids = self.params.get_param(PARAM_ZONE_SOURCES[zone], [])
         return list(
-            self._source_name_to_id.keys()
+            self.source_name_to_id.keys()
             if not source_ids
             else [
-                self._source_id_to_name[s]
+                self.source_id_to_name[s]
                 for s in source_ids
-                if s in self._source_id_to_name
+                if s in self.source_id_to_name
             ]
         )
 
     def get_source_dict(self, zone: Zones = None) -> dict[str, str]:
         """Return source id<->name translation tables."""
         if zone is None:
-            return MappingProxyType(self._source_name_to_id)
-        source_ids = self._params.get(PARAM_ZONE_SOURCES[zone], [])
+            return MappingProxyType(self.source_name_to_id)
+        source_ids = self.params.get_param(PARAM_ZONE_SOURCES[zone], [])
         return (
-            self._source_name_to_id
+            self.source_name_to_id
             if not source_ids
-            else {k: v for k, v in self._source_name_to_id.items() if v in source_ids}
+            else {k: v for k, v in self.source_name_to_id.items() if v in source_ids}
         )
 
     def get_source_name(self, source_id: str) -> str:
         """Return name for given source ID."""
         return (
-            self._source_id_to_name.get(source_id, source_id)
-            if self._source_name_to_id
+            self.source_id_to_name.get(source_id, source_id)
+            if self.source_name_to_id
             else source_id
         )
 
     def clear_source_id(self, source_id: str) -> None:
         """Clear name mapping for given source ID."""
         source_name = None
-        if source_id in self._source_id_to_name:
-            source_name = self._source_id_to_name[source_id]
-            self._source_id_to_name.pop(source_id)
-        if source_name in self._source_name_to_id:
-            self._source_name_to_id.pop(source_name)
+        if source_id in self.source_id_to_name:
+            source_name = self.source_id_to_name[source_id]
+            self.source_id_to_name.pop(source_id)
+        if source_name in self.source_name_to_id:
+            self.source_name_to_id.pop(source_name)
 
     def get_ipod_control_commands(self) -> list[str]:
         """Return a list of all valid iPod control modes."""

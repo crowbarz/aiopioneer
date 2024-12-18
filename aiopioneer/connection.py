@@ -41,11 +41,12 @@ from .parsers.response import Response
 _LOGGER = logging.getLogger(__name__)
 
 
-class PioneerAVRConnection(PioneerAVRParams):
+class PioneerAVRConnection:
     """Pioneer AVR connection class."""
 
     def __init__(  # pylint: disable=super-init-not-called
         self,
+        params: PioneerAVRParams,
         host: str,
         port: int = DEFAULT_PORT,
         timeout: float = DEFAULT_TIMEOUT,
@@ -59,6 +60,7 @@ class PioneerAVRConnection(PioneerAVRParams):
             timeout,
             scan_interval,
         )
+        self.params = params
         self._host = host
         self._port = port
         self._timeout = timeout
@@ -239,11 +241,11 @@ class PioneerAVRConnection(PioneerAVRParams):
 
     async def _connection_listener(self) -> None:
         """AVR connection listener. Parse responses and update state."""
-        if self._params[PARAM_DEBUG_LISTENER]:
+        if self.params.get_param(PARAM_DEBUG_LISTENER):
             _LOGGER.debug(">> PioneerAVR._connection_listener() started")
         running = True
         while self.available:
-            debug_listener = self._params[PARAM_DEBUG_LISTENER]
+            debug_listener = self.params.get_param(PARAM_DEBUG_LISTENER)
             action = " listening for responses"
             try:
                 response = await self._read_response()
@@ -301,7 +303,7 @@ class PioneerAVRConnection(PioneerAVRParams):
 
     async def _listener_schedule(self) -> None:
         """Schedule the listener task."""
-        if self._params[PARAM_DEBUG_LISTENER]:
+        if self.params.get_param(PARAM_DEBUG_LISTENER):
             _LOGGER.debug(">> PioneerAVR._listener_schedule()")
         await self._listener_cancel()
         self._listener_task = asyncio.create_task(
@@ -310,7 +312,7 @@ class PioneerAVRConnection(PioneerAVRParams):
 
     async def _listener_cancel(self) -> None:
         """Cancel the listener task."""
-        debug_listener = self._params[PARAM_DEBUG_LISTENER]
+        debug_listener = self.params.get_param(PARAM_DEBUG_LISTENER)
         await cancel_task(self._listener_task, "listener", debug=debug_listener)
         self._listener_task = None
 
@@ -320,14 +322,14 @@ class PioneerAVRConnection(PioneerAVRParams):
         try:
             return await self._reader.readuntil(b"\n")
         except asyncio.CancelledError:
-            if self._params[PARAM_DEBUG_RESPONDER]:
+            if self.params.get_param(PARAM_DEBUG_RESPONDER):
                 _LOGGER.debug("reader: readuntil() was cancelled")
             return None
 
     ## Read responses from AVR
     async def _read_response(self, timeout: float = None) -> str:
         """Wait for a response from AVR and return to all readers."""
-        debug_responder = self._params[PARAM_DEBUG_RESPONDER]
+        debug_responder = self.params.get_param(PARAM_DEBUG_RESPONDER)
         if debug_responder:
             _LOGGER.debug(">> PioneerAVR._read_response(timeout=%s)", timeout)
 
@@ -388,14 +390,14 @@ class PioneerAVRConnection(PioneerAVRParams):
 
     async def _responder_cancel(self) -> None:
         """Cancel any active responder task."""
-        debug_responder = self._params[PARAM_DEBUG_RESPONDER]
+        debug_responder = self.params.get_param(PARAM_DEBUG_RESPONDER)
         await cancel_task(self._responder_task, "responder", debug=debug_responder)
         self._responder_task = None
 
     ## Send commands and requests to AVR
     async def send_raw_command(self, command: str, rate_limit: bool = True) -> None:
         """Send a raw command to the AVR."""
-        debug_command = self._params[PARAM_DEBUG_COMMAND]
+        debug_command = self.params.get_param(PARAM_DEBUG_COMMAND)
         if debug_command:
             _LOGGER.debug(
                 '>> PioneerAVR.send_raw_command("%s", rate_limit=%s)',
@@ -407,7 +409,7 @@ class PioneerAVRConnection(PioneerAVRParams):
 
         if rate_limit:
             # Rate limit commands
-            command_delay = self._params[PARAM_COMMAND_DELAY]
+            command_delay = self.params.get_param(PARAM_COMMAND_DELAY)
             since_command = command_delay + 0.1
             if self._last_command_at:
                 since_command = time.time() - self._last_command_at
@@ -423,7 +425,7 @@ class PioneerAVRConnection(PioneerAVRParams):
 
     async def _wait_for_response(self, command: str, response_prefix: str) -> str:
         """Wait for a response to a request."""
-        debug_command = self._params[PARAM_DEBUG_COMMAND]
+        debug_command = self.params.get_param(PARAM_DEBUG_COMMAND)
 
         while True:
             await self._response_event.wait()
@@ -446,7 +448,7 @@ class PioneerAVRConnection(PioneerAVRParams):
         rate_limit: bool = True,
     ) -> str:
         """Send a raw command to the AVR and return the response."""
-        debug_command = self._params[PARAM_DEBUG_COMMAND]
+        debug_command = self.params.get_param(PARAM_DEBUG_COMMAND)
         if debug_command:
             _LOGGER.debug(
                 '>> PioneerAVR.send_raw_request("%s", %s, rate_limit=%s)',
@@ -487,7 +489,7 @@ class PioneerAVRConnection(PioneerAVRParams):
     ) -> str | bool | None:
         """Send a command or request to the device."""
         # pylint: disable=unidiomatic-typecheck disable=logging-not-lazy
-        debug_command = self._params[PARAM_DEBUG_COMMAND]
+        debug_command = self.params.get_param(PARAM_DEBUG_COMMAND)
         if debug_command:
             _LOGGER.debug(
                 '>> PioneerAVR.send_command("%s", zone="%s", prefix="%s", '
