@@ -166,6 +166,7 @@ class PioneerAVRConnection:
     async def shutdown(self) -> None:
         """Shutdown the client."""
         _LOGGER.debug(">> shutdown started")
+        await self._reconnect_cancel()
         await self.disconnect(reconnect=False)
         await asyncio.sleep(0)  # yield to pending shutdown tasks
         _LOGGER.debug(">> shutdown completed")
