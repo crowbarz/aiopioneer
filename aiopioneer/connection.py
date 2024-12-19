@@ -31,7 +31,7 @@ from .util import (
     safe_wait_for,
 )
 from .const import (
-    Zones,
+    Zone,
     DEFAULT_PORT,
     DEFAULT_TIMEOUT,
     DEFAULT_SCAN_INTERVAL,
@@ -452,7 +452,7 @@ class PioneerAVRConnection:
     async def send_command(
         self,
         command: str,
-        zone: Zones = Zones.Z1,
+        zone: Zone = Zone.Z1,
         prefix: str = "",
         suffix: str = "",
         ignore_error: bool | None = None,

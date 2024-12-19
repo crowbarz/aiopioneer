@@ -12,7 +12,7 @@ from ..const import (
     AMP_MODES,
     PANEL_LOCK,
     DIMMER_MODES,
-    Zones,
+    Zone,
 )
 from ..param import (
     PioneerAVRParams,
@@ -28,7 +28,7 @@ class SystemParsers:
 
     @staticmethod
     def power(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="PWR"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="PWR"
     ) -> list[Response]:
         """Response parser for zone power status."""
         parsed = []
@@ -54,7 +54,7 @@ class SystemParsers:
                     response_command=command,
                     base_property=None,
                     property_name=None,
-                    zone=Zones.ALL,
+                    zone=Zone.ALL,
                     value=power_state,
                     queue_commands=None,
                 ),
@@ -64,7 +64,7 @@ class SystemParsers:
 
     @staticmethod
     def input_source(
-        raw: str, params: PioneerAVRParams, zone=Zones.Z1, command="FN"
+        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="FN"
     ) -> list[Response]:
         """Response parser for current zone source input."""
         raw = "".join(filter(str.isnumeric, raw))  # select only numeric values from raw
@@ -99,7 +99,7 @@ class SystemParsers:
                     response_command=command,
                     base_property=None,
                     property_name=None,
-                    zone=Zones.ALL,
+                    zone=Zone.ALL,
                     value=raw,
                     queue_commands=None,
                 ),
@@ -148,7 +148,7 @@ class SystemParsers:
 
     @staticmethod
     def volume(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="VOL"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VOL"
     ) -> list[Response]:
         """Response parser for zone volume setting."""
         raw = "".join(filter(str.isnumeric, raw))  # select only numeric values from raw
@@ -168,7 +168,7 @@ class SystemParsers:
 
     @staticmethod
     def mute(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="MUT"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="MUT"
     ) -> list[Response]:
         """Response parser for zone mute status."""
         raw = "".join(filter(str.isnumeric, raw))  # select only numeric values from raw

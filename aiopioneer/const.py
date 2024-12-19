@@ -1,6 +1,7 @@
 """Constants for aiopioneer."""
 
 from enum import StrEnum
+from typing import Self
 
 VERSION = "0.7.1"
 DEFAULT_TIMEOUT = 2
@@ -9,7 +10,7 @@ MIN_RESCAN_INTERVAL = 10
 DEFAULT_PORT = 8102
 
 
-class Zones(StrEnum):
+class Zone(StrEnum):
     """Valid aiopioneer zones."""
 
     ALL = "ALL"

@@ -11,7 +11,7 @@ from ..const import (
     VIDEO_SIGNAL_BITS,
     VIDEO_SIGNAL_COLORSPACE,
     VIDEO_SIGNAL_EXT_COLORSPACE,
-    Zones,
+    Zone,
 )
 from ..param import PioneerAVRParams
 from .response import Response
@@ -22,7 +22,7 @@ class InformationParsers:
 
     @staticmethod
     def audio_information(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="AST"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="AST"
     ) -> list[Response]:
         """Response parser for audio information."""
         parsed = []
@@ -506,7 +506,7 @@ class InformationParsers:
 
     @staticmethod
     def video_information(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="VST"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VST"
     ) -> list[Response]:
         """Response parser for video information."""
         parsed = []

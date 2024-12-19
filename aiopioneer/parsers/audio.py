@@ -1,6 +1,6 @@
 """aiopioneer response parsers for audio parameters."""
 
-from ..const import Zones, TONE_MODES, TONE_DB_VALUES
+from ..const import Zone, TONE_MODES, TONE_DB_VALUES
 from ..param import PioneerAVRParams, PARAM_ALL_LISTENING_MODES
 from .response import Response
 
@@ -10,7 +10,7 @@ class AudioParsers:
 
     @staticmethod
     def listening_mode(
-        raw: str, params: PioneerAVRParams, zone=Zones.Z1, command="SR"
+        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="SR"
     ) -> list[Response]:
         """Response parser for listening_mode. (Zone 1 only)"""
         listening_mode = params.get_param(PARAM_ALL_LISTENING_MODES, {}).get(raw)
@@ -43,7 +43,7 @@ class AudioParsers:
 
     @staticmethod
     def tone(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="TO"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="TO"
     ) -> list[Response]:
         """Response parser for tone mode."""
         parsed = []
@@ -62,7 +62,7 @@ class AudioParsers:
 
     @staticmethod
     def tone_bass(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="BA"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="BA"
     ) -> list[Response]:
         """Response parser for tone bass setting."""
         parsed = []
@@ -81,7 +81,7 @@ class AudioParsers:
 
     @staticmethod
     def tone_treble(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="TO"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="TO"
     ) -> list[Response]:
         """Response parser for tone treble setting."""
         parsed = []
@@ -100,7 +100,7 @@ class AudioParsers:
 
     @staticmethod
     def channel_levels(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="CLV"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="CLV"
     ) -> list[Response]:
         """Response parser for channel levels."""
         value = float(int(raw[3:]) - 50) / 2
