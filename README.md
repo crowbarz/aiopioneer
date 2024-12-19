@@ -68,10 +68,12 @@ Where a parameter is specified at more than one level, the higher priority param
 | `enabled_functions` | list | `["basic", "audio", "amp", "dsp", "tone", "channels", "video", "tuner", "system", "display"]` | Change the functions that are enabled by the API, adding more functions will increase the amount of time it takes to complete a full init and update.
 | `disable_auto_query` | bool | `false` | Setting to `true` will disable auto queries on init for all functions apart from basic functionality (power, source, volume and mute). If you only need those functions, you can set this to `true`
 | `am_frequency_step` | int | `null` | Optional setting to configure the AM frequency step. If this is set to `null`, a function is queued to detect this information by stepping up and down the frequency when the tuner is first used while set to AM.
+| `always_poll` | bool | `false` | Always poll the AVR every _scan_interval_. If set to `false`, out of band status responses from the AVR will reset the polling interval.
 | `debug_listener` | bool | `false` | Enables additional debug logging for the listener task.
 | `debug_responder` | bool | `false` | Enables additional debug logging for the responder task.
 | `debug_updater` | bool | `false` | Enables additional debug logging for the updater task.
 | `debug_command` | bool | `false` | Enables additional debug logging for commands sent and responses received.
+| `debug_command_queue` | bool | `false` | Enables additional debug logging for the command queue task.
 
 If your model of AVR always needs specific parameters to be set for the library to function properly, then please create a PR to add a custom profile for the AVR model.
 
@@ -359,6 +361,7 @@ Listed below are the public attributes of a `PioneerAVR` object. Use a Zones enu
 | `video` | | Current AVR video parameters
 | `audio` | | Current AVR audio parameters
 | `system` | | AVR system attributes
+| `ip_control_port_n` | **str** | IP control ports configured on the AVR (where `n` is the port index)
 
 ## Command line interface (CLI) (>= 0.1.3, CLI arguments >= 0.3)
 

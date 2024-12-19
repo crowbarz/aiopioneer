@@ -1,8 +1,11 @@
 """aiopioneer parsing classes and functions."""
 
+from collections.abc import Callable
 import logging
 
-from aiopioneer.const import Zones
+from ..const import Zones
+from ..param import PioneerAVRParams
+from ..properties import PioneerAVRProperties
 from .response import Response
 from .system import SystemParsers
 from .audio import AudioParsers
@@ -12,7 +15,7 @@ from .information import InformationParsers
 from .video import VideoParsers
 from .settings import SettingsParsers
 
-# _LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 RESPONSE_DATA = [
     ["PWR", SystemParsers.power, Zones.Z1],
@@ -161,17 +164,104 @@ RESPONSE_DATA = [
 ]
 
 
-def process_raw_response(raw_resp: str, params: dict) -> list[Response]:
+def _process_response(properties: PioneerAVRProperties, response: Response) -> None:
+    """Process a parsed response."""
+    current_base = current_value = None
+
+    if response.base_property is None:
+        return
+
+    if response.base_property.startswith("_"):
+        match response.base_property:
+            case "_clear_source_id":
+                properties.clear_source_id(response.value)
+                return
+            case "_get_source_name":
+                response.base_property = "source_name"
+                response.value = properties.get_source_name(response.value)
+
+    current_base = current_value = getattr(properties, response.base_property)
+    is_global = response.zone in [Zones.ALL, None]
+    if response.property_name is None and not is_global:
+        current_value = current_base.get(response.zone)
+        if current_value != response.value:
+            current_base[response.zone] = response.value
+            setattr(properties, response.base_property, current_base)
+            _LOGGER.info(
+                "Zone %s: %s: %s -> %s (%s)",
+                response.zone,
+                response.base_property,
+                current_value,
+                response.value,
+                response.raw,
+            )
+    elif response.property_name is not None and not is_global:
+        ## Default zone dict first, otherwise we hit an exception
+        current_base.setdefault(response.zone, {})
+        current_prop = current_base.get(response.zone)
+        current_value = current_prop.get(response.property_name)
+        if current_value != response.value:
+            current_base[response.zone][response.property_name] = response.value
+            setattr(properties, response.base_property, current_base)
+            _LOGGER.info(
+                "Zone %s: %s.%s: %s -> %s (%s)",
+                response.zone,
+                response.base_property,
+                response.property_name,
+                current_value,
+                response.value,
+                response.raw,
+            )
+    elif response.property_name is None and is_global:
+        if current_base != response.value:
+            setattr(properties, response.base_property, response.value)
+            _LOGGER.info(
+                "Global: %s: %s -> %s (%s)",
+                response.base_property,
+                current_base,
+                response.value,
+                response.raw,
+            )
+    else:  # response.property_name is not None and is_global:
+        current_value = current_base.get(response.property_name)
+        if current_value != response.value:
+            current_base[response.property_name] = response.value
+            setattr(properties, response.base_property, current_base)
+            _LOGGER.info(
+                "Global: %s.%s: %s -> %s (%s)",
+                response.base_property,
+                response.property_name,
+                current_value,
+                response.value,
+                response.raw,
+            )
+
+
+def process_raw_response(
+    raw_resp: str, params: PioneerAVRParams, properties: PioneerAVRProperties
+) -> tuple[set[Zones], list[str]]:
     """Processes a raw response and looks up required functions from RESPONSE_DATA."""
     match_resp = next((r for r in RESPONSE_DATA if raw_resp.startswith(r[0])), None)
-    if match_resp:
-        parse_cmd = match_resp[0]
-        parse_func = match_resp[1]
-        parse_zone = match_resp[2]
-        return parse_func(
-            raw_resp[len(parse_cmd) :], params, zone=parse_zone, command=parse_cmd
-        )
+    if not match_resp:
+        ## No error handling as not all responses have been captured by aiopioneer.
+        # _LOGGER.debug("unparsed raw response ignored: %s", raw_resp)
+        return [], []
 
-    ## No error handling as not all responses have been captured by aiopioneer.
-    # _LOGGER.debug("unparsed raw response ignored: %s", raw_resp)
-    return []
+    parse_cmd: str = match_resp[0]
+    parse_func: Callable[[str, PioneerAVRParams, Zones, str], Response] = match_resp[1]
+    parse_zone: Zones = match_resp[2]
+    responses: list[Response] = parse_func(
+        raw_resp[len(parse_cmd) :], params, zone=parse_zone, command=parse_cmd
+    )
+
+    ## Parse responses and update properties
+    updated_zones: set[Zones] = set()
+    command_queue: list[str] = []
+    for response in responses:
+        _process_response(properties, response)
+        if response.zone is not None:
+            updated_zones.add(response.zone)
+        if response.command_queue:
+            command_queue.extend(response.command_queue)
+
+    return updated_zones, command_queue

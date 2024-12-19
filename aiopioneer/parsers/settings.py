@@ -1,6 +1,6 @@
 """aiopioneer response parsers for AVR settings."""
 
-from aiopioneer.const import (
+from ..const import (
     MCACC_MEASUREMENT_STATUS,
     MCACC_MEASUREMENT_ERROR,
     STANDING_WAVE_FREQUENCIES,
@@ -9,6 +9,7 @@ from aiopioneer.const import (
     STANDBY_PASSTHROUGH_OPTIONS,
     EXTERNAL_HDMI_TRIGGER_OPTIONS,
 )
+from ..param import PioneerAVRParams
 from .response import Response
 
 
@@ -16,7 +17,9 @@ class SettingsParsers:
     """AVR Setting related parsers."""
 
     @staticmethod
-    def home_menu_status(raw: str, _params: dict, zone=None, command="SSL") -> list:
+    def home_menu_status(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SSL"
+    ) -> list[Response]:
         """Response parser for home menu status."""
         parsed = []
         parsed.append(
@@ -34,8 +37,8 @@ class SettingsParsers:
 
     @staticmethod
     def mcacc_diagnostic_status(
-        raw: str, _params: dict, zone=None, command="SSJ"
-    ) -> list:
+        raw: str, _params: PioneerAVRParams, zone=None, command="SSJ"
+    ) -> list[Response]:
         """Response parser for diagnostic information for MCACC."""
         parsed = []
 
@@ -86,7 +89,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def standing_wave_setting(raw: str, _params: dict, zone=None, command="SUU") -> list:
+    def standing_wave_setting(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SUU"
+    ) -> list[Response]:
         """Response parser for standing wave status."""
         parsed = []
         parsed.append(
@@ -158,7 +163,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def standing_wave_sw_trim(raw: str, _params: dict, zone=None, command="SUV") -> list:
+    def standing_wave_sw_trim(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SUV"
+    ) -> list[Response]:
         """Response parser for standing wave SW trim status."""
         mcacc_memory = raw[:2]
         value = (int(raw[2:4]) - 50) / 2
@@ -178,7 +185,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def surround_position(raw: str, _params: dict, zone=None, command="SSP") -> list:
+    def surround_position(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SSP"
+    ) -> list[Response]:
         """Response parser for surround position setting."""
         parsed = []
         parsed.append(
@@ -195,7 +204,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def x_over(raw: str, _params: dict, zone=None, command="SSQ") -> list:
+    def x_over(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SSQ"
+    ) -> list[Response]:
         """Response parser for X.OVER setting."""
         parsed = []
         parsed.append(
@@ -212,7 +223,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def x_curve(raw: str, _params: dict, zone=None, command="SST") -> list:
+    def x_curve(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SST"
+    ) -> list[Response]:
         """Response parser for X-Curve setting."""
         parsed = []
         parsed.append(
@@ -229,7 +242,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def loudness_plus(raw: str, _params: dict, zone=None, command="SSU") -> list:
+    def loudness_plus(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SSU"
+    ) -> list[Response]:
         """Response parser for Loudness Plus setting."""
         parsed = []
         parsed.append(
@@ -246,7 +261,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def sbch_processing(raw: str, _params: dict, zone=None, command="SSV") -> list:
+    def sbch_processing(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SSV"
+    ) -> list[Response]:
         """Response parser for SBch Processing (THX Audio) setting."""
         parsed = []
         parsed.append(
@@ -263,7 +280,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def speaker_setting(raw: str, _params: dict, zone=None, command="SSG") -> list:
+    def speaker_setting(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SSG"
+    ) -> list[Response]:
         """Response parser for speaker setting."""
         value = raw[2]
         speaker = raw[:2]
@@ -309,7 +328,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def input_level_adjust(raw: str, _params: dict, zone=None, command="ILA") -> list:
+    def input_level_adjust(
+        raw: str, _params: PioneerAVRParams, zone=None, command="ILA"
+    ) -> list[Response]:
         """Response parser for input level adjust setting."""
         source = raw[0:2]
         value = (int(raw[2:4]) - 50) / 2
@@ -329,7 +350,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def channel_level_mcacc(raw: str, _params: dict, zone=None, command="SSR") -> list:
+    def channel_level_mcacc(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SSR"
+    ) -> list[Response]:
         """Response parser for channel level for MCACC MEMORY setting."""
         memory = raw[0:2]
         speaker = raw[2:5].replace("_", "")
@@ -351,8 +374,8 @@ class SettingsParsers:
 
     @staticmethod
     def speaker_distance_mcacc(
-        raw: str, _params: dict, zone=None, command="SSS"
-    ) -> list:
+        raw: str, _params: PioneerAVRParams, zone=None, command="SSS"
+    ) -> list[Response]:
         """Response parser for speaker distance for MCACC MEMORY setting."""
         memory = raw[0:2]
         speaker = raw[2:5].replace("_", "")
@@ -391,7 +414,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def thx_ultraselect2_sw(raw: str, _params: dict, zone=None, command="SSW") -> list:
+    def thx_ultraselect2_sw(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SSW"
+    ) -> list[Response]:
         """Response parser for THX Ultra2/Select2 SW (THX Audio) setting."""
         parsed = []
         parsed.append(
@@ -409,8 +434,8 @@ class SettingsParsers:
 
     @staticmethod
     def boundary_gain_compression(
-        raw: str, _params: dict, zone=None, command="SSX"
-    ) -> list:
+        raw: str, _params: PioneerAVRParams, zone=None, command="SSX"
+    ) -> list[Response]:
         """Response parser for BGC (THX Audio) setting."""
         parsed = []
         parsed.append(
@@ -427,7 +452,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def re_equalization(raw: str, _params: dict, zone=None, command="SSB") -> list:
+    def re_equalization(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SSB"
+    ) -> list[Response]:
         """Response parser for Re-EQ (THX Audio) setting."""
         parsed = []
         parsed.append(
@@ -444,7 +471,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def osd_language(raw: str, _params: dict, zone=None, command="SSE") -> list:
+    def osd_language(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SSE"
+    ) -> list[Response]:
         """Response parser for OSD language setting."""
         parsed = []
         parsed.append(
@@ -461,7 +490,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def dhcp(raw: str, _params: dict, zone=None, command="STA") -> list:
+    def dhcp(
+        raw: str, _params: PioneerAVRParams, zone=None, command="STA"
+    ) -> list[Response]:
         """Response parser for DHCP setting."""
         parsed = []
         parsed.append(
@@ -478,7 +509,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def proxy_enabled(raw: str, _params: dict, zone=None, command="STG") -> list:
+    def proxy_enabled(
+        raw: str, _params: PioneerAVRParams, zone=None, command="STG"
+    ) -> list[Response]:
         """Response parser for proxy server setting."""
         parsed = []
         parsed.append(
@@ -495,7 +528,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def network_standby(raw: str, _params: dict, zone=None, command="STJ") -> list:
+    def network_standby(
+        raw: str, _params: PioneerAVRParams, zone=None, command="STJ"
+    ) -> list[Response]:
         """Response parser for network standby setting."""
         parsed = []
         parsed.append(
@@ -512,7 +547,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def friendly_name(raw: str, _params: dict, zone=None, command="SSO") -> list:
+    def friendly_name(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SSO"
+    ) -> list[Response]:
         """Response parser for friendly name setting."""
         value = raw.split('"')[1]
 
@@ -531,7 +568,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def parental_lock(raw: str, _params: dict, zone=None, command="STK") -> list:
+    def parental_lock(
+        raw: str, _params: PioneerAVRParams, zone=None, command="STK"
+    ) -> list[Response]:
         """Response parser for parental lock setting."""
         parsed = []
         parsed.append(
@@ -549,8 +588,8 @@ class SettingsParsers:
 
     @staticmethod
     def parental_lock_password(
-        raw: str, _params: dict, zone=None, command="STL"
-    ) -> list:
+        raw: str, _params: PioneerAVRParams, zone=None, command="STL"
+    ) -> list[Response]:
         """Response parser for parental lock password setting."""
         parsed = []
         parsed.append(
@@ -567,7 +606,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def port_numbers(raw: str, _params: dict, zone=None, command="SUM") -> list:
+    def port_numbers(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SUM"
+    ) -> list[Response]:
         """Response parser for TCP port numbers set for the AVR."""
         ports = [raw[i : i + 2] for i in range(0, len(raw), 2)]
         parsed = []
@@ -578,8 +619,8 @@ class SettingsParsers:
                 Response(
                     raw=raw,
                     response_command=command,
-                    base_property="ip_control_port_{index}",
-                    property_name=None,
+                    base_property="system",
+                    property_name=f"ip_control_port_{index}",
                     zone=zone,
                     value="disabled" if port == "99999" else port,
                     queue_commands=None,
@@ -590,7 +631,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def hdmi_control(raw: str, _params: dict, zone=None, command="STQ") -> list:
+    def hdmi_control(
+        raw: str, _params: PioneerAVRParams, zone=None, command="STQ"
+    ) -> list[Response]:
         """Response parser for HDMI control setting."""
         parsed = []
         parsed.append(
@@ -607,7 +650,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def hdmi_control_mode(raw: str, _params: dict, zone=None, command="STR") -> list:
+    def hdmi_control_mode(
+        raw: str, _params: PioneerAVRParams, zone=None, command="STR"
+    ) -> list[Response]:
         """Response parser for HDMI Control Mode setting."""
         parsed = []
         parsed.append(
@@ -624,7 +669,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def hdmi_arc(raw: str, _params: dict, zone=None, command="STT") -> list:
+    def hdmi_arc(
+        raw: str, _params: PioneerAVRParams, zone=None, command="STT"
+    ) -> list[Response]:
         """Response parser for HDMI ARC setting."""
         parsed = []
         parsed.append(
@@ -641,7 +688,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def pqls_for_backup(raw: str, _params: dict, zone=None, command="SVL") -> list:
+    def pqls_for_backup(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SVL"
+    ) -> list[Response]:
         """Response parser for PQLS for backup setting."""
         parsed = []
         parsed.append(
@@ -658,7 +707,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def speaker_b_link(raw: str, _params: dict, zone=None, command="STX") -> list:
+    def speaker_b_link(
+        raw: str, _params: PioneerAVRParams, zone=None, command="STX"
+    ) -> list[Response]:
         """Response parser for speaker B link setting."""
         parsed = []
         parsed.append(
@@ -675,7 +726,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def standby_passthrough(raw: str, _params: dict, zone=None, command="STU") -> list:
+    def standby_passthrough(
+        raw: str, _params: PioneerAVRParams, zone=None, command="STU"
+    ) -> list[Response]:
         """Response parser for standby passthrough setting."""
         parsed = []
         parsed.append(
@@ -692,7 +745,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def external_hdmi_trigger(raw: str, _params: dict, zone=None, command="STV") -> list:
+    def external_hdmi_trigger(
+        raw: str, _params: PioneerAVRParams, zone=None, command="STV"
+    ) -> list[Response]:
         """Response parser for 12V Trigger 1 (HDMI Setup) setting."""
         trigger = "1" if command == "STV" else "2"
 
@@ -711,7 +766,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def osd_overlay(raw: str, _params: dict, zone=None, command="SVA") -> list:
+    def osd_overlay(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SVA"
+    ) -> list[Response]:
         """Response parser for OSD overlay status."""
         parsed = []
         parsed.append(
@@ -728,7 +785,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def additional_service(raw: str, _params: dict, zone=None, command="ADS") -> list:
+    def additional_service(
+        raw: str, _params: PioneerAVRParams, zone=None, command="ADS"
+    ) -> list[Response]:
         """Response parser for additional service setting."""
         parsed = []
         parsed.append(
@@ -745,7 +804,9 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def user_lock(raw: str, _params: dict, zone=None, command="SUT") -> list:
+    def user_lock(
+        raw: str, _params: PioneerAVRParams, zone=None, command="SUT"
+    ) -> list[Response]:
         """Response parser for user lock setting."""
         parsed = []
         parsed.append(

@@ -10,6 +10,7 @@ import traceback
 from .param import (
     PioneerAVRParams,
     PARAM_COMMAND_DELAY,
+    PARAM_ALWAYS_POLL,
     PARAM_DEBUG_LISTENER,
     PARAM_DEBUG_RESPONDER,
     PARAM_DEBUG_COMMAND,
@@ -89,7 +90,7 @@ class PioneerAVRConnection:
     ## Connection/disconnection
     async def connect(self, reconnect: bool = True) -> None:
         """Open connection to AVR and start listener thread."""
-        _LOGGER.debug(">> PioneerAVRConnection.connect() started")
+        _LOGGER.debug(">> connect started")
 
         if self.available:
             raise RuntimeError("AVR is connected, skipping connect")
@@ -112,7 +113,7 @@ class PioneerAVRConnection:
             self._reconnect = reconnect
             await self.on_connect()
 
-        _LOGGER.debug(">> PioneerAVRConnection.connect() completed")
+        _LOGGER.debug(">> connect completed")
 
     async def on_connect(self) -> None:
         """Start AVR tasks on connection."""
@@ -123,10 +124,11 @@ class PioneerAVRConnection:
 
     async def disconnect(self, reconnect: bool = None) -> None:
         """Shutdown and close connection to AVR."""
-        _LOGGER.debug(">> PioneerAVRConnection.disconnect() started")
+        _LOGGER.debug(">> disconnect started")
 
         if not self.available:
             _LOGGER.warning("AVR not connected, skipping disconnect")
+            return
         if self._disconnect_lock.locked():
             raise RuntimeError("AVR connection is already disconnecting")
 
@@ -145,7 +147,7 @@ class PioneerAVRConnection:
                 try:
                     await self._writer.wait_closed()
                 except Exception as exc:  # pylint: disable=broad-except
-                    _LOGGER.debug("ignoring disconnect exception: %s", str(exc))
+                    _LOGGER.debug("ignoring disconnect exception: %s", repr(exc))
             self._reader = None
             self._writer = None
             _LOGGER.info("AVR connection closed")
@@ -153,29 +155,30 @@ class PioneerAVRConnection:
             if reconnect:
                 await self._reconnect_schedule()
 
-        _LOGGER.debug(">> PioneerAVRConnection.disconnect() completed")
+        _LOGGER.debug(">> disconnect completed")
 
     async def on_disconnect(self) -> None:
         """Stop tasks on disconnect."""
-        await self._responder_cancel()
-        await self._listener_cancel()
+        await self._responder_cancel(ignore_exception=True)
+        await self._listener_cancel(ignore_exception=True)
         await asyncio.sleep(0)  # yield to responder and listener tasks
 
     async def shutdown(self) -> None:
         """Shutdown the client."""
-        _LOGGER.debug(">> PioneerAVRConnection.shutdown()")
+        _LOGGER.debug(">> shutdown started")
         await self.disconnect(reconnect=False)
         await asyncio.sleep(0)  # yield to pending shutdown tasks
+        _LOGGER.debug(">> shutdown completed")
 
-    async def reconnect(self) -> None:
+    async def _reconnect_avr(self) -> None:
         """Reconnect to an AVR."""
-        _LOGGER.debug(">> PioneerAVR.reconnect() started")
+        _LOGGER.debug(">> reconnect started")
         retry = 0
         try:
             while not self.available:
                 retry += 1
                 delay = get_backoff_delay(retry)
-                log_retry = "waiting %ds before retrying connection #%d"
+                log_retry = "waiting %.3fs before retrying connection #%d"
                 _LOGGER.debug(log_retry, delay, retry)
                 await asyncio.sleep(delay)
 
@@ -187,17 +190,15 @@ class PioneerAVRConnection:
                     # pass through to outer except
                     raise
                 except Exception as exc:  # pylint: disable=broad-except
-                    _LOGGER.debug(
-                        "could not reconnect to AVR: %s: %s", type(exc).__name__, exc
-                    )
+                    _LOGGER.debug("could not reconnect to AVR: %s", repr(exc))
                     # fall through to reconnect outside try block
 
                 if self.available:
                     await self.disconnect()
         except asyncio.CancelledError:
-            _LOGGER.debug(">> PioneerAVR.reconnect() cancelled")
+            _LOGGER.debug(">> reconnect cancelled")
 
-        _LOGGER.debug(">> PioneerAVR.reconnect() completed")
+        _LOGGER.debug(">> reconnect completed")
 
     def _set_socket_options(self) -> None:
         """Set socket keepalive options."""
@@ -210,63 +211,67 @@ class PioneerAVRConnection:
 
     async def set_timeout(self, timeout: float) -> None:
         """Set timeout and update socket keepalive options."""
-        _LOGGER.debug(">> PioneerAVRConnection.set_timeout(%f)", timeout)
         self._timeout = timeout
         self._set_socket_options()
 
     async def _reconnect_schedule(self) -> None:
         """Schedule reconnection to the AVR."""
         if self._reconnect:
-            _LOGGER.debug(">> PioneerAVR._reconnect_schedule()")
+            _LOGGER.debug(">> scheduling reconnect")
             reconnect_task = self._reconnect_task
             if reconnect_task:
                 await asyncio.sleep(0)  # yield to reconnect task if running
                 if reconnect_task.done():
                     if exc := reconnect_task.exception():
-                        _LOGGER.error("reconnect task exception: %s", exc)
+                        _LOGGER.error("reconnect task exception: %s", repr(exc))
                     reconnect_task = None  # trigger new task creation
             if reconnect_task is None:
                 _LOGGER.info("reconnecting to AVR")
                 reconnect_task = asyncio.create_task(
-                    self.reconnect(), name="avr_reconnect"
+                    self._reconnect_avr(), name="avr_reconnect"
                 )
                 self._reconnect_task = reconnect_task
             else:
                 _LOGGER.error("AVR listener reconnection already running")
 
-    async def _reconnect_cancel(self) -> None:
+    async def _reconnect_cancel(self, ignore_exception=False) -> None:
         """Cancel any active reconnect task."""
-        await cancel_task(self._reconnect_task, "reconnect")
+        await cancel_task(self._reconnect_task, ignore_exception=ignore_exception)
         self._reconnect_task = None
 
     async def _connection_listener(self) -> None:
         """AVR connection listener. Parse responses and update state."""
         if self.params.get_param(PARAM_DEBUG_LISTENER):
-            _LOGGER.debug(">> PioneerAVR._connection_listener() started")
-        running = True
+            _LOGGER.debug(">> listener started")
         while self.available:
+            action = "listening for responses"
             debug_listener = self.params.get_param(PARAM_DEBUG_LISTENER)
-            action = " listening for responses"
             try:
                 response = await self._read_response()
-                if response is None:
-                    # Connection closed or exception, exit task
-                    _LOGGER.debug(">> PioneerAVR._connection_listener() exiting")
-                    break
-
-                # Check for empty response
-                self.last_updated = time.time()  # include empty responses
-                if not response:
-                    # Skip processing empty responses (keepalives)
+                ## NOTE: any response from the AVR received within the
+                ## scan_interval, including keepalives and responses triggered
+                ## via the remote and by other clients, will cause the next
+                ## update to be rescheduled to scan_interval after the last
+                ## response.
+                ##
+                ## Keepalives may be sent by the AVR (every 30 seconds on the
+                ## VSX-930) when connected to port 8102, but are not sent when
+                ## connected to port 23.
+                ##
+                ## Check for empty response
+                if not self.params.get_param(PARAM_ALWAYS_POLL):
+                    self.last_updated = time.time()  # consider responses as refresh
+                if response is not None and not response:
+                    ## Skip processing empty responses (keepalives)
                     if debug_listener:
                         _LOGGER.debug("ignoring empty response")
                     continue
                 if debug_listener:
                     _LOGGER.debug("received AVR response: %s", response)
 
-                # Parse response, update cached properties
-                action = " parsing response " + response
-                updated_zones = self.parse_response(response)
+                ## Parse response, update cached properties
+                action = "parsing response " + response
+                self.parse_response(response)
 
                 ## Queue raw response and signal response handler
                 if self._queue_responses:
@@ -274,46 +279,45 @@ class PioneerAVRConnection:
                     self._response_event.set()
                     ## Do not yield, process all responses first
 
-                action = " handling response"
-                self.handle_response(updated_zones)
-
             except asyncio.CancelledError:
-                _LOGGER.debug(">> PioneerAVR._connection_listener() cancelled")
-                running = False
+                _LOGGER.debug(">> listener task cancelled")
+                break
+            except (EOFError, TimeoutError):
+                _LOGGER.debug(">> listener detected connection closed")
                 break
             except Exception as exc:  # pylint: disable=broad-except
-                _LOGGER.error("listener exception%s: %s", action, str(exc))
+                _LOGGER.error("listener task exception %s: %s", action, repr(exc))
                 _LOGGER.error(traceback.format_exc())
                 # continue listening on exception
 
-        if running and self.available:
-            # Trigger disconnection if not already disconnected
-            _LOGGER.debug(">> PioneerAVR._connection_listener() triggering disconnect")
+        if not self._disconnect_lock.locked():
+            # Trigger disconnection if not already disconnecting
+            _LOGGER.debug(">> listener triggering disconnect")
             await self.disconnect()
 
-        _LOGGER.debug(">> PioneerAVR._connection_listener() completed")
+        _LOGGER.debug(">> listener completed")
 
-    def parse_response(self, response_raw: str) -> set:
+    def parse_response(self, response_raw: str) -> None:
         """Callback function for response parser."""
         raise RuntimeError("parse_response not implemented")
-
-    def handle_response(self, updated_zones: set) -> None:
-        """Callback function for response handler."""
-        raise RuntimeError("handle_response not implemented")
 
     async def _listener_schedule(self) -> None:
         """Schedule the listener task."""
         if self.params.get_param(PARAM_DEBUG_LISTENER):
-            _LOGGER.debug(">> PioneerAVR._listener_schedule()")
+            _LOGGER.debug(">> scheduling listener")
         await self._listener_cancel()
         self._listener_task = asyncio.create_task(
             self._connection_listener(), name="avr_listener"
         )
 
-    async def _listener_cancel(self) -> None:
+    async def _listener_cancel(self, ignore_exception=False) -> None:
         """Cancel the listener task."""
         debug_listener = self.params.get_param(PARAM_DEBUG_LISTENER)
-        await cancel_task(self._listener_task, "listener", debug=debug_listener)
+        await cancel_task(
+            self._listener_task,
+            debug=debug_listener,
+            ignore_exception=ignore_exception,
+        )
         self._listener_task = None
 
     ## Reader co-routine
@@ -322,8 +326,7 @@ class PioneerAVRConnection:
         try:
             return await self._reader.readuntil(b"\n")
         except asyncio.CancelledError:
-            if self.params.get_param(PARAM_DEBUG_RESPONDER):
-                _LOGGER.debug("reader: readuntil() was cancelled")
+            _LOGGER.debug(">> responder task cancelled")
             return None
 
     ## Read responses from AVR
@@ -331,14 +334,14 @@ class PioneerAVRConnection:
         """Wait for a response from AVR and return to all readers."""
         debug_responder = self.params.get_param(PARAM_DEBUG_RESPONDER)
         if debug_responder:
-            _LOGGER.debug(">> PioneerAVR._read_response(timeout=%s)", timeout)
+            _LOGGER.debug(">> _read_response(timeout=%s)", timeout)
 
         ## Schedule responder task if not already created
         responder_task = self._responder_task
         if responder_task:
             if responder_task.done():
                 if exc := responder_task.exception():
-                    _LOGGER.error("responder task exception: %s", exc)
+                    _LOGGER.error("responder task exception: %s", repr(exc))
                 responder_task = None  # trigger new task creation
         if responder_task is None:
             responder_task = asyncio.create_task(
@@ -347,63 +350,38 @@ class PioneerAVRConnection:
             # responder_task = asyncio.create_task(self._reader.readuntil(b"\n"))
             self._responder_task = responder_task
             if debug_responder:
-                _LOGGER.debug("created responder task %s", responder_task.get_name())
+                _LOGGER.debug("scheduled responder task")
         else:
             ## Wait on existing responder task
             if debug_responder:
-                _LOGGER.debug("using responder task %s", responder_task.get_name())
+                _LOGGER.debug("using existing responder task")
 
         ## Wait for result and process
-        task_name = asyncio.current_task().get_name()
-        try:
-            if timeout:
-                if debug_responder:
-                    _LOGGER.debug(
-                        "%s: waiting for data (timeout=%s)", task_name, timeout
-                    )
-                done, pending = await asyncio.wait(  # pylint: disable=unused-variable
-                    [responder_task], timeout=timeout
-                )
-                if done:
-                    raw_response = responder_task.result()
-                else:
-                    _LOGGER.debug("%s: timed out waiting for data", task_name)
-                    return None
-            else:
-                if debug_responder:
-                    _LOGGER.debug("%s: waiting for data", task_name)
-                raw_response = await responder_task
-        except (EOFError, TimeoutError):
-            ## Connection closed
-            _LOGGER.debug("%s: connection closed", task_name)
-            return None
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.error("%s: exception: %s", task_name, str(exc))
-            return None
-        if raw_response is None:  # task cancelled
-            _LOGGER.debug("%s: responder task cancelled", task_name)
-            return None
-        response = raw_response.decode().strip()
         if debug_responder:
-            _LOGGER.debug("%s: received response: %s", task_name, response)
+            _LOGGER.debug("responder waiting for data (timeout=%s)", timeout)
+        done, _ = await asyncio.wait([responder_task], timeout=timeout or None)
+        if not done:
+            _LOGGER.debug("responder timed out waiting for data")
+            return None  ## NOTE: does not cancel responder task
+        response = responder_task.result().decode().strip()
+        if debug_responder:
+            _LOGGER.debug("responder received response: %s", response)
         return response
 
-    async def _responder_cancel(self) -> None:
+    async def _responder_cancel(self, ignore_exception=False) -> None:
         """Cancel any active responder task."""
         debug_responder = self.params.get_param(PARAM_DEBUG_RESPONDER)
-        await cancel_task(self._responder_task, "responder", debug=debug_responder)
+        await cancel_task(
+            self._responder_task,
+            debug=debug_responder,
+            ignore_exception=ignore_exception,
+        )
         self._responder_task = None
 
     ## Send commands and requests to AVR
     async def send_raw_command(self, command: str, rate_limit: bool = True) -> None:
         """Send a raw command to the AVR."""
         debug_command = self.params.get_param(PARAM_DEBUG_COMMAND)
-        if debug_command:
-            _LOGGER.debug(
-                '>> PioneerAVR.send_raw_command("%s", rate_limit=%s)',
-                command,
-                rate_limit,
-            )
         if not self.available:
             raise AVRUnavailableError
 
@@ -448,14 +426,6 @@ class PioneerAVRConnection:
         rate_limit: bool = True,
     ) -> str:
         """Send a raw command to the AVR and return the response."""
-        debug_command = self.params.get_param(PARAM_DEBUG_COMMAND)
-        if debug_command:
-            _LOGGER.debug(
-                '>> PioneerAVR.send_raw_request("%s", %s, rate_limit=%s)',
-                command,
-                response_prefix,
-                rate_limit,
-            )
         async with self._request_lock:  ## Only send one request at a time
             self._response_queue = []
             self._queue_responses = (
@@ -535,7 +505,7 @@ class PioneerAVRConnection:
         except (PioneerError, Exception) as exc:
             translation_key = getattr(exc, "translation_key", "unknown_exception")
             err = PioneerErrorFormatText.get(translation_key, "unknown_exception")
-            err_txt = err.format(command=command, zone=str(zone), exc=str(exc))
+            err_txt = err.format(command=command, zone=str(zone), exc=repr(exc))
             rc = False if isinstance(exc, AVRCommandError) else None
 
         if ignore_error:

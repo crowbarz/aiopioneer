@@ -1,6 +1,6 @@
 """aiopioneer response parsers for informational responses."""
 
-from aiopioneer.const import (
+from ..const import (
     AUDIO_SIGNAL_INPUT_FREQ,
     AUDIO_SIGNAL_INPUT_INFO,
     AUDIO_WORKING_PQLS,
@@ -13,6 +13,7 @@ from aiopioneer.const import (
     VIDEO_SIGNAL_EXT_COLORSPACE,
     Zones,
 )
+from ..param import PioneerAVRParams
 from .response import Response
 
 
@@ -21,8 +22,8 @@ class InformationParsers:
 
     @staticmethod
     def audio_information(
-        raw: str, _params: dict, zone=Zones.Z1, command="AST"
-    ) -> list:
+        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="AST"
+    ) -> list[Response]:
         """Response parser for audio information."""
         parsed = []
 
@@ -505,8 +506,8 @@ class InformationParsers:
 
     @staticmethod
     def video_information(
-        raw: str, _params: dict, zone=Zones.Z1, command="VST"
-    ) -> list:
+        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="VST"
+    ) -> list[Response]:
         """Response parser for video information."""
         parsed = []
 
@@ -749,8 +750,8 @@ class InformationParsers:
 
     @staticmethod
     def device_display_information(
-        raw: str, _params: dict, zone=None, command="FL"
-    ) -> list:
+        raw: str, _params: PioneerAVRParams, zone=None, command="FL"
+    ) -> list[Response]:
         """Response parser for AVR display text."""
         display_str = (
             "".join([chr(int(raw[i : i + 2], 16)) for i in range(2, len(raw) - 1, 2)])

@@ -23,10 +23,12 @@ PARAM_MAX_VOLUME_ZONEX = "max_volume_zonex"
 PARAM_POWER_ON_VOLUME_BOUNCE = "power_on_volume_bounce"
 PARAM_VOLUME_STEP_ONLY = "volume_step_only"
 PARAM_IGNORE_VOLUME_CHECK = "ignore_volume_check"
+PARAM_ALWAYS_POLL = "always_poll"
 PARAM_DEBUG_LISTENER = "debug_listener"
 PARAM_DEBUG_RESPONDER = "debug_responder"
 PARAM_DEBUG_UPDATER = "debug_updater"
 PARAM_DEBUG_COMMAND = "debug_command"
+PARAM_DEBUG_COMMAND_QUEUE = "debug_command_queue"
 PARAM_ZONE_1_SOURCES = "zone_1_sources"  ## All possible valid input sources for Zone 1
 PARAM_ZONE_2_SOURCES = "zone_2_sources"  ## All possible valid input sources for Zone 2
 PARAM_ZONE_3_SOURCES = "zone_3_sources"  ## All possible valid input sources for Zone 3
@@ -40,35 +42,49 @@ PARAM_ZONE_SOURCES = {
 
 ## All possible valid speaker system settings for HDZone volume functions to be available
 PARAM_HDZONE_VOLUME_REQUIREMENTS = "hdzone_volume_requirements"
+
 ## All possible speaker system modes. Different AVR models will have different available options
 PARAM_SPEAKER_SYSTEM_MODES = "amp_speaker_system_modes"
+
 ## All valid video resolution modes
 PARAM_VIDEO_RESOLUTION_MODES = "video_resolution_modes"
 PARAM_MHL_SOURCE = "mhl_source"
+
 ## Stores all the enabled high level categories for the AVR.
 PARAM_ENABLED_FUNCTIONS = "enabled_functions"
+
 ## If set to True, the AVR won't auto query additional attributes in high level
 ## categories, instead we rely on the AVR returning them as they are changed.
 PARAM_DISABLE_AUTO_QUERY = "disable_auto_query"
+
 ## List of additional listening modes. Overrides LISTENING_MODES. Non-unique
 ## display names will be ignored
 ## key: [display_name, 2ch_source_bool, multichannel_source_bool]
 PARAM_EXTRA_LISTENING_MODES = "extra_amp_listening_modes"
+
 ## List of enabled listening mode IDs. If specified, then no listening modes
 ## are added by default
 PARAM_ENABLED_LISTENING_MODES = "enabled_amp_listening_modes"
+
 ## List of disabled listening mode IDs. Override IDs that are also specified in
 ## PARAM_EXTRA_LISTENING_MODES
 PARAM_DISABLED_LISTENING_MODES = "disabled_amp_listening_modes"
-## Tuner step for AM frequencies. If None, calculate automatically when tuner is first used
+
+## Tuner step for AM frequencies. If None, calculate automatically when tuner
+## is first used (stored as system param)
 PARAM_TUNER_AM_FREQ_STEP = "am_frequency_step"
 
 ## System params
-PARAM_QUERY_SOURCES = "query_sources"
+
 ## List of all possible listening modes
-PARAM_ALL_LISTENING_MODES = "all_listening_modes"
+PARAM_QUERY_SOURCES = "query_sources"
+
 ## List of listening modes available for selection on AVR
+PARAM_ALL_LISTENING_MODES = "all_listening_modes"
 PARAM_AVAILABLE_LISTENING_MODES = "available_listening_modes"
+
+## Set of Zones that have completed initial refresh
+PARAM_ZONES_INITIAL_REFRESH = "zones_initial_refresh"
 
 DEFAULT_PARAM_ENABLED_FUNCTIONS = [
     "basic",
@@ -109,10 +125,12 @@ PARAM_DEFAULTS = {
     PARAM_POWER_ON_VOLUME_BOUNCE: False,
     PARAM_VOLUME_STEP_ONLY: False,
     PARAM_IGNORE_VOLUME_CHECK: False,
+    PARAM_ALWAYS_POLL: False,
     PARAM_DEBUG_LISTENER: False,
     PARAM_DEBUG_RESPONDER: False,
     PARAM_DEBUG_UPDATER: False,
     PARAM_DEBUG_COMMAND: False,
+    PARAM_DEBUG_COMMAND_QUEUE: False,
     PARAM_ENABLED_FUNCTIONS: DEFAULT_PARAM_ENABLED_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY: False,
     PARAM_ZONE_1_SOURCES: [],
@@ -692,6 +710,12 @@ class PioneerAVRParams:
         self._params: dict[str, Any] = {}
         self.set_user_params(params)
 
+    ## Public parameters
+    @property
+    def zones_initial_refresh(self) -> set[Zones]:
+        """Return set of zones that have completed initial refresh."""
+        return self.get_system_param(PARAM_ZONES_INITIAL_REFRESH, set())
+
     ## Parameter management functions
     def _update_params(self) -> None:
         """Set current parameters."""
@@ -733,7 +757,7 @@ class PioneerAVRParams:
         self._update_params()
         self.update_listening_modes()
 
-    def set_system_param(self, param: str, value: bool) -> None:
+    def set_system_param(self, param: str, value: Any) -> None:
         """Set system parameter."""
         self._system_params[param] = value
         self._update_params()
@@ -757,6 +781,10 @@ class PioneerAVRParams:
     def get_param(self, param_name: str, default: Any = None) -> Any:
         """Get the value of the specified parameter."""
         return self._params.get(param_name, default)
+
+    def get_system_param(self, param_name: str, default: Any = None) -> Any:
+        """Get the value of the specified system parameter."""
+        return self._system_params.get(param_name, default)
 
     def update_listening_modes(self) -> None:
         """Update list of valid listening modes for AVR."""

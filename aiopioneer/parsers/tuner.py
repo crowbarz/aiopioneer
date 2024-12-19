@@ -1,7 +1,7 @@
 """aiopioneer response parsers for tuner parameters."""
 
-from aiopioneer.param import PARAM_TUNER_AM_FREQ_STEP
-from aiopioneer.const import Zones, TunerBand
+from ..const import Zones, TunerBand
+from ..param import PioneerAVRParams, PARAM_TUNER_AM_FREQ_STEP
 from .response import Response
 
 
@@ -14,7 +14,9 @@ class TunerParsers:
     _current_freq: float = None  # current frequency, clear preset when changed
 
     @staticmethod
-    def frequency_fm(raw: str, params: dict, zone=Zones.ALL, command="FR") -> list:
+    def frequency_fm(
+        raw: str, params: PioneerAVRParams, zone=Zones.ALL, command="FR"
+    ) -> list[Response]:
         """Response parser for FM tuner frequency."""
         new_freq = float(raw) / 100
         current_freq = TunerParsers._current_freq
@@ -49,14 +51,16 @@ class TunerParsers:
         return parsed
 
     @staticmethod
-    def frequency_am(raw: str, params: dict, zone=Zones.ALL, command="FR") -> list:
+    def frequency_am(
+        raw: str, params: PioneerAVRParams, zone=Zones.ALL, command="FR"
+    ) -> list[Response]:
         """Response parser AM tuner frequency."""
         new_freq = float(raw)
         current_freq = TunerParsers._current_freq
         parsed = []
-        queue_commands = None
-        if params.get(PARAM_TUNER_AM_FREQ_STEP) is None:
-            queue_commands = ["_sleep(2)", "_calculate_am_frequency_step"]
+        command_queue = None
+        if params.get_param(PARAM_TUNER_AM_FREQ_STEP) is None:
+            command_queue = [["_sleep", 2], "_calculate_am_frequency_step"]
 
         parsed.extend(
             [
@@ -67,7 +71,7 @@ class TunerParsers:
                     property_name="band",
                     zone=zone,
                     value=TunerBand.AM,
-                    queue_commands=queue_commands,
+                    queue_commands=command_queue,
                 ),
                 Response(
                     raw=raw,
@@ -88,9 +92,12 @@ class TunerParsers:
         return parsed
 
     @staticmethod
-    def preset(raw: str, _params: dict, zone=Zones.ALL, command="PR") -> list:
+    def preset(
+        raw: str, _params: PioneerAVRParams, zone=Zones.ALL, command="PR"
+    ) -> list[Response]:
         """Response parser for tuner preset. Cache until next frequency update."""
         parsed = []
+        command_queue = [["_oob", "query_tuner_frequency"]]
         TunerParsers._cached_preset_raw = raw
         parsed.append(
             Response(
@@ -100,13 +107,15 @@ class TunerParsers:
                 property_name=None,
                 zone=zone,
                 value=raw,
-                queue_commands=["query_tuner_frequency"],
+                queue_commands=command_queue,
             )
         )
         return parsed
 
     @staticmethod
-    def _update_preset(_params: dict, zone=Zones.ALL, command="PR") -> list:
+    def _update_preset(
+        _params: PioneerAVRParams, zone=Zones.ALL, command="PR"
+    ) -> list[Response]:
         """Parse and update tuner preset from cached values."""
         parsed = []
         current_preset_raw = TunerParsers._current_preset_raw
@@ -151,7 +160,9 @@ class TunerParsers:
         return parsed
 
     @staticmethod
-    def _clear_preset(_params: dict, zone=Zones.ALL, command="PR") -> list:
+    def _clear_preset(
+        _params: PioneerAVRParams, zone=Zones.ALL, command="PR"
+    ) -> list[Response]:
         """Clear tuner presets."""
         raw = ""
         parsed = []
@@ -182,17 +193,21 @@ class TunerParsers:
         return parsed
 
     @staticmethod
-    def am_frequency_step(raw: str, _params: dict, zone=None, command="SUQ") -> list:
+    def am_frequency_step(
+        raw: str, params: PioneerAVRParams, zone=None, command="SUQ"
+    ) -> list[Response]:
         """Response parser for AM frequency step. (Supported on very few AVRs)"""
+        frequency_step = 9 if raw == "0" else 10
         parsed = []
+        params.set_system_param(PARAM_TUNER_AM_FREQ_STEP, frequency_step)
         parsed.append(
             Response(
                 raw=raw,
                 response_command=command,
-                base_property="_system_params",
-                property_name=PARAM_TUNER_AM_FREQ_STEP,
+                base_property="tuner",
+                property_name="am_frequency_step",
                 zone=zone,
-                value=9 if raw == "0" else 10,
+                value=frequency_step,
                 queue_commands=None,
             )
         )

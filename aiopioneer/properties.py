@@ -25,7 +25,8 @@ class PioneerAVRProperties:
         self.volume: dict[Zones, int] = {}
         self.max_volume: dict[Zones, int] = {}
         self.mute: dict[Zones, bool] = {}
-        self.source: dict[Zones, str] = {}
+        self.source_id: dict[Zones, str] = {}
+        self.source_name: dict[Zones, str] = {}
         self.listening_mode = ""
         self.listening_mode_raw = ""
         self.media_control_mode: dict[Zones, str] = {}
@@ -91,7 +92,8 @@ class PioneerAVRProperties:
         if source_name in self.source_name_to_id:
             self.source_name_to_id.pop(source_name)
 
-    def get_ipod_control_commands(self) -> list[str]:
+    @property
+    def ipod_control_commands(self) -> list[str]:
         """Return a list of all valid iPod control modes."""
         return list(
             [
@@ -101,7 +103,8 @@ class PioneerAVRProperties:
             ]
         )
 
-    def get_tuner_control_commands(self) -> list[str]:
+    @property
+    def tuner_control_commands(self) -> list[str]:
         """Return a list of all valid tuner control commands."""
         return list(
             [
