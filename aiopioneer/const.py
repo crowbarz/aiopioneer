@@ -19,6 +19,17 @@ class Zone(StrEnum):
     Z3 = "3"
     HDZ = "Z"
 
+    @staticmethod
+    def full_name(zone: Self) -> str:
+        """Get zone full name."""
+        return {
+            Zone.ALL: "All Zones",
+            Zone.Z1: "Main Zone",
+            Zone.Z2: "Zone 2",
+            Zone.Z3: "Zone 3",
+            Zone.HDZ: "HDZone",
+        }.get(zone)
+
 
 class TunerBand(StrEnum):
     """Valid frequency bands."""
