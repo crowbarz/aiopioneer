@@ -79,7 +79,7 @@ class SystemParsers:
                 Response(
                     raw=raw,
                     response_command=command,
-                    base_property="source",
+                    base_property="_get_source_name",
                     property_name=None,
                     zone=zone,
                     value=raw,
@@ -88,7 +88,7 @@ class SystemParsers:
                 Response(
                     raw=raw,
                     response_command=command,
-                    base_property="_get_source_name",
+                    base_property="source_id",
                     property_name=None,
                     zone=zone,
                     value=raw,
