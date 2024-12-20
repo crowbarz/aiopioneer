@@ -1,7 +1,7 @@
 """aiopioneer response parsers for tuner parameters."""
 
 from ..const import Zone, TunerBand
-from ..param import PioneerAVRParams, PARAM_TUNER_AM_FREQ_STEP
+from ..params import PioneerAVRParams, PARAM_TUNER_AM_FREQ_STEP
 from .response import Response
 
 

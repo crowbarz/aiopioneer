@@ -4,7 +4,7 @@ from collections.abc import Callable
 import logging
 
 from ..const import Zone
-from ..param import PioneerAVRParams
+from ..params import PioneerAVRParams
 from ..properties import PioneerAVRProperties
 from .response import Response
 from .system import SystemParsers

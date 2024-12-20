@@ -14,7 +14,7 @@ from ..const import (
     DIMMER_MODES,
     Zone,
 )
-from ..param import (
+from ..params import (
     PioneerAVRParams,
     PARAM_QUERY_SOURCES,
     PARAM_MHL_SOURCE,

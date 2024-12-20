@@ -13,7 +13,7 @@ from ..const import (
     VIDEO_SIGNAL_EXT_COLORSPACE,
     Zone,
 )
-from ..param import PioneerAVRParams
+from ..params import PioneerAVRParams
 from .response import Response
 
 

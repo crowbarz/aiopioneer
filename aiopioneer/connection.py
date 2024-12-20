@@ -7,7 +7,7 @@ import logging
 import time
 import traceback
 
-from .param import (
+from .params import (
     PioneerAVRParams,
     PARAM_COMMAND_DELAY,
     PARAM_ALWAYS_POLL,
