@@ -1,7 +1,7 @@
 """Pioneer AVR response parsers for video parameters."""
 
 from ..const import VIDEO_RESOLUTION_MODES, ADVANCED_VIDEO_ADJUST_MODES, Zone
-from ..param import PioneerAVRParams
+from ..params import PioneerAVRParams
 from .response import Response
 
 

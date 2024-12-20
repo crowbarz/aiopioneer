@@ -11,7 +11,7 @@ from ..const import (
     DSP_VIRTUAL_DEPTH,
     Zone,
 )
-from ..param import PioneerAVRParams
+from ..params import PioneerAVRParams
 from .response import Response
 
 

@@ -1,7 +1,7 @@
 """aiopioneer response parsers for audio parameters."""
 
 from ..const import Zone, TONE_MODES, TONE_DB_VALUES
-from ..param import PioneerAVRParams, PARAM_ALL_LISTENING_MODES
+from ..params import PioneerAVRParams, PARAM_ALL_LISTENING_MODES
 from .response import Response
 
 

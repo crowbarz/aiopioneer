@@ -9,7 +9,7 @@ from ..const import (
     STANDBY_PASSTHROUGH_OPTIONS,
     EXTERNAL_HDMI_TRIGGER_OPTIONS,
 )
-from ..param import PioneerAVRParams
+from ..params import PioneerAVRParams
 from .response import Response
 
 

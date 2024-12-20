@@ -7,7 +7,7 @@ from types import MappingProxyType
 
 from .commands import PIONEER_COMMANDS
 from .const import Zone, MEDIA_CONTROL_COMMANDS
-from .param import PioneerAVRParams, PARAM_ZONE_SOURCES, PARAM_QUERY_SOURCES
+from .params import PioneerAVRParams, PARAM_ZONE_SOURCES, PARAM_QUERY_SOURCES
 
 
 class PioneerAVRProperties:

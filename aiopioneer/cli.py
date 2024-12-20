@@ -8,7 +8,7 @@ import argparse
 
 from aiopioneer import PioneerAVR
 from aiopioneer.const import Zone, DEFAULT_PORT
-from aiopioneer.param import (
+from aiopioneer.params import (
     PARAM_DEBUG_LISTENER,
     PARAM_DEBUG_RESPONDER,
     PARAM_DEBUG_UPDATER,
