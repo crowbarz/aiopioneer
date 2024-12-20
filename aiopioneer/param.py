@@ -9,7 +9,7 @@ import re
 from collections import OrderedDict
 from typing import Any
 
-from .const import Zones, LISTENING_MODES
+from .const import Zone, LISTENING_MODES
 from .util import merge
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,10 +34,10 @@ PARAM_ZONE_2_SOURCES = "zone_2_sources"  ## All possible valid input sources for
 PARAM_ZONE_3_SOURCES = "zone_3_sources"  ## All possible valid input sources for Zone 3
 PARAM_HDZONE_SOURCES = "hdzone_sources"  ## All possible valid input sources for HDZone
 PARAM_ZONE_SOURCES = {
-    Zones.Z1: PARAM_ZONE_1_SOURCES,
-    Zones.Z2: PARAM_ZONE_2_SOURCES,
-    Zones.Z3: PARAM_ZONE_3_SOURCES,
-    Zones.HDZ: PARAM_HDZONE_SOURCES,
+    Zone.Z1: PARAM_ZONE_1_SOURCES,
+    Zone.Z2: PARAM_ZONE_2_SOURCES,
+    Zone.Z3: PARAM_ZONE_3_SOURCES,
+    Zone.HDZ: PARAM_HDZONE_SOURCES,
 }
 
 ## All possible valid speaker system settings for HDZone volume functions to be available
@@ -712,7 +712,7 @@ class PioneerAVRParams:
 
     ## Public parameters
     @property
-    def zones_initial_refresh(self) -> set[Zones]:
+    def zones_initial_refresh(self) -> set[Zone]:
         """Return set of zones that have completed initial refresh."""
         return self.get_system_param(PARAM_ZONES_INITIAL_REFRESH, set())
 

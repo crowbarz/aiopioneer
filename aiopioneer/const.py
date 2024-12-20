@@ -1,6 +1,7 @@
 """Constants for aiopioneer."""
 
 from enum import StrEnum
+from typing import Self
 
 VERSION = "0.7.1"
 DEFAULT_TIMEOUT = 2
@@ -9,7 +10,7 @@ MIN_RESCAN_INTERVAL = 10
 DEFAULT_PORT = 8102
 
 
-class Zones(StrEnum):
+class Zone(StrEnum):
     """Valid aiopioneer zones."""
 
     ALL = "ALL"
@@ -17,6 +18,17 @@ class Zones(StrEnum):
     Z2 = "2"
     Z3 = "3"
     HDZ = "Z"
+
+    @staticmethod
+    def full_name(zone: Self) -> str:
+        """Get zone full name."""
+        return {
+            Zone.ALL: "All Zones",
+            Zone.Z1: "Main Zone",
+            Zone.Z2: "Zone 2",
+            Zone.Z3: "Zone 3",
+            Zone.HDZ: "HDZone",
+        }.get(zone)
 
 
 class TunerBand(StrEnum):

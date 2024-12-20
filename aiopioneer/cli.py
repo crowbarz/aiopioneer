@@ -7,7 +7,7 @@ import json
 import argparse
 
 from aiopioneer import PioneerAVR
-from aiopioneer.const import Zones, DEFAULT_PORT
+from aiopioneer.const import Zone, DEFAULT_PORT
 from aiopioneer.param import (
     PARAM_DEBUG_LISTENER,
     PARAM_DEBUG_RESPONDER,
@@ -73,7 +73,7 @@ async def cli_main(args: argparse.Namespace):
         _LOGGER.info("AVR zones discovered: %s", pioneer.properties.zones)
 
     reader, _writer = await connect_stdin_stdout()
-    zone = Zones.Z1
+    zone = Zone.Z1
     while True:
         print(f"Current zone is {zone}")
         res = await reader.readline()
@@ -88,7 +88,7 @@ async def cli_main(args: argparse.Namespace):
         arg = None if num_tokens == 1 else tokens[1]
         if cmd == "zone":
             try:
-                zone_new = Zones(arg)
+                zone_new = Zone(arg)
                 if zone_new in pioneer.properties.zones:
                     zone = zone_new
                     print(f"Setting current zone to {zone}")

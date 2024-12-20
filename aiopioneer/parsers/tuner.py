@@ -1,6 +1,6 @@
 """aiopioneer response parsers for tuner parameters."""
 
-from ..const import Zones, TunerBand
+from ..const import Zone, TunerBand
 from ..param import PioneerAVRParams, PARAM_TUNER_AM_FREQ_STEP
 from .response import Response
 
@@ -15,7 +15,7 @@ class TunerParsers:
 
     @staticmethod
     def frequency_fm(
-        raw: str, params: PioneerAVRParams, zone=Zones.ALL, command="FR"
+        raw: str, params: PioneerAVRParams, zone=Zone.ALL, command="FR"
     ) -> list[Response]:
         """Response parser for FM tuner frequency."""
         new_freq = float(raw) / 100
@@ -52,7 +52,7 @@ class TunerParsers:
 
     @staticmethod
     def frequency_am(
-        raw: str, params: PioneerAVRParams, zone=Zones.ALL, command="FR"
+        raw: str, params: PioneerAVRParams, zone=Zone.ALL, command="FR"
     ) -> list[Response]:
         """Response parser AM tuner frequency."""
         new_freq = float(raw)
@@ -93,7 +93,7 @@ class TunerParsers:
 
     @staticmethod
     def preset(
-        raw: str, _params: PioneerAVRParams, zone=Zones.ALL, command="PR"
+        raw: str, _params: PioneerAVRParams, zone=Zone.ALL, command="PR"
     ) -> list[Response]:
         """Response parser for tuner preset. Cache until next frequency update."""
         parsed = []
@@ -114,7 +114,7 @@ class TunerParsers:
 
     @staticmethod
     def _update_preset(
-        _params: PioneerAVRParams, zone=Zones.ALL, command="PR"
+        _params: PioneerAVRParams, zone=Zone.ALL, command="PR"
     ) -> list[Response]:
         """Parse and update tuner preset from cached values."""
         parsed = []
@@ -161,7 +161,7 @@ class TunerParsers:
 
     @staticmethod
     def _clear_preset(
-        _params: PioneerAVRParams, zone=Zones.ALL, command="PR"
+        _params: PioneerAVRParams, zone=Zone.ALL, command="PR"
     ) -> list[Response]:
         """Clear tuner presets."""
         raw = ""

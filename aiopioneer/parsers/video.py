@@ -1,6 +1,6 @@
 """Pioneer AVR response parsers for video parameters."""
 
-from ..const import VIDEO_RESOLUTION_MODES, ADVANCED_VIDEO_ADJUST_MODES, Zones
+from ..const import VIDEO_RESOLUTION_MODES, ADVANCED_VIDEO_ADJUST_MODES, Zone
 from ..param import PioneerAVRParams
 from .response import Response
 
@@ -10,7 +10,7 @@ class VideoParsers:
 
     @staticmethod
     def video_converter(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="VTB"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTB"
     ) -> list[Response]:
         """Response parser for video converter setting."""
         value = int(raw)
@@ -35,7 +35,7 @@ class VideoParsers:
 
     @staticmethod
     def video_resolution(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="VTC"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTC"
     ) -> list[Response]:
         """Response parser for video resolution setting."""
         parsed = []
@@ -54,7 +54,7 @@ class VideoParsers:
 
     @staticmethod
     def pure_cinema(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="VTD"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTD"
     ) -> list[Response]:
         """Response parser for pure cinema setting."""
         value = int(raw)
@@ -81,7 +81,7 @@ class VideoParsers:
 
     @staticmethod
     def prog_motion(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="VTE"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTE"
     ) -> list[Response]:
         """Response parser for prog motion setting."""
         value = int(raw)
@@ -104,7 +104,7 @@ class VideoParsers:
 
     @staticmethod
     def stream_smoother(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="VTF"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTF"
     ) -> list[Response]:
         """Response parser for stream smoother setting."""
         value = int(raw)
@@ -131,7 +131,7 @@ class VideoParsers:
 
     @staticmethod
     def advanced_video_adjust(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="VTG"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTG"
     ) -> list[Response]:
         """Response parser for advanced video adjust setting."""
         parsed = []
@@ -152,7 +152,7 @@ class VideoParsers:
     def output_video_property(
         raw: str,
         _params: PioneerAVRParams,
-        zone=Zones.Z1,
+        zone=Zone.Z1,
         command=None,
         property_name=None,
     ) -> list[Response]:
@@ -173,42 +173,42 @@ class VideoParsers:
 
     @staticmethod
     def output_ynr(
-        raw: str, params: PioneerAVRParams, zone=Zones.Z1, command="VTH"
+        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTH"
     ) -> list[Response]:
         """Response parser for output YNR setting."""
         return VideoParsers.output_video_property(raw, params, zone, command, "ynr")
 
     @staticmethod
     def output_cnr(
-        raw: str, params: PioneerAVRParams, zone=Zones.Z1, command="VTI"
+        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTI"
     ) -> list[Response]:
         """Response parser for output CNR setting."""
         return VideoParsers.output_video_property(raw, params, zone, command, "cnr")
 
     @staticmethod
     def output_bnr(
-        raw: str, params: PioneerAVRParams, zone=Zones.Z1, command="VTJ"
+        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTJ"
     ) -> list[Response]:
         """Response parser for output BNR setting."""
         return VideoParsers.output_video_property(raw, params, zone, command, "bnr")
 
     @staticmethod
     def output_mnr(
-        raw: str, params: PioneerAVRParams, zone=Zones.Z1, command="VTK"
+        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTK"
     ) -> list[Response]:
         """Response parser for output MNR setting."""
         return VideoParsers.output_video_property(raw, params, zone, command, "mnr")
 
     @staticmethod
     def output_detail(
-        raw: str, params: PioneerAVRParams, zone=Zones.Z1, command="VTL"
+        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTL"
     ) -> list[Response]:
         """Response parser for output detail setting."""
         return VideoParsers.output_video_property(raw, params, zone, command, "detail")
 
     @staticmethod
     def output_sharpness(
-        raw: str, params: PioneerAVRParams, zone=Zones.Z1, command="VTM"
+        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTM"
     ) -> list[Response]:
         """Response parser for output sharpness setting."""
         return VideoParsers.output_video_property(
@@ -217,7 +217,7 @@ class VideoParsers:
 
     @staticmethod
     def output_brightness(
-        raw: str, params: PioneerAVRParams, zone=Zones.Z1, command="VTN"
+        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTN"
     ) -> list[Response]:
         """Response parser for output brightness setting."""
         return VideoParsers.output_video_property(
@@ -226,7 +226,7 @@ class VideoParsers:
 
     @staticmethod
     def output_contrast(
-        raw: str, params: PioneerAVRParams, zone=Zones.Z1, command="VTO"
+        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTO"
     ) -> list[Response]:
         """Response parser for output contrast setting."""
         return VideoParsers.output_video_property(
@@ -235,21 +235,21 @@ class VideoParsers:
 
     @staticmethod
     def output_hue(
-        raw: str, params: PioneerAVRParams, zone=Zones.Z1, command="VTP"
+        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTP"
     ) -> list[Response]:
         """Response parser for output hue setting."""
         return VideoParsers.output_video_property(raw, params, zone, command, "hue")
 
     @staticmethod
     def output_chroma(
-        raw: str, params: PioneerAVRParams, zone=Zones.Z1, command="VTQ"
+        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTQ"
     ) -> list[Response]:
         """Response parser for output chroma setting."""
         return VideoParsers.output_video_property(raw, params, zone, command, "chroma")
 
     @staticmethod
     def black_setup(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="VTR"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTR"
     ) -> list[Response]:
         """Response parser for black setup setting."""
         value = int(raw)
@@ -274,7 +274,7 @@ class VideoParsers:
 
     @staticmethod
     def aspect(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="VTS"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTS"
     ) -> list[Response]:
         """Response parser for output aspect setting."""
         value = int(raw)

@@ -9,7 +9,7 @@ from ..const import (
     DSP_PHASE_CONTROL,
     DSP_SIGNAL_SELECT,
     DSP_VIRTUAL_DEPTH,
-    Zones,
+    Zone,
 )
 from ..param import PioneerAVRParams
 from .response import Response
@@ -20,7 +20,7 @@ class DspParsers:
 
     @staticmethod
     def mcacc_setting(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="MC"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="MC"
     ) -> list[Response]:
         """Response parser for MCACC setting."""
         parsed = []
@@ -39,7 +39,7 @@ class DspParsers:
 
     @staticmethod
     def phasecontrol(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="IS"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="IS"
     ) -> list[Response]:
         """Response parser for phase control setting."""
         parsed = []
@@ -58,7 +58,7 @@ class DspParsers:
 
     @staticmethod
     def virtual_speakers(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="VSP"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VSP"
     ) -> list[Response]:
         """Response parser for virtual speakers setting."""
         parsed = []
@@ -77,7 +77,7 @@ class DspParsers:
 
     @staticmethod
     def virtual_soundback(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="VSB"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VSB"
     ) -> list[Response]:
         """Response parser for virtual sound-back setting."""
         parsed = []
@@ -96,7 +96,7 @@ class DspParsers:
 
     @staticmethod
     def virtual_height(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="VHT"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VHT"
     ) -> list[Response]:
         """Response parser for virtual height setting."""
         parsed = []
@@ -115,7 +115,7 @@ class DspParsers:
 
     @staticmethod
     def sound_retriever(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATA"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATA"
     ) -> list[Response]:
         """Response parser for sound retriever setting."""
         parsed = []
@@ -134,7 +134,7 @@ class DspParsers:
 
     @staticmethod
     def signal_select(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="SDA"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="SDA"
     ) -> list[Response]:
         """Response parser for signal select setting."""
         parsed = []
@@ -153,7 +153,7 @@ class DspParsers:
 
     @staticmethod
     def input_att(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="SDB"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="SDB"
     ) -> list[Response]:
         """Response parser for input attenuation setting."""
         parsed = []
@@ -172,7 +172,7 @@ class DspParsers:
 
     @staticmethod
     def equalizer(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATC"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATC"
     ) -> list[Response]:
         """Response parser for equalizer setting."""
         parsed = []
@@ -191,7 +191,7 @@ class DspParsers:
 
     @staticmethod
     def standing_wave(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATD"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATD"
     ) -> list[Response]:
         """Response parser for standing wave setting."""
         parsed = []
@@ -210,7 +210,7 @@ class DspParsers:
 
     @staticmethod
     def phase_control_plus(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATE"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATE"
     ) -> list[Response]:
         """Response parser for phase control plus setting."""
         value = int(raw)
@@ -230,7 +230,7 @@ class DspParsers:
 
     @staticmethod
     def sound_delay(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATF"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATF"
     ) -> list[Response]:
         """Response parser for sound delay setting."""
         parsed = []
@@ -249,7 +249,7 @@ class DspParsers:
 
     @staticmethod
     def digital_noise_reduction(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATG"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATG"
     ) -> list[Response]:
         """Response parser for digital noise reduction setting."""
         parsed = []
@@ -268,7 +268,7 @@ class DspParsers:
 
     @staticmethod
     def dialog_enhancement(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATH"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATH"
     ) -> list[Response]:
         """Response parser for dialog enhancement setting."""
         parsed = []
@@ -287,7 +287,7 @@ class DspParsers:
 
     @staticmethod
     def audio_scaler(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATY"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATY"
     ) -> list[Response]:
         """Response parser for Audio Scaler setting."""
         parsed = []
@@ -306,7 +306,7 @@ class DspParsers:
 
     @staticmethod
     def hi_bit(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATI"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATI"
     ) -> list[Response]:
         """Response parser for Hi-BIT setting."""
         parsed = []
@@ -325,7 +325,7 @@ class DspParsers:
 
     @staticmethod
     def up_sampling(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATZ"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATZ"
     ) -> list[Response]:
         """Response parser for up sampling setting."""
         raw = int(raw)
@@ -353,7 +353,7 @@ class DspParsers:
 
     @staticmethod
     def dual_mono(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATJ"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATJ"
     ) -> list[Response]:
         """Response parser for dual mono setting."""
         parsed = []
@@ -373,7 +373,7 @@ class DspParsers:
 
     @staticmethod
     def fixed_pcm(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATK"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATK"
     ) -> list[Response]:
         """Response parser for fixed PCM setting."""
         parsed = []
@@ -392,7 +392,7 @@ class DspParsers:
 
     @staticmethod
     def dynamic_range_control(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATL"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATL"
     ) -> list[Response]:
         """Response parser for dynamic range control setting."""
         parsed = []
@@ -412,7 +412,7 @@ class DspParsers:
 
     @staticmethod
     def lfe_attenuator(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATM"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATM"
     ) -> list[Response]:
         """Response parser for LFE attenuator setting."""
         value = int(raw) * -5
@@ -432,7 +432,7 @@ class DspParsers:
 
     @staticmethod
     def sacd_gain(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATN"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATN"
     ) -> list[Response]:
         """Response parser for SACD gain setting."""
         parsed = []
@@ -451,7 +451,7 @@ class DspParsers:
 
     @staticmethod
     def auto_delay(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATO"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATO"
     ) -> list[Response]:
         """Response parser for auto delay setting."""
         parsed = []
@@ -471,7 +471,7 @@ class DspParsers:
 
     @staticmethod
     def center_width(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATP"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATP"
     ) -> list[Response]:
         """Response parser for center width setting."""
         parsed = []
@@ -490,7 +490,7 @@ class DspParsers:
 
     @staticmethod
     def panorama(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATQ"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATQ"
     ) -> list[Response]:
         """Response parser for panorama setting."""
         parsed = []
@@ -509,7 +509,7 @@ class DspParsers:
 
     @staticmethod
     def dimension(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATR"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATR"
     ) -> list[Response]:
         """Response parser for dimension setting."""
         parsed = []
@@ -528,7 +528,7 @@ class DspParsers:
 
     @staticmethod
     def center_image(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATS"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATS"
     ) -> list[Response]:
         """Response parser for center image setting."""
         parsed = []
@@ -547,7 +547,7 @@ class DspParsers:
 
     @staticmethod
     def effect(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATT"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATT"
     ) -> list[Response]:
         """Response parser for effect setting."""
         parsed = []
@@ -566,7 +566,7 @@ class DspParsers:
 
     @staticmethod
     def height_gain(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATU"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATU"
     ) -> list[Response]:
         """Response parser for height gain setting."""
         parsed = []
@@ -585,7 +585,7 @@ class DspParsers:
 
     @staticmethod
     def digital_filter(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATV"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATV"
     ) -> list[Response]:
         """Response parser for digital filter setting."""
         parsed = []
@@ -604,7 +604,7 @@ class DspParsers:
 
     @staticmethod
     def loudness_management(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ATW"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATW"
     ) -> list[Response]:
         """Response parser for loudness management setting."""
         parsed = []
@@ -623,7 +623,7 @@ class DspParsers:
 
     @staticmethod
     def center_spread(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ARA"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ARA"
     ) -> list[Response]:
         """Response parser for center spread setting."""
         parsed = []
@@ -642,7 +642,7 @@ class DspParsers:
 
     @staticmethod
     def rendering_mode(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="ARB"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ARB"
     ) -> list[Response]:
         """Response parser for rendering mode setting (Dolby Atmos only)."""
         parsed = []
@@ -661,7 +661,7 @@ class DspParsers:
 
     @staticmethod
     def virtual_depth(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="VDP"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VDP"
     ) -> list[Response]:
         """Response parser for virtual depth setting."""
         parsed = []
@@ -680,7 +680,7 @@ class DspParsers:
 
     @staticmethod
     def virtual_wide(
-        raw: str, _params: PioneerAVRParams, zone=Zones.Z1, command="VWD"
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VWD"
     ) -> list[Response]:
         """Response parser for virtual wide setting."""
         parsed = []
