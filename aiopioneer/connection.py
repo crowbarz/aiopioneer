@@ -464,7 +464,7 @@ class PioneerAVRConnection:
         if debug_command:
             _LOGGER.debug(
                 '>> PioneerAVR.send_command("%s", zone="%s", prefix="%s", '
-                + "ignore_error=%s, rate_limit=%s, suffix=%s)",
+                + "suffix=%s, ignore_error=%s, rate_limit=%s)",
                 command,
                 zone,
                 prefix,
