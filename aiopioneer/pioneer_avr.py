@@ -519,7 +519,7 @@ class PioneerAVR(PioneerAVRConnection):
         self._command_queue_task = None
         self._command_queue = []
 
-    def command_queue_schedule(self) -> None:
+    def _command_queue_schedule(self) -> None:
         """Schedule commands to queue."""
         if len(self._command_queue) == 0:
             return
@@ -549,7 +549,7 @@ class PioneerAVR(PioneerAVRConnection):
             self._command_queue.insert(insert_at, command)
         else:
             self._command_queue.append(command)
-        self.command_queue_schedule()
+        self._command_queue_schedule()
 
     ## AVR methods
     def _get_parameter_key_from_value(
