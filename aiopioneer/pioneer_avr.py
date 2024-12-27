@@ -82,7 +82,7 @@ class PioneerAVR(PioneerAVRConnection):
         host: str,
         port: int = DEFAULT_PORT,
         timeout: float = DEFAULT_TIMEOUT,
-        scan_interval: int = DEFAULT_SCAN_INTERVAL,
+        scan_interval: float = DEFAULT_SCAN_INTERVAL,
         params: dict[str, str] = None,
     ):
         """Initialise the Pioneer AVR interface."""
@@ -398,7 +398,7 @@ class PioneerAVR(PioneerAVRConnection):
 
     async def update(self, zones: list[Zone] = None, wait: bool = True) -> None:
         """Update AVR cached status."""
-        if not zones:
+        if not zones or Zone.ALL in zones:
             self.queue_command("_full_refresh")
         else:
             for zone in zones:

@@ -51,7 +51,7 @@ class PioneerAVRConnection:
         host: str,
         port: int = DEFAULT_PORT,
         timeout: float = DEFAULT_TIMEOUT,
-        scan_interval: int = DEFAULT_SCAN_INTERVAL,
+        scan_interval: float = DEFAULT_SCAN_INTERVAL,
     ):
         """Initialise the Pioneer AVR connection."""
         _LOGGER.debug(
