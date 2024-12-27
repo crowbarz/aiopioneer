@@ -31,12 +31,12 @@ class PioneerAVRProperties:
         self.listening_mode_raw = ""
         self.media_control_mode: dict[Zone, str] = {}
         self.tone: dict[Zone, dict] = {}
-        self.amp: dict[str, Any] = {}
-        self.tuner: dict[str, Any] = {}
-        self.dsp: dict[str, Any] = {}
-        self.video: dict[str, Any] = {}
-        self.system: dict[str, Any] = {}
-        self.audio: dict[str, Any] = {}
+        self.amp: dict[str | Zone, Any] = {}
+        self.tuner: dict[str | Zone, Any] = {}
+        self.dsp: dict[str | Zone, Any] = {}
+        self.video: dict[str | Zone, Any] = {}
+        self.system: dict[str | Zone, Any] = {}
+        self.audio: dict[str | Zone, Any] = {}
 
         ## Complex object that holds multiple different props for the CHANNEL/DSP functions
         self.channel_levels: dict[str, Any] = {}
