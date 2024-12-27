@@ -291,8 +291,13 @@ class PioneerAVRConnection:
                 _LOGGER.error(traceback.format_exc())
                 # continue listening on exception
 
+        ## Flush response queue if disconnected or cancelled
+        if self._queue_responses:
+            self._response_queue = []
+            self._response_event.set()
+
         if not self._disconnect_lock.locked():
-            # Trigger disconnection if not already disconnecting
+            ## Trigger disconnection if not already disconnecting
             _LOGGER.debug(">> listener triggering disconnect")
             await self.disconnect()
 
@@ -398,8 +403,11 @@ class PioneerAVRConnection:
                     _LOGGER.debug("delaying command for %.3f s", delay)
                 await asyncio.sleep(command_delay - since_command)
         _LOGGER.debug("sending command: %s", command)
-        self._writer.write(command.encode("ASCII") + b"\r")
-        await self._writer.drain()
+        try:
+            self._writer.write(command.encode("ASCII") + b"\r")
+            await self._writer.drain()
+        except Exception as exc:
+            raise AVRUnavailableError from exc
         self._last_command_at = time.time()
 
     async def _wait_for_response(self, command: str, response_prefix: str) -> str:
@@ -409,6 +417,9 @@ class PioneerAVRConnection:
         while True:
             await self._response_event.wait()
             self._response_event.clear()
+            if not self._response_queue:
+                _LOGGER.debug(">> wait_for_response aborting on connection closed")
+                raise AVRUnavailableError
             for response in self._response_queue:
                 if response.startswith(response_prefix):
                     if debug_command:
