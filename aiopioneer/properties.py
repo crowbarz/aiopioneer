@@ -47,7 +47,7 @@ class PioneerAVRProperties:
 
     def set_source_dict(self, sources: dict[str, str]) -> None:
         """Manually set source id<->name translation tables."""
-        self.params.set_system_param(PARAM_QUERY_SOURCES, False)
+        self.params.set_runtime_param(PARAM_QUERY_SOURCES, False)
         self.source_name_to_id = copy.deepcopy(sources)
         self.source_id_to_name = {v: k for k, v in sources.items()}
 

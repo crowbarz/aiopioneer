@@ -158,7 +158,7 @@ class PioneerAVR(PioneerAVRConnection):
     async def build_source_dict(self) -> None:
         """Generate source id<->name translation tables."""
         timeouts = 0
-        self.params.set_system_param(PARAM_QUERY_SOURCES, True)
+        self.params.set_runtime_param(PARAM_QUERY_SOURCES, True)
         self.properties.source_name_to_id = {}
         self.properties.source_id_to_name = {}
         await self._command_queue_wait()  ## wait for command queue to complete
@@ -384,7 +384,7 @@ class PioneerAVR(PioneerAVRConnection):
                         await self.query_device_info()
                     _LOGGER.info("completed initial refresh for zone %s", zone)
                     zones_initial_refresh.add(zone)
-                    self.params.set_system_param(
+                    self.params.set_runtime_param(
                         PARAM_ZONES_INITIAL_REFRESH, zones_initial_refresh
                     )
                     self._call_zone_callbacks(zones=[zone])
@@ -852,7 +852,7 @@ class PioneerAVR(PioneerAVRConnection):
             )
             return
 
-        self.params.set_system_param(PARAM_TUNER_AM_FREQ_STEP, new_freq - current_freq)
+        self.params.set_runtime_param(PARAM_TUNER_AM_FREQ_STEP, new_freq - current_freq)
         await self.send_command("decrease_tuner_frequency", ignore_error=True)
 
     async def _step_tuner_frequency(self, band: str, frequency: float) -> None:

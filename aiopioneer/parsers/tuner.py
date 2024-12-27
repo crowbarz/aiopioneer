@@ -199,7 +199,7 @@ class TunerParsers:
         """Response parser for AM frequency step. (Supported on very few AVRs)"""
         frequency_step = 9 if raw == "0" else 10
         parsed = []
-        params.set_system_param(PARAM_TUNER_AM_FREQ_STEP, frequency_step)
+        params.set_runtime_param(PARAM_TUNER_AM_FREQ_STEP, frequency_step)
         parsed.append(
             Response(
                 raw=raw,

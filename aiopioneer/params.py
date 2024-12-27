@@ -714,7 +714,7 @@ class PioneerAVRParams:
     @property
     def zones_initial_refresh(self) -> set[Zone]:
         """Return set of zones that have completed initial refresh."""
-        return self.get_system_param(PARAM_ZONES_INITIAL_REFRESH, set())
+        return self.get_runtime_param(PARAM_ZONES_INITIAL_REFRESH, set())
 
     ## Parameter management functions
     def _update_params(self) -> None:
@@ -757,8 +757,8 @@ class PioneerAVRParams:
         self._update_params()
         self.update_listening_modes()
 
-    def set_system_param(self, param: str, value: Any) -> None:
-        """Set a system parameter."""
+    def set_runtime_param(self, param: str, value: Any) -> None:
+        """Set a run-time parameter."""
         self._system_params[param] = value
         self._update_params()
 
@@ -782,7 +782,7 @@ class PioneerAVRParams:
         """Get the value of the specified parameter."""
         return self._params.get(param_name, default)
 
-    def get_system_param(self, param_name: str, default: Any = None) -> Any:
+    def get_runtime_param(self, param_name: str, default: Any = None) -> Any:
         """Get the value of the specified system parameter."""
         return self._system_params.get(param_name, default)
 
