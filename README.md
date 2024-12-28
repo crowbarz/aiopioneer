@@ -8,17 +8,17 @@ Originally developed and tested on a VSX-930 (Main Zone and HDZone outputs) but 
 
 ## Features
 
-- Implemented in asyncio.
-- Maintains single continuous telnet session to AVR, with automatic reconnect.
-- Eliminates status polling where AVR sends keepalive responses (on port 8102).
-- Auto-detects Zones 1, 2, 3 and HDZONE.
-- Ignore specific zones, for AVRs that report phantom zones.
-- Automatically polls AVR for source names - no longer need to manually code them in your config any more if your AVR supports their retrieval. Can also set source names manually.
-- Queries device parameters: MAC address, software version, model.
-- Ability to set internal parameters to change the API functionality, eg. maximum volume, volume step change delta.
-- Defaults for internal parameters can be changed based on custom profiles based on AVR model.
-- Includes workaround for AVRs with an initial volume set on the Main Zone (eg. VSX-930).
-- Supports AVRs that do not support setting the volume level by emulating using up/down commands (eg. VSX-S510).
+- Implemented in asyncio
+- Maintains single continuous telnet session to AVR, with automatic reconnect. This method of accessing the AVR API crashes less often than the integration included with Home Assistant
+- Eliminates status polling where AVR sends keepalive responses (on port 8102)
+- Auto-detects Zones 1, 2, 3 and HDZone
+- Ignore specific zones, for AVRs that report phantom zones
+- Automatically polls AVR for source names - no longer need to manually code them in your config any more if your AVR supports their retrieval. Can also set source names manually
+- Queries device information from the AVR: MAC address, software version, model
+- Ability to set internal parameters to change the API functionality, eg. maximum volume, volume step change delta
+- Defaults for internal parameters set vio custom profiles based on AVR model
+- Includes workaround for AVRs with an initial volume set on the Main Zone (eg. VSX-930)
+- Supports AVRs that do not support setting the volume level by emulating using up/down commands (eg. VSX-S510)
 - Command line client for sending commands and testing
 - Supports all listening mode functions
 - Supports all video related functions
@@ -29,51 +29,52 @@ Originally developed and tested on a VSX-930 (Main Zone and HDZone outputs) but 
 - Supports all zone input functions
 - Supports all zone volumne and mute functions
 - Supports setting of tuner band and preset
-- Supports setting frequency directly for capable AVRs, and also by stepping the frequency up/down
+- Supports setting tuner frequency directly for AVRs that support this via the API, and also by stepping the frequency up/down
 
-## Params
+## Parameters
 
 There are several types of parameters that modify the library's functionality. These are listed below in order of increasing priority:
 
 - **Default parameters**: these are the defaults for all of the parameters
 - **Model parameters**: these parameters are determined by the AVR model as detected by the library. Custom profiles for specific AVR models are defined in [`aiopioneer/param.py](https://github.com/crowbarz/aiopioneer/blob/main/aiopioneer/param.py)
 - **User parameters**: these parameters are provided by the user at instantiation, and can also be updated via the `set_user_params` method
-- **System parameters**: these parameters are set by the library at run time
+- **Run-time parameters**: these parameters are set by the library at run-time
 
-Where a parameter is specified at more than one level, the higher priority parameter takes precedence. So a user specified parameter will override any value that is determined by the AVR model.
+Where a parameter is specified at more than one level, the higher priority parameter takes precedence. Thus, a user specified parameter will override any value that is determined by the AVR model.
 
-**NOTE:** YAML syntax is used in the table below. Use Python equivalents (`false` -> `False`, `true` -> `True`, `null` -> `None` etc.) when calling the Python API directly, and JSON syntax if manually specifying via the Home Assistant integration.
+**NOTE:** YAML syntax is used in the table below. Use Python equivalents (`false` -> `False`, `true` -> `True`, `null` -> `None` etc.) when calling the Python API directly, and JSON syntax if specified manually via the Home Assistant integration.
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
-| `ignored_zones` | list | `[]` | List of zones to ignore even if they are auto-discovered. Specify Zone IDs as strings: "1", "2", "3" and "Z".
-| `command_delay` | float | `0.1` | Insert a delay between sequential commands that are sent to the AVR. This appears to make the AVR behave more reliably during status polls. Increase this value if debug logging shows that your AVR times out between commands.
-| `max_source_id` | int | `60` | Maximum source ID that the source discovery queries. Reduce this if your AVR returns errors.
-| `max_volume` | int | `185` | Maximum volume for the Main Zone.
-| `max_volume_zonex` | int | `185` | Maximum volume for zones other than the Main Zone.
-| `power_on_volume_bounce` | bool | `false` | On some AVRs (eg. VSX-930) where a power-on is set, the initial volume is not reported by the AVR correctly until a volume change is made. This option enables a workaround that sends a volume up and down command to the AVR on power-on to correct the reported volume without affecting the power-on volume.
+| `ignored_zones` | list | `[]` | List of zones to ignore even if they are auto-discovered. Specify Zone IDs as strings: "1", "2", "3" and "Z"
+| `command_delay` | float | `0.1` | Insert a delay between sequential commands that are sent to the AVR. This appears to make the AVR behave more reliably during status polls. Increase this value if debug logging shows that your AVR times out between commands
+| `max_source_id` | int | `60` | Maximum source ID that the source discovery queries. Reduce this if your AVR returns errors
+| `max_volume` | int | `185` | Maximum volume for the Main Zone
+| `max_volume_zonex` | int | `185` | Maximum volume for zones other than the Main Zone
+| `power_on_volume_bounce` | bool | `false` | On some AVRs (eg. VSX-930) where a power-on is set, the initial volume is not reported by the AVR correctly until a volume change is made. This option enables a workaround that sends a volume up and down command to the AVR on power-on to correct the reported volume without affecting the power-on volume
 | `volume_step_only` | bool | `false` | On some AVRs (eg. VSX-S510), setting the volume level is not supported natively by the API. This option emulates setting the volume level using volume up and down commands.
-| `ignore_volume_check` | bool | `false` | Don't check volume when determining whether a zone exists on the AVR. Useful for AVRs with an HDZone that passes through audio.
-| `zone_1_sources` | list | `[]` | (>0.4) Customises the available sources for use with Zone 1. Defaults to all available sources.
-| `zone_2_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with Zone 2 (some AVRs do not support all sources).
-| `zone_3_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with Zone 3 (some AVRs do not support all sources).
-| `hdzone_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with HDZone (some AVRs do not support all sources).
-| `hdzone_volume_requirements` | list | `["13", "15", "05", "25"]` | A list of sources that HDZone must be set to for volume control, some AVRs do not support HDZone volume at all (see `ignore_volume_check` above) and some only allow control of certain sources.
-| `amp_speaker_system_modes` | dict | `....` | Customises the names of speaker system modes. Different generations of AVR will name zones slighty differently. For example, the SC-LX57 names speaker system mode `15` as `5.1ch Bi-Amp + ZONE2` however this can also be called `5.2ch Bi-Amp + HDZONE` on newer AVRs.
-| `extra_amp_listening_modes` | dict | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/const.py#L24) | (>0.5) Additional listening modes that are added to the list of all possible listening modes for the AVR. This list is used to decode the listening mode ID returned by the AVR. See the source for the format for listening mode definition.
-| `enabled_amp_listening_modes` | list | `[]` | (>0.5) A list of listening mode IDs to be made available for selection. If specified, then no listening mode IDs will be included by default. All enabled source names must be unique, and duplicated names are ignored. The additional listening modes must be actually supported by the AVR, and will return an error (usually `E02`) when an unsupported listening mode is selected. This list is predefined for some AVRs, and specifying this parameter manually will override the model specific default disable list.
-| `disabled_amp_listening_modes` | list | `[]` | A list of listening mode IDs to be disabled. Listening mode IDs that are also specified in `enabled_amp_listening_modes` will be disabled. This list is predefined for some AVRs, and specifying this parameter manually will override the model specific default disable list.
-| `video_resolution_modes` | list | `['0', '1', '3', '4', '5', '6', '7', '8', '9']` | Sets the available video resolutions. Not all AVRs support the same resolution settings. This defaults to all of the latest resolutions from FY16.
+| `ignore_volume_check` | bool | `false` | Don't check volume when determining whether a zone exists on the AVR. Useful for AVRs with an HDZone that passes through audio
+| `zone_1_sources` | list | `[]` | (>0.4) Customises the available sources for use with Zone 1. Defaults to all available sources
+| `zone_2_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with Zone 2 (some AVRs do not support all sources)
+| `zone_3_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with Zone 3 (some AVRs do not support all sources)
+| `hdzone_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with HDZone (some AVRs do not support all sources)
+<!-- unimplemented
+| `hdzone_volume_requirements` | list | `["13", "15", "05", "25"]` | A list of sources that HDZone must be set to for volume control, some AVRs do not support HDZone volume at all (see `ignore_volume_check` above) and some only allow control of certain sources -->
+| `amp_speaker_system_modes` | dict | `....` | Customises the names of speaker system modes. Different generations of AVR will name zones slighty differently. For example, the SC-LX57 names speaker system mode `15` as `5.1ch Bi-Amp + ZONE2` however this can also be called `5.2ch Bi-Amp + HDZONE` on newer AVRs
+| `extra_amp_listening_modes` | dict | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/const.py#L24) | (>0.5) Additional listening modes that are added to the list of all possible listening modes for the AVR. This list is used to decode the listening mode ID returned by the AVR. See the source for the format for listening mode definition
+| `enabled_amp_listening_modes` | list | `[]` | (>0.5) A list of listening mode IDs to be made available for selection. If specified, then no listening mode IDs will be included by default. All enabled source names must be unique, and duplicated names are ignored. The additional listening modes must be actually supported by the AVR, and will return an error (usually `E02`) when an unsupported listening mode is selected. This list is predefined for some AVRs, and specifying this parameter manually will override the model specific default disable list
+| `disabled_amp_listening_modes` | list | `[]` | A list of listening mode IDs to be disabled. Listening mode IDs that are also specified in `enabled_amp_listening_modes` will be disabled. This list is predefined for some AVRs, and specifying this parameter manually will override the model specific default disable list
+| `video_resolution_modes` | list | `['0', '1', '3', '4', '5', '6', '7', '8', '9']` | Sets the available video resolutions. Not all AVRs support the same resolution settings. This defaults to all of the latest resolutions from FY16
 | `mhl_source` | string | `null` | Sets the MHL source ID. This is used for media controls. This information cannot be queried automatically
-| `enabled_functions` | list | `["basic", "audio", "amp", "dsp", "tone", "channels", "video", "tuner", "system", "display"]` | Change the functions that are enabled by the API, adding more functions will increase the amount of time it takes to complete a full init and update.
-| `disable_auto_query` | bool | `false` | Setting to `true` will disable auto queries on init for all functions apart from basic functionality (power, source, volume and mute). If you only need those functions, you can set this to `true`
-| `am_frequency_step` | int | `null` | Optional setting to configure the AM frequency step. If this is set to `null`, a function is queued to detect this information by stepping up and down the frequency when the tuner is first used while set to AM.
-| `always_poll` | bool | `false` | Always poll the AVR every _scan_interval_. If set to `false`, out of band status responses from the AVR will reset the polling interval.
-| `debug_listener` | bool | `false` | Enables additional debug logging for the listener task.
-| `debug_responder` | bool | `false` | Enables additional debug logging for the responder task.
-| `debug_updater` | bool | `false` | Enables additional debug logging for the updater task.
-| `debug_command` | bool | `false` | Enables additional debug logging for commands sent and responses received.
-| `debug_command_queue` | bool | `false` | Enables additional debug logging for the command queue task.
+| `enabled_functions` | list | `["basic", "audio", "amp", "dsp", "tone", "channels", "video", "tuner", "system", "display"]` | Change the functions that are enabled by the API, adding more functions will increase the amount of time it takes to complete a full init and update
+| `disable_auto_query` | bool | `false` | Set to `true` to disable auto queries on first zone power on for all functions apart from core functionality (power, source, volume and mute)
+| `am_frequency_step` | int | `null` | Optional setting to configure the tuner AM frequency step. If not specified, it will be queried from the AVR if supported by the AVR, otherwise it will be determined by stepping the frequency up and down when the AM tuner is first used
+| `always_poll` | bool | `false` | Always poll the AVR every _scan_interval_. If set to `false`, out of band status responses from the AVR will reset the polling interval
+| `debug_listener` | bool | `false` | Enables additional debug logging for the listener task
+| `debug_responder` | bool | `false` | Enables additional debug logging for the responder task
+| `debug_updater` | bool | `false` | Enables additional debug logging for the updater task
+| `debug_command` | bool | `false` | Enables additional debug logging for commands sent and responses received
+| `debug_command_queue` | bool | `false` | Enables additional debug logging for the command queue task
 
 If your model of AVR always needs specific parameters to be set for the library to function properly, then please create a PR to add a custom profile for the AVR model.
 
@@ -81,57 +82,66 @@ If your model of AVR always needs specific parameters to be set for the library 
 
 The library exposes a Python API through the **PioneerAVR** class. The class methods are listed below:
 
-### Connection methods
 
-`PioneerAVR.__init__(`_host_, _port_ = DEFAULT_PORT, _timeout_: **float** = DEFAULT_TIMEOUT, _scan_interval_: **int** = DEFAULT_SCAN_INTERVAL, _params_: **dict[str, str]** = **None** `)`
+`PioneerAVR.__init__(`_host_, _port_ = DEFAULT_PORT, _timeout_: **float** = DEFAULT_TIMEOUT, _scan_interval_: **float** = DEFAULT_SCAN_INTERVAL, _params_: **dict[str, str]** = **None** `)`
 
-Constructor for the **PioneerAVR** class. The connection parameters are used when `PioneerAVR.connect` is called. After connection is established, the AVR will be polled every _scan_interval_ seconds. Optional user parameters are provided via _params_.
+Constructor for the **PioneerAVR** class. The connection parameters are used when `PioneerAVR.connect` is called. After connection is established, the AVR will be polled every _scan_interval_ seconds. If the `always_poll` parameter is set, the poll timer is reset when a response from the AVR is received. Optional user parameters are provided via _params_.
 
-_awaitable_ `PioneerAVR.connect(`_reconnect_: **bool** = True`)`
+### Connection methods (inherited by `PioneerAVR`)
 
-Establish a connection to the AVR. Set _reconnect_ to **True** to attempt to re-establish the connection on disconnect.
+_awaitable_ `PioneerAVRConnection.connect(`_reconnect_: **bool** = True`)`
 
-_awaitable_ `PioneerAVR.disconnect()`
+Establish a connection to the AVR. Set _reconnect_ to **True** to re-establish the connection if it is disconnected.
 
-Disconnect from the AVR. Attempt to re-establish the connection if enabled.
+_awaitable_ `PioneerAVRConnection.disconnect(`_reconnect_: **bool**`)`
 
-_awaitable_ `PioneerAVR.shutdown()`
+Disconnect from the AVR. Attempt to re-establish the connection if enabled at connect, or overridden by specifying _reconnect_.
+
+_awaitable_ `PioneerAVRConnection.shutdown()`
 
 Permanently disconnect from the AVR. Does not attempt reconnection.
 
-_awaitable_ `PioneerAVR.set_timeout(`_timeout_: **float**`)`
+_awaitable_ `PioneerAVRConnection.set_timeout(`_timeout_: **float**`)`
 
-Set command timeout. Used also to set the socket keepalive timeout.
+Set command and socket keepalive timeouts.
+
+_property_ `available`: **bool**
+
+Whether integration is connected to the AVR.
+
+_property_ `scan_interval`: **float**
+
+Number of seconds between polls for AVR full updates.
 
 ### Update methods
 
-_awaitable_ `PioneerAVR.update(`_full_: **bool** = **False**, _wait_: **bool** = **True**`)`
+_awaitable_ `PioneerAVR.update(`_zones_: **list[Zone]** = **None**, _wait_: **bool** = **True**`)`
 
-Request an update of the AVR, and wait for the update to complete if _wait_ is **True**. <br/>
-If _full_ is **True**, then a full update is performed irrespective of when the previous update was performed. Otherwise, an update is performed if the scan interval has elapsed. <br/>
-If a scan interval is set, then an update is scheduled in the updater task. Otherwise the update is performed synchronously (_wait_ cannot be set to **False** in this case).
+Update of the cached properties from the AVR via the command queue. <br/>
+Refresh the AVR zones _zones_, or all AVR zones if not specified. <br/>
+Wait for the update to be completed if _wait_ is **True**. <br/>
 
 _awaitable_ `PioneerAVR.set_scan_interval(`_scan_interval_: **int**`)`
 
 Set the scan interval to _scan_interval_ and restart the updater task.
 
-_awaitable_ `PioneerAVR.update_zones()`
-
-Update zones from `ignored_zones` parameter and re-query zones from the AVR.
-
 ### AVR system methods
 
-_awaitable_ `PioneerAVR.turn_on(`_zone_: Zones = Zones.Z1`)`:
+_awaitable_ `PioneerAVR.turn_on(`_zone_: Zone = Zone.Z1`)`:
 
 Turn on the Pioneer AVR zone.
 
-_awaitable_ `PioneerAVR.turn_off(`_zone_: Zones = Zones.Z1`)`:
+_awaitable_ `PioneerAVR.turn_off(`_zone_: Zone = Zone.Z1`)`:
 
 Turn off the Pioneer AVR zone.
 
+_awaitable_ `PioneerAVR.query_device_model()`
+
+Query the AVR for device model. Updates the model parameters if device model is changed.
+
 _awaitable_ `PioneerAVR.query_device_info()`
 
-Query the AVR for device information. Updates the model parameters if device model is changed.
+Query the AVR for device information.
 
 _awaitable_ `PioneerAVR.query_zones(`_force_update_: **bool** = **True**`)`
 
@@ -147,13 +157,13 @@ _awaitable_ `PioneerAVR.set_remote_lock(`_remote_lock_: **bool**`)`:
 
 Set the remote lock.
 
-_awaitable_ `PioneerAVR.set_dimmer(`_dimmer_: **str**, _zone_: Zones = Zones.Z1`)`:
+_awaitable_ `PioneerAVR.set_dimmer(`_dimmer_: **str**, _zone_: Zone = Zone.Z1`)`:
 
 Set the display dimmer.
 
 ### AVR source methods
 
-_awaitable_ `PioneerAVR.select_source(`_source_: **str** = **None**, _source_id_: **str** = **None**, _zone_: Zones = Zones.Z1`)`:
+_awaitable_ `PioneerAVR.select_source(`_source_: **str** = **None**, _source_id_: **str** = **None**, _zone_: Zone = Zone.Z1`)`:
 
 Set the input source for _zone_ to name _source_name_ or ID _source_id_ (requires one argument.)
 
@@ -162,20 +172,20 @@ _awaitable_ `PioneerAVR.build_source_dict()`
 Query the available sources names from the AVR. <br/>
 Parameter `max_source_id` determines the highest source ID that is queried.
 
-`PioneerAVR.set_source_dict(`_sources_: **dict**[**str**, **str**]`)`
+`PioneerAVRProperties.set_source_dict(`_sources_: **dict**[**str**, **str**]`)`
 
 Manually set the available sources to the dict _sources_, where the keys are source IDs (padded to 2 chars) and the values are the corresponding source names.
 
-`PioneerAVR.get_source_list(`_zone_: Zones = Zones.Z1`)` -> **list**[**str**]
+`PioneerAVRProperties.get_source_list(`_zone_: Zone = Zone.Z1`)` -> **list**[**str**]
 
 Return the set of currently available source names for _zone_. The source names can be used with the `select_source` method.
 
-`PioneerAVR.get_source_dict(`_zone_: Zones = **None**`)` -> **dict**[**str**, **str**]
+`PioneerAVRProperties.get_source_dict(`_zone_: Zone = **None**`)` -> **dict**[**str**, **str**]
 
 Return a dict of currently available source names to source ID mappings for _zone_. <br/>
 If _zone_ is **None**, then return the dict of all available source names to source ID mappings.
 
-`PioneerAVR.get_source_name(`_source_id_: **str**`)` -> **str**
+`PioneerAVRProperties.get_source_name(`_source_id_: **str**`)` -> **str**
 
 Return the source name for _source_id_.
 
@@ -184,36 +194,51 @@ _awaitable_ `PioneerAVR.set_source_name(`_source_id_: **str**, _source_name_: **
 Renames _source_id_ to _source_name_ on the AVR. <br/>
 If _default_ is **True**, reset _source_id_ to the default source name.
 
-`PioneerAVR.clear_source_id(`_source_id_: **str**`)`
+`PioneerAVRProperties.clear_source_id(`_source_id_: **str**`)`
 
 Clear the name mapping for _source_id_.
 
-### AVR command methods
+### Command queue
 
-_awaitable_ `PioneerAVR.send_command(`_command_: **str**, _zone_: Zones = Zones.Z1, _prefix_: **str** = "", _suffix_: **str** = "", _ignore_erro* = **None**, _rate_limit_: **bool** = **True**`)` -> **bool** | **None**
+`PioneerAVR.queue_command(`_command_: **str** | **list**, _skip_if_queued_: **bool** = **True**, _insert_at_: **int** = -1`)` -> **None**
+
+Add _command_ to the command queue, to to be sent in the background to the AVR or executed as a local command. Starts the command queue task if not already running. <br/>
+_command_ may be specified as a **str**, or a **list** whose first element is a **str** that is used as the command to execute. The list form is used for local commands that support arguments of arbitrary type.
+The following local commands are supported, these are mainly used by the command parsers for more complex actions:
+
+- `_power_on`: execute initial refresh on zone power on
+- `_full_refresh`: perform a full refresh on all AVR Zones
+- \[ `_refresh_zone`, _zone_: **Zone** \]: perform a refresh on the specified zone
+- \[ `_delayed_query_basic`, _delay_: **float** \]: schedule a basic AVR query if parameter `disable_auto_query` is not enabled
+- `_query_basic`: perform a basic AVR query if parameter `disable_auto_query` is not enabled
+- `_calculate_am_frequency_step`: calculate the tuner AM frequency step
+- \[ `_sleep`, _delay_: **float** \]: sleep for _delay_ before executing the next command in the queue
+
+If _skip_if_queued_ is **True** and _command_ is already present in the command queue, then the command is not queued again. Local command arguments are included in the match. <br\>
+Insert the command at queue position _insert_at_ if specified. Inserts by default at end of the queue.
+
+### Low level AVR command methods (inherited by `PioneerAVR`)
+
+_awaitable_ `PioneerAVRConnection.send_command(`_command_: **str**, _zone_: Zone = Zone.Z1, _prefix_: **str** = "", _suffix_: **str** = "", _ignore_erro* = **None**, _rate_limit_: **bool** = **True**`)` -> **bool** | **None**
 
 Send command _command_ for zone _zone_ to the AVR, prefixed with _prefix_ and/or suffixed with _suffix_ if specified. <br/>
 If _command_ does not generate a response, then returns **True** if the command was successfully sent.
 Otherwise, returns the response received from the AVR, **None** if timed out, or **False** if an error response was received. <br/>
 If _ignore_error_ is **None** (default), then raise an exception on error. If _ignore_error_ is **True**, then log the error as level debug, otherwise log the error as level error. <br/>
-Raises `AVRResponseTimeoutError` on timeout, and `AVRCommandError` if the request returned an error.<br/>
+Raises `AVRUnavailable` if the AVR is disconnected, `AVRResponseTimeoutError` on timeout, and `AVRCommandError` if the request returned an error.<br/>
 If _rate_limit_ is **True**, then rate limit the commands sent to the AVR in accordance with the `command_delay` parameter.
 
-`PioneerAVR.queue_command(`_command_: **str**, _skip_if_queued_: **bool** = **True**, _insert_at_: **int** = -1`)` -> **None**
-
-Add _command_ to the command queue, to to be sent in the background to the AVR when method `command_queue_schedule` is invoked.
-Insert the command at queue position _insert_at_ if specified (inserts at end of the queue by default).
-
-_awaitable_ `PioneerAVR.send_raw_command(`_command_: **str**, _rate_limit_: **bool** = True`)`
+_awaitable_ `PioneerAVRConnection.send_raw_command(`_command_: **str**, _rate_limit_: **bool** = True`)`
 
 Send a raw command _command_ to the AVR.
-If _rate_limit_ is **True**, then rate limit the commands sent to the AVR in accordance with the `command_delay` parameter.
+If _rate_limit_ is **True**, then rate limit the commands sent to the AVR in accordance with the `command_delay` parameter. <br/>
+Raises `AVRUnavailable` if the AVR is disconnected.
 
-_awaitable_ `PioneerAVR.send_raw_request(`_command_: **str**, _response_prefix_: **str**, _rate_limit_: **bool** = **True**`)` -> **str** | **bool** | **None**
+_awaitable_ `PioneerAVRConnection.send_raw_request(`_command_: **str**, _response_prefix_: **str**, _rate_limit_: **bool** = **True**`)` -> **str** | **bool** | **None**
 
 Send a raw command _command_ to the AVR and wait for a response with prefix _response_prefix_.
 Returns the response received from the AVR.<br/>
-Raises `AVRResponseTimeoutError` on timeout, and `AVRCommandError` if the request returned an error.<br/>
+Raises `AVRUnavailable` if the AVR is disconnected, `AVRResponseTimeoutError` on timeout, and `AVRCommandError` if the request returned an error.<br/>
 If _rate_limit_ is **True**, then rate limit the commands sent to the AVR in accordance with the `command_delay` parameter.
 
 ### AVR tuner methods
@@ -255,54 +280,53 @@ _awaitable_ `PioneerAVR.set_volume_level(`_target_volume_: **int**, zone: Zones 
 Set the volume level for zone _zone_ to _target_volume_.
 _target_volume_ must be between 0 and 185 inclusive for Zone 1, and between 0 and 81 inclusive for all  other zones.
 
-_awaitable_ `PioneerAVR.mute_on(`_zone_: Zones = Zones.Z1`)` -> **bool**
+_awaitable_ `PioneerAVR.mute_on(`_zone_: Zone = Zone.Z1`)` -> **bool**
 
 Turn mute on for zone _zone_.
 
-_awaitable_ `PioneerAVR.mute_off(`_zone_: Zones = Zones.Z1`)` -> **bool**
+_awaitable_ `PioneerAVR.mute_off(`_zone_: Zone = Zone.Z1`)` -> **bool**
 
 Turn mute off for zone _zone_.
 
-_awaitable_ `PioneerAVR.set_tone_settings(`_tone_: **str** = **None**, _treble_: **int** = **None**, _bass_: **int** = **None**, _zone_: Zones = Zones.Z1 `)`*
+_awaitable_ `PioneerAVR.set_tone_settings(`_tone_: **str** = **None**, _treble_: **int** = **None**, _bass_: **int** = **None**, _zone_: Zone = Zone.Z1 `)`*
 
 Set the tone settings for zone _zone_ to _tone_. When _tone_ is set to `On`, _treble_ specifies the treble and _bass_ specifies the bass.
 
-_awaitable_ `PioneerAVR.set_amp_settings(`_speaker_config_: **str** = **None**, _hdmi_out_: **str** = **None**, _hdmi_audio_output_: **bool** = **None**, _pqls_: **bool** = **None**, _amp_: **str** = **None**, _zone_: Zones = Zones.Z1`)` -> **bool**
+_awaitable_ `PioneerAVR.set_amp_settings(`_speaker_config_: **str** = **None**, _hdmi_out_: **str** = **None**, _hdmi_audio_output_: **bool** = **None**, _pqls_: **bool** = **None**, _amp_: **str** = **None**, _zone_: Zone = Zone.Z1`)` -> **bool**
 
 Set amplifier function settings for zone _zone_.
 
-`PioneerAVR.get_ipod_control_commands()` -> list[str]
+`PioneerAVRProperties.get_supported_media_controls(`_zone_: Zone`)` -> **list**[**str**]
+
+Return a list of all valid media control actions for a given zone. If the provided zone source is not currently compatible with media controls, **None** will be returned.
+
+_property_ `PioneerAVRProperties.ipod_control_commands`: **list**[**str**]
 
 Return a list of all valid iPod control modes.
 
-`PioneerAVR.get_tuner_control_commands()` -> list[str]
+_property_ `PioneerAVRProperties.tuner_control_commands`: **list**[**str**]
 
 Return a list of all valid tuner control commands.
 
-`PioneerAVR.get_supported_media_controls(`_zone_: Zones`)` -> list[str]
-
-Return a list of all valid media control actions for zone _zone_.
-Return **None** if the provided zone source is not currently compatible with media controls.
-
-_awaitable_ `PioneerAVR.set_channel_levels(`_channel_: **str**, _level_: **float**, _zone_: Zones = Zones.Z1`)` -> **bool**
+_awaitable_ `PioneerAVR.set_channel_levels(`_channel_: **str**, _level_: **float**, _zone_: Zone = Zone.Z1`)` -> **bool**
 
 Set the level (gain) for amplifier channel in zone _zone_.
 
-_awaitable_ `PioneerAVR.set_video_settings(`_zone_: Zones, **_arguments_`)` -> **bool**
+_awaitable_ `PioneerAVR.set_video_settings(`_zone_: Zone, **_arguments_`)` -> **bool**
 
 Set video settings for zone _zone_.
 
-_awaitable_ `PioneerAVR.set_dsp_settings(`_zone_: Zones, **_arguments_`)` -> **bool**
+_awaitable_ `PioneerAVR.set_dsp_settings(`_zone_: Zone, **_arguments_`)` -> **bool**
 
 Set the DSP settings for the amplifier for zone _zone_.
 
-_awaitable_ `PioneerAVR.media_control(`_action_: **str**, _zone_: Zones = Zones.Z1`)` -> **bool**
+_awaitable_ `PioneerAVR.media_control(`_action_: **str**, _zone_: Zone = Zone.Z1`)` -> **bool**
 
 Perform media control activities such as play, pause, stop, fast forward or rewind.
 
 ### AVR zone callback methods
 
-`PioneerAVR.set_zone_callback(`_zone_: Zones, _callback_: **Callable**[..., **None**]`)`
+`PioneerAVR.set_zone_callback(`_zone_: Zone, _callback_: **Callable**[..., **None**]`)`
 
 Register callback _callback_ for zone _zone_.
 
@@ -310,57 +334,75 @@ Register callback _callback_ for zone _zone_.
 
 Clear callbacks for all zones.
 
-### Param methods
+### Parameter methods
 
-`PioneerAVR.set_user_params(`_params_: **dict**[**str**, **Any**] = **None**`)` -> **None**
+`PioneerAVRParams.set_default_params_model(`_model_: **str**`)` -> **None**
+
+Set default parameters based on device model.
+
+`PioneerAVRParams.set_user_params(`_params_: **dict**[**str**, **Any**] = **None**`)` -> **None**
 
 Set user parameters and update current parameters.
 
-`PioneerAVR.get_param(`_param_name_: **str**`)` -> **Any**
+`PioneerAVRParams.set_user_param(`_param_: **str**, _value_: **Any**`)` -> **None**
 
-Get the value of the specified parameter.
+Set a user parameter.
 
-`PioneerAVR.get_params()` -> **dict**[**str**, **Any**]
+`PioneerAVRParams.set_runtime_param(`_param_: **str**, _value_: **Any**`)` -> **None**
 
-Get a copy of all current parameters.
+Set a run-time parameter.
 
-`PioneerAVR.get_user_params()` -> **dict**[**str**, **Any**]
+_property_ `PioneerAVRParams.zones_initial_refresh`: **set**[Zone]
 
-Get a copy of user parameters.
+Return set of zones that have completed an initial refresh.
 
-`PioneerAVR.get_default_params()` -> **dict**[**str**, **Any**]
+_property_ `PioneerAVRParams.default_params`: **dict**[**str**, **Any**]
 
 Get a copy of current default parameters.
 
-### Attributes
+_property_ `PioneerAVRParams.user_params`: **dict**[**str**, **Any**]
 
-Listed below are the public attributes of a `PioneerAVR` object. Use a Zones enum to access zone specific attributes for those that are indexed by zone.
+Get a copy of user parameters.
+
+_property `PioneerAVRParams.params_all` -> **dict**[**str**, **Any**]
+
+Get a copy of all current parameters.
+
+`PioneerAVRParams.get_param(`_param_name_: **str**`)` -> **Any**
+
+Get the value of the specified parameter.
+
+`PioneerAVRParams.get_runtime_param(`_param_name_: **str**`)` -> **Any**
+
+Get the value of the specified run-time parameter.
+
+### AVR Properties
+
+Listed below are the public attributes of a `PioneerAVRProperties` object that contains the current state of the AVR. Use a `Zone` enum to access zone specific attributes for those that are indexed by zone.
 
 | Attribute | Type | Description
 | --- | --- | ---
-| `scan_interval` | **int** | Number of seconds between polls for AVR full updates
 | `model` | **str** \| **None** | Model number returned by the AVR
 | `software_version` | **str** \| **None** | Software version returned by the AVR
 | `mac_addr` | **str** \| **None** | System MAC address returned by the AVR
-| `available` | **bool** | Whether integration is connected to the AVR
-| `initial_update` | **bool** \| **None** | Set to **False** if the initial update has been deferred due to the AVR main zone being powered off when initially connected, and **True** when the update has been completed
-| `zones` | **list**[Zones] | List of all zones detected on the AVR
-| `power` | **dict**[Zones, **bool**] | Power status for each detected zone
-| `volume` | **dict**[Zones, **int**] | Volume status for each detected zone
-| `max_volume` | **dict**[Zones, **int**] | Maximum valid volume for each detected zone
-| `mute` | **dict**[Zones, **bool**] | Mute status for each detected zone
-| `source` | **dict**[Zones, **str**] | Active source for each detected zone
+| `zones` | **list**[Zone] | List of all zones detected on the AVR
+| `power` | **dict**[Zone, **bool**] | Power status for each detected zone
+| `volume` | **dict**[Zone, **int**] | Volume status for each detected zone
+| `max_volume` | **dict**[Zone, **int**] | Maximum valid volume for each detected zone
+| `mute` | **dict**[Zone, **bool**] | Mute status for each detected zone
+| `source_id` | **dict**[Zone, **str**] | Active source ID for each detected zone
+| `source_name` | **dict**[Zone, **str**] | Active source name for each detected zone
 | `listening_mode` | **str** | Name of the currently active listening mode
 | `listening_mode_raw` | **str** | ID of the currently active listening mode
-| `media_control_mode` | **dict**[Zones, **str**] | Media control mode for each detected zone
-| `tone` | | Tone attributes for each detected zone
-| `amp` | | Current AVR amp attributes
-| `tuner` | | Current AVR tuner attributes
+| `media_control_mode` | **dict**[Zone, **str**] | Media control mode for each detected zone
+| `tone` | **dict**[Zone, **dict**] | Tone attributes for each detected zone
+| `amp` | **dict**[**str** \| Zone, **str**] | Current AVR amp attributes
+| `tuner` | **dict**[**str** \| Zone, **str**] | Current AVR tuner attributes
+| `dsp` | **dict**[**str** \| Zone, **str**] | Current AVR DSP attributes
+| `video` | **dict**[**str** \| Zone, **str**] | Current AVR video parameters
+| `audio` | **dict**[**str** \| Zone, **str**] | Current AVR audio parameters
+| `system` | **dict**[**str** \| Zone, **str**]| AVR system attributes
 | `channel_levels` | **dict**[**str**, **Any**] | Current AVR channel levels, indexed by channel name
-| `dsp` | | Current AVR DSP attributes
-| `video` | | Current AVR video parameters
-| `audio` | | Current AVR audio parameters
-| `system` | | AVR system attributes
 | `ip_control_port_n` | **str** | IP control ports configured on the AVR (where `n` is the port index)
 
 ## Command line interface (CLI) (>= 0.1.3, CLI arguments >= 0.3)
@@ -375,7 +417,6 @@ Invoke the CLI with the following arguments:
 | --- | --- | ---
 | hostname | required | hostname for AVR connection
 | `-p`<br>`--port` | 8102 | port for AVR connection
-| `+Q`<br>`--no-query-device-info` | None | skip AVR device info query
 | `+Z`<br>`--no-query-zones` | None | skip AVR zone query
 
 The CLI accepts all API commands, as well as the following:
@@ -408,6 +449,7 @@ The CLI accepts all API commands, as well as the following:
 | `debug_responder` | _state_ (bool) | Enable/disable the `debug_responder` parameter.
 | `debug_updater` | _state_ (bool) | Enable/disable the `debug_updater` parameter.
 | `debug_command` | _state_ (bool) | Enable/disable the `debug_command` parameter.
+| `debug_command_queue` | _state_ (bool) | Enable/disable the `debug_command_queue` parameter.
 | `set_scan_interval` | _scan_interval_ (float) | Set the scan interval to _scan_interval_.
 | `get_scan_interval` | | Return the current scan interval.
 | `set_volume_level` | _volume_level_ (int) | Set the volume level for the current zone.
@@ -458,6 +500,28 @@ The list below shows the source ID that corresponds to each AVR source:
 | 47 | DMR (Information only)
 
 ## Breaking changes
+
+### 0.8
+
+- To enable params to be accessible from AVR response parsers and also to reduce the size of the main class, the `PioneerAVR` class has been split out to the classes listed below. References to parameter and properties methods and attributes will need to be updated to be accessed via the `params` and `properties` attributes of the `PioneerAVR` object. All other public attributes have moved to the new classes.
+  - `PioneerAVRParams` contains user and run-time params and params manipulation methods. Some method names have changed, please consult the updated documentation for details
+  - `PioneerAVRProperties` contains the cache of AVR properties collected from its responses
+- The connection related methods are also split out into the `PioneerAVRConnection` class, although `PioneerAVR` inherits from the new class so its methods are still accessible via `PioneerAVR`
+- Commands that are sent to the AVR to perform full updates are now executed via the command queue. This eliminates the previous interaction between the updater and command queue threads, as the updater now simply schedules an update via the command queue
+- The order of queries during a full update has been modified, so that amp, DSP and tone queries are executed before video queries
+- The `Zones` enum has been renamed `Zone`
+- The `param` module has been renamed `params`
+- Exception handling within the AVR interface methods has been made more robust. The AVR listener and responders will now only trigger disconnect/reconnect of the AVR if the AVR connection drops. Notably, parser exceptions will no longer cause the AVR connection to disconnect and reconnect
+- Not detecting Zone 1 on the AVR on module startup has been demoted from an error to a warning and Zone 1 is assumed to exist. Note however that most AVR commands will still not work when the AVR is in this state
+- The `source` AVR zone property has been renamed `source_id`, and an additional `source_name` property has been introduced that contains the mapped name for the source for each zone
+- The `query_device_model` method has been introduced to query the device model and set default model parameters. Previously, the `query_device_info` queried all device information including the device model regardless of whether the AVR main zone was powered on. Clients that called `query_device_info` should now call `query_device_model`. `query_device_info` will be automatically called when the main zone is powered on for the first time after connecting
+- The `query_audio_information` and `query_video_information` commands have been renamed `query_basic_audio_information` and `query_basic_video_information`. These basic query commands, in addition to `query_listening_mode`, are executed with a delay after all zone power and source operations whenever any zone is powered on
+- The `system_query_source_name` has been renamed to `query_source_name` to avoid being sent during AVR device info queries
+- If Zone 1 is not turned on at integration startup, then only the AVR model will be queried. The remaining AVR device info is queried when zone 1 is turned on, after the zone's initial refresh
+- The `query_sources` method has been removed. `PioneerAVRParams.get_system_param(PARAM_QUERY_SOURCES)` should be used instead
+- The `update_zones` method has been removed. Change the AVR zones by recreating the `PioneerAVR` object with the new zones
+- The `PioneerAVR.initial_update` property has moved to run-time parameter `PARAM_ZONES_INITIAL_REFRESH` and is now a set of `Zone`. The `PioneerAVRParams.zones_initial_refresh` property is provided as a convenience to access this run-time parameter
+- System parameters have been re-termed as run-time parameters to better reflect their function
 
 ### 0.7
 
