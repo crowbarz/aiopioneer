@@ -16,7 +16,7 @@ Originally developed and tested on a VSX-930 (Main Zone and HDZone outputs) but 
 - Automatically polls AVR for source names - no longer need to manually code them in your config any more if your AVR supports their retrieval. Can also set source names manually
 - Queries device information from the AVR: MAC address, software version, model
 - Ability to set internal parameters to change the API functionality, eg. maximum volume, volume step change delta
-- Defaults for internal parameters set vio custom profiles based on AVR model
+- Defaults for internal parameters set via custom profiles based on AVR model
 - Includes workaround for AVRs with an initial volume set on the Main Zone (eg. VSX-930)
 - Supports AVRs that do not support setting the volume level by emulating using up/down commands (eg. VSX-S510)
 - Command line client for sending commands and testing
@@ -42,7 +42,8 @@ There are several types of parameters that modify the library's functionality. T
 
 Where a parameter is specified at more than one level, the higher priority parameter takes precedence. Thus, a user specified parameter will override any value that is determined by the AVR model.
 
-**NOTE:** YAML syntax is used in the table below. Use Python equivalents (`false` -> `False`, `true` -> `True`, `null` -> `None` etc.) when calling the Python API directly, and JSON syntax if specified manually via the Home Assistant integration.
+> [!NOTE]
+> YAML syntax is used to indicate values the table below. Use Python equivalents (`false` -> `False`, `true` -> `True`, `null` -> `None` etc.) when calling the Python API directly, and JSON syntax if specifying parameters manually via the Home Assistant integration.
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
@@ -81,7 +82,6 @@ If your model of AVR always needs specific parameters to be set for the library 
 ## Python API
 
 The library exposes a Python API through the **PioneerAVR** class. The class methods are listed below:
-
 
 `PioneerAVR.__init__(`_host_, _port_ = DEFAULT_PORT, _timeout_: **float** = DEFAULT_TIMEOUT, _scan_interval_: **float** = DEFAULT_SCAN_INTERVAL, _params_: **dict[str, str]** = **None** `)`
 
@@ -405,7 +405,7 @@ Listed below are the public attributes of a `PioneerAVRProperties` object that c
 | `channel_levels` | **dict**[**str**, **Any**] | Current AVR channel levels, indexed by channel name
 | `ip_control_port_n` | **str** | IP control ports configured on the AVR (where `n` is the port index)
 
-## Command line interface (CLI) (>= 0.1.3, CLI arguments >= 0.3)
+## Command line interface (CLI)
 
 A very simple command line interface `aiopioneer` is available to connect to the AVR, send commands and receive responses. It can be used to test the capabilities of the library against your specific AVR.
 
@@ -504,23 +504,23 @@ The list below shows the source ID that corresponds to each AVR source:
 ### 0.8
 
 - To enable params to be accessible from AVR response parsers and also to reduce the size of the main class, the `PioneerAVR` class has been split out to the classes listed below. References to parameter and properties methods and attributes will need to be updated to be accessed via the `params` and `properties` attributes of the `PioneerAVR` object. All other public attributes have moved to the new classes.
-  - `PioneerAVRParams` contains user and run-time params and params manipulation methods. Some method names have changed, please consult the updated documentation for details
+  - `PioneerAVRParams` contains the user and run-time parameter get/set methods. Some method names have changed, please consult the updated documentation for details
   - `PioneerAVRProperties` contains the cache of AVR properties collected from its responses
-- The connection related methods are also split out into the `PioneerAVRConnection` class, although `PioneerAVR` inherits from the new class so its methods are still accessible via `PioneerAVR`
-- Commands that are sent to the AVR to perform full updates are now executed via the command queue. This eliminates the previous interaction between the updater and command queue threads, as the updater now simply schedules an update via the command queue
-- The order of queries during a full update has been modified, so that amp, DSP and tone queries are executed before video queries
-- The `Zones` enum has been renamed `Zone`
-- The `param` module has been renamed `params`
-- Exception handling within the AVR interface methods has been made more robust. The AVR listener and responders will now only trigger disconnect/reconnect of the AVR if the AVR connection drops. Notably, parser exceptions will no longer cause the AVR connection to disconnect and reconnect
-- Not detecting Zone 1 on the AVR on module startup has been demoted from an error to a warning and Zone 1 is assumed to exist. Note however that most AVR commands will still not work when the AVR is in this state
+- The connection related methods have also been split out to the `PioneerAVRConnection` class, although `PioneerAVR` inherits from the new class so the connection methods are still accessible via the `PioneerAVR` class
+- Commands that are sent to the AVR to perform full updates are now executed via the command queue. This eliminates the previous interaction between the updater and command queue threads, as the updater now simply schedules updates via the command queue
+- The order of queries during a full update has been modified so that amp, DSP and tone queries are executed before video queries
+- The `Zones` enum has been renamed `Zone` for improved consistency
+- The `param` module has been renamed `params` for improved consistency
+- Exception handling within the AVR interface methods has been made more robust. The AVR listener and responders will now only trigger disconnection from the AVR (and reconnection if requested) if the AVR connection drops. Notably, parser exceptions and timeouts to power, volume and mute queries will no longer cause the AVR connection to disconnect and reconnect. This should fully resolve issues such as crowbarz/ha-pioneer_async#54
+- Not detecting Zone 1 on the AVR on module startup has been demoted from an error to a warning and Zone 1 is assumed to exist. Despite this change, most AVR commands will still not work when the AVR is in this state. It is now up to the client to check that Zone 1 has been discovered and handle the case when it is not
 - The `source` AVR zone property has been renamed `source_id`, and an additional `source_name` property has been introduced that contains the mapped name for the source for each zone
-- The `query_device_model` method has been introduced to query the device model and set default model parameters. Previously, the `query_device_info` queried all device information including the device model regardless of whether the AVR main zone was powered on. Clients that called `query_device_info` should now call `query_device_model`. `query_device_info` will be automatically called when the main zone is powered on for the first time after connecting
+- The `query_device_model` method has been introduced to query the device model and set default model parameters. Previously, the `query_device_info` queried all device information including the device model regardless of whether the AVR main zone was powered on. Clients that previously called `query_device_info` at module startup should now call `query_device_model`. `query_device_info` will be automatically called when the main zone is powered on for the first time after connecting, and no longer needs to be called by the client
+- If Zone 1 is not powered on at integration startup, queries for AVR device info is deferred until Zone 1 is first powered on.
 - The `query_audio_information` and `query_video_information` commands have been renamed `query_basic_audio_information` and `query_basic_video_information`. These basic query commands, in addition to `query_listening_mode`, are executed with a delay after all zone power and source operations whenever any zone is powered on
 - The `system_query_source_name` has been renamed to `query_source_name` to avoid being sent during AVR device info queries
-- If Zone 1 is not turned on at integration startup, then only the AVR model will be queried. The remaining AVR device info is queried when zone 1 is turned on, after the zone's initial refresh
-- The `query_sources` method has been removed. `PioneerAVRParams.get_system_param(PARAM_QUERY_SOURCES)` should be used instead
+- The `query_sources` method has been removed. `PioneerAVRParams.get_runtime_param(PARAM_QUERY_SOURCES)` should be used instead
 - The `update_zones` method has been removed. Change the AVR zones by recreating the `PioneerAVR` object with the new zones
-- The `PioneerAVR.initial_update` property has moved to run-time parameter `PARAM_ZONES_INITIAL_REFRESH` and is now a set of `Zone`. The `PioneerAVRParams.zones_initial_refresh` property is provided as a convenience to access this run-time parameter
+- The `PioneerAVR.initial_update` property has moved to run-time param `PARAM_ZONES_INITIAL_REFRESH` and is now a set of `Zone`. The `PioneerAVRParams.zones_initial_refresh` property is provided as a convenience to access this run-time parameter
 - System parameters have been re-termed as run-time parameters to better reflect their function
 
 ### 0.7
