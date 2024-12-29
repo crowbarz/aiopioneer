@@ -124,7 +124,7 @@ PARAM_DEFAULTS = {
     PARAM_MAX_VOLUME_ZONEX: 81,
     PARAM_POWER_ON_VOLUME_BOUNCE: False,
     PARAM_VOLUME_STEP_ONLY: False,
-    PARAM_IGNORE_VOLUME_CHECK: False,
+    PARAM_IGNORE_VOLUME_CHECK: True,
     PARAM_ALWAYS_POLL: False,
     PARAM_DEBUG_LISTENER: False,
     PARAM_DEBUG_RESPONDER: False,
@@ -387,8 +387,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
                     "0151",
                     "0212",
                 ],
-                # Zone 1 volume returns E02 if only HDZone is on
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_ENABLED_FUNCTIONS: PARAM_ENABLED_FUNCTIONS_NO_VIDEO,
             },
         ),
@@ -407,7 +405,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^SC-LX79",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_DISABLED_LISTENING_MODES: PARAM_DISABLED_LISTENING_MODES_SC_LX79,
                 PARAM_SPEAKER_SYSTEM_MODES: PARAM_SPEAKER_SYSTEM_MODES_SC_LX79,
@@ -416,7 +413,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^SC-LX87",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_ZONE_2_SOURCES: [
                     "04",
@@ -465,7 +461,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^SC-77",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_DISABLED_LISTENING_MODES: PARAM_DISABLED_LISTENING_MODES_SC_LX79,
                 PARAM_SPEAKER_SYSTEM_MODES: PARAM_SPEAKER_SYSTEM_MODES_SC_LX79,
@@ -474,7 +469,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^SC-LX77",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_ZONE_2_SOURCES: [
                     "04",
@@ -522,7 +516,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^SC-75",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_DISABLED_LISTENING_MODES: PARAM_DISABLED_LISTENING_MODES_SC_LX79,
                 PARAM_SPEAKER_SYSTEM_MODES: PARAM_SPEAKER_SYSTEM_MODES_SC_LX79,
@@ -531,7 +524,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^SC-1523",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_DISABLED_LISTENING_MODES: PARAM_DISABLED_LISTENING_MODES_SC_LX79,
                 PARAM_SPEAKER_SYSTEM_MODES: PARAM_SPEAKER_SYSTEM_MODES_SC_LX79,
@@ -540,7 +532,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^SC-1528",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_DISABLED_LISTENING_MODES: PARAM_DISABLED_LISTENING_MODES_SC_LX79,
                 PARAM_SPEAKER_SYSTEM_MODES: PARAM_SPEAKER_SYSTEM_MODES_SC_LX79,
@@ -549,7 +540,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^SC-LX57",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_ZONE_2_SOURCES: [
                     "04",
@@ -589,7 +579,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^SC-72",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_DISABLED_LISTENING_MODES: PARAM_DISABLED_LISTENING_MODES_SC_LX79,
                 PARAM_SPEAKER_SYSTEM_MODES: PARAM_SPEAKER_SYSTEM_MODES_SC_LX79,
@@ -598,7 +587,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^SC-1323",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_DISABLED_LISTENING_MODES: PARAM_DISABLED_LISTENING_MODES_SC_LX79,
                 PARAM_SPEAKER_SYSTEM_MODES: PARAM_SPEAKER_SYSTEM_MODES_SC_LX79,
@@ -607,7 +595,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^SC-1328",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_DISABLED_LISTENING_MODES: PARAM_DISABLED_LISTENING_MODES_SC_LX79,
                 PARAM_SPEAKER_SYSTEM_MODES: PARAM_SPEAKER_SYSTEM_MODES_SC_LX79,
@@ -616,7 +603,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^SC-2023",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_ZONE_3_SOURCES: [
                     "04",
@@ -636,7 +622,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^SC-71",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_SPEAKER_SYSTEM_MODES: PARAM_SPEAKER_SYSTEM_MODES_SC_LX79,
             },
@@ -644,7 +629,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^SC-1223",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_DISABLED_LISTENING_MODES: PARAM_DISABLED_LISTENING_MODES_SC_2023,
                 PARAM_SPEAKER_SYSTEM_MODES: PARAM_SPEAKER_SYSTEM_MODES_SC_LX79,
@@ -653,7 +637,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^SC-1228",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_SPEAKER_SYSTEM_MODES: PARAM_SPEAKER_SYSTEM_MODES_SC_LX79,
             },
@@ -661,7 +644,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^VSX-1123",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_DISABLED_LISTENING_MODES: PARAM_DISABLED_LISTENING_MODES_SC_2023,
                 PARAM_SPEAKER_SYSTEM_MODES: PARAM_SPEAKER_SYSTEM_MODES_SC_LX79,
@@ -670,7 +652,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^VSX-1128",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_SPEAKER_SYSTEM_MODES: PARAM_SPEAKER_SYSTEM_MODES_SC_LX79,
             },
@@ -678,7 +659,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^VSX-1028",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_SPEAKER_SYSTEM_MODES: PARAM_SPEAKER_SYSTEM_MODES_SC_LX79,
             },
@@ -686,7 +666,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
         (
             r"^VSX-923",
             {
-                PARAM_IGNORE_VOLUME_CHECK: True,
                 PARAM_HDZONE_VOLUME_REQUIREMENTS: [],
                 PARAM_DISABLED_LISTENING_MODES: PARAM_DISABLED_LISTENING_MODES_SC_2023,
                 PARAM_SPEAKER_SYSTEM_MODES: PARAM_SPEAKER_SYSTEM_MODES_SC_LX79,
