@@ -20,7 +20,7 @@ class PioneerAVRProperties:
         self.model = None
         self.software_version = None
         self.mac_addr: str = None
-        self.zones: list[Zone] = []
+        self.zones: set[Zone] = set()
         self.power: dict[Zone, bool] = {}
         self.volume: dict[Zone, int] = {}
         self.max_volume: dict[Zone, int] = {}

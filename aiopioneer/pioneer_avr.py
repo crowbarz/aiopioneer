@@ -141,9 +141,9 @@ class PioneerAVR(PioneerAVRConnection):
                 or await self.send_command("query_volume", zone, ignore_error=True)
             ):
                 if zone not in ignored_zones:
-                    _LOGGER.info("zone %s discovered", zone)
+                    _LOGGER.info("%s discovered", zone.full_name)
                     if zone not in self.properties.zones:
-                        self.properties.zones.append(zone)
+                        self.properties.zones.add(zone)
                         self.properties.max_volume[zone.value] = max_volume
                     return True
                 return False
@@ -151,7 +151,7 @@ class PioneerAVR(PioneerAVRConnection):
 
         async with self._update_lock:
             if not await query_zone(Zone.Z1, self.params.get_param(PARAM_MAX_VOLUME)):
-                _LOGGER.warning("zone 1 not discovered on AVR, assuming present")
+                _LOGGER.warning("%s not discovered on AVR", Zone.Z1.full_name)
             for zone in [Zone.Z2, Zone.Z3, Zone.HDZ]:
                 await query_zone(zone, self.params.get_param(PARAM_MAX_VOLUME_ZONEX))
 
@@ -236,10 +236,11 @@ class PioneerAVR(PioneerAVRConnection):
         """Clear callbacks for all zones."""
         self._zone_callback = {}
 
-    def _call_zone_callbacks(self, zones: list[Zone] = None) -> None:
+    def _call_zone_callbacks(self, zones: set[Zone] = None) -> None:
         """Call callbacks to signal updated zone(s)."""
         if zones is None:
-            zones = self.properties.zones + [Zone.ALL]
+            zones = self.properties.zones.copy()
+            zones.add(Zone.ALL)
         for zone in zones:
             if zone in self._zone_callback:
                 callback = self._zone_callback[zone]
@@ -382,15 +383,15 @@ class PioneerAVR(PioneerAVRConnection):
                 if self.properties.power[zone] and zone not in zones_initial_refresh:
                     if zone is Zone.Z1:
                         await self.query_device_info()
-                    _LOGGER.info("completed initial refresh for zone %s", zone)
+                    _LOGGER.info("completed initial refresh for %s", zone.full_name)
                     zones_initial_refresh.add(zone)
                     self.params.set_runtime_param(
                         PARAM_ZONES_INITIAL_REFRESH, zones_initial_refresh
                     )
-                    self._call_zone_callbacks(zones=[zone])
+                    self._call_zone_callbacks(zones=set([zone]))
 
             ## Trigger callbacks to all zones on refresh
-            self._call_zone_callbacks(zones=[Zone.ALL])
+            self._call_zone_callbacks(zones=set([Zone.ALL]))
         except Exception as exc:  # pylint: disable=broad-except
             _LOGGER.error("exception refreshing AVR status: %s", repr(exc))
 
@@ -569,7 +570,7 @@ class PioneerAVR(PioneerAVRConnection):
     def _check_zone(self, zone: Zone) -> Zone:
         """Check that specified zone is valid."""
         if zone not in self.properties.zones:
-            raise ValueError(f"zone {zone} does not exist on AVR")
+            raise ValueError(f"{zone.full_name} does not exist on AVR")
         return zone
 
     async def turn_on(self, zone: Zone = Zone.Z1) -> None:
@@ -590,7 +591,7 @@ class PioneerAVR(PioneerAVRConnection):
         if source_id is None:
             source_id = self.properties.source_name_to_id.get(source)
         if source_id is None:
-            raise ValueError(f"invalid source {source} for zone {zone}")
+            raise ValueError(f"invalid source {source} for {zone.full_name}")
 
         await self.send_command("select_source", zone, prefix=source_id)
 
@@ -610,7 +611,9 @@ class PioneerAVR(PioneerAVRConnection):
         current_volume = self.properties.volume.get(zone.value)
         max_volume = self.properties.max_volume[zone.value]
         if target_volume < 0 or target_volume > max_volume:
-            raise ValueError(f"volume {target_volume} out of range for zone {zone}")
+            raise ValueError(
+                f"volume {target_volume} out of range for {zone.full_name}"
+            )
         volume_step_only = self.params.get_param(PARAM_VOLUME_STEP_ONLY)
         if volume_step_only:
             start_volume = current_volume
@@ -707,7 +710,7 @@ class PioneerAVR(PioneerAVRConnection):
         ## Check the zone supports tone settings and that inputs are within range
         zone = self._check_zone(zone)
         if self.properties.tone.get(zone.value) is None:
-            raise RuntimeError(f"tone controls are not available for zone {zone}")
+            raise RuntimeError(f"tone controls are not available for {zone.full_name}")
         if not -6 <= treble <= 6:
             raise ValueError(f"invalid treble value: {treble}")
         if not -6 <= bass <= 6:
@@ -943,11 +946,11 @@ class PioneerAVR(PioneerAVRConnection):
         """Set the level (gain) for amplifier channel in zone."""
         zone = self._check_zone(zone)
         if self.properties.channel_levels.get(zone.value) is None:
-            raise ValueError(f"channel levels not supported for zone {zone}")
+            raise ValueError(f"channel levels not supported for {zone.full_name}")
 
         ## Check the channel exists
         if self.properties.channel_levels[zone.value].get(channel.upper()) is None:
-            raise ValueError(f"invalid channel {channel} for zone {zone}")
+            raise ValueError(f"invalid channel {channel} for {zone.full_name}")
 
         prefix = channel.ljust(3, "_") + str(int((level * 2) + 50))
         await self.send_command("set_channel_levels", zone, prefix=prefix)
@@ -959,7 +962,7 @@ class PioneerAVR(PioneerAVRConnection):
         # This function is only valid for zone 1, no video settings are
         # available for zone 2, 3, 4 and HDZone
         if zone is not Zone.Z1:
-            raise ValueError(f"video settings not supporte for zone {zone}")
+            raise ValueError(f"video settings not supported for {zone.full_name}")
 
         # This is a complex function and supports handles requests to update any
         # video related parameters
@@ -1026,7 +1029,7 @@ class PioneerAVR(PioneerAVRConnection):
         """Set the DSP settings for the amplifier."""
         zone = self._check_zone(arguments.get("zone"))
         if zone is not Zone.Z1:
-            raise ValueError(f"DSP settings not supported for zone {zone}")
+            raise ValueError(f"DSP settings not supported for {zone.full_name}")
 
         ## TODO: refactor to use match and possibly subfunctions
         for arg in arguments:
@@ -1112,13 +1115,13 @@ class PioneerAVR(PioneerAVRConnection):
                 await self.send_command(command, Zone.Z1, ignore_error=False)
             else:
                 raise NotImplementedError(
-                    f"Current source ({self.properties.source_id.get(zone.value)} does not support "
-                    "action {action}"
+                    f"Current source ({self.properties.source_id.get(zone.value)} "
+                    f"does not support action {action}"
                 )
         else:
             raise NotImplementedError(
-                f"Current source ({self.properties.source_id.get(zone.value)}) does not support "
-                "media_control activities"
+                f"Current source ({self.properties.source_id.get(zone.value)}) "
+                "does not support media_control activities"
             )
 
     async def set_source_name(

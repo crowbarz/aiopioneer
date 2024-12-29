@@ -19,8 +19,8 @@ class Zone(StrEnum):
     Z3 = "3"
     HDZ = "Z"
 
-    @staticmethod
-    def full_name(zone: Self) -> str:
+    @property
+    def full_name(self) -> str:
         """Get zone full name."""
         return {
             Zone.ALL: "All Zones",
@@ -28,7 +28,7 @@ class Zone(StrEnum):
             Zone.Z2: "Zone 2",
             Zone.Z3: "Zone 3",
             Zone.HDZ: "HDZone",
-        }.get(zone)
+        }.get(self)
 
 
 class TunerBand(StrEnum):
