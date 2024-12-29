@@ -36,7 +36,7 @@ Originally developed and tested on a VSX-930 (Main Zone and HDZone outputs) but 
 There are several types of parameters that modify the library's functionality. These are listed below in order of increasing priority:
 
 - **Default parameters**: these are the defaults for all of the parameters
-- **Model parameters**: these parameters are determined by the AVR model as detected by the library. Custom profiles for specific AVR models are defined in [`aiopioneer/param.py](https://github.com/crowbarz/aiopioneer/blob/main/aiopioneer/param.py)
+- **Model parameters**: these parameters are determined by the AVR model as detected by the library. Custom profiles for specific AVR models are defined in [aiopioneer/param.py](https://github.com/crowbarz/aiopioneer/blob/main/aiopioneer/param.py)
 - **User parameters**: these parameters are provided by the user at instantiation, and can also be updated via the `set_user_params` method
 - **Run-time parameters**: these parameters are set by the library at run-time
 
@@ -59,8 +59,6 @@ Where a parameter is specified at more than one level, the higher priority param
 | `zone_2_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with Zone 2 (some AVRs do not support all sources)
 | `zone_3_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with Zone 3 (some AVRs do not support all sources)
 | `hdzone_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with HDZone (some AVRs do not support all sources)
-<!-- unimplemented
-| `hdzone_volume_requirements` | list | `["13", "15", "05", "25"]` | A list of sources that HDZone must be set to for volume control, some AVRs do not support HDZone volume at all (see `ignore_volume_check` above) and some only allow control of certain sources -->
 | `amp_speaker_system_modes` | dict | `....` | Customises the names of speaker system modes. Different generations of AVR will name zones slighty differently. For example, the SC-LX57 names speaker system mode `15` as `5.1ch Bi-Amp + ZONE2` however this can also be called `5.2ch Bi-Amp + HDZONE` on newer AVRs
 | `extra_amp_listening_modes` | dict | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/const.py#L24) | (>0.5) Additional listening modes that are added to the list of all possible listening modes for the AVR. This list is used to decode the listening mode ID returned by the AVR. See the source for the format for listening mode definition
 | `enabled_amp_listening_modes` | list | `[]` | (>0.5) A list of listening mode IDs to be made available for selection. If specified, then no listening mode IDs will be included by default. All enabled source names must be unique, and duplicated names are ignored. The additional listening modes must be actually supported by the AVR, and will return an error (usually `E02`) when an unsupported listening mode is selected. This list is predefined for some AVRs, and specifying this parameter manually will override the model specific default disable list
@@ -76,6 +74,8 @@ Where a parameter is specified at more than one level, the higher priority param
 | `debug_updater` | bool | `false` | Enables additional debug logging for the updater task
 | `debug_command` | bool | `false` | Enables additional debug logging for commands sent and responses received
 | `debug_command_queue` | bool | `false` | Enables additional debug logging for the command queue task
+<!-- unimplemented
+| `hdzone_volume_requirements` | list | `["13", "15", "05", "25"]` | A list of sources that HDZone must be set to for volume control, some AVRs do not support HDZone volume at all (see `ignore_volume_check` above) and some only allow control of certain sources -->
 
 If your model of AVR always needs specific parameters to be set for the library to function properly, then please create a PR to add a custom profile for the AVR model.
 
@@ -83,7 +83,7 @@ If your model of AVR always needs specific parameters to be set for the library 
 
 The library exposes a Python API through the **PioneerAVR** class. The class methods are listed below:
 
-`PioneerAVR.__init__(`_host_, _port_ = DEFAULT_PORT, _timeout_: **float** = DEFAULT_TIMEOUT, _scan_interval_: **float** = DEFAULT_SCAN_INTERVAL, _params_: **dict[str, str]** = **None** `)`
+`PioneerAVR.__init__(`_host_: **str**, _port_ = DEFAULT_PORT, _timeout_: **float** = DEFAULT_TIMEOUT, _scan_interval_: **float** = DEFAULT_SCAN_INTERVAL, _params_: **dict[str, str]** = **None** `)`
 
 Constructor for the **PioneerAVR** class. The connection parameters are used when `PioneerAVR.connect` is called. After connection is established, the AVR will be polled every _scan_interval_ seconds. If the `always_poll` parameter is set, the poll timer is reset when a response from the AVR is received. Optional user parameters are provided via _params_.
 
@@ -520,7 +520,7 @@ The list below shows the source ID that corresponds to each AVR source:
 - The `system_query_source_name` has been renamed to `query_source_name` to avoid being sent during AVR device info queries
 - The `query_sources` method has been removed. `PioneerAVRParams.get_runtime_param(PARAM_QUERY_SOURCES)` should be used instead
 - The `update_zones` method has been removed. Change the AVR zones by recreating the `PioneerAVR` object with the new zones
-- The `PioneerAVR.initial_update` property has moved to run-time param `PARAM_ZONES_INITIAL_REFRESH` and is now a set of `Zone`. The `PioneerAVRParams.zones_initial_refresh` property is provided as a convenience to access this run-time parameter
+- The `PioneerAVR.initial_update` property has moved to run-time parameter `PARAM_ZONES_INITIAL_REFRESH` and is now a set of `Zone`. The `PioneerAVRParams.zones_initial_refresh` property is provided as a convenience to access this run-time parameter
 - System parameters have been re-termed as run-time parameters to better reflect their function
 
 ### 0.7
