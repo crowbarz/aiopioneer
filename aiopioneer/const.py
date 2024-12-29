@@ -1,7 +1,6 @@
 """Constants for aiopioneer."""
 
 from enum import StrEnum
-from typing import Self
 
 VERSION = "0.7.1"
 DEFAULT_TIMEOUT = 2
