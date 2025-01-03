@@ -506,7 +506,7 @@ The list below shows the source ID that corresponds to each AVR source:
 - To enable params to be accessible from AVR response parsers and also to reduce the size of the main class, the `PioneerAVR` class has been split out to the classes listed below. References to parameter and properties methods and attributes will need to be updated to be accessed via the `params` and `properties` attributes of the `PioneerAVR` object. All other public attributes have moved to the new classes.
   - `PioneerAVRParams` contains the user and run-time parameter get/set methods. Some method names have changed, please consult the updated documentation for details
   - `PioneerAVRProperties` contains the cache of AVR properties collected from its responses
-- The connection related methods have also been split out to the `PioneerAVRConnection` class, although `PioneerAVR` inherits from the new class so the connection methods are still accessible via the `PioneerAVR` class
+  - `PioneerAVRConnection` contains the connection related methods, although `PioneerAVR` inherits from the new class so the connection methods are still accessible via the `PioneerAVR` class
 - Commands that are sent to the AVR to perform full updates are now executed via the command queue. This eliminates the previous interaction between the updater and command queue threads, as the updater now simply schedules updates via the command queue
 - The order of queries during a full update has been modified so that amp, DSP and tone queries are executed before video queries
 - The `Zones` enum has been renamed `Zone` for improved consistency
@@ -520,8 +520,9 @@ The list below shows the source ID that corresponds to each AVR source:
 - The `system_query_source_name` has been renamed to `query_source_name` to avoid being sent during AVR device info queries
 - The `query_sources` method has been removed. `PioneerAVRParams.get_runtime_param(PARAM_QUERY_SOURCES)` should be used instead
 - The `update_zones` method has been removed. Change the AVR zones by recreating the `PioneerAVR` object with the new zones
-- The `PioneerAVR.initial_update` property has moved to run-time parameter `PARAM_ZONES_INITIAL_REFRESH` and is now a set of `Zone`. The `PioneerAVRParams.zones_initial_refresh` property is provided as a convenience to access this run-time parameter
+- The `PioneerAVR.initial_update` property has moved to run-time param `PARAM_ZONES_INITIAL_REFRESH` and is now a set of `Zone`. The `PioneerAVRParams.zones_initial_refresh` property is provided as a convenience to access this run-time parameter
 - System parameters have been re-termed as run-time parameters to better reflect their function
+- The `PioneerAVRProperties.zones` property now has typing `set[Zone]`
 
 ### 0.7
 
