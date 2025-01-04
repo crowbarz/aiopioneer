@@ -573,6 +573,8 @@ class PioneerAVR(PioneerAVRConnection):
 
     def _check_zone(self, zone: Zone) -> Zone:
         """Check that specified zone is valid."""
+        if not isinstance(zone, Zone):
+            raise ValueError(f"{zone} is not a zone identifier")
         if zone not in self.properties.zones:
             raise ValueError(f"{zone.full_name} does not exist on AVR")
         return zone
