@@ -8,6 +8,7 @@ import sys
 import getopt
 
 from aiopioneer import PioneerAVR
+from aiopioneer.const import Zone, TunerBand
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,10 +34,13 @@ async def main(argv):
 
     try:
         await pioneer.connect()
-    except Exception as e:  # pylint: disable=invalid-name
-        print(f"Could not connect to AVR: {type(e).__name__}: {e.args}")
+    except Exception as exc:
+        print(f"Could not connect to AVR: {repr(exc)}")
         return False
 
+    if await pioneer.query_device_model() is None:
+        print("AVR not responding to device model query")
+        return False
     await pioneer.query_device_info()
     print(
         f"AVR device info: model={pioneer.properties.model}, "
@@ -51,33 +55,25 @@ async def main(argv):
     await pioneer.update()
     await asyncio.sleep(15)
     ## Turn on main zone for tests
-    # await pioneer.turn_on("1")
+    await pioneer.turn_on(zone=Zone.Z1)
 
-    # await pioneer.select_source("TUNER", "1")
-    # await pioneer.set_tuner_frequency("AM", 580, "1")
+    # await pioneer.select_source(source="TUNER", zone=Zone.Z1)
+    # await pioneer.set_tuner_frequency(band=TunerBand.AM, frequency=580)
 
-    await pioneer.set_dsp_settings(phase_control="off", zone="1")
+    await pioneer.set_dsp_settings(phase_control="off", zone=Zone.Z1)
 
     # print("...")
     # await pioneer.disconnect()
 
     while True:
-        for prop, value in vars(pioneer).items():
+        for prop, value in vars(pioneer.properties).items():
             print(prop, ":", value)
 
         await asyncio.sleep(60)
         print("Update ...")
         await pioneer.update()
 
-    # if not pioneer.available:
-    #     try:
-    #         await pioneer.connect()
-    #     except Exception as e:  # pylint: disable=invalid-name
-    #         print(f"Could not reconnect to AVR: {type(e).__name__}: {e.args}")
-    #         await pioneer.shutdown()
-    #         return False
-
-    # await pioneer.send_raw_request("?RGD", "PWR")
+    # await pioneer.send_raw_request("?RGD", "RGD", ignore_error=True)
     # print("...")
     # await asyncio.sleep(5)
     # print("...")
