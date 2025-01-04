@@ -195,14 +195,18 @@ class PioneerAVR(PioneerAVRConnection):
                 zone_listening_modes |= {mode_id: mode_details[0]}
         return zone_listening_modes
 
-    async def query_device_model(self) -> None:
+    async def query_device_model(self) -> bool | None:
         """Query device model from Pioneer AVR."""
         _LOGGER.info("querying device model")
-        if await self.send_command("query_model", ignore_error=True):
+        if res := await self.send_command("query_model", ignore_error=True):
             self.params.set_default_params_model(
                 self.properties.model
             )  # Update default params for this model
             self.params.update_listening_modes()  # Update valid listening modes
+            return True
+        elif res is False:
+            _LOGGER.warning("AVR device model unavailable, no model parameters set")
+        return res
 
     async def query_device_info(self) -> None:
         """Query device information from Pioneer AVR."""

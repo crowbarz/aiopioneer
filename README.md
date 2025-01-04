@@ -135,9 +135,10 @@ _awaitable_ `PioneerAVR.turn_off(`_zone_: Zone = Zone.Z1`)`:
 
 Turn off the Pioneer AVR zone.
 
-_awaitable_ `PioneerAVR.query_device_model()`
+_awaitable_ `PioneerAVR.query_device_model()` -> **bool** | **None**
 
 Query the AVR for device model. Updates the model parameters if device model is changed.
+Returns **True** if the AVR responds with its model, **False** if the AVR responds with an error, and **None** otherwise.
 
 _awaitable_ `PioneerAVR.query_device_info()`
 
