@@ -486,7 +486,7 @@ class PioneerAVRConnection:
 
         async def _send_command():
             raw_command = PIONEER_COMMANDS.get(command, {}).get(zone)
-            if type(raw_command) is list:
+            if isinstance(raw_command, list):
                 if len(raw_command) == 2:
                     # Handle command as request
                     expected_response = raw_command[1]
@@ -500,7 +500,7 @@ class PioneerAVRConnection:
                         _LOGGER.debug("send_command received response: %s", response)
                     return response
                 raise AVRUnknownCommandError
-            elif type(raw_command) is str:
+            elif isinstance(raw_command, str):
                 await self.send_raw_command(
                     prefix + raw_command + suffix, rate_limit=rate_limit
                 )
