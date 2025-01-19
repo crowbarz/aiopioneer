@@ -334,14 +334,9 @@ class PioneerAVR(PioneerAVRConnection):
 
         ## Check for timeouts, but ignore errors (eg. ?V will
         # return E02 immediately after power on)
-        if (
-            await self.send_command("query_volume", zone, ignore_error=True) is None
-            or await self.send_command("query_mute", zone, ignore_error=True) is None
-            or await self.send_command("query_source_id", zone, ignore_error=True)
-            is None
-        ):
-            ## Timeout occurred, AVR may be disconnected
-            raise TimeoutError("Timeout waiting for data")
+        for command in ["query_volume", "query_mute", "query_source_id"]:
+            if await self.send_command(command, zone, ignore_error=True) is None:
+                raise TimeoutError(f"Timeout waiting for {command}")
 
         ## Zone-specific updates, if enabled
         if self.params.get_param(PARAM_DISABLE_AUTO_QUERY):
