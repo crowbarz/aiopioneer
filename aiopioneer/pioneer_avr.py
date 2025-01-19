@@ -111,6 +111,11 @@ class PioneerAVR(PioneerAVRConnection):
         await self._updater_schedule()
         await asyncio.sleep(0)  # yield to updater task
 
+    async def on_reconnect(self) -> None:
+        """Update AVR on reconnection."""
+        await super().on_reconnect()
+        await self.update(wait=False)
+
     async def on_disconnect(self) -> None:
         """Stop AVR tasks on disconnection."""
         self._call_zone_callbacks()
