@@ -118,6 +118,7 @@ class PioneerAVR(PioneerAVRConnection):
 
     async def on_disconnect(self) -> None:
         """Stop AVR tasks on disconnection."""
+        self.properties.reset()
         self._call_zone_callbacks()
         await self._command_queue_cancel(ignore_exception=True)
         await self._updater_cancel(ignore_exception=True)

@@ -45,6 +45,20 @@ class PioneerAVRProperties:
         self.source_name_to_id: dict[str, str] = {}
         self.source_id_to_name: dict[str, str] = {}
 
+    def reset(self) -> None:
+        """Reset AVR properties."""
+        self.power = {}
+        self.volume = {}
+        self.mute = {}
+        self.listening_mode = ""
+        self.listening_mode_raw = ""
+        self.amp = {}
+        self.tuner = {}
+        self.dsp = {}
+        self.video = {}
+        self.system = {}
+        self.audio = {}
+
     def set_source_dict(self, sources: dict[str, str]) -> None:
         """Manually set source id<->name translation tables."""
         self.params.set_runtime_param(PARAM_QUERY_SOURCES, False)
