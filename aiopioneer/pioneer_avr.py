@@ -474,8 +474,7 @@ class PioneerAVR(PioneerAVRConnection):
                 case _:
                     raise ValueError(f"unknown local command: {command}")
 
-        if debug_command_queue:
-            _LOGGER.debug(">> command queue started")
+        _LOGGER.debug(">> command queue started")
         async with self._update_lock:
             while len(self._command_queue) > 0:
                 ## Keep command in queue until it has finished executing
@@ -498,8 +497,7 @@ class PioneerAVR(PioneerAVRConnection):
                     )
                 self._command_queue.pop(0)
 
-        if debug_command_queue:
-            _LOGGER.debug(">> command queue completed")
+        _LOGGER.debug(">> command queue completed")
 
     async def _command_queue_wait(self) -> None:
         """Wait for command queue to be flushed."""
