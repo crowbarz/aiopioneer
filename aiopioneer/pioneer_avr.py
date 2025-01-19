@@ -46,6 +46,7 @@ from .const import (
 from .exceptions import (
     AVRResponseTimeoutError,
     AVRCommandError,
+    AVRUnavailableError,
 )
 from .params import (
     PioneerAVRParams,
