@@ -186,6 +186,7 @@ class PioneerAVRConnection:
                 try:
                     await self.connect()
                     if self.available:
+                        await self.on_reconnect()
                         break
                 except asyncio.CancelledError:  # pylint: disable=try-except-raise
                     # pass through to outer except
@@ -200,6 +201,9 @@ class PioneerAVRConnection:
             _LOGGER.debug(">> reconnect cancelled")
 
         _LOGGER.debug(">> reconnect completed")
+
+    async def on_reconnect(self) -> None:
+        """Run tasks on reconnection."""
 
     def _set_socket_options(self) -> None:
         """Set socket keepalive options."""
