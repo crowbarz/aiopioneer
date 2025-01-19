@@ -25,7 +25,6 @@ PARAM_VOLUME_STEP_ONLY = "volume_step_only"
 PARAM_IGNORE_VOLUME_CHECK = "ignore_volume_check"
 PARAM_ALWAYS_POLL = "always_poll"
 PARAM_DEBUG_LISTENER = "debug_listener"
-PARAM_DEBUG_RESPONDER = "debug_responder"
 PARAM_DEBUG_UPDATER = "debug_updater"
 PARAM_DEBUG_COMMAND = "debug_command"
 PARAM_DEBUG_COMMAND_QUEUE = "debug_command_queue"
@@ -127,7 +126,6 @@ PARAM_DEFAULTS = {
     PARAM_IGNORE_VOLUME_CHECK: True,
     PARAM_ALWAYS_POLL: False,
     PARAM_DEBUG_LISTENER: False,
-    PARAM_DEBUG_RESPONDER: False,
     PARAM_DEBUG_UPDATER: False,
     PARAM_DEBUG_COMMAND: False,
     PARAM_DEBUG_COMMAND_QUEUE: False,
