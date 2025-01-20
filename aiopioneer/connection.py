@@ -462,14 +462,15 @@ class PioneerAVRConnection:
                 return True
             raise AVRUnknownCommandError
 
-        if ignore_error is None:
-            ## Do not handle exceptions
-            return await _send_command()
-
         # pylint: disable=broad-exception-caught
         try:
             return await _send_command()
+        except AVRUnavailableError:  ## always raise even if ignoring errors
+            raise
         except (PioneerError, Exception) as exc:
+            if ignore_error is None:
+                _LOGGER.debug("send_command raised exception: %s", repr(exc))
+                raise
             translation_key = getattr(exc, "translation_key", "unknown_exception")
             err = PioneerErrorFormatText.get(translation_key, "unknown_exception")
             err_txt = err.format(command=command, zone=str(zone), exc=repr(exc))
