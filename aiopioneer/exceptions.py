@@ -5,6 +5,12 @@ class PioneerError(RuntimeError):
     """Generic Pioneer AVR exception."""
 
 
+class AVRConnectError(PioneerError):
+    """Could not connect to AVR error."""
+
+    translation_key = "avr_connect_error"
+
+
 class AVRUnavailableError(PioneerError):
     """AVR connection not available exception."""
 
@@ -30,6 +36,7 @@ class AVRCommandError(PioneerError):
 
 
 PioneerErrorFormatText = {
+    "avr_connect_error": "Unable to connect to AVR",
     "avr_unavailable": "AVR connection is not available",
     "unknown_command": "Unknown AVR command {command} for zone {zone}",
     "response_timeout": "AVR command {command} timed out",

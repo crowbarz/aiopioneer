@@ -21,6 +21,7 @@ from .exceptions import (
     AVRUnknownCommandError,
     AVRResponseTimeoutError,
     AVRCommandError,
+    AVRConnectError,
     PioneerErrorFormatText,
 )
 from .util import (
@@ -91,19 +92,30 @@ class PioneerAVRConnection:
         _LOGGER.debug(">> connect started")
 
         if self.available:
-            raise RuntimeError("AVR is connected, skipping connect")
+            raise AVRConnectError("AVR is already connected")
         if self._connect_lock.locked():
-            raise RuntimeError("AVR connection is already connecting")
+            raise AVRConnectError("AVR connection is already connecting")
 
         async with self._connect_lock:
             _LOGGER.debug("opening AVR connection")
             if self._writer is not None:
-                raise RuntimeError("AVR connection already established")
+                raise AVRConnectError("AVR connection already established")
 
             ## Open new connection
-            reader, writer = await asyncio.wait_for(  # pylint: disable=unused-variable
-                asyncio.open_connection(self._host, self._port), timeout=self._timeout
-            )
+            try:
+                reader, writer = (
+                    await asyncio.wait_for(  # pylint: disable=unused-variable
+                        asyncio.open_connection(self._host, self._port),
+                        timeout=self._timeout,
+                    )
+                )
+            except TimeoutError as exc:
+                raise AVRConnectError("connection timed out") from exc
+            except OSError as exc:
+                raise AVRConnectError(repr(exc)) from exc
+            except Exception as exc:  # pylint: disable=broad-except
+                raise AVRConnectError(f"exception: {repr(exc)}") from exc
+
             _LOGGER.info("AVR connection established")
             self._reader = reader
             self._writer = writer
