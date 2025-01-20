@@ -666,12 +666,12 @@ class PioneerAVR(PioneerAVRConnection):
     async def mute_on(self, zone: Zone = Zone.Z1) -> None:
         """Mute AVR."""
         zone = self._check_zone(zone)
-        await self.send_command("mute_on", zone, ignore_error=False)
+        await self.send_command("mute_on", zone)
 
     async def mute_off(self, zone: Zone = Zone.Z1) -> None:
         """Unmute AVR."""
         zone = self._check_zone(zone)
-        await self.send_command("mute_off", zone, ignore_error=False)
+        await self.send_command("mute_off", zone)
 
     async def select_listening_mode(
         self, mode_name: str = None, mode_id: str = None
