@@ -136,7 +136,7 @@ class PioneerAVRConnection:
         _LOGGER.debug(">> disconnect started")
 
         if not self.available:
-            _LOGGER.warning("AVR not connected, skipping disconnect")
+            _LOGGER.debug("AVR not connected, skipping disconnect")
             return
         if self._disconnect_lock.locked():
             raise RuntimeError("AVR connection is already disconnecting")
@@ -361,6 +361,7 @@ class PioneerAVRConnection:
             self._writer.write(command.encode("ASCII") + b"\r")
             await self._writer.drain()
         except Exception as exc:
+            _LOGGER.error("could not send command %s to AVR: %s", command, repr(exc))
             raise AVRUnavailableError from exc
         self._last_command_at = time.time()
 
