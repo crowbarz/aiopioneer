@@ -488,6 +488,12 @@ class PioneerAVR(PioneerAVRConnection):
                         await local_command(command, args)
                     else:
                         await self.send_command(command, ignore_error=False)
+                except AVRUnavailableError:
+                    _LOGGER.debug(">> command queue detected AVR unavailable")
+                    break
+                except asyncio.CancelledError:
+                    _LOGGER.debug(">> command queue task cancelled")
+                    break
                 except Exception as exc:  # pylint: disable=broad-except
                     _LOGGER.error(
                         "exception executing command %s: %s", command, repr(exc)
