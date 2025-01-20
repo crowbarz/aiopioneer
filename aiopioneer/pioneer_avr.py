@@ -382,24 +382,21 @@ class PioneerAVR(PioneerAVRConnection):
         log_refresh = "refreshing AVR status (zones=%s, last updated %s)"
         _LOGGER.info(log_refresh, zones, last_updated_str)
         self.last_updated = time.time()
-        try:
-            for zone in zones:
-                await self._refresh_zone(zone)
-                zones_initial_refresh = self.params.zones_initial_refresh
-                if self.properties.power[zone] and zone not in zones_initial_refresh:
-                    if zone is Zone.Z1:
-                        await self.query_device_info()
-                    _LOGGER.info("completed initial refresh for %s", zone.full_name)
-                    zones_initial_refresh.add(zone)
-                    self.params.set_runtime_param(
-                        PARAM_ZONES_INITIAL_REFRESH, zones_initial_refresh
-                    )
-                    self._call_zone_callbacks(zones=set([zone]))
+        for zone in zones:
+            await self._refresh_zone(zone)
+            zones_initial_refresh = self.params.zones_initial_refresh
+            if self.properties.power[zone] and zone not in zones_initial_refresh:
+                if zone is Zone.Z1:
+                    await self.query_device_info()
+                _LOGGER.info("completed initial refresh for %s", zone.full_name)
+                zones_initial_refresh.add(zone)
+                self.params.set_runtime_param(
+                    PARAM_ZONES_INITIAL_REFRESH, zones_initial_refresh
+                )
+                self._call_zone_callbacks(zones=set([zone]))
 
-            ## Trigger callbacks to all zones on refresh
-            self._call_zone_callbacks(zones=set([Zone.ALL]))
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.error("exception refreshing AVR status: %s", repr(exc))
+        ## Trigger callbacks to all zones on refresh
+        self._call_zone_callbacks(zones=set([Zone.ALL]))
 
         _LOGGER.debug(">> refresh completed")
 
