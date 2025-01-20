@@ -623,7 +623,7 @@ class PioneerAVR(PioneerAVRConnection):
         zone = self._check_zone(zone)
         await self.send_command("volume_down", zone)
 
-    async def set_volume_level(self, target_volume: int, zone: Zone = Zone.Z1) -> bool:
+    async def set_volume_level(self, target_volume: int, zone: Zone = Zone.Z1) -> None:
         """Set volume level (0..185 for Zone 1, 0..81 for other Zones)."""
         zone = self._check_zone(zone)
         current_volume = self.properties.volume.get(zone.value)
@@ -643,35 +643,25 @@ class PioneerAVR(PioneerAVRConnection):
                     volume_step_count += 1
                     new_volume = self.properties.volume.get(zone.value)
                     if new_volume <= current_volume:  # going wrong way
-                        _LOGGER.warning("set_volume_level stopped stepping up")
-                        return False
+                        raise AVRCommandError("set_volume_level stopped stepping up")
                     if volume_step_count > (target_volume - start_volume):
-                        _LOGGER.warning("set_volume_level exceed max steps")
-                        return False
+                        raise AVRCommandError("set_volume_level exceed max steps")
                     current_volume = new_volume
-            else:  # step down
+            elif target_volume < start_volume:  # step down
                 while current_volume > target_volume:
                     _LOGGER.debug("current volume: %d", current_volume)
                     await self.volume_down(zone)
                     volume_step_count += 1
                     new_volume = self.properties.volume.get(zone.value)
                     if new_volume >= current_volume:  # going wrong way
-                        _LOGGER.warning("set_volume_level stopped stepping down")
-                        return False
+                        raise AVRCommandError("set_volume_level stopped stepping down")
                     if volume_step_count > (start_volume - target_volume):
-                        _LOGGER.warning("set_volume_level exceed max steps")
-                        return False
+                        raise AVRCommandError("set_volume_level exceed max steps")
                     current_volume = self.properties.volume.get(zone.value)
-            return True
-
         else:
             vol_len = 3 if Zone(zone) is Zone.Z1 else 2
             vol_prefix = str(target_volume).zfill(vol_len)
-            return bool(
-                await self.send_command(
-                    "set_volume_level", zone, prefix=vol_prefix, ignore_error=False
-                )
-            )
+            await self.send_command("set_volume_level", zone, prefix=vol_prefix)
 
     async def mute_on(self, zone: Zone = Zone.Z1) -> None:
         """Mute AVR."""
