@@ -102,6 +102,7 @@ class PioneerAVR(PioneerAVRConnection):
         self._update_lock = asyncio.Lock()
         self._updater_task = None
         self._command_queue_task = None
+        self._command_queue_excs: list[Exception] = []
         self._command_queue: list = []  # queue of commands to execute
         self._zone_callback = {}
 
@@ -413,7 +414,6 @@ class PioneerAVR(PioneerAVRConnection):
     ## Command queue
     async def _execute_command_queue(self) -> None:
         """Execute commands from a queue."""
-        debug_command_queue = self.params.get_param(PARAM_DEBUG_COMMAND_QUEUE)
 
         def check_args(command: str, args: list, num_args: int) -> None:
             """Check expected number of arguments have been provided."""
@@ -498,6 +498,8 @@ class PioneerAVR(PioneerAVRConnection):
                     _LOGGER.error(
                         "exception executing command %s: %s", command, repr(exc)
                     )
+                    self._command_queue_excs.append(exc)
+
                 self._command_queue.pop(0)
 
         _LOGGER.debug(">> command queue completed")
@@ -506,17 +508,23 @@ class PioneerAVR(PioneerAVRConnection):
         """Wait for command queue to be flushed."""
         await asyncio.sleep(0)  # yield to command queue task
         debug_command_queue = self.params.get_param(PARAM_DEBUG_COMMAND_QUEUE)
-        if self._command_queue_task:
-            if self._command_queue_task.done():
-                if exc := self._command_queue_task.exception():
-                    _LOGGER.error("command queue task exception: %s", repr(exc))
-                self._command_queue_task = None
-            else:
-                if debug_command_queue:
-                    _LOGGER.debug("waiting for command queue to be flushed")
-                await asyncio.wait([self._command_queue_task])
+        if self._command_queue_task is None:
+            return
 
-    async def _command_queue_cancel(self, ignore_exception=False) -> None:
+        if debug_command_queue:
+            _LOGGER.debug("waiting for command queue to be flushed")
+        await asyncio.wait([self._command_queue_task])
+        if exc := self._command_queue_task.exception():
+            _LOGGER.error("command queue task exception: %s", repr(exc))
+            return
+
+        self._command_queue_task = None
+        if excs := self._command_queue_excs:
+            if debug_command_queue:
+                _LOGGER.debug("command queue exceptions: %s", repr(excs))
+            raise ExceptionGroup("command queue exceptions", excs)
+
+    async def _command_queue_cancel(self, ignore_exception: bool = False) -> None:
         """Cancel any pending commands and the task itself."""
         debug_command_queue = self.params.get_param(PARAM_DEBUG_COMMAND_QUEUE)
         await cancel_task(
@@ -544,6 +552,7 @@ class PioneerAVR(PioneerAVRConnection):
             self._command_queue_task = asyncio.create_task(
                 self._execute_command_queue(), name="avr_command_queue"
             )
+            self._command_queue_excs = []
 
     def queue_command(
         self, command: str | list, skip_if_queued: bool = True, insert_at: int = -1
