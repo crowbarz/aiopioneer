@@ -75,27 +75,6 @@ def get_backoff_delay(retry_count):
     return delay
 
 
-async def safe_wait_for(awt, timeout: float = None, name: str = None):
-    """
-    asyncio.wait_for() that re-raises cancellation even if aw is complete.
-    Work around issue: https://bugs.python.org/issue42130
-    """
-    task = asyncio.create_task(awt, name=name)
-    try:
-        await asyncio.wait({task}, timeout=timeout)
-        if task.done():
-            return task.result()
-        ## timed out
-        try:
-            task.cancel()
-            await task
-        except asyncio.CancelledError:
-            pass
-        raise TimeoutError()
-    except asyncio.CancelledError as exc:
-        raise exc
-
-
 async def cancel_task(task: asyncio.Task, debug=False, ignore_exception=False):
     """Cancels a task and waits for it to finish."""
     if not task:

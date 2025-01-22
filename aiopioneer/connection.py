@@ -28,7 +28,6 @@ from .util import (
     sock_set_keepalive,
     get_backoff_delay,
     cancel_task,
-    safe_wait_for,
 )
 from .const import (
     Zone,
@@ -395,17 +394,14 @@ class PioneerAVRConnection:
         """Send a raw command to the AVR and return the response."""
         async with self._request_lock:  ## Only send one request at a time
             self._response_queue = []
-            self._queue_responses = (
-                True  ## Start queueing responses before sending command
-            )
+            ## Start queueing responses before sending command
+            self._queue_responses = True
             self._response_event.clear()
             await self.send_raw_command(command, rate_limit=rate_limit)
             try:
-                # response = await asyncio.wait_for(
-                response = await safe_wait_for(
+                response = await asyncio.wait_for(
                     self._wait_for_response(command, response_prefix),
                     timeout=self._timeout,
-                    name="avr_wait_for_response",
                 )
                 await asyncio.sleep(0)  # yield to listener task
             except TimeoutError as exc:  # response timer expired
