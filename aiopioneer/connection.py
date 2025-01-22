@@ -21,8 +21,10 @@ from .exceptions import (
     AVRUnknownCommandError,
     AVRResponseTimeoutError,
     AVRCommandError,
+    AVRCommandResponseError,
     AVRConnectError,
-    PioneerErrorFormatText,
+    AVRDisconnectError,
+    AVRConnectTimeoutError,
 )
 from .util import (
     sock_set_keepalive,
@@ -91,16 +93,12 @@ class PioneerAVRConnection:
         _LOGGER.debug(">> connect started")
 
         if self.available:
-            raise AVRConnectError("AVR is already connected")
+            raise AVRConnectError(err_key="already_connected")
         if self._connect_lock.locked():
-            raise AVRConnectError("AVR connection is already connecting")
+            raise AVRConnectError(err_key="already_connecting")
 
         async with self._connect_lock:
             _LOGGER.debug("opening AVR connection")
-            if self._writer is not None:
-                raise AVRConnectError("AVR connection already established")
-
-            ## Open new connection
             try:
                 reader, writer = (
                     await asyncio.wait_for(  # pylint: disable=unused-variable
@@ -109,11 +107,9 @@ class PioneerAVRConnection:
                     )
                 )
             except TimeoutError as exc:
-                raise AVRConnectError("connection timed out") from exc
-            except OSError as exc:
-                raise AVRConnectError(repr(exc)) from exc
+                raise AVRConnectTimeoutError(exc=exc) from exc
             except Exception as exc:  # pylint: disable=broad-except
-                raise AVRConnectError(f"exception: {repr(exc)}") from exc
+                raise AVRConnectError(exc=exc) from exc
 
             _LOGGER.info("AVR connection established")
             self._reader = reader
@@ -138,7 +134,7 @@ class PioneerAVRConnection:
             _LOGGER.debug("AVR not connected, skipping disconnect")
             return
         if self._disconnect_lock.locked():
-            raise RuntimeError("AVR connection is already disconnecting")
+            raise AVRDisconnectError(err_key="already_disconnecting")
 
         await self._reconnect_cancel()
         if reconnect is None:
@@ -382,7 +378,7 @@ class PioneerAVRConnection:
                         )
                     return response
                 if response.startswith("E"):
-                    raise AVRCommandError(response)
+                    raise AVRCommandResponseError(command=command, err=response)
             self._response_queue = []
 
     async def send_raw_request(
@@ -405,7 +401,7 @@ class PioneerAVRConnection:
                 )
                 await asyncio.sleep(0)  # yield to listener task
             except TimeoutError as exc:  # response timer expired
-                raise AVRResponseTimeoutError from exc
+                raise AVRResponseTimeoutError(command=command) from exc
 
             self._queue_responses = False
             self._response_queue = []
@@ -450,30 +446,27 @@ class PioneerAVRConnection:
                     if debug_command:
                         _LOGGER.debug("send_command received response: %s", response)
                     return response
-                raise AVRUnknownCommandError
+                raise AVRUnknownCommandError(command=command, zone=zone)
             elif isinstance(raw_command, str):
                 await self.send_raw_command(
                     prefix + raw_command + suffix, rate_limit=rate_limit
                 )
                 return True
-            raise AVRUnknownCommandError
+            raise AVRUnknownCommandError(command=command, zone=zone)
 
-        # pylint: disable=broad-exception-caught
         try:
             return await _send_command()
         except AVRUnavailableError:  ## always raise even if ignoring errors
             raise
-        except (PioneerError, Exception) as exc:
+        except PioneerError as exc:
             if ignore_error is None:
-                _LOGGER.debug("send_command raised exception: %s", repr(exc))
-                raise
-            translation_key = getattr(exc, "translation_key", "unknown_exception")
-            err = PioneerErrorFormatText.get(translation_key, "unknown_exception")
-            err_txt = err.format(command=command, zone=str(zone), exc=repr(exc))
-            rc = False if isinstance(exc, AVRCommandError) else None
-
-        if ignore_error:
-            _LOGGER.debug(err_txt)
-        else:
-            _LOGGER.error(err_txt)
-        return rc
+                _LOGGER.debug("send_command raised exception: %s", str(exc))
+                raise exc
+            if ignore_error:
+                _LOGGER.debug(str(exc))
+            else:
+                _LOGGER.error(str(exc))
+            return False if isinstance(exc, AVRCommandError) else None
+        except Exception as exc:  # pylint: disable=broad-except
+            _LOGGER.error("send_command exception: %s: %s", command, repr(exc))
+            _LOGGER.error(traceback.format_exc())

@@ -44,9 +44,11 @@ from .const import (
     DSP_DIGITAL_FILTER,
 )
 from .exceptions import (
+    AVRUnavailableError,
     AVRResponseTimeoutError,
     AVRCommandError,
-    AVRUnavailableError,
+    AVRUnknownLocalCommandError,
+    AVRTunerUnavailableError,
 )
 from .params import (
     PioneerAVRParams,
@@ -337,7 +339,7 @@ class PioneerAVR(PioneerAVRConnection):
         # return E02 immediately after power on)
         for command in ["query_volume", "query_mute", "query_source_id"]:
             if await self.send_command(command, zone, ignore_error=True) is None:
-                raise TimeoutError(f"Timeout waiting for {command}")
+                raise AVRResponseTimeoutError(command=command)
 
         ## Zone-specific updates, if enabled
         if self.params.get_param(PARAM_DISABLE_AUTO_QUERY):
@@ -469,7 +471,7 @@ class PioneerAVR(PioneerAVRConnection):
                     check_args(command, args, 1)
                     await asyncio.sleep(args[0])
                 case _:
-                    raise ValueError(f"unknown local command: {command}")
+                    raise AVRUnknownLocalCommandError(command=command)
 
         _LOGGER.debug(">> command queue started")
         async with self._update_lock:
@@ -483,7 +485,7 @@ class PioneerAVR(PioneerAVRConnection):
                         args = command[1:]
                         command = command[0]
                     elif not isinstance(command, str):
-                        raise ValueError(f"malformed command: {command}")
+                        raise AVRUnknownLocalCommandError(command=command)
                     if command.startswith("_"):
                         await local_command(command, args)
                     else:
@@ -514,6 +516,8 @@ class PioneerAVR(PioneerAVRConnection):
         if debug_command_queue:
             _LOGGER.debug("waiting for command queue to be flushed")
         await asyncio.wait([self._command_queue_task])
+        if self._command_queue_task is None:
+            raise AVRUnavailableError
         if exc := self._command_queue_task.exception():
             _LOGGER.error("command queue task exception: %s", repr(exc))
             return
@@ -522,6 +526,8 @@ class PioneerAVR(PioneerAVRConnection):
         if excs := self._command_queue_excs:
             if debug_command_queue:
                 _LOGGER.debug("command queue exceptions: %s", repr(excs))
+            if len(excs) == 1:
+                raise excs[0]
             raise ExceptionGroup("command queue exceptions", excs)
 
     async def _command_queue_cancel(self, ignore_exception: bool = False) -> None:
@@ -643,9 +649,17 @@ class PioneerAVR(PioneerAVRConnection):
                     volume_step_count += 1
                     new_volume = self.properties.volume.get(zone.value)
                     if new_volume <= current_volume:  # going wrong way
-                        raise AVRCommandError("set_volume_level stopped stepping up")
+                        raise AVRCommandError(
+                            command="set_volume_level",
+                            zone=zone,
+                            err="AVR volume_up failed",
+                        )
                     if volume_step_count > (target_volume - start_volume):
-                        raise AVRCommandError("set_volume_level exceed max steps")
+                        raise AVRCommandError(
+                            command="set_volume_level",
+                            zone=zone,
+                            err="Exceeded max volume steps",
+                        )
                     current_volume = new_volume
             elif target_volume < start_volume:  # step down
                 while current_volume > target_volume:
@@ -654,9 +668,17 @@ class PioneerAVR(PioneerAVRConnection):
                     volume_step_count += 1
                     new_volume = self.properties.volume.get(zone.value)
                     if new_volume >= current_volume:  # going wrong way
-                        raise AVRCommandError("set_volume_level stopped stepping down")
+                        raise AVRCommandError(
+                            command="set_volume_level",
+                            zone=zone,
+                            err="AVR volume_down failed",
+                        )
                     if volume_step_count > (start_volume - target_volume):
-                        raise AVRCommandError("set_volume_level exceed max steps")
+                        raise AVRCommandError(
+                            command="set_volume_level",
+                            zone=zone,
+                            err="Exceeded max volume steps",
+                        )
                     current_volume = self.properties.volume.get(zone.value)
         else:
             vol_len = 3 if Zone(zone) is Zone.Z1 else 2
@@ -813,7 +835,7 @@ class PioneerAVR(PioneerAVRConnection):
             self.properties.tuner.get("band") is None
             or SOURCE_TUNER not in self.properties.source_id.values()
         ):
-            raise RuntimeError("tuner is unavailable")
+            raise AVRTunerUnavailableError(command="select_tuner_band")
 
         ## Set the tuner band
         if band == self.properties.tuner.get("band"):
