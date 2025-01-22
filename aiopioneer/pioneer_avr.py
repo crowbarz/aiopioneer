@@ -409,7 +409,7 @@ class PioneerAVR(PioneerAVRConnection):
             self.queue_command("_full_refresh")
         else:
             for zone in zones:
-                self.queue_command(f"_refresh_zone({zone})")
+                self.queue_command(["_refresh_zone", zone])
         if wait:
             await self._command_queue_wait()
 

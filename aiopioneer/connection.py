@@ -38,8 +38,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
 )
 
-from .parsers.response import Response
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -81,7 +79,7 @@ class PioneerAVRConnection:
         self._listener_task = None
         self._reconnect_task = None
         self._response_event = asyncio.Event()
-        self._response_queue: list[Response] = []
+        self._response_queue: list[str] = []
         self._queue_responses = False
 
         self._reader = None
