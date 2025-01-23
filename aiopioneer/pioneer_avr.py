@@ -651,14 +651,14 @@ class PioneerAVR(PioneerAVRConnection):
                     if new_volume <= current_volume:  # going wrong way
                         raise AVRCommandError(
                             command="set_volume_level",
-                            zone=zone,
                             err="AVR volume_up failed",
+                            zone=zone,
                         )
                     if volume_step_count > (target_volume - start_volume):
                         raise AVRCommandError(
                             command="set_volume_level",
-                            zone=zone,
                             err="Exceeded max volume steps",
+                            zone=zone,
                         )
                     current_volume = new_volume
             elif target_volume < start_volume:  # step down
@@ -670,14 +670,14 @@ class PioneerAVR(PioneerAVRConnection):
                     if new_volume >= current_volume:  # going wrong way
                         raise AVRCommandError(
                             command="set_volume_level",
-                            zone=zone,
                             err="AVR volume_down failed",
+                            zone=zone,
                         )
                     if volume_step_count > (start_volume - target_volume):
                         raise AVRCommandError(
                             command="set_volume_level",
-                            zone=zone,
                             err="Exceeded max volume steps",
+                            zone=zone,
                         )
                     current_volume = self.properties.volume.get(zone.value)
         else:
