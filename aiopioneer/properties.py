@@ -7,7 +7,12 @@ from types import MappingProxyType
 
 from .commands import PIONEER_COMMANDS
 from .const import Zone, MEDIA_CONTROL_COMMANDS
-from .params import PioneerAVRParams, PARAM_ZONE_SOURCES, PARAM_QUERY_SOURCES
+from .params import (
+    PioneerAVRParams,
+    PARAM_MODEL,
+    PARAM_ZONE_SOURCES,
+    PARAM_QUERY_SOURCES,
+)
 
 
 class PioneerAVRProperties:
@@ -17,7 +22,7 @@ class PioneerAVRProperties:
         self.params = params
 
         ## AVR base properties
-        self.model = None
+        self.model = params.get_param(PARAM_MODEL)
         self.software_version = None
         self.mac_addr: str = None
         self.zones: set[Zone] = set()

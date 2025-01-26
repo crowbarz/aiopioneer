@@ -49,6 +49,7 @@ from .exceptions import (
     AVRCommandError,
     AVRUnknownLocalCommandError,
     AVRTunerUnavailableError,
+    AVRConnectProtocolError,
 )
 from .params import (
     PioneerAVRParams,
@@ -112,6 +113,8 @@ class PioneerAVR(PioneerAVRConnection):
     async def on_connect(self) -> None:
         """Start AVR tasks on connection."""
         await super().on_connect()
+        if await self.query_device_model() is None:
+            raise AVRConnectProtocolError
         await self._updater_schedule()
         await asyncio.sleep(0)  # yield to updater task
 
@@ -207,6 +210,8 @@ class PioneerAVR(PioneerAVRConnection):
 
     async def query_device_model(self) -> bool | None:
         """Query device model from Pioneer AVR."""
+        if self.properties.model is not None:
+            return True
         _LOGGER.info("querying device model")
         if res := await self.send_command("query_model", ignore_error=True):
             self.params.set_default_params_model(
