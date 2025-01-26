@@ -47,6 +47,7 @@ Where a parameter is specified at more than one level, the higher priority param
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
+| `model` | str | | Device model of AVR. Queried from AVR on connect if not specified
 | `ignored_zones` | list | `[]` | List of zones to ignore even if they are auto-discovered. Specify Zone IDs as strings: "1", "2", "3" and "Z"
 | `command_delay` | float | `0.1` | Insert a delay between sequential commands that are sent to the AVR. This appears to make the AVR behave more reliably during status polls. Increase this value if debug logging shows that your AVR times out between commands
 | `max_source_id` | int | `60` | Maximum source ID that the source discovery queries. Reduce this if your AVR returns errors
@@ -91,7 +92,9 @@ Constructor for the **PioneerAVR** class. The connection parameters are used whe
 
 _awaitable_ `PioneerAVRConnection.connect(`_reconnect_: **bool** = True`)`
 
-Establish a connection to the AVR. Set _reconnect_ to **True** to re-establish the connection if it is disconnected.
+Establish a connection to the AVR, and query the AVR device model if parameter `model` is not set. Set _reconnect_ to **True** to re-establish the connection if it is disconnected.
+
+Raises `AVRConnectionError` on connection errors, with `err` indicating the connection error.
 
 _awaitable_ `PioneerAVRConnection.disconnect(`_reconnect_: **bool**`)`
 
@@ -135,10 +138,13 @@ _awaitable_ `PioneerAVR.turn_off(`_zone_: Zone = Zone.Z1`)`:
 
 Turn off the Pioneer AVR zone.
 
-_awaitable_ `PioneerAVR.query_device_model()` -> **bool** | **None**
+_awaitable_ `PioneerAVR.query_device_model()` -> **bool** | **None** (**deprecated**)
 
 Query the AVR for device model. Updates the model parameters if device model is changed.
 Returns **True** if the AVR responds with its model, **False** if the AVR responds with an error, and **None** otherwise.
+
+> [!CAUTION]
+> As of 0.8.2, it is no longer required to call this function after connecting to the AVR. This method is deprecated and will be removed in a future version.
 
 _awaitable_ `PioneerAVR.query_device_info()`
 
