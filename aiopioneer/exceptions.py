@@ -23,7 +23,7 @@ class PioneerError(RuntimeError):
 
 
 class AVRConnectionError(PioneerError):
-    """Could not connect to AVR."""
+    """Base class for AVR connection errors."""
 
     translation_key = "avr_connection_error"
 
@@ -34,6 +34,7 @@ class AVRConnectionError(PioneerError):
             err = ConnectErrorFormatText.get(err_key, err_key)
         elif exc and err is None:
             err = repr(exc)
+        self.err = err
         super().__init__(err=err, exc=exc, **kwargs)
 
 
@@ -55,6 +56,7 @@ class AVRConnectProtocolError(AVRConnectError):
 
     def __init__(self, exc: Exception = None, **kwargs):
         super().__init__(err_key="protocol_error", exc=exc, **kwargs)
+
 
 class AVRDisconnectError(AVRConnectionError):
     """Error disconnecting from AVR."""
