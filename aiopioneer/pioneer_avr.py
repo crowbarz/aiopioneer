@@ -419,8 +419,8 @@ class PioneerAVR(PioneerAVRConnection):
             await self._command_queue_wait()
 
     ## Command queue
-    async def _execute_command_queue(self) -> None:
-        """Execute commands from a queue."""
+    async def _execute_local_command(self, command: str, args: list) -> None:
+        """Execute local command."""
 
         def check_args(command: str, args: list, num_args: int) -> None:
             """Check expected number of arguments have been provided."""
@@ -428,56 +428,53 @@ class PioneerAVR(PioneerAVRConnection):
                 args_desc = "argument" if num_args == 1 else "arguments"
                 raise ValueError(f"{command} requires {num_args} {args_desc}")
 
-        async def local_command(command: str, args: list) -> None:
-            match command:
-                case "_power_on":
-                    check_args(command, args, 1)
-                    zone = Zone(args[0])
-                    if zone not in self.params.zones_initial_refresh:
-                        _LOGGER.info("scheduling initial refresh")
-                        self.queue_command(["_sleep", 2], insert_at=1)
-                        self.queue_command(["_refresh_zone", zone], insert_at=2)
-                    else:
-                        self.queue_command(["_delayed_query_basic", 4], insert_at=1)
-                    if zone is Zone.Z1 and self.params.get_param(
-                        PARAM_POWER_ON_VOLUME_BOUNCE
-                    ):
-                        ## NOTE: volume workaround scheduled ahead of initial refresh
-                        _LOGGER.info("scheduling Zone 1 volume workaround")
-                        self.queue_command(
-                            "volume_up", skip_if_queued=False, insert_at=1
-                        )
-                        self.queue_command(
-                            "volume_down", skip_if_queued=False, insert_at=2
-                        )
-                case "_full_refresh":
-                    await self._refresh_zones(zones=self.properties.zones)
-                case "_refresh_zone":
-                    check_args(command, args, 1)
-                    await self._refresh_zones(zones=[Zone(args[0])])
-                case "_delayed_query_basic":
-                    check_args(command, args, 1)
-                    if not self.params.get_param(PARAM_DISABLE_AUTO_QUERY):
-                        self.queue_command(["_sleep", args[0]], insert_at=1)
-                        self.queue_command("_query_basic", insert_at=2)
-                case "_query_basic":
-                    if any(
-                        self.properties.power.values()
-                    ) and not self.params.get_param(PARAM_DISABLE_AUTO_QUERY):
-                        for cmd in [
-                            "query_listening_mode",
-                            "query_basic_audio_information",
-                            "query_basic_video_information",
-                        ]:
-                            await self.send_command(cmd, ignore_error=True)
-                case "_calculate_am_frequency_step":
-                    await self._calculate_am_frequency_step()
-                case "_sleep":
-                    check_args(command, args, 1)
-                    await asyncio.sleep(args[0])
-                case _:
-                    raise AVRUnknownLocalCommandError(command=command)
+        match command:
+            case "_power_on":
+                check_args(command, args, 1)
+                zone = Zone(args[0])
+                if zone not in self.params.zones_initial_refresh:
+                    _LOGGER.info("scheduling initial refresh")
+                    self.queue_command(["_sleep", 2], insert_at=1)
+                    self.queue_command(["_refresh_zone", zone], insert_at=2)
+                else:
+                    self.queue_command(["_delayed_query_basic", 4], insert_at=1)
+                if zone is Zone.Z1 and self.params.get_param(
+                    PARAM_POWER_ON_VOLUME_BOUNCE
+                ):
+                    ## NOTE: volume workaround scheduled ahead of initial refresh
+                    _LOGGER.info("scheduling Zone 1 volume workaround")
+                    self.queue_command("volume_up", skip_if_queued=False, insert_at=1)
+                    self.queue_command("volume_down", skip_if_queued=False, insert_at=2)
+            case "_full_refresh":
+                await self._refresh_zones(zones=self.properties.zones)
+            case "_refresh_zone":
+                check_args(command, args, 1)
+                await self._refresh_zones(zones=[Zone(args[0])])
+            case "_delayed_query_basic":
+                check_args(command, args, 1)
+                if not self.params.get_param(PARAM_DISABLE_AUTO_QUERY):
+                    self.queue_command(["_sleep", args[0]], insert_at=1)
+                    self.queue_command("_query_basic", insert_at=2)
+            case "_query_basic":
+                if any(self.properties.power.values()) and not self.params.get_param(
+                    PARAM_DISABLE_AUTO_QUERY
+                ):
+                    for cmd in [
+                        "query_listening_mode",
+                        "query_basic_audio_information",
+                        "query_basic_video_information",
+                    ]:
+                        await self.send_command(cmd, ignore_error=True)
+            case "_calculate_am_frequency_step":
+                await self._calculate_am_frequency_step()
+            case "_sleep":
+                check_args(command, args, 1)
+                await asyncio.sleep(args[0])
+            case _:
+                raise AVRUnknownLocalCommandError(command=command)
 
+    async def _execute_command_queue(self) -> None:
+        """Execute commands from a queue."""
         _LOGGER.debug(">> command queue started")
         async with self._update_lock:
             while len(self._command_queue) > 0:
@@ -492,7 +489,7 @@ class PioneerAVR(PioneerAVRConnection):
                     elif not isinstance(command, str):
                         raise AVRUnknownLocalCommandError(command=command)
                     if command.startswith("_"):
-                        await local_command(command, args)
+                        await self._execute_local_command(command, args)
                     else:
                         await self.send_command(command, ignore_error=False)
                 except AVRUnavailableError:
