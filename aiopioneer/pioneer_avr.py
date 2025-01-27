@@ -44,9 +44,11 @@ from .const import (
     DSP_DIGITAL_FILTER,
 )
 from .exceptions import (
+    AVRUnavailableError,
     AVRResponseTimeoutError,
     AVRCommandError,
-    AVRUnavailableError,
+    AVRUnknownLocalCommandError,
+    AVRTunerUnavailableError,
 )
 from .params import (
     PioneerAVRParams,
@@ -102,6 +104,7 @@ class PioneerAVR(PioneerAVRConnection):
         self._update_lock = asyncio.Lock()
         self._updater_task = None
         self._command_queue_task = None
+        self._command_queue_excs: list[Exception] = []
         self._command_queue: list = []  # queue of commands to execute
         self._zone_callback = {}
 
@@ -336,7 +339,7 @@ class PioneerAVR(PioneerAVRConnection):
         # return E02 immediately after power on)
         for command in ["query_volume", "query_mute", "query_source_id"]:
             if await self.send_command(command, zone, ignore_error=True) is None:
-                raise TimeoutError(f"Timeout waiting for {command}")
+                raise AVRResponseTimeoutError(command=command)
 
         ## Zone-specific updates, if enabled
         if self.params.get_param(PARAM_DISABLE_AUTO_QUERY):
@@ -382,24 +385,21 @@ class PioneerAVR(PioneerAVRConnection):
         log_refresh = "refreshing AVR status (zones=%s, last updated %s)"
         _LOGGER.info(log_refresh, zones, last_updated_str)
         self.last_updated = time.time()
-        try:
-            for zone in zones:
-                await self._refresh_zone(zone)
-                zones_initial_refresh = self.params.zones_initial_refresh
-                if self.properties.power[zone] and zone not in zones_initial_refresh:
-                    if zone is Zone.Z1:
-                        await self.query_device_info()
-                    _LOGGER.info("completed initial refresh for %s", zone.full_name)
-                    zones_initial_refresh.add(zone)
-                    self.params.set_runtime_param(
-                        PARAM_ZONES_INITIAL_REFRESH, zones_initial_refresh
-                    )
-                    self._call_zone_callbacks(zones=set([zone]))
+        for zone in zones:
+            await self._refresh_zone(zone)
+            zones_initial_refresh = self.params.zones_initial_refresh
+            if self.properties.power[zone] and zone not in zones_initial_refresh:
+                if zone is Zone.Z1:
+                    await self.query_device_info()
+                _LOGGER.info("completed initial refresh for %s", zone.full_name)
+                zones_initial_refresh.add(zone)
+                self.params.set_runtime_param(
+                    PARAM_ZONES_INITIAL_REFRESH, zones_initial_refresh
+                )
+                self._call_zone_callbacks(zones=set([zone]))
 
-            ## Trigger callbacks to all zones on refresh
-            self._call_zone_callbacks(zones=set([Zone.ALL]))
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.error("exception refreshing AVR status: %s", repr(exc))
+        ## Trigger callbacks to all zones on refresh
+        self._call_zone_callbacks(zones=set([Zone.ALL]))
 
         _LOGGER.debug(">> refresh completed")
 
@@ -416,7 +416,6 @@ class PioneerAVR(PioneerAVRConnection):
     ## Command queue
     async def _execute_command_queue(self) -> None:
         """Execute commands from a queue."""
-        debug_command_queue = self.params.get_param(PARAM_DEBUG_COMMAND_QUEUE)
 
         def check_args(command: str, args: list, num_args: int) -> None:
             """Check expected number of arguments have been provided."""
@@ -472,7 +471,7 @@ class PioneerAVR(PioneerAVRConnection):
                     check_args(command, args, 1)
                     await asyncio.sleep(args[0])
                 case _:
-                    raise ValueError(f"unknown local command: {command}")
+                    raise AVRUnknownLocalCommandError(command=command)
 
         _LOGGER.debug(">> command queue started")
         async with self._update_lock:
@@ -486,15 +485,23 @@ class PioneerAVR(PioneerAVRConnection):
                         args = command[1:]
                         command = command[0]
                     elif not isinstance(command, str):
-                        raise ValueError(f"malformed command: {command}")
+                        raise AVRUnknownLocalCommandError(command=command)
                     if command.startswith("_"):
                         await local_command(command, args)
                     else:
                         await self.send_command(command, ignore_error=False)
+                except AVRUnavailableError:
+                    _LOGGER.debug(">> command queue detected AVR unavailable")
+                    break
+                except asyncio.CancelledError:
+                    _LOGGER.debug(">> command queue task cancelled")
+                    break
                 except Exception as exc:  # pylint: disable=broad-except
                     _LOGGER.error(
                         "exception executing command %s: %s", command, repr(exc)
                     )
+                    self._command_queue_excs.append(exc)
+
                 self._command_queue.pop(0)
 
         _LOGGER.debug(">> command queue completed")
@@ -503,17 +510,27 @@ class PioneerAVR(PioneerAVRConnection):
         """Wait for command queue to be flushed."""
         await asyncio.sleep(0)  # yield to command queue task
         debug_command_queue = self.params.get_param(PARAM_DEBUG_COMMAND_QUEUE)
-        if self._command_queue_task:
-            if self._command_queue_task.done():
-                if exc := self._command_queue_task.exception():
-                    _LOGGER.error("command queue task exception: %s", repr(exc))
-                self._command_queue_task = None
-            else:
-                if debug_command_queue:
-                    _LOGGER.debug("waiting for command queue to be flushed")
-                await asyncio.wait([self._command_queue_task])
+        if self._command_queue_task is None:
+            return
 
-    async def _command_queue_cancel(self, ignore_exception=False) -> None:
+        if debug_command_queue:
+            _LOGGER.debug("waiting for command queue to be flushed")
+        await asyncio.wait([self._command_queue_task])
+        if self._command_queue_task is None:
+            raise AVRUnavailableError
+        if exc := self._command_queue_task.exception():
+            _LOGGER.error("command queue task exception: %s", repr(exc))
+            return
+
+        self._command_queue_task = None
+        if excs := self._command_queue_excs:
+            if debug_command_queue:
+                _LOGGER.debug("command queue exceptions: %s", repr(excs))
+            if len(excs) == 1:
+                raise excs[0]
+            raise ExceptionGroup("command queue exceptions", excs)
+
+    async def _command_queue_cancel(self, ignore_exception: bool = False) -> None:
         """Cancel any pending commands and the task itself."""
         debug_command_queue = self.params.get_param(PARAM_DEBUG_COMMAND_QUEUE)
         await cancel_task(
@@ -541,6 +558,7 @@ class PioneerAVR(PioneerAVRConnection):
             self._command_queue_task = asyncio.create_task(
                 self._execute_command_queue(), name="avr_command_queue"
             )
+            self._command_queue_excs = []
 
     def queue_command(
         self, command: str | list, skip_if_queued: bool = True, insert_at: int = -1
@@ -611,7 +629,7 @@ class PioneerAVR(PioneerAVRConnection):
         zone = self._check_zone(zone)
         await self.send_command("volume_down", zone)
 
-    async def set_volume_level(self, target_volume: int, zone: Zone = Zone.Z1) -> bool:
+    async def set_volume_level(self, target_volume: int, zone: Zone = Zone.Z1) -> None:
         """Set volume level (0..185 for Zone 1, 0..81 for other Zones)."""
         zone = self._check_zone(zone)
         current_volume = self.properties.volume.get(zone.value)
@@ -631,45 +649,51 @@ class PioneerAVR(PioneerAVRConnection):
                     volume_step_count += 1
                     new_volume = self.properties.volume.get(zone.value)
                     if new_volume <= current_volume:  # going wrong way
-                        _LOGGER.warning("set_volume_level stopped stepping up")
-                        return False
+                        raise AVRCommandError(
+                            command="set_volume_level",
+                            err="AVR volume_up failed",
+                            zone=zone,
+                        )
                     if volume_step_count > (target_volume - start_volume):
-                        _LOGGER.warning("set_volume_level exceed max steps")
-                        return False
+                        raise AVRCommandError(
+                            command="set_volume_level",
+                            err="Exceeded max volume steps",
+                            zone=zone,
+                        )
                     current_volume = new_volume
-            else:  # step down
+            elif target_volume < start_volume:  # step down
                 while current_volume > target_volume:
                     _LOGGER.debug("current volume: %d", current_volume)
                     await self.volume_down(zone)
                     volume_step_count += 1
                     new_volume = self.properties.volume.get(zone.value)
                     if new_volume >= current_volume:  # going wrong way
-                        _LOGGER.warning("set_volume_level stopped stepping down")
-                        return False
+                        raise AVRCommandError(
+                            command="set_volume_level",
+                            err="AVR volume_down failed",
+                            zone=zone,
+                        )
                     if volume_step_count > (start_volume - target_volume):
-                        _LOGGER.warning("set_volume_level exceed max steps")
-                        return False
+                        raise AVRCommandError(
+                            command="set_volume_level",
+                            err="Exceeded max volume steps",
+                            zone=zone,
+                        )
                     current_volume = self.properties.volume.get(zone.value)
-            return True
-
         else:
             vol_len = 3 if Zone(zone) is Zone.Z1 else 2
             vol_prefix = str(target_volume).zfill(vol_len)
-            return bool(
-                await self.send_command(
-                    "set_volume_level", zone, prefix=vol_prefix, ignore_error=False
-                )
-            )
+            await self.send_command("set_volume_level", zone, prefix=vol_prefix)
 
     async def mute_on(self, zone: Zone = Zone.Z1) -> None:
         """Mute AVR."""
         zone = self._check_zone(zone)
-        await self.send_command("mute_on", zone, ignore_error=False)
+        await self.send_command("mute_on", zone)
 
     async def mute_off(self, zone: Zone = Zone.Z1) -> None:
         """Unmute AVR."""
         zone = self._check_zone(zone)
-        await self.send_command("mute_off", zone, ignore_error=False)
+        await self.send_command("mute_off", zone)
 
     async def select_listening_mode(
         self, mode_name: str = None, mode_id: str = None
@@ -811,7 +835,7 @@ class PioneerAVR(PioneerAVRConnection):
             self.properties.tuner.get("band") is None
             or SOURCE_TUNER not in self.properties.source_id.values()
         ):
-            raise RuntimeError("tuner is unavailable")
+            raise AVRTunerUnavailableError(command="select_tuner_band")
 
         ## Set the tuner band
         if band == self.properties.tuner.get("band"):
