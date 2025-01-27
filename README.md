@@ -71,7 +71,6 @@ Where a parameter is specified at more than one level, the higher priority param
 | `am_frequency_step` | int | `null` | Optional setting to configure the tuner AM frequency step. If not specified, it will be queried from the AVR if supported by the AVR, otherwise it will be determined by stepping the frequency up and down when the AM tuner is first used
 | `always_poll` | bool | `false` | Always poll the AVR every _scan_interval_. If set to `false`, out of band status responses from the AVR will reset the polling interval
 | `debug_listener` | bool | `false` | Enables additional debug logging for the listener task
-| `debug_responder` | bool | `false` | Enables additional debug logging for the responder task
 | `debug_updater` | bool | `false` | Enables additional debug logging for the updater task
 | `debug_command` | bool | `false` | Enables additional debug logging for commands sent and responses received
 | `debug_command_queue` | bool | `false` | Enables additional debug logging for the command queue task
@@ -453,7 +452,6 @@ The CLI accepts all API commands, as well as the following:
 | `get_audio` | | Returns the current AVR audio parameters.
 | `get_system` | | Returns the AVR system attributes.
 | `debug_listener` | _state_ (bool) | Enable/disable the `debug_listener` parameter.
-| `debug_responder` | _state_ (bool) | Enable/disable the `debug_responder` parameter.
 | `debug_updater` | _state_ (bool) | Enable/disable the `debug_updater` parameter.
 | `debug_command` | _state_ (bool) | Enable/disable the `debug_command` parameter.
 | `debug_command_queue` | _state_ (bool) | Enable/disable the `debug_command_queue` parameter.
