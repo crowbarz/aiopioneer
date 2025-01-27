@@ -38,9 +38,6 @@ async def main(argv):
         print(f"Could not connect to AVR: {repr(exc)}")
         return False
 
-    if await pioneer.query_device_model() is None:
-        print("AVR not responding to device model query")
-        return False
     await pioneer.query_device_info()
     print(
         f"AVR device info: model={pioneer.properties.model}, "

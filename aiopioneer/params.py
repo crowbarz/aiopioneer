@@ -14,7 +14,7 @@ from .util import merge
 
 _LOGGER = logging.getLogger(__name__)
 
-
+PARAM_MODEL = "model"
 PARAM_IGNORED_ZONES = "ignored_zones"
 PARAM_COMMAND_DELAY = "command_delay"
 PARAM_MAX_SOURCE_ID = "max_source_id"
@@ -116,6 +116,7 @@ PARAM_DEFAULTS_SYSTEM = {
 }
 
 PARAM_DEFAULTS = {
+    PARAM_MODEL: None,
     PARAM_IGNORED_ZONES: [],
     PARAM_COMMAND_DELAY: 0.1,
     PARAM_MAX_SOURCE_ID: 60,
@@ -685,6 +686,8 @@ class PioneerAVRParams:
         self._system_params = PARAM_DEFAULTS_SYSTEM
         self._user_params: dict[str, Any] = {}
         self._params: dict[str, Any] = {}
+        if model := params.get(PARAM_MODEL):
+            self.set_default_params_model(model)
         self.set_user_params(params)
 
     ## Public parameters

@@ -23,7 +23,7 @@ class PioneerError(RuntimeError):
 
 
 class AVRConnectionError(PioneerError):
-    """Could not connect to AVR."""
+    """Base class for AVR connection errors."""
 
     translation_key = "avr_connection_error"
 
@@ -34,6 +34,7 @@ class AVRConnectionError(PioneerError):
             err = ConnectErrorFormatText.get(err_key, err_key)
         elif exc and err is None:
             err = repr(exc)
+        self.err = err
         super().__init__(err=err, exc=exc, **kwargs)
 
 
@@ -48,6 +49,13 @@ class AVRConnectTimeoutError(AVRConnectError):
 
     def __init__(self, exc: Exception = None, **kwargs):
         super().__init__(err_key="connect_timeout_error", exc=exc, **kwargs)
+
+
+class AVRConnectProtocolError(AVRConnectError):
+    """Could not connect to AVR error due to API protocol error."""
+
+    def __init__(self, exc: Exception = None, **kwargs):
+        super().__init__(err_key="protocol_error", exc=exc, **kwargs)
 
 
 class AVRDisconnectError(AVRConnectionError):
@@ -155,4 +163,5 @@ ConnectErrorFormatText = {
     "already_connected": "AVR is already connected",
     "already_connecting": "AVR is already connecting",
     "already_disconnecting": "AVR is already disconnecting",
+    "protocol_error": "Device not responding to Pioneer AVR protocol",
 }

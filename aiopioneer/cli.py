@@ -64,7 +64,6 @@ async def cli_main(args: argparse.Namespace):
         _LOGGER.error("could not connect to AVR: %s", repr(exc))
         return False
 
-    await pioneer.query_device_model()
     set_log_level("debug")
     print(f"Using default params: {pioneer.params.user_params}")
     pioneer.params.set_user_param(PARAM_DEBUG_LISTENER, True)
@@ -169,10 +168,6 @@ async def cli_main(args: argparse.Namespace):
             arg_bool = get_bool_arg(arg)
             print(f"Setting debug_listener to: {arg_bool}")
             pioneer.params.set_user_param(PARAM_DEBUG_LISTENER, arg_bool)
-        elif cmd == "debug_responder":
-            arg_bool = get_bool_arg(arg)
-            print(f"Setting debug_responder to: {arg_bool}")
-            pioneer.params.set_user_param(PARAM_DEBUG_RESPONDER, arg_bool)
         elif cmd == "debug_updater":
             arg_bool = get_bool_arg(arg)
             print(f"Setting debug_updater to: {arg_bool}")
