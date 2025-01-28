@@ -1014,64 +1014,52 @@ class PioneerAVR(PioneerAVRConnection):
 
         # This is a complex function and supports handles requests to update any
         # video related parameters
-        ## TODO: refactor to use match and possibly subfunctions
-        for arg in arguments:
-            if arg != "zone":
-                if arguments.get(arg) is not None:
-                    if self.properties.video.get(arg) is not arguments.get(arg):
-                        if isinstance(arguments.get(arg), str):
-                            # Functions to do a lookup here
-                            if arg == "resolution":
-                                arguments[arg] = self._get_parameter_key_from_value(
-                                    arguments.get(arg), VIDEO_RESOLUTION_MODES
-                                )
-                                if arguments[arg] not in self.params.get_param(
-                                    PARAM_VIDEO_RESOLUTION_MODES
-                                ):
-                                    raise ValueError(
-                                        f"Resolution {arguments.get(arg)} is "
-                                        f"not supported by current configuration."
-                                    )
-                            if arg == "pure_cinema":
-                                arguments[arg] = self._get_parameter_key_from_value(
-                                    arguments.get(arg), VIDEO_PURE_CINEMA_MODES
-                                )
-                            if arg == "stream_smoother":
-                                arguments[arg] = self._get_parameter_key_from_value(
-                                    arguments.get(arg), VIDEO_STREAM_SMOOTHER_MODES
-                                )
-                            if arg == "advanced_video_adjust":
-                                arguments[arg] = self._get_parameter_key_from_value(
-                                    arguments.get(arg), ADVANCED_VIDEO_ADJUST_MODES
-                                )
-                            if arg == "aspect":
-                                arguments[arg] = self._get_parameter_key_from_value(
-                                    arguments.get(arg), VIDEO_ASPECT_MODES
-                                )
+        for arg, value in arguments.items():
+            if value is None:
+                continue  ## TODO: check whether None is valid for any command
+            if self.properties.video.get(arg) == value:
+                continue  ## TODO: check typing of parsed responses
+            if (command := "set_video_" + arg) not in PIONEER_COMMANDS:
+                raise AVRUnknownCommandError(command=command, zone=zone)
 
-                        elif isinstance(arguments.get(arg), bool):
-                            arguments[arg] = str(int(arguments.get(arg)))
-
-                        elif isinstance(arguments.get(arg), int):
-                            # parameter 0 = 50, so add 50 for all int video parameters
-                            arguments[arg] += 50
-                            if arg == "prog_motion":
-                                arguments[arg] += 50
-                            elif arg == "ynr":
-                                arguments[arg] += 50
-                            elif arg == "cnr":
-                                arguments[arg] += 50
-                            elif arg == "bnr":
-                                arguments[arg] += 50
-                            elif arg == "mnr":
-                                arguments[arg] += 50
-
-                        await self.send_command(
-                            "set_video_" + arg,
-                            zone,
-                            prefix=str(arguments.get(arg)),
-                            ignore_error=False,
+            if isinstance(value, str):
+                # Functions to do a lookup here
+                if arg == "resolution":
+                    value = self._get_parameter_key_from_value(
+                        value, VIDEO_RESOLUTION_MODES
+                    )
+                    if value not in self.params.get_param(PARAM_VIDEO_RESOLUTION_MODES):
+                        raise ValueError(
+                            f"Resolution {value} is "
+                            f"not supported by current configuration."
                         )
+                if arg == "pure_cinema":
+                    value = self._get_parameter_key_from_value(
+                        value, VIDEO_PURE_CINEMA_MODES
+                    )
+                if arg == "stream_smoother":
+                    value = self._get_parameter_key_from_value(
+                        value, VIDEO_STREAM_SMOOTHER_MODES
+                    )
+                if arg == "advanced_video_adjust":
+                    value = self._get_parameter_key_from_value(
+                        value, ADVANCED_VIDEO_ADJUST_MODES
+                    )
+                if arg == "aspect":
+                    value = self._get_parameter_key_from_value(
+                        value, VIDEO_ASPECT_MODES
+                    )
+
+                elif isinstance(value, bool):
+                    value = str(int(value))
+
+                elif isinstance(value, int):
+                    # parameter 0 = 50, so add 50 for all int video parameters
+                    value += 50
+                    if arg in ["prog_motion", "ynr", "cnr", "bnr", "mnr"]:
+                        value += 50
+
+                await self.send_command(command, zone, prefix=str(value))
 
     async def set_dsp_settings(self, zone: Zone, **arguments) -> None:
         """Set the DSP settings for the amplifier."""
@@ -1084,73 +1072,56 @@ class PioneerAVR(PioneerAVRConnection):
             )
 
         ## TODO: refactor to use match and possibly subfunctions
-        for arg in arguments:
-            if arg != "zone":
-                if arguments.get(arg) is not None:
-                    if self.properties.dsp.get(arg) is not arguments.get(arg):
-                        if isinstance(arguments.get(arg), str):
-                            # Functions to do a lookup here
-                            if arg == "phase_control":
-                                arguments[arg] = self._get_parameter_key_from_value(
-                                    arguments.get(arg), DSP_PHASE_CONTROL
-                                )
-                            elif arg == "signal_select":
-                                arguments[arg] = self._get_parameter_key_from_value(
-                                    arguments.get(arg), DSP_SIGNAL_SELECT
-                                )
-                            elif arg == "digital_dialog_enhancement":
-                                arguments[arg] = self._get_parameter_key_from_value(
-                                    arguments.get(arg), DSP_DIGITAL_DIALOG_ENHANCEMENT
-                                )
-                            elif arg == "dual_mono":
-                                arguments[arg] = self._get_parameter_key_from_value(
-                                    arguments.get(arg), DSP_DUAL_MONO
-                                )
-                            elif arg == "drc":
-                                arguments[arg] = self._get_parameter_key_from_value(
-                                    arguments.get(arg), DSP_DRC
-                                )
-                            elif arg == "height_gain":
-                                arguments[arg] = self._get_parameter_key_from_value(
-                                    arguments.get(arg), DSP_HEIGHT_GAIN
-                                )
-                            elif arg == "virtual_depth":
-                                arguments[arg] = self._get_parameter_key_from_value(
-                                    arguments.get(arg), DSP_VIRTUAL_DEPTH
-                                )
-                            elif arg == "digital_filter":
-                                arguments[arg] = self._get_parameter_key_from_value(
-                                    arguments.get(arg), DSP_DIGITAL_FILTER
-                                )
-                        elif isinstance(arguments.get(arg), bool):
-                            arguments[arg] = str(int(arguments.get(arg)))
-                        elif isinstance(arguments.get(arg), float):
-                            if arg == "sound_delay":
-                                arguments[arg] = str(
-                                    int(float(arguments.get(arg)) * 10)
-                                ).zfill(3)
-                            elif arg == "center_image":
-                                arguments[arg] = str(
-                                    int(arguments.get(arg)) * 10
-                                ).zfill(2)
-                        elif isinstance(arguments.get(arg), int):
-                            if arg == "lfe_att":
-                                arguments[arg] = int((-20 / 5) * -1)
-                            elif arg == "dimension":
-                                arguments[arg] = arguments.get(arg) + 50
-                            elif arg == "effect":
-                                arguments[arg] = str(arguments.get(arg) / 10).zfill(2)
-                            elif arg == "phase_control_plus":
-                                arguments[arg] = str(arguments.get(arg)).zfill(2)
-                            elif arg == "center_width":
-                                arguments[arg] = str(arguments.get(arg)).zfill(2)
+        for arg, value in arguments.items():
+            if value is None:
+                continue  ## TODO: check whether None is valid for any command
+            if self.properties.dsp.get(arg) == value:
+                continue  ## TODO: check typing of parsed responses
+            if (command := "set_dsp_" + arg) not in PIONEER_COMMANDS:
+                raise AVRUnknownCommandError(command=command, zone=zone)
 
-                        await self.send_command(
-                            "set_dsp_" + arg,
-                            zone,
-                            prefix=str(arguments.get(arg)),
-                            ignore_error=False,
-                        )
+            if isinstance(value, str):
+                # Functions to do a lookup here
+                if arg == "phase_control":
+                    value = self._get_parameter_key_from_value(value, DSP_PHASE_CONTROL)
+                elif arg == "signal_select":
+                    value = self._get_parameter_key_from_value(value, DSP_SIGNAL_SELECT)
+                elif arg == "digital_dialog_enhancement":
+                    value = self._get_parameter_key_from_value(
+                        value, DSP_DIGITAL_DIALOG_ENHANCEMENT
+                    )
+                elif arg == "dual_mono":
+                    value = self._get_parameter_key_from_value(value, DSP_DUAL_MONO)
+                elif arg == "drc":
+                    value = self._get_parameter_key_from_value(value, DSP_DRC)
+                elif arg == "height_gain":
+                    value = self._get_parameter_key_from_value(value, DSP_HEIGHT_GAIN)
+                elif arg == "virtual_depth":
+                    value = self._get_parameter_key_from_value(value, DSP_VIRTUAL_DEPTH)
+                elif arg == "digital_filter":
+                    value = self._get_parameter_key_from_value(
+                        value, DSP_DIGITAL_FILTER
+                    )
+            elif isinstance(value, bool):
+                value = str(int(value))
+            elif isinstance(value, float):
+                if arg == "sound_delay":
+                    value = str(int(float(value) * 10)).zfill(3)
+                elif arg == "center_image":
+                    value = str(int(value) * 10).zfill(2)
+            elif isinstance(value, int):
+                if arg == "lfe_att":
+                    value = int((-20 / 5) * -1)
+                elif arg == "dimension":
+                    value = value + 50
+                elif arg == "effect":
+                    value = str(value / 10).zfill(2)
+                elif arg == "phase_control_plus":
+                    value = str(value).zfill(2)
+                elif arg == "center_width":
+                    value = str(value).zfill(2)
+
+            await self.send_command(command, zone, prefix=str(value))
 
     async def media_control(self, action: str, zone: Zone = Zone.Z1) -> None:
         """
