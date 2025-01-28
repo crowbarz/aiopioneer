@@ -10,16 +10,17 @@ class PioneerError(RuntimeError):
 
     def __init__(self, msg: str = None, **kwargs):
         self.kwargs = kwargs
-        if msg:
-            err_txt = msg
-        else:
-            err_key = self.translation_key
-            try:
-                err = ErrorFormatText[err_key]
-                err_txt = err.format(**self.kwargs)
-            except Exception as err_exc:  # pylint: disable=broad-except
-                err_txt = f"exception generating error {err_key}: {repr(err_exc)}"
-        super().__init__(err_txt)
+        if msg is None:
+            msg = self.format_err(ErrorFormatText, self.translation_key, **kwargs)
+        super().__init__(msg)
+
+    @staticmethod
+    def format_err(err_dict: dict[str, str], err_key: str, **kwargs):
+        """Get error message and interpolate arguments."""
+        try:
+            return err_dict[err_key].format(**kwargs)
+        except Exception as err_exc:  # pylint: disable=broad-except
+            return f"exception generating error {err_key}: {repr(err_exc)}"
 
 
 class AVRConnectionError(PioneerError):
@@ -31,7 +32,7 @@ class AVRConnectionError(PioneerError):
         self, err: str = None, err_key: str = None, exc: Exception = None, **kwargs
     ):
         if err_key:
-            err = ConnectErrorFormatText.get(err_key, err_key)
+            err = self.format_err(ConnectErrorFormatText, err_key, exc=exc, **kwargs)
         elif exc and err is None:
             err = repr(exc)
         self.err = err
@@ -129,7 +130,9 @@ class AVRLocalCommandError(AVRCommandError):
         **kwargs,
     ):
         if err_key:
-            err = LocalCommandErrorFormatText.get(err_key, err_key)
+            err = self.format_err(
+                LocalCommandErrorFormatText, err_key, exc=exc, **kwargs
+            )
         elif exc and err is None:
             err = repr(exc)
         super().__init__(command=command, err=err, exc=exc, **kwargs)
@@ -156,6 +159,16 @@ ErrorFormatText = {
 
 LocalCommandErrorFormatText = {
     "tuner_unavailable": "AVR tuner is unavailable",
+    "tone_unavailable": "Tone controls not supported for {zone.full_name}",
+    "freq_step_calc_error": "Unable to calculate AM frequency step",
+    "freq_step_unknown": "Unknown AM tuner frequency step, parameter 'am_frequency_step' required",
+    "freq_step_max_exceeded": "Maximum tuner frequency step count exceeded",
+    "freq_set_failed": "Unable to set tuner frequency to {frequency}",
+    "channel_levels_unavailable": "channel levels not supported for {zone.full_name}",
+    "video_settings_unavailable": "video settings not supported for {zone.full_name}",
+    "dsp_settings_unavailable": "DSP settings not supported for {zone.full_name}",
+    "media_controls_not_supported": "Media controls not supported on source {source}",
+    "media_action_not_supported": "Media action {action} not supported on source {source}",
 }
 
 ConnectErrorFormatText = {

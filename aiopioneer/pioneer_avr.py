@@ -47,9 +47,11 @@ from .exceptions import (
     AVRUnavailableError,
     AVRResponseTimeoutError,
     AVRCommandError,
+    AVRUnknownCommandError,
     AVRUnknownLocalCommandError,
     AVRTunerUnavailableError,
     AVRConnectProtocolError,
+    AVRLocalCommandError,
 )
 from .params import (
     PioneerAVRParams,
@@ -742,7 +744,9 @@ class PioneerAVR(PioneerAVRConnection):
         ## Check the zone supports tone settings and that inputs are within range
         zone = self._check_zone(zone)
         if self.properties.tone.get(zone.value) is None:
-            raise RuntimeError(f"tone controls are not available for {zone.full_name}")
+            raise AVRLocalCommandError(
+                command="set_tone_settings", err_key="tone_unavailable", zone=zone
+            )
         if not -6 <= treble <= 6:
             raise ValueError(f"invalid treble value: {treble}")
         if not -6 <= bass <= 6:
@@ -864,9 +868,7 @@ class PioneerAVR(PioneerAVRConnection):
             SOURCE_TUNER in self.properties.source_id.values()
             and self.properties.tuner.get("band") == "AM"
         ):
-            raise RuntimeError(
-                "cannot calculate AM frequency step: tuner is unavailable"
-            )
+            raise AVRTunerUnavailableError(command="calculate_am_frequency_step")
 
         ## Try sending the query_tuner_am_step command first.
         await self.send_command(command="query_tuner_am_step", ignore_error=True)
@@ -878,17 +880,19 @@ class PioneerAVR(PioneerAVRConnection):
         new_freq = current_freq
         count = 3
         while new_freq == current_freq and count > 0:
-            await self.send_command("increase_tuner_frequency", ignore_error=True)
+            if not await self.send_command(
+                "increase_tuner_frequency", ignore_error=True
+            ):
+                break
             new_freq = self.properties.tuner.get("frequency")
             count -= 1
-        if new_freq == current_freq and count == 0:
-            _LOGGER.error(
-                "cannot calculate tuner AM frequency step: unable to step frequency"
+        if new_freq == current_freq:
+            raise AVRLocalCommandError(
+                command="calculate_am_frequency_step", err_key="freq_step_calc_error"
             )
-            return
 
         self.params.set_runtime_param(PARAM_TUNER_AM_FREQ_STEP, new_freq - current_freq)
-        await self.send_command("decrease_tuner_frequency", ignore_error=True)
+        await self.send_command("decrease_tuner_frequency")
 
     async def _step_tuner_frequency(self, band: str, frequency: float) -> None:
         """Step the tuner frequency until requested frequency is reached."""
@@ -896,8 +900,8 @@ class PioneerAVR(PioneerAVRConnection):
         current_freq = self.properties.tuner.get("frequency")
         if band == "AM":
             if (freq_step := self.params.get_param(PARAM_TUNER_AM_FREQ_STEP)) is None:
-                raise ValueError(
-                    "unknown AM tuner frequency step, param 'am_frequency_step' required"
+                raise AVRLocalCommandError(
+                    command="step_tuner_frequency", err_key="freq_step_unknown"
                 )
 
             # Divide frequency by freq_step using modf so that the remainder is
@@ -932,7 +936,9 @@ class PioneerAVR(PioneerAVRConnection):
                 count -= 1
 
         if count == 0:
-            raise RuntimeError("maximum frequency step count exceeded")
+            raise AVRLocalCommandError(
+                command="step_tuner_frequency", err_key="freq_step_max_exceeded"
+            )
 
     async def set_tuner_frequency(self, band: TunerBand, frequency: float) -> None:
         """Set the tuner frequency and band."""
@@ -949,13 +955,15 @@ class PioneerAVR(PioneerAVRConnection):
         if await self.send_command("operation_direct_access", ignore_error=True):
             ## Set tuner frequency directly if command is supported
             freq_str = str(int(frequency * (100 if band == TunerBand.FM else 1)))
-            for digit in freq_str:
-                if not await self.send_command(
-                    "operation_tuner_digit", prefix=digit, ignore_error=False
-                ):
-                    raise RuntimeError(f"AVR rejected frequency set to {frequency}")
+            try:
+                for digit in freq_str:
+                    await self.send_command("operation_tuner_digit", prefix=digit)
+            except AVRCommandError as exc:
+                raise AVRLocalCommandError(
+                    command="set_tuner_frequency", err_key="freq_set_failed", exc=exc
+                ) from exc
         else:
-            await self._step_tuner_frequency(band, frequency)
+            await self._step_tuner_frequency(band=band, frequency=frequency)
 
     async def select_tuner_preset(self, tuner_class: str, preset: int) -> None:
         """Select the tuner preset."""
@@ -978,23 +986,31 @@ class PioneerAVR(PioneerAVRConnection):
         """Set the level (gain) for amplifier channel in zone."""
         zone = self._check_zone(zone)
         if self.properties.channel_levels.get(zone.value) is None:
-            raise ValueError(f"channel levels not supported for {zone.full_name}")
+            raise AVRLocalCommandError(
+                command="set_channel_levels",
+                err_key="channel_levels_unavailable",
+                zone=zone,
+            )
 
         ## Check the channel exists
         if self.properties.channel_levels[zone.value].get(channel.upper()) is None:
             raise ValueError(f"invalid channel {channel} for {zone.full_name}")
 
         prefix = channel.ljust(3, "_") + str(int((level * 2) + 50))
-        await self.send_command("set_channel_levels", zone, prefix=prefix)
+        await self.send_command("set_channel_levels", zone=zone, prefix=prefix)
 
-    async def set_video_settings(self, **arguments) -> None:
+    async def set_video_settings(self, zone: Zone, **arguments) -> None:
         """Set video settings for a given zone."""
-        zone = self._check_zone(arguments.get("zone"))
+        zone = self._check_zone(zone)
 
         # This function is only valid for zone 1, no video settings are
         # available for zone 2, 3, 4 and HDZone
         if zone is not Zone.Z1:
-            raise ValueError(f"video settings not supported for {zone.full_name}")
+            raise AVRLocalCommandError(
+                command="set_video_settings",
+                err_key="video_settings_unavailable",
+                zone=zone,
+            )
 
         # This is a complex function and supports handles requests to update any
         # video related parameters
@@ -1057,11 +1073,15 @@ class PioneerAVR(PioneerAVRConnection):
                             ignore_error=False,
                         )
 
-    async def set_dsp_settings(self, **arguments) -> None:
+    async def set_dsp_settings(self, zone: Zone, **arguments) -> None:
         """Set the DSP settings for the amplifier."""
-        zone = self._check_zone(arguments.get("zone"))
+        zone = self._check_zone(zone)
         if zone is not Zone.Z1:
-            raise ValueError(f"DSP settings not supported for {zone.full_name}")
+            raise AVRLocalCommandError(
+                command="set_dsp_settings",
+                err_key="dsp_settings_unavailable",
+                zone=zone,
+            )
 
         ## TODO: refactor to use match and possibly subfunctions
         for arg in arguments:
@@ -1140,21 +1160,24 @@ class PioneerAVR(PioneerAVRConnection):
         zone = self._check_zone(zone)
         media_commands = self.properties.media_control_mode.get(zone)
         if media_commands is not None:
-            command = MEDIA_CONTROL_COMMANDS.get(media_commands, {}).get(action)
-            if command is not None:
-                # These commands are ALWAYS sent to zone 1 because each zone
-                # does not have unique commands
-                await self.send_command(command, Zone.Z1, ignore_error=False)
-            else:
-                raise NotImplementedError(
-                    f"Current source ({self.properties.source_id.get(zone.value)} "
-                    f"does not support action {action}"
-                )
-        else:
-            raise NotImplementedError(
-                f"Current source ({self.properties.source_id.get(zone.value)}) "
-                "does not support media_control activities"
+            raise AVRLocalCommandError(
+                command="media_control",
+                err_key="media_controls_not_supported",
+                source=self.properties.source_name.get(zone.value),
             )
+
+        command = MEDIA_CONTROL_COMMANDS.get(media_commands, {}).get(action)
+        if command is not None:
+            raise AVRLocalCommandError(
+                command="media_control",
+                err_key="media_action_not_supported",
+                source=self.properties.source_name.get(zone.value),
+                action=action,
+            )
+
+        # These commands are ALWAYS sent to zone 1 because each zone
+        # does not have unique commands
+        await self.send_command(command, Zone.Z1)
 
     async def set_source_name(
         self, source_id: str, source_name: str = "", default: bool = False
