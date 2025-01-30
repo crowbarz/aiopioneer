@@ -25,6 +25,7 @@ from .exceptions import (
     AVRConnectError,
     AVRDisconnectError,
     AVRConnectTimeoutError,
+    AVRResponseParseError,
 )
 from .util import (
     sock_set_keepalive,
@@ -291,6 +292,9 @@ class PioneerAVRConnection:
             except (EOFError, OSError):
                 _LOGGER.debug(">> listener detected connection error")
                 break
+            except AVRResponseParseError as exc:
+                _LOGGER.error(str(exc))
+                # continue listening on PioneerError
             except Exception as exc:  # pylint: disable=broad-except
                 _LOGGER.error("listener task exception %s: %s", action, repr(exc))
                 _LOGGER.error(traceback.format_exc())

@@ -4,6 +4,7 @@ from collections.abc import Callable
 import logging
 
 from ..const import Zone
+from ..exceptions import AVRResponseParseError
 from ..params import PioneerAVRParams
 from ..properties import PioneerAVRProperties
 from .response import Response
@@ -244,15 +245,18 @@ def process_raw_response(
     match_resp = next((r for r in RESPONSE_DATA if raw_resp.startswith(r[0])), None)
     if not match_resp:
         ## No error handling as not all responses have been captured by aiopioneer.
-        # _LOGGER.debug("unparsed raw response ignored: %s", raw_resp)
+        _LOGGER.debug("unparsed raw response: %s", raw_resp)
         return [], []
 
     parse_cmd: str = match_resp[0]
     parse_func: Callable[[str, PioneerAVRParams, Zone, str], Response] = match_resp[1]
     parse_zone: Zone = match_resp[2]
-    responses: list[Response] = parse_func(
-        raw_resp[len(parse_cmd) :], params, zone=parse_zone, command=parse_cmd
-    )
+    try:
+        responses: list[Response] = parse_func(
+            raw_resp[len(parse_cmd) :], params, zone=parse_zone, command=parse_cmd
+        )
+    except Exception as exc:  # pylint: disable=broad-except
+        raise AVRResponseParseError(response=raw_resp, exc=exc) from exc
 
     ## Parse responses and update properties
     updated_zones: set[Zone] = set()

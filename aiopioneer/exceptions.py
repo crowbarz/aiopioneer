@@ -116,6 +116,15 @@ class AVRCommandResponseError(AVRCommandError):
         super().__init__(command=command, err=err, **kwargs)
 
 
+class AVRResponseParseError(PioneerError):
+    """AVR response could not be parsed."""
+
+    translation_key = "response_parse_error"
+
+    def __init__(self, response: str, exc: Exception, **kwargs):
+        super().__init__(response=response, err=repr(exc), exc=exc, **kwargs)
+
+
 class AVRLocalCommandError(AVRCommandError):
     """Local command resulted in an error."""
 
@@ -154,6 +163,7 @@ ErrorFormatText = {
     "unknown_local_command": "Unknown command {command}",
     "response_timeout": "AVR command {command} timed out",
     "command_error": "AVR command {command} returned error: {err}",
+    "response_parse_error": "Exception parsing response: {response}: {err}",
     "local_command_error": "Command {command} error: {err}",
 }
 
