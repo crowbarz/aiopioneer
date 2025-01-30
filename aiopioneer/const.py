@@ -1,6 +1,7 @@
 """Constants for aiopioneer."""
 
 from enum import StrEnum
+from typing import Any
 
 VERSION = "0.8.1"
 DEFAULT_TIMEOUT = 2
@@ -38,6 +39,29 @@ class TunerBand(StrEnum):
 
 
 SOURCE_TUNER = "02"
+
+
+class AVRParamMap(dict):
+    """Map of AVR parameter keys to values."""
+
+    params = {}
+
+    def __new__(cls, value: Any):
+        for k, v in cls.params.items():
+            if cls.match(v, value):
+                return k
+        raise ValueError(f"Name {value} not found in {cls.__name__}")
+
+    def __class_getitem__(cls, key):
+        if (value := cls.params.get(key)) is not None:
+            return value
+        raise ValueError(f"Key {key} not found in {cls.__name__}")
+
+    @classmethod
+    def match(cls, v: Any, value: Any):
+        """Default value match function."""
+        return v == value
+
 
 # Listening modes is a dict with a nested array for the following structure:
 # key: [display_name, 2ch_source_bool, multichannel_source_bool]
