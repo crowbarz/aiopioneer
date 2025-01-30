@@ -249,11 +249,16 @@ MEDIA_CONTROL_COMMANDS = {
     },
 }
 
-TONE_MODES = {
-    "0": "Bypass",
-    "1": "On",
-    "9": "(cycle)",
-}
+
+class ToneModes(AVRParamMap):
+    """Tone modes."""
+
+    params = {
+        "0": "Bypass",
+        "1": "On",
+        "9": "(cycle)",
+    }
+
 
 TONE_DB_VALUES = {
     "00": "6dB",

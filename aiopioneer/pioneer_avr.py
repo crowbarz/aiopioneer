@@ -21,7 +21,7 @@ from .const import (
     MIN_RESCAN_INTERVAL,
     SOURCE_TUNER,
     DIMMER_MODES,
-    TONE_MODES,
+    ToneModes,
     TONE_DB_VALUES,
     SPEAKER_MODES,
     HDMI_OUT_MODES,
@@ -756,7 +756,7 @@ class PioneerAVR(PioneerAVRConnection):
             await self.send_command(
                 "set_tone_mode",
                 zone,
-                prefix=self._get_parameter_key_from_value(tone, TONE_MODES),
+                prefix=ToneModes(tone),
             )
         ## Set treble and bass only if zone tone status is set to "On"
         if self.properties.tone.get(zone.value, {}).get("status") == "On":
