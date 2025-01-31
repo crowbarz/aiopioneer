@@ -277,8 +277,12 @@ class PioneerAVRConnection:
                     _LOGGER.debug("received AVR response: %s", response)
 
                 ## Parse response, update cached properties
-                action = "parsing response " + response
-                self.parse_response(response)
+                try:
+                    action = "parsing response " + response
+                    self.parse_response(response)
+                except AVRResponseParseError as exc:
+                    _LOGGER.error(str(exc))
+                    # continue on AVRResponseParseError
 
                 ## Queue raw response and signal response handler
                 if self._queue_responses:
@@ -289,10 +293,10 @@ class PioneerAVRConnection:
             except asyncio.CancelledError:
                 _LOGGER.debug(">> listener task cancelled")
                 break
-            except (EOFError, OSError):
+            except (EOFError, OSError, AVRUnavailableError):
                 _LOGGER.debug(">> listener detected connection error")
                 break
-            except AVRResponseParseError as exc:
+            except PioneerError as exc:
                 _LOGGER.error(str(exc))
                 # continue listening on PioneerError
             except Exception as exc:  # pylint: disable=broad-except
