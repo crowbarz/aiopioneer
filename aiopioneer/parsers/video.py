@@ -1,6 +1,6 @@
 """Pioneer AVR response parsers for video parameters."""
 
-from ..const import VIDEO_RESOLUTION_MODES, ADVANCED_VIDEO_ADJUST_MODES, Zone
+from ..const import VideoResolutionModes, AdvancedVideoAdjustModes, Zone
 from ..params import PioneerAVRParams
 from .response import Response
 
@@ -46,7 +46,7 @@ class VideoParsers:
                 base_property="video",
                 property_name="resolution",
                 zone=zone,
-                value=VIDEO_RESOLUTION_MODES.get(raw),
+                value=VideoResolutionModes[raw],
                 queue_commands=None,
             )
         )
@@ -142,7 +142,7 @@ class VideoParsers:
                 base_property="video",
                 property_name="advanced_video_adjust",
                 zone=zone,
-                value=ADVANCED_VIDEO_ADJUST_MODES.get(raw),
+                value=AdvancedVideoAdjustModes[raw],
                 queue_commands=None,
             )
         )

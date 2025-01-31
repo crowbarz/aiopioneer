@@ -41,26 +41,37 @@ class TunerBand(StrEnum):
 SOURCE_TUNER = "02"
 
 
-class AVRParamMap(dict):
+class ParamMap(dict):
     """Map of AVR parameter keys to values."""
 
-    params = {}
+    param_map: dict[str, Any] = {}
 
     def __new__(cls, value: Any):
-        for k, v in cls.params.items():
+        for k, v in cls.param_map.items():
             if cls.match(v, value):
                 return k
         raise ValueError(f"Name {value} not found in {cls.__name__}")
 
-    def __class_getitem__(cls, key):
-        if (value := cls.params.get(key)) is not None:
+    def __class_getitem__(cls, key: str):
+        if (value := cls.param_map.get(key)) is not None:
             return value
         raise ValueError(f"Key {key} not found in {cls.__name__}")
 
     @classmethod
-    def match(cls, v: Any, value: Any):
+    def match(cls, v: str, value: Any):
         """Default value match function."""
         return v == value
+
+
+class ParamListMap(dict):
+    """Map of AVR parameter keys to a list."""
+
+    params: dict[str, list] = {}
+
+    @classmethod
+    def match(cls, v: list, value: list):
+        """Match value to first element of list."""
+        return v == value[0]
 
 
 # Listening modes is a dict with a nested array for the following structure:
@@ -250,89 +261,130 @@ MEDIA_CONTROL_COMMANDS = {
 }
 
 
-class ToneModes(AVRParamMap):
+class ToneModes(ParamMap):
     """Tone modes."""
 
-    params = {
+    param_map = {
         "0": "Bypass",
         "1": "On",
         "9": "(cycle)",
     }
 
 
-TONE_DB_VALUES = {
-    "00": "6dB",
-    "01": "5dB",
-    "02": "4dB",
-    "03": "3dB",
-    "04": "2dB",
-    "05": "1dB",
-    "06": "0dB",
-    "07": "-1dB",
-    "08": "-2dB",
-    "09": "-3dB",
-    "10": "-4dB",
-    "11": "-5dB",
-    "12": "-6dB",
-}
+class ToneDB(ParamMap):
+    """Tone dB values."""
 
-SPEAKER_MODES = {
-    "0": "OFF",
-    "1": "A",
-    "2": "B",
-    "3": "A+B",
-}
+    param_map = {
+        "00": "6dB",
+        "01": "5dB",
+        "02": "4dB",
+        "03": "3dB",
+        "04": "2dB",
+        "05": "1dB",
+        "06": "0dB",
+        "07": "-1dB",
+        "08": "-2dB",
+        "09": "-3dB",
+        "10": "-4dB",
+        "11": "-5dB",
+        "12": "-6dB",
+    }
 
-HDMI_OUT_MODES = {
-    "0": "ALL",
-    "1": "HDMI 1",
-    "2": "HDMI 2",
-    "3": "HDMI (cyclic)",
-}
 
-HDMI_AUDIO_MODES = {
-    "0": "AMP",
-    "1": "PASSTHROUGH",
-}
+class SpeakerModes(ParamMap):
+    """Speaker modes."""
 
-PANEL_LOCK = {
-    "0": "OFF",
-    "1": "PANEL ONLY",
-    "2": "PANEL + VOLUME",
-}
+    param_map = {
+        "0": "OFF",
+        "1": "A",
+        "2": "B",
+        "3": "A+B",
+    }
 
-PQLS_MODES = {
-    "0": "OFF",
-    "1": "AUTO",
-}
 
-AMP_MODES = {
-    "0": "AMP ON",
-    "1": "AMP Front OFF",
-    "2": "AMP Front & Center OFF",
-    "3": "AMP OFF",
-}
+class HDMIOutModes(ParamMap):
+    """HDMI out modes."""
 
-VIDEO_PURE_CINEMA_MODES = {
-    "0": "AUTO",
-    "1": "ON",
-    "2": "OFF",
-}
+    param_map = {
+        "0": "ALL",
+        "1": "HDMI 1",
+        "2": "HDMI 2",
+        "3": "HDMI (cyclic)",
+    }
 
-VIDEO_STREAM_SMOOTHER_MODES = {"0": "OFF", "1": "ON", "2": "AUTO"}
 
-VIDEO_ASPECT_MODES = {
-    "0": "PASSTHROUGH",
-    "1": "NORMAL",
-}
+class HDMIAudioModes(ParamMap):
+    """HDMI audio modes."""
 
-ADVANCED_VIDEO_ADJUST_MODES = {
-    "0": "PDP",
-    "1": "LCD",
-    "2": "FPJ",
-    "3": "Professional",
-    "4": "Memory",
-}
+    param_map = {
+        "0": "AMP",
+        "1": "PASSTHROUGH",
+    }
+
+
+class PanelLock(ParamMap):
+    """Panel lock settings."""
+
+    param_map = {
+        "0": "OFF",
+        "1": "PANEL ONLY",
+        "2": "PANEL + VOLUME",
+    }
+
+
+class PQLSModes(ParamMap):
+    """PQLS modes."""
+
+    param_map = {
+        "0": "OFF",
+        "1": "AUTO",
+    }
+
+
+class AMPModes(ParamMap):
+    """AMP modes."""
+
+    param_map = {
+        "0": "AMP ON",
+        "1": "AMP Front OFF",
+        "2": "AMP Front & Center OFF",
+        "3": "AMP OFF",
+    }
+
+
+class VideoPureCinemaModes(ParamMap):
+    """Video pure cinema modes."""
+
+    param_map = {
+        "0": "AUTO",
+        "1": "ON",
+        "2": "OFF",
+    }
+
+
+class VideoStreamSmootherModes(ParamMap):
+    """Video stream smoother modes."""
+
+    param_map = {"0": "OFF", "1": "ON", "2": "AUTO"}
+
+
+class VideoAspectModes(ParamMap):
+    """Video aspect modes."""
+
+    param_map = {"0": "PASSTHROUGH", "1": "NORMAL"}
+
+
+class AdvancedVideoAdjustModes(ParamMap):
+    """Advanced video adjust modes."""
+
+    param_map = {
+        "0": "PDP",
+        "1": "LCD",
+        "2": "FPJ",
+        "3": "Professional",
+        "4": "Memory",
+    }
+
 
 CHANNEL_LEVELS_OBJ = {
     "C": 0,
@@ -507,25 +559,34 @@ VIDEO_SIGNAL_3D_MODES = {
     "08": "Side-by-Side(Half)",
 }
 
-VIDEO_RESOLUTION_MODES = {
-    "0": "AUTO",
-    "1": "PURE",
-    "3": "480/576p",
-    "4": "720p",
-    "5": "1080i",
-    "6": "1080p",
-    "7": "1080/24p",
-    "8": "4K",
-    "9": "4K/24p",
-}
 
-DIMMER_MODES = {
-    "0": "Brightest",
-    "1": "Bright",
-    "2": "Dark",
-    "3": "Off",
-    "9": "(cycle)",
-}
+class VideoResolutionModes(ParamMap):
+    """Video resolution modes."""
+
+    param_map = {
+        "0": "AUTO",
+        "1": "PURE",
+        "3": "480/576p",
+        "4": "720p",
+        "5": "1080i",
+        "6": "1080p",
+        "7": "1080/24p",
+        "8": "4K",
+        "9": "4K/24p",
+    }
+
+
+class DimmerModes(ParamMap):
+    """Dimmer modes."""
+
+    param_map = {
+        "0": "Brightest",
+        "1": "Bright",
+        "2": "Dark",
+        "3": "Off",
+        "9": "(cycle)",
+    }
+
 
 MCACC_MEASUREMENT_ERROR = {
     "0": "No error",

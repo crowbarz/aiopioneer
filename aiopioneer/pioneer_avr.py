@@ -20,19 +20,19 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     MIN_RESCAN_INTERVAL,
     SOURCE_TUNER,
-    DIMMER_MODES,
+    DimmerModes,
     ToneModes,
-    TONE_DB_VALUES,
-    SPEAKER_MODES,
-    HDMI_OUT_MODES,
-    PANEL_LOCK,
-    AMP_MODES,
+    ToneDB,
+    SpeakerModes,
+    HDMIOutModes,
+    PanelLock,
+    AMPModes,
     MEDIA_CONTROL_COMMANDS,
-    VIDEO_RESOLUTION_MODES,
-    ADVANCED_VIDEO_ADJUST_MODES,
-    VIDEO_PURE_CINEMA_MODES,
-    VIDEO_STREAM_SMOOTHER_MODES,
-    VIDEO_ASPECT_MODES,
+    VideoResolutionModes,
+    AdvancedVideoAdjustModes,
+    VideoPureCinemaModes,
+    VideoStreamSmootherModes,
+    VideoAspectModes,
     CHANNEL_LEVELS_OBJ,
     DSP_PHASE_CONTROL,
     DSP_SIGNAL_SELECT,
@@ -42,6 +42,7 @@ from .const import (
     DSP_HEIGHT_GAIN,
     DSP_VIRTUAL_DEPTH,
     DSP_DIGITAL_FILTER,
+    ParamMap,
 )
 from .exceptions import (
     AVRUnavailableError,
@@ -717,10 +718,7 @@ class PioneerAVR(PioneerAVRConnection):
 
     async def set_panel_lock(self, panel_lock: str) -> None:
         """Set the panel lock."""
-        await self.send_command(
-            "set_amp_panel_lock",
-            prefix=self._get_parameter_key_from_value(panel_lock, PANEL_LOCK),
-        )
+        await self.send_command("set_amp_panel_lock", prefix=PanelLock(panel_lock))
 
     async def set_remote_lock(self, remote_lock: bool) -> None:
         """Set the remote lock."""
@@ -728,10 +726,7 @@ class PioneerAVR(PioneerAVRConnection):
 
     async def set_dimmer(self, dimmer: str) -> None:
         """Set the display dimmer."""
-        await self.send_command(
-            "set_amp_dimmer",
-            prefix=self._get_parameter_key_from_value(dimmer, DIMMER_MODES),
-        )
+        await self.send_command("set_amp_dimmer", prefix=DimmerModes(dimmer))
 
     async def set_tone_settings(
         self,
@@ -764,18 +759,10 @@ class PioneerAVR(PioneerAVRConnection):
             bass_str = f"{str(bass)}dB"
             if treble is not None:
                 await self.send_command(
-                    "set_tone_treble",
-                    zone,
-                    prefix=self._get_parameter_key_from_value(
-                        treble_str, TONE_DB_VALUES
-                    ),
+                    "set_tone_treble", zone, prefix=ToneDB(treble_str)
                 )
             if bass is not None:
-                await self.send_command(
-                    "set_tone_bass",
-                    zone,
-                    prefix=self._get_parameter_key_from_value(bass_str, TONE_DB_VALUES),
-                )
+                await self.send_command("set_tone_bass", zone, prefix=ToneDB(bass_str))
 
     async def set_amp_settings(
         self,
@@ -795,19 +782,13 @@ class PioneerAVR(PioneerAVRConnection):
             and speaker_config is not None
         ):
             await self.send_command(
-                "set_amp_speaker_status",
-                zone,
-                prefix=self._get_parameter_key_from_value(
-                    speaker_config, SPEAKER_MODES
-                ),
+                "set_amp_speaker_status", zone, prefix=SpeakerModes(speaker_config)
             )
 
         # FUNC: HDMI OUTPUT SELECT (use PARAM_HDMI_OUT_MODES)
         if self.properties.amp.get("hdmi_out") is not None and hdmi_out is not None:
             await self.send_command(
-                "set_amp_hdmi_out_status",
-                zone,
-                prefix=self._get_parameter_key_from_value(hdmi_out, HDMI_OUT_MODES),
+                "set_amp_hdmi_out_status", zone, prefix=HDMIOutModes(hdmi_out)
             )
 
         # FUNC: HDMI AUDIO (simple bool, True is on, otherwise audio only goes to amp)
@@ -827,11 +808,7 @@ class PioneerAVR(PioneerAVRConnection):
 
         # FUNC: AMP (use PARAM_AMP_MODES)
         if self.properties.amp.get("status") is not None and amp is not None:
-            await self.send_command(
-                "set_amp_status",
-                zone,
-                prefix=self._get_parameter_key_from_value(amp, AMP_MODES),
-            )
+            await self.send_command("set_amp_status", zone, prefix=AMPModes(amp))
 
     async def select_tuner_band(self, band: TunerBand = TunerBand.FM) -> None:
         """Set the tuner band."""
@@ -1014,52 +991,38 @@ class PioneerAVR(PioneerAVRConnection):
 
         # This is a complex function and supports handles requests to update any
         # video related parameters
+        ## TODO: handle cyclic, up/down -> 8, 9 or 98, 99
         for arg, value in arguments.items():
-            if value is None:
-                continue  ## TODO: check whether None is valid for any command
             if self.properties.video.get(arg) == value:
-                continue  ## TODO: check typing of parsed responses
+                continue
             if (command := "set_video_" + arg) not in PIONEER_COMMANDS:
                 raise AVRUnknownCommandError(command=command, zone=zone)
-
-            if isinstance(value, str):
-                # Functions to do a lookup here
+            arg_format = PIONEER_COMMANDS[command]["args"]
+            arg_type = arg_format[0]  # prefix type
+            if isinstance(arg_type, ParamMap):
+                value = arg_type(value)
                 if arg == "resolution":
-                    value = self._get_parameter_key_from_value(
-                        value, VIDEO_RESOLUTION_MODES
-                    )
                     if value not in self.params.get_param(PARAM_VIDEO_RESOLUTION_MODES):
-                        raise ValueError(
-                            f"Resolution {value} is "
-                            f"not supported by current configuration."
-                        )
-                if arg == "pure_cinema":
-                    value = self._get_parameter_key_from_value(
-                        value, VIDEO_PURE_CINEMA_MODES
+                        raise ValueError(f"Resolution {value} unavailable")
+            elif not isinstance(arg, arg_type):
+                raise ValueError(f"Invalid value {value} for video setting {arg}")
+            elif arg_type is bool:
+                value = int(value)
+            elif arg_type is int:
+                value_min = arg_format[1]
+                value_max = arg_format[2]
+                if not value_min >= value >= value_max:
+                    raise ValueError(
+                        f"Value {value} outside of range {value_min} -- {value_max}"
+                        f"for video setting {arg}"
                     )
-                if arg == "stream_smoother":
-                    value = self._get_parameter_key_from_value(
-                        value, VIDEO_STREAM_SMOOTHER_MODES
-                    )
-                if arg == "advanced_video_adjust":
-                    value = self._get_parameter_key_from_value(
-                        value, ADVANCED_VIDEO_ADJUST_MODES
-                    )
-                if arg == "aspect":
-                    value = self._get_parameter_key_from_value(
-                        value, VIDEO_ASPECT_MODES
-                    )
+                value += 50
+            else:
+                raise RuntimeError(
+                    f"Invalid argument type {arg_type} for video setting {arg}"
+                )
 
-                elif isinstance(value, bool):
-                    value = str(int(value))
-
-                elif isinstance(value, int):
-                    # parameter 0 = 50, so add 50 for all int video parameters
-                    value += 50
-                    if arg in ["prog_motion", "ynr", "cnr", "bnr", "mnr"]:
-                        value += 50
-
-                await self.send_command(command, zone, prefix=str(value))
+            await self.send_command(command, zone, prefix=str(value))
 
     async def set_dsp_settings(self, zone: Zone, **arguments) -> None:
         """Set the DSP settings for the amplifier."""

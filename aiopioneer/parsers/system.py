@@ -5,13 +5,13 @@ import re
 from ..const import (
     SOURCE_TUNER,
     MEDIA_CONTROL_SOURCES,
-    SPEAKER_MODES,
-    HDMI_AUDIO_MODES,
-    HDMI_OUT_MODES,
-    PQLS_MODES,
-    AMP_MODES,
-    PANEL_LOCK,
-    DIMMER_MODES,
+    SpeakerModes,
+    HDMIAudioModes,
+    HDMIOutModes,
+    PQLSModes,
+    AMPModes,
+    PanelLock,
+    DimmerModes,
     Zone,
 )
 from ..params import (
@@ -199,7 +199,7 @@ class SystemParsers:
                 base_property="amp",
                 property_name="speakers",
                 zone=zone,
-                value=SPEAKER_MODES.get(raw),
+                value=SpeakerModes[raw],
                 queue_commands=None,
             )
         )
@@ -218,7 +218,7 @@ class SystemParsers:
                 base_property="amp",
                 property_name="hdmi_out",
                 zone=zone,
-                value=HDMI_OUT_MODES.get(raw),
+                value=HDMIOutModes[raw],
                 queue_commands=None,
             )
         )
@@ -237,7 +237,7 @@ class SystemParsers:
                 base_property="amp",
                 property_name="hdmi_audio",
                 zone=zone,
-                value=HDMI_AUDIO_MODES.get(raw),
+                value=HDMIAudioModes[raw],
                 queue_commands=None,
             )
         )
@@ -256,7 +256,7 @@ class SystemParsers:
                 base_property="amp",
                 property_name="pqls",
                 zone=zone,
-                value=PQLS_MODES.get(raw),
+                value=PQLSModes[raw],
                 queue_commands=None,
             )
         )
@@ -275,7 +275,7 @@ class SystemParsers:
                 base_property="amp",
                 property_name="dimmer",
                 zone=zone,
-                value=DIMMER_MODES.get(raw),
+                value=DimmerModes[raw],
                 queue_commands=None,
             )
         )
@@ -313,7 +313,7 @@ class SystemParsers:
                 base_property="amp",
                 property_name="status",
                 zone=zone,
-                value=AMP_MODES.get(raw),
+                value=AMPModes[raw],
                 queue_commands=None,
             )
         )
@@ -332,7 +332,7 @@ class SystemParsers:
                 base_property="amp",
                 property_name="panel_lock",
                 zone=zone,
-                value=PANEL_LOCK.get(raw),
+                value=PanelLock[raw],
                 queue_commands=None,
             )
         )

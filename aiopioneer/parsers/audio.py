@@ -1,6 +1,6 @@
 """aiopioneer response parsers for audio parameters."""
 
-from ..const import Zone, ToneModes, TONE_DB_VALUES
+from ..const import Zone, ToneModes, ToneDB
 from ..params import PioneerAVRParams, PARAM_ALL_LISTENING_MODES
 from .response import Response
 
@@ -73,7 +73,7 @@ class AudioParsers:
                 base_property="tone",
                 property_name="bass",
                 zone=zone,
-                value=TONE_DB_VALUES.get(raw),
+                value=ToneDB[raw],
                 queue_commands=None,
             )
         )
@@ -92,7 +92,7 @@ class AudioParsers:
                 base_property="tone",
                 property_name="treble",
                 zone=zone,
-                value=TONE_DB_VALUES.get(raw),
+                value=ToneDB[raw],
                 queue_commands=None,
             )
         )
