@@ -245,7 +245,8 @@ def process_raw_response(
     match_resp = next((r for r in RESPONSE_DATA if raw_resp.startswith(r[0])), None)
     if not match_resp:
         ## No error handling as not all responses have been captured by aiopioneer.
-        _LOGGER.debug("unparsed raw response: %s", raw_resp)
+        if not raw_resp.startswith("E"):
+            _LOGGER.debug("unparsed raw response: %s", raw_resp)
         return [], []
 
     parse_cmd: str = match_resp[0]
