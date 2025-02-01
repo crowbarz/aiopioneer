@@ -29,7 +29,7 @@ from .const import (
     AMPModes,
     MEDIA_CONTROL_COMMANDS,
     CHANNEL_LEVELS_OBJ,
-    ParamMap,
+    AVRCodeMapBase,
 )
 from .exceptions import (
     AVRUnavailableError,
@@ -986,7 +986,7 @@ class PioneerAVR(PioneerAVRConnection):
                 raise AVRUnknownCommandError(command=command, zone=zone)
             arg_format = PIONEER_COMMANDS[command]["args"]
             arg_type = arg_format[0]  # prefix type
-            if isinstance(arg_type, ParamMap):
+            if isinstance(arg_type, AVRCodeMapBase):
                 value = arg_type(value)
                 if arg == "resolution":
                     if value not in self.params.get_param(PARAM_VIDEO_RESOLUTION_MODES):
@@ -1029,7 +1029,7 @@ class PioneerAVR(PioneerAVRConnection):
                 raise AVRUnknownCommandError(command=command, zone=zone)
             arg_format = PIONEER_COMMANDS[command]["args"]
             arg_type = arg_format[0]  # prefix type
-            if isinstance(arg_type, ParamMap):
+            if isinstance(arg_type, AVRCodeMapBase):
                 value = arg_type(value)
             elif not isinstance(arg, arg_type):
                 raise ValueError(f"Invalid value {value} for DSP setting {arg}")

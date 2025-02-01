@@ -41,37 +41,68 @@ class TunerBand(StrEnum):
 SOURCE_TUNER = "02"
 
 
-class ParamMap(dict):
-    """Map of AVR parameter keys to values."""
+class AVRCodeMapBase(dict):
+    """Map of AVR codes to values."""
 
-    param_map: dict[str, Any] = {}
-
-    def __new__(cls, value: Any):
-        for k, v in cls.param_map.items():
-            if cls.match(v, value):
-                return k
-        raise ValueError(f"Name {value} not found in {cls.__name__}")
+    def __new__(cls, value):
+        raise ValueError("ParamMapBase.__new__ not implemented")
 
     def __class_getitem__(cls, key: str):
-        if (value := cls.param_map.get(key)) is not None:
-            return value
-        raise ValueError(f"Key {key} not found in {cls.__name__}")
+        raise ValueError("ParamMapBase.__class_getitem__ not implemented")
 
     @classmethod
-    def match(cls, v: str, value: Any):
+    def match(cls, v, value):
         """Default value match function."""
         return v == value
 
 
-class ParamListMap(dict):
-    """Map of AVR parameter keys to a list."""
+class AVRCodeStrMap(AVRCodeMapBase):
+    """Map of AVR codes to values."""
 
-    params: dict[str, list] = {}
+    code_map: dict[str, str] = {}
+
+    def __new__(cls, value: str) -> str:
+        for k, v in cls.code_map.items():
+            if cls.match(v, value):
+                return k
+        raise ValueError(f"Name {value} not found in {cls.__name__}")
+
+    def __class_getitem__(cls, key: str) -> str:
+        if (value := cls.code_map.get(key)) is not None:
+            return value
+        raise ValueError(f"Key {key} not found in {cls.__name__}")
+
+
+class AVRCodeListMap(AVRCodeStrMap):
+    """Map of AVR codes to a list."""
+
+    code_map: dict[str, list] = {}
 
     @classmethod
     def match(cls, v: list, value: list):
         """Match value to first element of list."""
         return v == value[0]
+
+
+class AVRCodeIntMap(AVRCodeMapBase):
+    """Map of AVR codes to an integer."""
+
+    code_zfill: int = None
+    value_min: int = 0
+    value_max: int = 0
+
+    def __new__(cls, value: int) -> str:
+        if not cls.value_min >= value >= cls.value_max:
+            raise ValueError(
+                f"Value {value} outside of range {cls.value_min} -- {cls.value_max}"
+                f"for {cls.__name__}"
+            )
+        if cls.code_zfill:
+            return str(value).zfill(cls.code_zfill)
+        return str(value)
+
+    def __class_getitem__(cls, key: str) -> int:
+        return int(key)
 
 
 # Listening modes is a dict with a nested array for the following structure:
@@ -261,16 +292,16 @@ MEDIA_CONTROL_COMMANDS = {
 }
 
 
-class ToneModes(ParamMap):
+class ToneModes(AVRCodeStrMap):
     """Tone modes."""
 
-    param_map = {"0": "Bypass", "1": "On", "9": "(cycle)"}
+    code_map = {"0": "Bypass", "1": "On", "9": "(cycle)"}
 
 
-class ToneDB(ParamMap):
+class ToneDB(AVRCodeStrMap):
     """Tone dB values."""
 
-    param_map = {
+    code_map = {
         "00": "6dB",
         "01": "5dB",
         "02": "4dB",
@@ -287,40 +318,40 @@ class ToneDB(ParamMap):
     }
 
 
-class SpeakerModes(ParamMap):
+class SpeakerModes(AVRCodeStrMap):
     """Speaker modes."""
 
-    param_map = {"0": "OFF", "1": "A", "2": "B", "3": "A+B"}
+    code_map = {"0": "OFF", "1": "A", "2": "B", "3": "A+B"}
 
 
-class HDMIOutModes(ParamMap):
+class HDMIOutModes(AVRCodeStrMap):
     """HDMI out modes."""
 
-    param_map = {"0": "ALL", "1": "HDMI 1", "2": "HDMI 2", "3": "HDMI (cyclic)"}
+    code_map = {"0": "ALL", "1": "HDMI 1", "2": "HDMI 2", "3": "HDMI (cyclic)"}
 
 
-class HDMIAudioModes(ParamMap):
+class HDMIAudioModes(AVRCodeStrMap):
     """HDMI audio modes."""
 
-    param_map = {"0": "AMP", "1": "PASSTHROUGH"}
+    code_map = {"0": "AMP", "1": "PASSTHROUGH"}
 
 
-class PanelLock(ParamMap):
+class PanelLock(AVRCodeStrMap):
     """Panel lock settings."""
 
-    param_map = {"0": "OFF", "1": "PANEL ONLY", "2": "PANEL + VOLUME"}
+    code_map = {"0": "OFF", "1": "PANEL ONLY", "2": "PANEL + VOLUME"}
 
 
-class PQLSModes(ParamMap):
+class PQLSModes(AVRCodeStrMap):
     """PQLS modes."""
 
-    param_map = {"0": "OFF", "1": "AUTO"}
+    code_map = {"0": "OFF", "1": "AUTO"}
 
 
-class AMPModes(ParamMap):
+class AMPModes(AVRCodeStrMap):
     """AMP modes."""
 
-    param_map = {
+    code_map = {
         "0": "AMP ON",
         "1": "AMP Front OFF",
         "2": "AMP Front & Center OFF",
@@ -328,28 +359,28 @@ class AMPModes(ParamMap):
     }
 
 
-class VideoPureCinemaModes(ParamMap):
+class VideoPureCinemaModes(AVRCodeStrMap):
     """Video pure cinema modes."""
 
-    param_map = {"0": "AUTO", "1": "ON", "2": "OFF"}
+    code_map = {"0": "AUTO", "1": "ON", "2": "OFF"}
 
 
-class VideoStreamSmootherModes(ParamMap):
+class VideoStreamSmootherModes(AVRCodeStrMap):
     """Video stream smoother modes."""
 
-    param_map = {"0": "OFF", "1": "ON", "2": "AUTO"}
+    code_map = {"0": "OFF", "1": "ON", "2": "AUTO"}
 
 
-class VideoAspectModes(ParamMap):
+class VideoAspectModes(AVRCodeStrMap):
     """Video aspect modes."""
 
-    param_map = {"0": "PASSTHROUGH", "1": "NORMAL"}
+    code_map = {"0": "PASSTHROUGH", "1": "NORMAL"}
 
 
-class AdvancedVideoAdjustModes(ParamMap):
+class AdvancedVideoAdjustModes(AVRCodeStrMap):
     """Advanced video adjust modes."""
 
-    param_map = {"0": "PDP", "1": "LCD", "2": "FPJ", "3": "Professional", "4": "Memory"}
+    code_map = {"0": "PDP", "1": "LCD", "2": "FPJ", "3": "Professional", "4": "Memory"}
 
 
 CHANNEL_LEVELS_OBJ = {
@@ -368,70 +399,70 @@ CHANNEL_LEVELS_OBJ = {
 }
 
 
-class DSPAutoManual(ParamMap):
+class DSPAutoManual(AVRCodeStrMap):
     """DSP auto/manual."""
 
-    param_map = {"0": "AUTO", "1": "MANUAL"}
+    code_map = {"0": "AUTO", "1": "MANUAL"}
 
 
-class DSPPhaseControl(ParamMap):
+class DSPPhaseControl(AVRCodeStrMap):
     """DSP phase control."""
 
-    param_map = {"0": "off", "1": "on", "2": "full band on"}
+    code_map = {"0": "off", "1": "on", "2": "full band on"}
 
 
-class DSPSignalSelect(ParamMap):
+class DSPSignalSelect(AVRCodeStrMap):
     """DSP signal select."""
 
-    param_map = {"0": "AUTO", "1": "ANALOG", "2": "DIGITAL", "3": "HDMI"}
+    code_map = {"0": "AUTO", "1": "ANALOG", "2": "DIGITAL", "3": "HDMI"}
 
 
-class DSPDialogEnhancement(ParamMap):
+class DSPDialogEnhancement(AVRCodeStrMap):
     """DSP dialog enhancement."""
 
-    param_map = {"0": "off", "1": "flat", "2": "+1", "3": "+2", "4": "+3", "5": "+4"}
+    code_map = {"0": "off", "1": "flat", "2": "+1", "3": "+2", "4": "+3", "5": "+4"}
 
 
-class DSPDualMono(ParamMap):
+class DSPDualMono(AVRCodeStrMap):
     """DSP dual mono."""
 
-    param_map = {"0": "CH1+CH2", "1": "CH1", "2": "CH2"}
+    code_map = {"0": "CH1+CH2", "1": "CH1", "2": "CH2"}
 
 
-class DSPDynamicRange(ParamMap):
+class DSPDynamicRange(AVRCodeStrMap):
     """DSP dyanmic range."""
 
-    param_map = {"0": "off", "1": "auto", "2": "mid", "3": "max"}
+    code_map = {"0": "off", "1": "auto", "2": "mid", "3": "max"}
 
 
-class DSPHeightGain(ParamMap):
+class DSPHeightGain(AVRCodeStrMap):
     """DSP height gain."""
 
-    param_map = {"0": "low", "1": "mid", "2": "high"}
+    code_map = {"0": "low", "1": "mid", "2": "high"}
 
 
-class DSPVirtualDepth(ParamMap):
+class DSPVirtualDepth(AVRCodeStrMap):
     """DSP virtual depth."""
 
-    param_map = {"0": "off", "1": "min", "2": "mid", "3": "max"}
+    code_map = {"0": "off", "1": "min", "2": "mid", "3": "max"}
 
 
-class DSPDigitalFilter(ParamMap):
+class DSPDigitalFilter(AVRCodeStrMap):
     """DSP digital filter."""
 
-    param_map = {"0": "slow", "1": "sharp", "2": "short"}
+    code_map = {"0": "slow", "1": "sharp", "2": "short"}
 
 
-class DSPUpSampling(ParamMap):
+class DSPUpSampling(AVRCodeStrMap):
     """DSP up sampling."""
 
-    param_map = {"0": "off", "1": "2 times", "2": "4 times"}
+    code_map = {"0": "off", "1": "2 times", "2": "4 times"}
 
 
-class DSPRenderingMode(ParamMap):
+class DSPRenderingMode(AVRCodeStrMap):
     """DSP rendering mode."""
 
-    param_map = {"0": "object base", "1": "channel base"}
+    code_map = {"0": "object base", "1": "channel base"}
 
 
 AUDIO_SIGNAL_INPUT_INFO = {
@@ -570,10 +601,10 @@ VIDEO_SIGNAL_3D_MODES = {
 }
 
 
-class VideoResolutionModes(ParamMap):
+class VideoResolutionModes(AVRCodeStrMap):
     """Video resolution modes."""
 
-    param_map = {
+    code_map = {
         "0": "AUTO",
         "1": "PURE",
         "3": "480/576p",
@@ -586,10 +617,10 @@ class VideoResolutionModes(ParamMap):
     }
 
 
-class DimmerModes(ParamMap):
+class DimmerModes(AVRCodeStrMap):
     """Dimmer modes."""
 
-    param_map = {
+    code_map = {
         "0": "Brightest",
         "1": "Bright",
         "2": "Dark",
