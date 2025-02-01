@@ -28,20 +28,7 @@ from .const import (
     PanelLock,
     AMPModes,
     MEDIA_CONTROL_COMMANDS,
-    VideoResolutionModes,
-    AdvancedVideoAdjustModes,
-    VideoPureCinemaModes,
-    VideoStreamSmootherModes,
-    VideoAspectModes,
     CHANNEL_LEVELS_OBJ,
-    DSP_PHASE_CONTROL,
-    DSP_SIGNAL_SELECT,
-    DSP_DIGITAL_DIALOG_ENHANCEMENT,
-    DSP_DUAL_MONO,
-    DSP_DRC,
-    DSP_HEIGHT_GAIN,
-    DSP_VIRTUAL_DEPTH,
-    DSP_DIGITAL_FILTER,
     ParamMap,
 )
 from .exceptions import (
@@ -1036,52 +1023,43 @@ class PioneerAVR(PioneerAVRConnection):
 
         ## TODO: refactor to use match and possibly subfunctions
         for arg, value in arguments.items():
-            if value is None:
-                continue  ## TODO: check whether None is valid for any command
             if self.properties.dsp.get(arg) == value:
-                continue  ## TODO: check typing of parsed responses
+                continue
             if (command := "set_dsp_" + arg) not in PIONEER_COMMANDS:
                 raise AVRUnknownCommandError(command=command, zone=zone)
-
-            if isinstance(value, str):
-                # Functions to do a lookup here
-                if arg == "phase_control":
-                    value = self._get_parameter_key_from_value(value, DSP_PHASE_CONTROL)
-                elif arg == "signal_select":
-                    value = self._get_parameter_key_from_value(value, DSP_SIGNAL_SELECT)
-                elif arg == "digital_dialog_enhancement":
-                    value = self._get_parameter_key_from_value(
-                        value, DSP_DIGITAL_DIALOG_ENHANCEMENT
-                    )
-                elif arg == "dual_mono":
-                    value = self._get_parameter_key_from_value(value, DSP_DUAL_MONO)
-                elif arg == "drc":
-                    value = self._get_parameter_key_from_value(value, DSP_DRC)
-                elif arg == "height_gain":
-                    value = self._get_parameter_key_from_value(value, DSP_HEIGHT_GAIN)
-                elif arg == "virtual_depth":
-                    value = self._get_parameter_key_from_value(value, DSP_VIRTUAL_DEPTH)
-                elif arg == "digital_filter":
-                    value = self._get_parameter_key_from_value(
-                        value, DSP_DIGITAL_FILTER
-                    )
-            elif isinstance(value, bool):
+            arg_format = PIONEER_COMMANDS[command]["args"]
+            arg_type = arg_format[0]  # prefix type
+            if isinstance(arg_type, ParamMap):
+                value = arg_type(value)
+            elif not isinstance(arg, arg_type):
+                raise ValueError(f"Invalid value {value} for DSP setting {arg}")
+            elif arg_type is bool:
                 value = str(int(value))
-            elif isinstance(value, float):
-                if arg == "sound_delay":
-                    value = str(int(float(value) * 10)).zfill(3)
-                elif arg == "center_image":
-                    value = str(int(value) * 10).zfill(2)
-            elif isinstance(value, int):
+            elif arg_type is float:
+                value_min = arg_format[1]
+                value_max = arg_format[2]
+                arg_zfill = arg_format[3]
+                if not value_min >= value >= value_max:
+                    raise ValueError(
+                        f"Value {value} outside of range {value_min} -- {value_max}"
+                        f"for DSP setting {arg}"
+                    )
+                value = str(int(value * 10)).zfill(arg_zfill)
+            elif arg_type is int:
+                value_min = arg_format[1]
+                value_max = arg_format[2]
+                if not value_min >= value >= value_max:
+                    raise ValueError(
+                        f"Value {value} outside of range {value_min} -- {value_max}"
+                        f"for DSP setting {arg}"
+                    )
                 if arg == "lfe_att":
-                    value = int((-20 / 5) * -1)
+                    value = str(abs(value)).zfill(2)
                 elif arg == "dimension":
                     value = value + 50
                 elif arg == "effect":
-                    value = str(value / 10).zfill(2)
-                elif arg == "phase_control_plus":
-                    value = str(value).zfill(2)
-                elif arg == "center_width":
+                    value = str(int(value / 10)).zfill(2)
+                elif arg in ["phase_control_plus", "center_width"]:
                     value = str(value).zfill(2)
 
             await self.send_command(command, zone, prefix=str(value))

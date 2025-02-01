@@ -1,14 +1,17 @@
 """aiopioneer response parsers for DSP functions. Most responses are only valid for Zone 1."""
 
 from ..const import (
-    DSP_DIGITAL_DIALOG_ENHANCEMENT,
-    DSP_DIGITAL_FILTER,
-    DSP_DRC,
-    DSP_DUAL_MONO,
-    DSP_HEIGHT_GAIN,
-    DSP_PHASE_CONTROL,
-    DSP_SIGNAL_SELECT,
-    DSP_VIRTUAL_DEPTH,
+    DSPAutoManual,
+    DSPDialogEnhancement,
+    DSPDigitalFilter,
+    DSPDynamicRange,
+    DSPDualMono,
+    DSPHeightGain,
+    DSPPhaseControl,
+    DSPSignalSelect,
+    DSPVirtualDepth,
+    DSPUpSampling,
+    DSPRenderingMode,
     Zone,
 )
 from ..params import PioneerAVRParams
@@ -50,7 +53,7 @@ class DspParsers:
                 base_property="dsp",
                 property_name="phase_control",
                 zone=zone,
-                value=DSP_PHASE_CONTROL.get(raw),
+                value=DSPPhaseControl[raw],
                 queue_commands=None,
             )
         )
@@ -69,7 +72,7 @@ class DspParsers:
                 base_property="dsp",
                 property_name="virtual_speakers",
                 zone=zone,
-                value=raw,
+                value=DSPAutoManual[raw],
                 queue_commands=None,
             )
         )
@@ -145,7 +148,7 @@ class DspParsers:
                 base_property="dsp",
                 property_name="signal_select",
                 zone=zone,
-                value=DSP_SIGNAL_SELECT.get(raw),
+                value=DSPSignalSelect[raw],
                 queue_commands=None,
             )
         )
@@ -279,7 +282,7 @@ class DspParsers:
                 base_property="dsp",
                 property_name="dialog_enchancement",
                 zone=zone,
-                value=DSP_DIGITAL_DIALOG_ENHANCEMENT.get(raw),
+                value=DSPDialogEnhancement[raw],
                 queue_commands=None,
             )
         )
@@ -298,7 +301,7 @@ class DspParsers:
                 base_property="dsp",
                 property_name="audio_scaler",
                 zone=zone,
-                value="auto" if int(raw) == "0" else "manual",
+                value=DSPAutoManual[raw],
                 queue_commands=None,
             )
         )
@@ -328,15 +331,6 @@ class DspParsers:
         raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATZ"
     ) -> list[Response]:
         """Response parser for up sampling setting."""
-        raw = int(raw)
-
-        if raw == 0:
-            raw = "off"
-        elif raw == 1:
-            raw = "2 times"
-        elif raw == 2:
-            raw = "4 times"
-
         parsed = []
         parsed.append(
             Response(
@@ -345,7 +339,7 @@ class DspParsers:
                 base_property="dsp",
                 property_name="up_sampling",
                 zone=zone,
-                value=raw,
+                value=DSPUpSampling[raw],
                 queue_commands=None,
             )
         )
@@ -364,7 +358,7 @@ class DspParsers:
                 base_property="dsp",
                 property_name="dual_mono",
                 zone=zone,
-                value=DSP_DUAL_MONO.get(raw),
+                value=DSPDualMono[raw],
                 queue_commands=None,
             )
         )
@@ -403,7 +397,7 @@ class DspParsers:
                 base_property="dsp",
                 property_name="dynamic_range_control",
                 zone=zone,
-                value=DSP_DRC.get(raw),
+                value=DSPDynamicRange[raw],
                 queue_commands=None,
             )
         )
@@ -415,7 +409,7 @@ class DspParsers:
         raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="ATM"
     ) -> list[Response]:
         """Response parser for LFE attenuator setting."""
-        value = int(raw) * -5
+        value = int(raw) * -1
         parsed = []
         parsed.append(
             Response(
@@ -577,7 +571,7 @@ class DspParsers:
                 base_property="dsp",
                 property_name="height_gain",
                 zone=zone,
-                value=DSP_HEIGHT_GAIN.get(raw),
+                value=DSPHeightGain[raw],
                 queue_commands=None,
             )
         )
@@ -596,7 +590,7 @@ class DspParsers:
                 base_property="dsp",
                 property_name="digital_filter",
                 zone=zone,
-                value=DSP_DIGITAL_FILTER.get(raw),
+                value=DSPDigitalFilter[raw],
                 queue_commands=None,
             )
         )
@@ -653,7 +647,7 @@ class DspParsers:
                 base_property="dsp",
                 property_name="rendering_mode",
                 zone=zone,
-                value="object base" if int(raw) == 0 else "channel base",
+                value=DSPRenderingMode[raw],
                 queue_commands=None,
             )
         )
@@ -672,7 +666,7 @@ class DspParsers:
                 base_property="dsp",
                 property_name="virtual_depth",
                 zone=zone,
-                value=DSP_VIRTUAL_DEPTH.get(raw),
+                value=DSPVirtualDepth[raw],
                 queue_commands=None,
             )
         )

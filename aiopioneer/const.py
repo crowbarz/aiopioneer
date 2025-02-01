@@ -264,11 +264,7 @@ MEDIA_CONTROL_COMMANDS = {
 class ToneModes(ParamMap):
     """Tone modes."""
 
-    param_map = {
-        "0": "Bypass",
-        "1": "On",
-        "9": "(cycle)",
-    }
+    param_map = {"0": "Bypass", "1": "On", "9": "(cycle)"}
 
 
 class ToneDB(ParamMap):
@@ -294,51 +290,31 @@ class ToneDB(ParamMap):
 class SpeakerModes(ParamMap):
     """Speaker modes."""
 
-    param_map = {
-        "0": "OFF",
-        "1": "A",
-        "2": "B",
-        "3": "A+B",
-    }
+    param_map = {"0": "OFF", "1": "A", "2": "B", "3": "A+B"}
 
 
 class HDMIOutModes(ParamMap):
     """HDMI out modes."""
 
-    param_map = {
-        "0": "ALL",
-        "1": "HDMI 1",
-        "2": "HDMI 2",
-        "3": "HDMI (cyclic)",
-    }
+    param_map = {"0": "ALL", "1": "HDMI 1", "2": "HDMI 2", "3": "HDMI (cyclic)"}
 
 
 class HDMIAudioModes(ParamMap):
     """HDMI audio modes."""
 
-    param_map = {
-        "0": "AMP",
-        "1": "PASSTHROUGH",
-    }
+    param_map = {"0": "AMP", "1": "PASSTHROUGH"}
 
 
 class PanelLock(ParamMap):
     """Panel lock settings."""
 
-    param_map = {
-        "0": "OFF",
-        "1": "PANEL ONLY",
-        "2": "PANEL + VOLUME",
-    }
+    param_map = {"0": "OFF", "1": "PANEL ONLY", "2": "PANEL + VOLUME"}
 
 
 class PQLSModes(ParamMap):
     """PQLS modes."""
 
-    param_map = {
-        "0": "OFF",
-        "1": "AUTO",
-    }
+    param_map = {"0": "OFF", "1": "AUTO"}
 
 
 class AMPModes(ParamMap):
@@ -355,11 +331,7 @@ class AMPModes(ParamMap):
 class VideoPureCinemaModes(ParamMap):
     """Video pure cinema modes."""
 
-    param_map = {
-        "0": "AUTO",
-        "1": "ON",
-        "2": "OFF",
-    }
+    param_map = {"0": "AUTO", "1": "ON", "2": "OFF"}
 
 
 class VideoStreamSmootherModes(ParamMap):
@@ -377,13 +349,7 @@ class VideoAspectModes(ParamMap):
 class AdvancedVideoAdjustModes(ParamMap):
     """Advanced video adjust modes."""
 
-    param_map = {
-        "0": "PDP",
-        "1": "LCD",
-        "2": "FPJ",
-        "3": "Professional",
-        "4": "Memory",
-    }
+    param_map = {"0": "PDP", "1": "LCD", "2": "FPJ", "3": "Professional", "4": "Memory"}
 
 
 CHANNEL_LEVELS_OBJ = {
@@ -401,28 +367,72 @@ CHANNEL_LEVELS_OBJ = {
     "RW": 0,
 }
 
-DSP_PHASE_CONTROL = {"0": "off", "1": "on", "2": "full band on"}
 
-DSP_SIGNAL_SELECT = {"0": "AUTO", "1": "ANALOG", "2": "DIGITAL", "3": "HDMI"}
+class DSPAutoManual(ParamMap):
+    """DSP auto/manual."""
 
-DSP_DIGITAL_DIALOG_ENHANCEMENT = {
-    "0": "off",
-    "1": "flat",
-    "2": "+1",
-    "3": "+2",
-    "4": "+3",
-    "5": "+4",
-}
+    param_map = {"0": "AUTO", "1": "MANUAL"}
 
-DSP_DUAL_MONO = {"0": "CH1+CH2", "1": "CH1", "2": "CH2"}
 
-DSP_DRC = {"0": "off", "1": "auto", "2": "mid", "3": "max"}
+class DSPPhaseControl(ParamMap):
+    """DSP phase control."""
 
-DSP_HEIGHT_GAIN = {"0": "low", "1": "mid", "2": "high"}
+    param_map = {"0": "off", "1": "on", "2": "full band on"}
 
-DSP_VIRTUAL_DEPTH = {"0": "off", "1": "min", "2": "mid", "3": "max"}
 
-DSP_DIGITAL_FILTER = {"0": "slow", "1": "sharp", "2": "short"}
+class DSPSignalSelect(ParamMap):
+    """DSP signal select."""
+
+    param_map = {"0": "AUTO", "1": "ANALOG", "2": "DIGITAL", "3": "HDMI"}
+
+
+class DSPDialogEnhancement(ParamMap):
+    """DSP dialog enhancement."""
+
+    param_map = {"0": "off", "1": "flat", "2": "+1", "3": "+2", "4": "+3", "5": "+4"}
+
+
+class DSPDualMono(ParamMap):
+    """DSP dual mono."""
+
+    param_map = {"0": "CH1+CH2", "1": "CH1", "2": "CH2"}
+
+
+class DSPDynamicRange(ParamMap):
+    """DSP dyanmic range."""
+
+    param_map = {"0": "off", "1": "auto", "2": "mid", "3": "max"}
+
+
+class DSPHeightGain(ParamMap):
+    """DSP height gain."""
+
+    param_map = {"0": "low", "1": "mid", "2": "high"}
+
+
+class DSPVirtualDepth(ParamMap):
+    """DSP virtual depth."""
+
+    param_map = {"0": "off", "1": "min", "2": "mid", "3": "max"}
+
+
+class DSPDigitalFilter(ParamMap):
+    """DSP digital filter."""
+
+    param_map = {"0": "slow", "1": "sharp", "2": "short"}
+
+
+class DSPUpSampling(ParamMap):
+    """DSP up sampling."""
+
+    param_map = {"0": "off", "1": "2 times", "2": "4 times"}
+
+
+class DSPRenderingMode(ParamMap):
+    """DSP rendering mode."""
+
+    param_map = {"0": "object base", "1": "channel base"}
+
 
 AUDIO_SIGNAL_INPUT_INFO = {
     "00": "ANALOG",
