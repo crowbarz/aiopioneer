@@ -118,7 +118,7 @@ PIONEER_COMMANDS = {
     "set_amp_panel_lock": {Zone.Z1: ["PKL", "PKL"]},
     "set_amp_remote_lock": {Zone.Z1: ["RML", "RML"]},
     ## dsp
-    "set_dsp_mcacc_memory_set": {Zone.Z1: ["MC", "MC"], "args": [int, 0, 6]},
+    "set_dsp_mcacc_memory_set": {Zone.Z1: ["MC", "MC"], "args": [int, 1, 6]},
     "set_dsp_phase_control": {Zone.Z1: ["IS", "IS"], "args": [DSPPhaseControl]},
     "set_dsp_phase_control_plus": {Zone.Z1: ["ATE", "ATE"], "args": [int, 0, 16]},
     "set_dsp_virtual_speakers": {Zone.Z1: ["VSP", "VSP"], "args": [DSPAutoManual]},
