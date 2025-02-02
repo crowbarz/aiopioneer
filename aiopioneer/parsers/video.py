@@ -18,13 +18,6 @@ class VideoInt66Map(AVRCodeInt50Map):
     value_max = 6
 
 
-class VideoInt44Map(AVRCodeInt50Map):
-    """Video map for integer values between -6 and +6."""
-
-    value_min = -4
-    value_max = 4
-
-
 class VideoResolutionModes(AVRCodeStrMap):
     """Video resolution modes."""
 
@@ -45,6 +38,13 @@ class VideoPureCinemaModes(AVRCodeStrMap):
     """Video pure cinema modes."""
 
     code_map = {"0": "AUTO", "1": "ON", "2": "OFF"}
+
+
+class VideoProgMotion(AVRCodeInt50Map):
+    """Video prog motion."""
+
+    value_min = -4
+    value_max = 4
 
 
 class VideoStreamSmootherModes(AVRCodeStrMap):

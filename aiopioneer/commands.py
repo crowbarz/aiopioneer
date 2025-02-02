@@ -4,7 +4,7 @@ from .parsers.video import (
     AdvancedVideoAdjustModes,
     VideoAspectModes,
     VideoInt08Map,
-    VideoInt44Map,
+    VideoProgMotion,
     VideoInt66Map,
     VideoPureCinemaModes,
     VideoResolutionModes,
@@ -243,7 +243,7 @@ PIONEER_COMMANDS = {
     "query_video_pure_cinema": {Zone.Z1: ["?VTD", "VTD"]},
     "set_video_pure_cinema": {Zone.Z1: ["VTD", "VTD"], "args": [VideoPureCinemaModes]},
     "query_video_prog_motion": {Zone.Z1: ["?VTE", "VTE"]},
-    "set_video_prog_motion": {Zone.Z1: ["VTE", "VTE"], "args": [VideoInt44Map]},
+    "set_video_prog_motion": {Zone.Z1: ["VTE", "VTE"], "args": [VideoProgMotion]},
     "query_video_stream_smoother": {Zone.Z1: ["?VTF", "VTF"]},
     "set_video_stream_smoother": {
         Zone.Z1: ["VTF", "VTF"],

@@ -30,7 +30,7 @@ from .dsp import DspParsers
 from .information import InformationParsers
 from .video import (
     VideoInt08Map,
-    VideoInt44Map,
+    VideoProgMotion,
     VideoInt66Map,
     VideoResolutionModes,
     VideoPureCinemaModes,
@@ -171,7 +171,7 @@ RESPONSE_DATA = [
     ["VTB", AVRCodeBoolMap, Zone.Z1, "video", "converter"],
     ["VTC", VideoResolutionModes, Zone.Z1, "video", "resolution"],
     ["VTD", VideoPureCinemaModes, Zone.Z1, "video", "pure_cinema"],
-    ["VTE", VideoInt44Map, Zone.Z1, "video", "prog_motion"],
+    ["VTE", VideoProgMotion, Zone.Z1, "video", "prog_motion"],
     ["VTF", VideoStreamSmootherModes, Zone.Z1, "video", "stream_smoother"],
     ["VTG", AdvancedVideoAdjustModes, Zone.Z1, "video", "advanced_video_adjust"],
     ["VTH", VideoInt08Map, Zone.Z1, "video", "ynr"],
