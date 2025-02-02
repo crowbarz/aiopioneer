@@ -397,6 +397,27 @@ class AMPModes(AVRCodeStrMap):
     }
 
 
+class VideoInt08Map(AVRCodeInt50Map):
+    """Video map for integer values between 0 and +8."""
+
+    value_min = 0
+    value_max = 8
+
+
+class VideoInt66Map(AVRCodeInt50Map):
+    """Video map for integer values between -6 and +6."""
+
+    value_min = -6
+    value_max = 6
+
+
+class VideoInt44Map(AVRCodeInt50Map):
+    """Video map for integer values between -6 and +6."""
+
+    value_min = -4
+    value_max = 4
+
+
 class VideoPureCinemaModes(AVRCodeStrMap):
     """Video pure cinema modes."""
 
@@ -435,6 +456,13 @@ CHANNEL_LEVELS_OBJ = {
     "LW": 0,
     "RW": 0,
 }
+
+
+class VideoSuperResolution(AVRCodeIntMap):
+    """Video super resolution."""
+
+    value_min = 0
+    value_max = 3
 
 
 class DSPAutoManual(AVRCodeStrMap):

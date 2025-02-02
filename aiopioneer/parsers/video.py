@@ -1,6 +1,16 @@
 """Pioneer AVR response parsers for video parameters."""
 
-from ..const import VideoResolutionModes, AdvancedVideoAdjustModes, Zone
+from ..const import (
+    Zone,
+    AVRCodeInt50Map,
+    VideoResolutionModes,
+    VideoPureCinemaModes,
+    VideoInt44Map,
+    VideoStreamSmootherModes,
+    AdvancedVideoAdjustModes,
+    VideoAspectModes,
+    VideoSuperResolution,
+)
 from ..params import PioneerAVRParams
 from .response import Response
 
@@ -13,12 +23,6 @@ class VideoParsers:
         raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTB"
     ) -> list[Response]:
         """Response parser for video converter setting."""
-        value = int(raw)
-        if value == 1:
-            value = "on"
-        else:
-            value = "off"
-
         parsed = []
         parsed.append(
             Response(
@@ -27,7 +31,7 @@ class VideoParsers:
                 base_property="video",
                 property_name="converter",
                 zone=zone,
-                value=value,
+                value=bool(raw),
                 queue_commands=None,
             )
         )
@@ -57,14 +61,6 @@ class VideoParsers:
         raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTD"
     ) -> list[Response]:
         """Response parser for pure cinema setting."""
-        value = int(raw)
-        if value == 0:
-            value = "auto"
-        elif value == 2:
-            value = "on"
-        else:
-            value = "off"
-
         parsed = []
         parsed.append(
             Response(
@@ -73,7 +69,7 @@ class VideoParsers:
                 base_property="video",
                 property_name="pure_cinema",
                 zone=zone,
-                value=value,
+                value=VideoPureCinemaModes[raw],
                 queue_commands=None,
             )
         )
@@ -84,37 +80,25 @@ class VideoParsers:
         raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTE"
     ) -> list[Response]:
         """Response parser for prog motion setting."""
-        value = int(raw)
-        if value < 55:
-            value = value - 50
-
-            parsed = []
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="video",
-                    property_name="prog_motion",
-                    zone=zone,
-                    value=value,
-                    queue_commands=None,
-                )
+        parsed = []
+        parsed.append(
+            Response(
+                raw=raw,
+                response_command=command,
+                base_property="video",
+                property_name="prog_motion",
+                zone=zone,
+                value=VideoInt44Map[raw],
+                queue_commands=None,
             )
-            return parsed
+        )
+        return parsed
 
     @staticmethod
     def stream_smoother(
         raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTF"
     ) -> list[Response]:
         """Response parser for stream smoother setting."""
-        value = int(raw)
-        if value == 0:
-            value = "off"
-        elif value == "1":
-            value = "on"
-        else:
-            value = "auto"
-
         parsed = []
         parsed.append(
             Response(
@@ -123,7 +107,7 @@ class VideoParsers:
                 base_property="video",
                 property_name="stream_smoother",
                 zone=zone,
-                value=value,
+                value=VideoStreamSmootherModes[raw],
                 queue_commands=None,
             )
         )
@@ -165,7 +149,7 @@ class VideoParsers:
                 base_property="video",
                 property_name=property_name,
                 zone=zone,
-                value=int(raw) - 50,
+                value=AVRCodeInt50Map[raw],
                 queue_commands=None,
             )
         )
@@ -252,12 +236,6 @@ class VideoParsers:
         raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTR"
     ) -> list[Response]:
         """Response parser for black setup setting."""
-        value = int(raw)
-        if value == 0:
-            value = 0
-        elif value == 1:
-            value = 7.5
-
         parsed = []
         parsed.append(
             Response(
@@ -266,7 +244,7 @@ class VideoParsers:
                 base_property="video",
                 property_name="black_setup",
                 zone=zone,
-                value=value,
+                value=bool(raw),
                 queue_commands=None,
             )
         )
@@ -277,12 +255,6 @@ class VideoParsers:
         raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTS"
     ) -> list[Response]:
         """Response parser for output aspect setting."""
-        value = int(raw)
-        if value == 0:
-            value = "passthrough"
-        elif value == 1:
-            value = "normal"
-
         parsed = []
         parsed.append(
             Response(
@@ -291,7 +263,27 @@ class VideoParsers:
                 base_property="video",
                 property_name="aspect",
                 zone=zone,
-                value=value,
+                value=VideoAspectModes[raw],
+                queue_commands=None,
+            )
+        )
+        return parsed
+
+    @staticmethod
+    def super_resolution(
+        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTT"
+    ) -> list[Response]:
+        """Response parser for output aspect setting."""
+
+        parsed = []
+        parsed.append(
+            Response(
+                raw=raw,
+                response_command=command,
+                base_property="video",
+                property_name="super_resolution",
+                zone=zone,
+                value=VideoSuperResolution[raw],
                 queue_commands=None,
             )
         )
