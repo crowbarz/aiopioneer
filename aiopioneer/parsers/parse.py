@@ -1,4 +1,4 @@
-"""aiopioneer parsing classes and functions."""
+"""aiopioneer parse response."""
 
 from types import FunctionType
 import logging
