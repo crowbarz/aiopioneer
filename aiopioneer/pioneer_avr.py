@@ -1001,48 +1001,18 @@ class PioneerAVR(PioneerAVRConnection):
                 zone=zone,
             )
 
-        ## TODO: refactor to use match and possibly subfunctions
         for arg, value in arguments.items():
             if self.properties.dsp.get(arg) == value:
                 continue
             if (command := "set_dsp_" + arg) not in PIONEER_COMMANDS:
                 raise AVRUnknownCommandError(command=command, zone=zone)
-            arg_format = PIONEER_COMMANDS[command]["args"]
-            arg_type = arg_format[0]  # prefix type
-            if isinstance(arg_type, AVRCodeMapBase):
-                value = arg_type(value)
-            elif not isinstance(arg, arg_type):
-                raise ValueError(f"Invalid value {value} for DSP setting {arg}")
-            elif arg_type is bool:
-                value = str(int(value))
-            elif arg_type is float:
-                value_min = arg_format[1]
-                value_max = arg_format[2]
-                arg_zfill = arg_format[3]
-                if not value_min >= value >= value_max:
-                    raise ValueError(
-                        f"Value {value} outside of range {value_min} -- {value_max}"
-                        f"for DSP setting {arg}"
-                    )
-                value = str(int(value * 10)).zfill(arg_zfill)
-            elif arg_type is int:
-                value_min = arg_format[1]
-                value_max = arg_format[2]
-                if not value_min >= value >= value_max:
-                    raise ValueError(
-                        f"Value {value} outside of range {value_min} -- {value_max}"
-                        f"for DSP setting {arg}"
-                    )
-                if arg == "lfe_att":
-                    value = str(abs(value)).zfill(2)
-                elif arg == "dimension":
-                    value = value + 50
-                elif arg == "effect":
-                    value = str(int(value / 10)).zfill(2)
-                elif arg in ["phase_control_plus", "center_width"]:
-                    value = str(value).zfill(2)
-
-            await self.send_command(command, zone, prefix=str(value))
+            arg_format = PIONEER_COMMANDS[command].get("args")
+            arg_code_map = arg_format[0] if isinstance(arg_format, list) else None
+            if not arg_format or not isinstance(arg_code_map, AVRCodeMapBase):
+                raise RuntimeError(
+                    f"Invalid code map {arg_code_map} for DSP setting {arg}"
+                )
+            await self.send_command(command, zone, prefix=arg_code_map(value))
 
     async def media_control(self, action: str, zone: Zone = Zone.Z1) -> None:
         """

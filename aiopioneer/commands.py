@@ -1,6 +1,29 @@
 """Pioneer AVR commands."""
 
+from .const import Zone
 from .parsers.code_map import AVRCodeBoolMap
+from .parsers.dsp import (
+    DspMcaccMemorySet,
+    DSPPhaseControl,
+    DSPSignalSelect,
+    DSPPhaseControlPlus,
+    DSPSoundDelay,
+    DSPAudioScaler,
+    DSPDialogEnhancement,
+    DSPDualMono,
+    DSPDynamicRange,
+    DSPLfeAttenuator,
+    DSPSacdGain,
+    DSPCenterWidth,
+    DSPDimension,
+    DSPCenterImage,
+    DSPEffect,
+    DSPHeightGain,
+    DSPDigitalFilter,
+    DSPUpSampling,
+    DSPVirtualDepth,
+    DSPRenderingMode,
+)
 from .parsers.video import (
     AdvancedVideoAdjustModes,
     VideoAspectModes,
@@ -11,20 +34,6 @@ from .parsers.video import (
     VideoResolutionModes,
     VideoStreamSmootherModes,
     VideoSuperResolution,
-)
-from .const import (
-    Zone,
-    DSPAutoManual,
-    DSPPhaseControl,
-    DSPSignalSelect,
-    DSPDialogEnhancement,
-    DSPDualMono,
-    DSPDynamicRange,
-    DSPHeightGain,
-    DSPVirtualDepth,
-    DSPDigitalFilter,
-    DSPUpSampling,
-    DSPRenderingMode,
 )
 
 PIONEER_COMMANDS = {
@@ -125,58 +134,49 @@ PIONEER_COMMANDS = {
     "set_amp_panel_lock": {Zone.Z1: ["PKL", "PKL"]},
     "set_amp_remote_lock": {Zone.Z1: ["RML", "RML"]},
     ## dsp
-    "set_dsp_mcacc_memory_set": {Zone.Z1: ["MC", "MC"], "args": [int, 1, 6]},
+    "set_dsp_mcacc_memory_set": {Zone.Z1: ["MC", "MC"], "args": [DspMcaccMemorySet]},
     "set_dsp_phase_control": {Zone.Z1: ["IS", "IS"], "args": [DSPPhaseControl]},
-    "set_dsp_phase_control_plus": {Zone.Z1: ["ATE", "ATE"], "args": [int, 0, 16]},
-    "set_dsp_virtual_speakers": {Zone.Z1: ["VSP", "VSP"], "args": [DSPAutoManual]},
-    "set_dsp_virtual_sb": {Zone.Z1: ["VSB", "VSB"], "args": [bool]},
-    "set_dsp_virtual_height": {Zone.Z1: ["VHT", "VHT"], "args": [bool]},
-    "set_dsp_virtual_wide": {Zone.Z1: ["VWD", "VWD"], "args": [bool]},
+    "set_dsp_phase_control_plus": {
+        Zone.Z1: ["ATE", "ATE"],
+        "args": [DSPPhaseControlPlus],
+    },
+    "set_dsp_virtual_speakers": {Zone.Z1: ["VSP", "VSP"], "args": [DSPAudioScaler]},
+    "set_dsp_virtual_sb": {Zone.Z1: ["VSB", "VSB"], "args": [AVRCodeBoolMap]},
+    "set_dsp_virtual_height": {Zone.Z1: ["VHT", "VHT"], "args": [AVRCodeBoolMap]},
+    "set_dsp_virtual_wide": {Zone.Z1: ["VWD", "VWD"], "args": [AVRCodeBoolMap]},
     "set_dsp_virtual_depth": {Zone.Z1: ["VDP", "VDP"], "args": [DSPVirtualDepth]},
-    "set_dsp_sound_retriever": {Zone.Z1: ["ATA", "ATA"], "args": [bool]},
+    "set_dsp_sound_retriever": {Zone.Z1: ["ATA", "ATA"], "args": [AVRCodeBoolMap]},
     "set_dsp_signal_select": {Zone.Z1: ["SDA", "SDA"], "args": [DSPSignalSelect]},
-    "set_dsp_analog_input_att": {Zone.Z1: ["SDB", "SDB"], "args": [bool]},
-    "set_dsp_eq": {Zone.Z1: ["ATC", "ATC"], "args": [bool]},
-    "set_dsp_standing_wave": {Zone.Z1: ["ATD", "ATD"], "args": [bool]},
-    "set_dsp_sound_delay": {
-        Zone.Z1: ["ATF", "ATF"],
-        "args": [float, 0, 800, 3],
-    },  ## NOTE: 1step=0.1frame
-    "set_dsp_digital_noise_reduction": {Zone.Z1: ["ATG", "ATG"], "args": [bool]},
+    "set_dsp_analog_input_att": {Zone.Z1: ["SDB", "SDB"], "args": [AVRCodeBoolMap]},
+    "set_dsp_eq": {Zone.Z1: ["ATC", "ATC"], "args": [AVRCodeBoolMap]},
+    "set_dsp_standing_wave": {Zone.Z1: ["ATD", "ATD"], "args": [AVRCodeBoolMap]},
+    "set_dsp_sound_delay": {Zone.Z1: ["ATF", "ATF"], "args": [DSPSoundDelay]},
+    "set_dsp_digital_noise_reduction": {
+        Zone.Z1: ["ATG", "ATG"],
+        "args": [AVRCodeBoolMap],
+    },
     "set_dsp_dialog_enhancement": {
         Zone.Z1: ["ATH", "ATH"],
         "args": [DSPDialogEnhancement],
     },
-    "set_dsp_audio_scaler": {Zone.Z1: ["ATY", "ATY"], "args": [DSPAutoManual]},
-    "set_dsp_hi_bit": {Zone.Z1: ["ATI", "ATI"], "args": [bool]},
+    "set_dsp_audio_scaler": {Zone.Z1: ["ATY", "ATY"], "args": [DSPAudioScaler]},
+    "set_dsp_hi_bit": {Zone.Z1: ["ATI", "ATI"], "args": [AVRCodeBoolMap]},
     "set_dsp_up_sampling": {Zone.Z1: ["ATZ", "ATZ"], "args": [DSPUpSampling]},
     "set_dsp_digital_filter": {Zone.Z1: ["ATV", "ATV"], "args": [DSPDigitalFilter]},
     "set_dsp_dual_mono": {Zone.Z1: ["ATJ", "ATJ"], "args": [DSPDualMono]},
-    "set_dsp_fixed_pcm": {Zone.Z1: ["ATK", "ATK"], "args": [bool]},
+    "set_dsp_fixed_pcm": {Zone.Z1: ["ATK", "ATK"], "args": [AVRCodeBoolMap]},
     "set_dsp_drc": {Zone.Z1: ["ATL", "ATL"], "args": [DSPDynamicRange]},
-    "set_dsp_lfe_att": {
-        Zone.Z1: ["ATM", "ATM"],
-        "args": [int, -20, 0],
-    },  ## TODO: handle 50 == off
-    "set_dsp_sacd_gain": {
-        Zone.Z1: ["ATN", "ATN"],
-        "args": [int, 0, 1],
-    },  ## TODO: check parser
-    "set_dsp_auto_delay": {Zone.Z1: ["ATO", "ATO"], "args": [bool]},
-    "set_dsp_center_width": {Zone.Z1: ["ATP", "ATP"], "args": [int, 0, 7]},
-    "set_dsp_panorama": {Zone.Z1: ["ATQ", "ATQ"], "args": [bool]},
-    "set_dsp_dimension": {Zone.Z1: ["ATR", "ATR"], "args": [int, -3, 3]},
-    "set_dsp_center_image": {
-        Zone.Z1: ["ATS", "ATS"],
-        "args": [float, 0, 10, 2],
-    },  ## NOTE: 1step=0.1
-    "set_dsp_effect": {
-        Zone.Z1: ["ATT", "ATT"],
-        "args": [int, 10, 90],
-    },  ## NOTE: 1step=10
+    "set_dsp_lfe_att": {Zone.Z1: ["ATM", "ATM"], "args": [DSPLfeAttenuator]},
+    "set_dsp_sacd_gain": {Zone.Z1: ["ATN", "ATN"], "args": [DSPSacdGain]},
+    "set_dsp_auto_delay": {Zone.Z1: ["ATO", "ATO"], "args": [AVRCodeBoolMap]},
+    "set_dsp_center_width": {Zone.Z1: ["ATP", "ATP"], "args": [DSPCenterWidth]},
+    "set_dsp_panorama": {Zone.Z1: ["ATQ", "ATQ"], "args": [AVRCodeBoolMap]},
+    "set_dsp_dimension": {Zone.Z1: ["ATR", "ATR"], "args": [DSPDimension]},
+    "set_dsp_center_image": {Zone.Z1: ["ATS", "ATS"], "args": [DSPCenterImage]},
+    "set_dsp_effect": {Zone.Z1: ["ATT", "ATT"], "args": [DSPEffect]},
     "set_dsp_height_gain": {Zone.Z1: ["ATU", "ATU"], "args": [DSPHeightGain]},
-    "set_dsp_loudness_management": {Zone.Z1: ["ATW", "ATW"], "args": [bool]},
-    "set_center_spread": {Zone.Z1: ["ARA", "ARA"], "args": [bool]},
+    "set_dsp_loudness_management": {Zone.Z1: ["ATW", "ATW"], "args": [AVRCodeBoolMap]},
+    "set_center_spread": {Zone.Z1: ["ARA", "ARA"], "args": [AVRCodeBoolMap]},
     "set_rendering_mode": {Zone.Z1: ["ARB", "ARB"], "args": [DSPRenderingMode]},
     "query_dsp_mcacc_memory_query": {Zone.Z1: ["?MC", "MC"]},
     "query_dsp_phase_control": {Zone.Z1: ["?IS", "IS"]},
@@ -185,7 +185,7 @@ PIONEER_COMMANDS = {
     "query_dsp_virtual_height": {Zone.Z1: ["?VHT", "VHT"]},
     "query_dsp_sound_retriever": {Zone.Z1: ["?ATA", "ATA"]},
     "query_dsp_signal_select": {Zone.Z1: ["?SDA", "SDA"]},
-    "query_dsp_analog_input_att": {Zone.Z1: ["?SDB", "SDB"]},
+    "query_dsp_input_att": {Zone.Z1: ["?SDB", "SDB"]},
     "query_dsp_eq": {Zone.Z1: ["?ATC", "ATC"]},
     "query_dsp_standing_wave": {Zone.Z1: ["?ATD", "ATD"]},
     "query_dsp_phase_control_plus": {Zone.Z1: ["?ATE", "ATE"]},
