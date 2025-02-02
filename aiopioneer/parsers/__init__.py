@@ -1,9 +1,10 @@
 """aiopioneer parsing classes and functions."""
 
 from collections.abc import Callable
+from types import FunctionType
 import logging
 
-from ..const import Zone
+from ..const import Zone, AVRCodeMapBase, AVRCodeIntMap
 from ..exceptions import AVRResponseParseError
 from ..params import PioneerAVRParams
 from ..properties import PioneerAVRProperties
@@ -27,10 +28,10 @@ RESPONSE_DATA = [
     ["Z2F", SystemParsers.input_source, Zone.Z2],
     ["Z3F", SystemParsers.input_source, Zone.Z3],
     ["ZEA", SystemParsers.input_source, Zone.HDZ],
-    ["VOL", SystemParsers.volume, Zone.Z1],
-    ["ZV", SystemParsers.volume, Zone.Z2],
-    ["YV", SystemParsers.volume, Zone.Z3],
-    ["XV", SystemParsers.volume, Zone.HDZ],
+    ["VOL", AVRCodeIntMap, Zone.Z1, "volume"],
+    ["ZV", AVRCodeIntMap, Zone.Z2, "volume"],
+    ["YV", AVRCodeIntMap, Zone.Z3, "volume"],
+    ["XV", AVRCodeIntMap, Zone.HDZ, "volume"],
     ["MUT", SystemParsers.mute, Zone.Z1],
     ["Z2MUT", SystemParsers.mute, Zone.Z2],
     ["Z3MUT", SystemParsers.mute, Zone.Z3],
@@ -162,6 +163,7 @@ RESPONSE_DATA = [
     ["VTQ", VideoParsers.output_chroma, Zone.Z1],
     ["VTR", VideoParsers.black_setup, Zone.Z1],
     ["VTS", VideoParsers.aspect, Zone.Z1],
+    ["VTT", VideoParsers.super_resolution, Zone.Z1],
 ]
 
 
@@ -242,20 +244,35 @@ def process_raw_response(
     raw_resp: str, params: PioneerAVRParams, properties: PioneerAVRProperties
 ) -> tuple[set[Zone], list[str]]:
     """Processes a raw response and looks up required functions from RESPONSE_DATA."""
-    match_resp = next((r for r in RESPONSE_DATA if raw_resp.startswith(r[0])), None)
-    if not match_resp:
-        ## No error handling as not all responses have been captured by aiopioneer.
-        if not raw_resp.startswith("E"):
-            _LOGGER.debug("unparsed raw response: %s", raw_resp)
-        return [], []
-
-    parse_cmd: str = match_resp[0]
-    parse_func: Callable[[str, PioneerAVRParams, Zone, str], Response] = match_resp[1]
-    parse_zone: Zone = match_resp[2]
     try:
-        responses: list[Response] = parse_func(
-            raw_resp[len(parse_cmd) :], params, zone=parse_zone, command=parse_cmd
-        )
+        match_resp = next((r for r in RESPONSE_DATA if raw_resp.startswith(r[0])), None)
+        if not match_resp:
+            ## No error handling as not all responses have been captured by aiopioneer.
+            if not raw_resp.startswith("E"):
+                _LOGGER.debug("unparsed raw response: %s", raw_resp)
+            return [], []
+
+        parse_cmd: str = match_resp[0]
+        parse_func = match_resp[1]
+        parse_zone: Zone = match_resp[2]
+        raw = raw_resp[len(parse_cmd) :]
+        responses: list[Response] = []
+        if isinstance(parse_func, FunctionType):
+            responses = parse_func(raw, params, zone=parse_zone, command=parse_cmd)
+        elif issubclass(parse_func, AVRCodeMapBase):
+            responses = [
+                Response(
+                    raw=raw,
+                    response_command=parse_cmd,
+                    base_property=match_resp[3],
+                    property_name=match_resp[4] if len(match_resp) >= 5 else None,
+                    zone=parse_zone,
+                    value=parse_func[raw],
+                    queue_commands=None,
+                )
+            ]
+        else:
+            raise RuntimeError(f"Invalid parser {parse_func} for response: {raw}")
     except Exception as exc:  # pylint: disable=broad-except
         raise AVRResponseParseError(response=raw_resp, exc=exc) from exc
 
