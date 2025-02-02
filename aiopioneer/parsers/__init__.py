@@ -3,7 +3,13 @@
 from types import FunctionType
 import logging
 
-from ..const import Zone, AVRCodeMapBase, AVRCodeIntMap
+from ..const import (
+    Zone,
+    AVRCodeMapBase,
+    AVRCodeIntMap,
+    AVRCodeBoolMap,
+    AVRCodeInverseBoolMap,
+)
 from ..exceptions import AVRResponseParseError
 from ..params import PioneerAVRParams
 from ..properties import PioneerAVRProperties
@@ -40,10 +46,10 @@ RESPONSE_DATA = [
     ["ZV", AVRCodeIntMap, Zone.Z2, "volume"],
     ["YV", AVRCodeIntMap, Zone.Z3, "volume"],
     ["XV", AVRCodeIntMap, Zone.HDZ, "volume"],
-    ["MUT", SystemParsers.mute, Zone.Z1],
-    ["Z2MUT", SystemParsers.mute, Zone.Z2],
-    ["Z3MUT", SystemParsers.mute, Zone.Z3],
-    ["HZMUT", SystemParsers.mute, Zone.HDZ],
+    ["MUT", AVRCodeInverseBoolMap, Zone.Z1, "mute"],
+    ["Z2MUT", AVRCodeInverseBoolMap, Zone.Z2, "mute"],
+    ["Z3MUT", AVRCodeInverseBoolMap, Zone.Z3, "mute"],
+    ["HZMUT", AVRCodeInverseBoolMap, Zone.HDZ, "mute"],
     ["SPK", SpeakerModes, Zone.ALL, "amp", "speakers"],
     ["HO", HDMIOutModes, Zone.ALL, "amp", "hdmi_out"],
     ["HA", HDMIAudioModes, Zone.ALL, "amp", "hdmi_audio"],

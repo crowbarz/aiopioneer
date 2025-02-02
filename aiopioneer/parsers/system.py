@@ -195,26 +195,6 @@ class SystemParsers:
         return parsed
 
     @staticmethod
-    def mute(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="MUT"
-    ) -> list[Response]:
-        """Response parser for zone mute status."""
-        raw = "".join(filter(str.isnumeric, raw))  # select only numeric values from raw
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="mute",
-                property_name=None,
-                zone=zone,
-                value=(raw == "0"),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
     def speaker_system(
         raw: str, params: PioneerAVRParams, zone=None, command="SSF"
     ) -> list[Response]:
