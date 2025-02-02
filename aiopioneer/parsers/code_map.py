@@ -35,11 +35,11 @@ class AVRCodeBoolMap(AVRCodeMapBase):
     def value_to_code(cls, value: bool) -> str:
         if not isinstance(value, bool):
             raise ValueError(f"Boolean value expected for {cls.__name__}")
-        return str(bool(value))
+        return str(int(value))
 
     @classmethod
     def code_to_value(cls, code: str) -> bool:
-        return bool(code)
+        return bool(int(code))
 
 
 class AVRCodeInverseBoolMap(AVRCodeBoolMap):
