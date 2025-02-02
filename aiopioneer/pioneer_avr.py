@@ -20,13 +20,8 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     MIN_RESCAN_INTERVAL,
     SOURCE_TUNER,
-    DimmerModes,
     ToneModes,
     ToneDB,
-    SpeakerModes,
-    HDMIOutModes,
-    PanelLock,
-    AMPModes,
     MEDIA_CONTROL_COMMANDS,
     CHANNEL_LEVELS_OBJ,
     AVRCodeMapBase,
@@ -60,6 +55,7 @@ from .params import (
     PARAM_QUERY_SOURCES,
     PARAM_ZONES_INITIAL_REFRESH,
 )
+from .parsers.system import AMPModes, DimmerModes, HDMIOutModes, PanelLock, SpeakerModes
 from .properties import PioneerAVRProperties
 from .util import cancel_task
 

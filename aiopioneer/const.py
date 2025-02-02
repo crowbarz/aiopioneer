@@ -356,47 +356,6 @@ class ToneDB(AVRCodeStrMap):
     }
 
 
-class SpeakerModes(AVRCodeStrMap):
-    """Speaker modes."""
-
-    code_map = {"0": "OFF", "1": "A", "2": "B", "3": "A+B"}
-
-
-class HDMIOutModes(AVRCodeStrMap):
-    """HDMI out modes."""
-
-    code_map = {"0": "ALL", "1": "HDMI 1", "2": "HDMI 2", "3": "HDMI (cyclic)"}
-
-
-class HDMIAudioModes(AVRCodeStrMap):
-    """HDMI audio modes."""
-
-    code_map = {"0": "AMP", "1": "PASSTHROUGH"}
-
-
-class PanelLock(AVRCodeStrMap):
-    """Panel lock settings."""
-
-    code_map = {"0": "OFF", "1": "PANEL ONLY", "2": "PANEL + VOLUME"}
-
-
-class PQLSModes(AVRCodeStrMap):
-    """PQLS modes."""
-
-    code_map = {"0": "OFF", "1": "AUTO"}
-
-
-class AMPModes(AVRCodeStrMap):
-    """AMP modes."""
-
-    code_map = {
-        "0": "AMP ON",
-        "1": "AMP Front OFF",
-        "2": "AMP Front & Center OFF",
-        "3": "AMP OFF",
-    }
-
-
 class VideoInt08Map(AVRCodeInt50Map):
     """Video map for integer values between 0 and +8."""
 
@@ -680,18 +639,6 @@ class VideoResolutionModes(AVRCodeStrMap):
         "7": "1080/24p",
         "8": "4K",
         "9": "4K/24p",
-    }
-
-
-class DimmerModes(AVRCodeStrMap):
-    """Dimmer modes."""
-
-    code_map = {
-        "0": "Brightest",
-        "1": "Bright",
-        "2": "Dark",
-        "3": "Off",
-        "9": "(cycle)",
     }
 
 

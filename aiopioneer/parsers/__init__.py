@@ -1,6 +1,5 @@
 """aiopioneer parsing classes and functions."""
 
-from collections.abc import Callable
 from types import FunctionType
 import logging
 
@@ -9,7 +8,16 @@ from ..exceptions import AVRResponseParseError
 from ..params import PioneerAVRParams
 from ..properties import PioneerAVRProperties
 from .response import Response
-from .system import SystemParsers
+from .system import (
+    SystemParsers,
+    SpeakerModes,
+    HDMIOutModes,
+    HDMIAudioModes,
+    PQLSModes,
+    DimmerModes,
+    AMPModes,
+    PanelLock,
+)
 from .audio import AudioParsers
 from .tuner import TunerParsers
 from .dsp import DspParsers
@@ -36,21 +44,20 @@ RESPONSE_DATA = [
     ["Z2MUT", SystemParsers.mute, Zone.Z2],
     ["Z3MUT", SystemParsers.mute, Zone.Z3],
     ["HZMUT", SystemParsers.mute, Zone.HDZ],
-    ["SPK", SystemParsers.speaker_modes, Zone.ALL],
-    ["HO", SystemParsers.hdmi_out, Zone.ALL],
-    ["HA", SystemParsers.hdmi_audio, Zone.ALL],
-    ["PQ", SystemParsers.pqls, Zone.ALL],
-    ["SAA", SystemParsers.dimmer, Zone.ALL],
-    ["SAB", SystemParsers.sleep, Zone.ALL],
-    ["SAC", SystemParsers.amp_status, Zone.ALL],
-    ["PKL", SystemParsers.panel_lock, Zone.ALL],
-    ["RML", SystemParsers.remote_lock, Zone.ALL],
+    ["SPK", SpeakerModes, Zone.ALL, "amp", "speakers"],
+    ["HO", HDMIOutModes, Zone.ALL, "amp", "hdmi_out"],
+    ["HA", HDMIAudioModes, Zone.ALL, "amp", "hdmi_audio"],
+    ["PQ", PQLSModes, Zone.ALL, "amp", "pqls"],
+    ["SAA", DimmerModes, Zone.ALL, "amp", "dimmer"],
+    ["SAB", AVRCodeIntMap, Zone.ALL, "amp", "sleep"],
+    ["SAC", AMPModes, Zone.ALL, "amp", "status"],
+    ["PKL", PanelLock, Zone.ALL, "amp", "panel_lock"],
+    ["RML", AVRCodeMapBase, Zone.ALL, "amp", "remote_lock"],  ## TODO: add code map
     ["SSF", SystemParsers.speaker_system, Zone.ALL],
     ["RGB", SystemParsers.input_name, Zone.ALL],
     ["SVB", SystemParsers.mac_address, Zone.ALL],
     ["RGD", SystemParsers.avr_model, Zone.ALL],
     ["SSI", SystemParsers.software_version, Zone.ALL],
-    ##
     ["AUA", SystemParsers.audio_parameter_prohibitation, Zone.Z1],
     ["AUB", SystemParsers.audio_parameter_working, Zone.Z1],
     ##
