@@ -1,7 +1,7 @@
 """Constants for aiopioneer."""
 
 from enum import StrEnum
-from typing import Any
+from typing import Any, Tuple
 
 VERSION = "0.8.1"
 DEFAULT_TIMEOUT = 2
@@ -45,10 +45,20 @@ class AVRCodeMapBase(dict):
     """Map of AVR codes to values."""
 
     def __new__(cls, value):
-        raise ValueError("ParamMapBase.__new__ not implemented")
+        return cls.value_to_code(value)
 
-    def __class_getitem__(cls, key: str):
-        raise ValueError("ParamMapBase.__class_getitem__ not implemented")
+    def __class_getitem__(cls, code: str):
+        return cls.code_to_value(code)
+
+    @classmethod
+    def value_to_code(cls, value) -> str:
+        """Convert value to code."""
+        return str(value)
+
+    @classmethod
+    def code_to_value(cls, code: str) -> Any:
+        """Convert code to value."""
+        return str(code)
 
     @classmethod
     def match(cls, v, value):
@@ -56,32 +66,45 @@ class AVRCodeMapBase(dict):
         return v == value
 
 
-class AVRCodeStrMap(AVRCodeMapBase):
+class AVRCodeMap(AVRCodeMapBase):
     """Map of AVR codes to values."""
 
-    code_map: dict[str, str] = {}
+    code_map: dict[str, Any] = {}
 
-    def __new__(cls, value: str) -> str:
+    @classmethod
+    def value_to_code(cls, value: Any) -> Any:
         for k, v in cls.code_map.items():
             if cls.match(v, value):
                 return k
         raise ValueError(f"Name {value} not found in {cls.__name__}")
 
-    def __class_getitem__(cls, key: str) -> str:
-        if (value := cls.code_map.get(key)) is not None:
+    @classmethod
+    def code_to_value(cls, code: str) -> str:
+        if (value := cls.code_map.get(code)) is not None:
             return value
-        raise ValueError(f"Key {key} not found in {cls.__name__}")
+        raise ValueError(f"Key {code} not found in {cls.__name__}")
 
 
-class AVRCodeListMap(AVRCodeStrMap):
-    """Map of AVR codes to a list."""
+class AVRCodeStrMap(AVRCodeMap):
+    """Map of AVR codes to values."""
+
+    code_map: dict[str, str] = {}
+
+
+class AVRCodeListMap(AVRCodeMap):
+    """Map of AVR codes to a list with value as first element."""
 
     code_map: dict[str, list] = {}
 
     @classmethod
-    def match(cls, v: list, value: list):
+    def match(cls, v: list, value: str):
         """Match value to first element of list."""
-        return v == value[0]
+        return v[0] == value
+
+    @classmethod
+    def code_to_value(cls, code: str) -> Tuple[str, list]:
+        value_list = cls.code_map[code]
+        return value_list[0], value_list[1:]
 
 
 class AVRCodeIntMap(AVRCodeMapBase):
@@ -94,15 +117,30 @@ class AVRCodeIntMap(AVRCodeMapBase):
     def __new__(cls, value: int) -> str:
         if not cls.value_min >= value >= cls.value_max:
             raise ValueError(
-                f"Value {value} outside of range {cls.value_min} -- {cls.value_max}"
+                f"Value {value} outside of range {cls.value_min} -- {cls.value_max} "
                 f"for {cls.__name__}"
             )
         if cls.code_zfill:
-            return str(value).zfill(cls.code_zfill)
-        return str(value)
+            return cls.value_to_code(value).zfill(cls.code_zfill)
+        return cls.value_to_code(value)
 
-    def __class_getitem__(cls, key: str) -> int:
-        return int(key)
+    ## NOTE: codes are not validated to value_min/value_max
+
+    @classmethod
+    def code_to_value(cls, code: str) -> int:
+        return int(code)
+
+
+class AVRCodeInt50Map(AVRCodeIntMap):
+    """Video program motion setting."""
+
+    @classmethod
+    def value_to_code(cls, value: int) -> str:
+        return str(value + 50)
+
+    @classmethod
+    def code_to_value(cls, code: str) -> int:
+        return int(code) - 50
 
 
 # Listening modes is a dict with a nested array for the following structure:
