@@ -32,13 +32,13 @@ class AVRCodeBoolMap(AVRCodeMapBase):
     """Map AVR codes to bool values."""
 
     @classmethod
-    def value_to_code(cls, value: bool) -> Any:
+    def value_to_code(cls, value: bool) -> str:
         if not isinstance(value, bool):
-            raise ValueError(f"Value {value} expected for {cls.__name__}")
+            raise ValueError(f"Boolean value expected for {cls.__name__}")
         return str(bool(value))
 
     @classmethod
-    def code_to_value(cls, code: str) -> str:
+    def code_to_value(cls, code: str) -> bool:
         return bool(code)
 
 
@@ -46,42 +46,42 @@ class AVRCodeInverseBoolMap(AVRCodeBoolMap):
     """Map AVR codes to inverse bool values."""
 
     @classmethod
-    def value_to_code(cls, value: bool) -> Any:
+    def value_to_code(cls, value: bool) -> str:
         if not isinstance(value, bool):
-            raise ValueError(f"Value {value} expected for {cls.__name__}")
-        return super().value_to_code(not value)
+            raise ValueError(f"Boolean value expected for {cls.__name__}")
+        return str(not bool(value))
 
     @classmethod
-    def code_to_value(cls, code: str) -> str:
-        return not super().value_to_code(code)
+    def code_to_value(cls, code: str) -> bool:
+        return not bool(code)
 
 
-class AVRCodeMap(AVRCodeMapBase):
+class AVRCodeDictMap(AVRCodeMapBase):
     """Map AVR codes to generic map of values."""
 
     code_map: dict[str, Any] = {}
 
     @classmethod
-    def value_to_code(cls, value: Any) -> Any:
+    def value_to_code(cls, value: Any) -> str:
         for k, v in cls.code_map.items():
             if cls.match(v, value):
                 return k
         raise ValueError(f"Name {value} not found in {cls.__name__}")
 
     @classmethod
-    def code_to_value(cls, code: str) -> str:
+    def code_to_value(cls, code: str) -> Any:
         if (value := cls.code_map.get(code)) is not None:
             return value
         raise ValueError(f"Key {code} not found in {cls.__name__}")
 
 
-class AVRCodeStrMap(AVRCodeMap):
+class AVRCodeStrMap(AVRCodeDictMap):
     """Map AVR codes to str values."""
 
     code_map: dict[str, str] = {}
 
 
-class AVRCodeListMap(AVRCodeMap):
+class AVRCodeListMap(AVRCodeDictMap):
     """Map AVR codes to a list with value as first element."""
 
     code_map: dict[str, list] = {}
@@ -131,3 +131,27 @@ class AVRCodeInt50Map(AVRCodeIntMap):
     @classmethod
     def code_to_value(cls, code: str) -> int:
         return int(code) - 50
+
+
+class AVRCodeFloatMap(AVRCodeMapBase):
+    """Map AVR codes to float values."""
+
+    code_zfill: int = None
+    value_min: float = 0
+    value_max: float = 0
+
+    def __new__(cls, value: float) -> str:
+        if not cls.value_min >= value >= cls.value_max:
+            raise ValueError(
+                f"Value {value} outside of range {cls.value_min} -- {cls.value_max} "
+                f"for {cls.__name__}"
+            )
+        if cls.code_zfill:
+            return cls.value_to_code(value).zfill(cls.code_zfill)
+        return cls.value_to_code(value)
+
+    ## NOTE: codes are not validated to value_min/value_max
+
+    @classmethod
+    def code_to_value(cls, code: str) -> float:
+        return float(code)
