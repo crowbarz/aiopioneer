@@ -1,16 +1,19 @@
 """Pioneer AVR commands."""
 
-from .const import (
-    Zone,
-    VideoInt08Map,
-    VideoInt66Map,
-    VideoResolutionModes,
-    VideoPureCinemaModes,
-    VideoInt44Map,
-    VideoStreamSmootherModes,
+from .parsers.video import (
     AdvancedVideoAdjustModes,
     VideoAspectModes,
+    VideoInt08Map,
+    VideoInt44Map,
+    VideoInt66Map,
+    VideoPureCinemaModes,
+    VideoResolutionModes,
+    VideoStreamSmootherModes,
     VideoSuperResolution,
+)
+from .const import (
+    Zone,
+    AVRCodeBoolMap,
     DSPAutoManual,
     DSPPhaseControl,
     DSPSignalSelect,
@@ -236,7 +239,7 @@ PIONEER_COMMANDS = {
     "query_video_resolution": {Zone.Z1: ["?VTC", "VTC"]},
     "set_video_resolution": {Zone.Z1: ["VTC", "VTC"], "args": [VideoResolutionModes]},
     "query_video_converter": {Zone.Z1: ["?VTB", "VTB"]},
-    "set_video_converter": {Zone.Z1: ["VTB", "VTB"], "args": [bool]},
+    "set_video_converter": {Zone.Z1: ["VTB", "VTB"], "args": [AVRCodeBoolMap]},
     "query_video_pure_cinema": {Zone.Z1: ["?VTD", "VTD"]},
     "set_video_pure_cinema": {Zone.Z1: ["VTD", "VTD"], "args": [VideoPureCinemaModes]},
     "query_video_prog_motion": {Zone.Z1: ["?VTE", "VTE"]},
@@ -272,7 +275,7 @@ PIONEER_COMMANDS = {
     "query_video_chroma": {Zone.Z1: ["?VTQ", "VTQ"]},
     "set_video_chroma": {Zone.Z1: ["VTQ", "VTQ"], "args": [VideoInt66Map]},
     "query_video_black_setup": {Zone.Z1: ["?VTR", "VTR"]},
-    "set_video_black_setup": {Zone.Z1: ["VTR", "VTR"], "args": [bool]},
+    "set_video_black_setup": {Zone.Z1: ["VTR", "VTR"], "args": [AVRCodeBoolMap]},
     "query_video_aspect": {Zone.Z1: ["?VTS", "VTS"]},
     "set_video_aspect": {Zone.Z1: ["VTS", "VTS"], "args": [VideoAspectModes]},
     "query_super_resolution": {Zone.Z1: ["?VTT", "VTT"]},

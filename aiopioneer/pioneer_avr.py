@@ -974,38 +974,21 @@ class PioneerAVR(PioneerAVRConnection):
 
         # This is a complex function and supports handles requests to update any
         # video related parameters
-        ## TODO: handle cyclic, up/down -> 8, 9 or 98, 99
         for arg, value in arguments.items():
             if self.properties.video.get(arg) == value:
                 continue
             if (command := "set_video_" + arg) not in PIONEER_COMMANDS:
                 raise AVRUnknownCommandError(command=command, zone=zone)
-            arg_format = PIONEER_COMMANDS[command]["args"]
-            arg_type = arg_format[0]  # prefix type
-            if isinstance(arg_type, AVRCodeMapBase):
-                value = arg_type(value)
-                if arg == "resolution":
-                    if value not in self.params.get_param(PARAM_VIDEO_RESOLUTION_MODES):
-                        raise ValueError(f"Resolution {value} unavailable")
-            elif not isinstance(arg, arg_type):
-                raise ValueError(f"Invalid value {value} for video setting {arg}")
-            elif arg_type is bool:
-                value = int(value)
-            elif arg_type is int:
-                value_min = arg_format[1]
-                value_max = arg_format[2]
-                if not value_min >= value >= value_max:
-                    raise ValueError(
-                        f"Value {value} outside of range {value_min} -- {value_max}"
-                        f"for video setting {arg}"
-                    )
-                value += 50
-            else:
+            arg_format = PIONEER_COMMANDS[command].get("args")
+            arg_code_map = arg_format[0] if isinstance(arg_format, list) else None
+            if not arg_format or not isinstance(arg_code_map, AVRCodeMapBase):
                 raise RuntimeError(
-                    f"Invalid argument type {arg_type} for video setting {arg}"
+                    f"Invalid code map {arg_code_map} for video setting {arg}"
                 )
-
-            await self.send_command(command, zone, prefix=str(value))
+            if arg == "resolution":
+                if value not in self.params.get_param(PARAM_VIDEO_RESOLUTION_MODES):
+                    raise ValueError(f"Resolution {value} unavailable")
+            await self.send_command(command, zone, prefix=arg_code_map(value))
 
     async def set_dsp_settings(self, zone: Zone, **arguments) -> None:
         """Set the DSP settings for the amplifier."""

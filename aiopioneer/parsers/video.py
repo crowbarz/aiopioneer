@@ -1,290 +1,72 @@
 """Pioneer AVR response parsers for video parameters."""
 
-from ..const import (
-    Zone,
-    AVRCodeInt50Map,
-    VideoResolutionModes,
-    VideoPureCinemaModes,
-    VideoInt44Map,
-    VideoStreamSmootherModes,
-    AdvancedVideoAdjustModes,
-    VideoAspectModes,
-    VideoSuperResolution,
-)
-from ..params import PioneerAVRParams
-from .response import Response
+from aiopioneer.const import AVRCodeInt50Map, AVRCodeIntMap, AVRCodeStrMap
+from ..const import AVRCodeInt50Map
 
 
-class VideoParsers:
-    """Video related parsers."""
+class VideoInt08Map(AVRCodeInt50Map):
+    """Video map for integer values between 0 and +8."""
 
-    @staticmethod
-    def video_converter(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTB"
-    ) -> list[Response]:
-        """Response parser for video converter setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="converter",
-                zone=zone,
-                value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
+    value_min = 0
+    value_max = 8
 
-    @staticmethod
-    def video_resolution(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTC"
-    ) -> list[Response]:
-        """Response parser for video resolution setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="resolution",
-                zone=zone,
-                value=VideoResolutionModes[raw],
-                queue_commands=None,
-            )
-        )
-        return parsed
 
-    @staticmethod
-    def pure_cinema(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTD"
-    ) -> list[Response]:
-        """Response parser for pure cinema setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="pure_cinema",
-                zone=zone,
-                value=VideoPureCinemaModes[raw],
-                queue_commands=None,
-            )
-        )
-        return parsed
+class VideoInt66Map(AVRCodeInt50Map):
+    """Video map for integer values between -6 and +6."""
 
-    @staticmethod
-    def prog_motion(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTE"
-    ) -> list[Response]:
-        """Response parser for prog motion setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="prog_motion",
-                zone=zone,
-                value=VideoInt44Map[raw],
-                queue_commands=None,
-            )
-        )
-        return parsed
+    value_min = -6
+    value_max = 6
 
-    @staticmethod
-    def stream_smoother(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTF"
-    ) -> list[Response]:
-        """Response parser for stream smoother setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="stream_smoother",
-                zone=zone,
-                value=VideoStreamSmootherModes[raw],
-                queue_commands=None,
-            )
-        )
-        return parsed
 
-    @staticmethod
-    def advanced_video_adjust(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTG"
-    ) -> list[Response]:
-        """Response parser for advanced video adjust setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="advanced_video_adjust",
-                zone=zone,
-                value=AdvancedVideoAdjustModes[raw],
-                queue_commands=None,
-            )
-        )
-        return parsed
+class VideoInt44Map(AVRCodeInt50Map):
+    """Video map for integer values between -6 and +6."""
 
-    @staticmethod
-    def output_video_property(
-        raw: str,
-        _params: PioneerAVRParams,
-        zone=Zone.Z1,
-        command=None,
-        property_name=None,
-    ) -> list[Response]:
-        """General response parser for output video property."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name=property_name,
-                zone=zone,
-                value=AVRCodeInt50Map[raw],
-                queue_commands=None,
-            )
-        )
-        return parsed
+    value_min = -4
+    value_max = 4
 
-    @staticmethod
-    def output_ynr(
-        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTH"
-    ) -> list[Response]:
-        """Response parser for output YNR setting."""
-        return VideoParsers.output_video_property(raw, params, zone, command, "ynr")
 
-    @staticmethod
-    def output_cnr(
-        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTI"
-    ) -> list[Response]:
-        """Response parser for output CNR setting."""
-        return VideoParsers.output_video_property(raw, params, zone, command, "cnr")
+class VideoResolutionModes(AVRCodeStrMap):
+    """Video resolution modes."""
 
-    @staticmethod
-    def output_bnr(
-        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTJ"
-    ) -> list[Response]:
-        """Response parser for output BNR setting."""
-        return VideoParsers.output_video_property(raw, params, zone, command, "bnr")
+    code_map = {
+        "0": "AUTO",
+        "1": "PURE",
+        "3": "480/576p",
+        "4": "720p",
+        "5": "1080i",
+        "6": "1080p",
+        "7": "1080/24p",
+        "8": "4K",
+        "9": "4K/24p",
+    }
 
-    @staticmethod
-    def output_mnr(
-        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTK"
-    ) -> list[Response]:
-        """Response parser for output MNR setting."""
-        return VideoParsers.output_video_property(raw, params, zone, command, "mnr")
 
-    @staticmethod
-    def output_detail(
-        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTL"
-    ) -> list[Response]:
-        """Response parser for output detail setting."""
-        return VideoParsers.output_video_property(raw, params, zone, command, "detail")
+class VideoPureCinemaModes(AVRCodeStrMap):
+    """Video pure cinema modes."""
 
-    @staticmethod
-    def output_sharpness(
-        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTM"
-    ) -> list[Response]:
-        """Response parser for output sharpness setting."""
-        return VideoParsers.output_video_property(
-            raw, params, zone, command, "sharpness"
-        )
+    code_map = {"0": "AUTO", "1": "ON", "2": "OFF"}
 
-    @staticmethod
-    def output_brightness(
-        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTN"
-    ) -> list[Response]:
-        """Response parser for output brightness setting."""
-        return VideoParsers.output_video_property(
-            raw, params, zone, command, "brightness"
-        )
 
-    @staticmethod
-    def output_contrast(
-        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTO"
-    ) -> list[Response]:
-        """Response parser for output contrast setting."""
-        return VideoParsers.output_video_property(
-            raw, params, zone, command, "contrast"
-        )
+class VideoStreamSmootherModes(AVRCodeStrMap):
+    """Video stream smoother modes."""
 
-    @staticmethod
-    def output_hue(
-        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTP"
-    ) -> list[Response]:
-        """Response parser for output hue setting."""
-        return VideoParsers.output_video_property(raw, params, zone, command, "hue")
+    code_map = {"0": "OFF", "1": "ON", "2": "AUTO"}
 
-    @staticmethod
-    def output_chroma(
-        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="VTQ"
-    ) -> list[Response]:
-        """Response parser for output chroma setting."""
-        return VideoParsers.output_video_property(raw, params, zone, command, "chroma")
 
-    @staticmethod
-    def black_setup(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTR"
-    ) -> list[Response]:
-        """Response parser for black setup setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="black_setup",
-                zone=zone,
-                value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
+class AdvancedVideoAdjustModes(AVRCodeStrMap):
+    """Advanced video adjust modes."""
 
-    @staticmethod
-    def aspect(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTS"
-    ) -> list[Response]:
-        """Response parser for output aspect setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="aspect",
-                zone=zone,
-                value=VideoAspectModes[raw],
-                queue_commands=None,
-            )
-        )
-        return parsed
+    code_map = {"0": "PDP", "1": "LCD", "2": "FPJ", "3": "Professional", "4": "Memory"}
 
-    @staticmethod
-    def super_resolution(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VTT"
-    ) -> list[Response]:
-        """Response parser for output aspect setting."""
 
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="super_resolution",
-                zone=zone,
-                value=VideoSuperResolution[raw],
-                queue_commands=None,
-            )
-        )
-        return parsed
+class VideoAspectModes(AVRCodeStrMap):
+    """Video aspect modes."""
+
+    code_map = {"0": "PASSTHROUGH", "1": "NORMAL"}
+
+
+class VideoSuperResolution(AVRCodeIntMap):
+    """Video super resolution."""
+
+    value_min = 0
+    value_max = 3

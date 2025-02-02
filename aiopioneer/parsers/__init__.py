@@ -28,7 +28,17 @@ from .audio import AudioParsers
 from .tuner import TunerParsers
 from .dsp import DspParsers
 from .information import InformationParsers
-from .video import VideoParsers
+from .video import (
+    VideoInt08Map,
+    VideoInt44Map,
+    VideoInt66Map,
+    VideoResolutionModes,
+    VideoPureCinemaModes,
+    VideoStreamSmootherModes,
+    AdvancedVideoAdjustModes,
+    VideoAspectModes,
+    VideoSuperResolution,
+)
 from .settings import SettingsParsers
 
 _LOGGER = logging.getLogger(__name__)
@@ -158,25 +168,25 @@ RESPONSE_DATA = [
     ["VST", InformationParsers.video_information, Zone.ALL],
     ["FL", InformationParsers.device_display_information, Zone.ALL],
     ##
-    ["VTB", VideoParsers.video_converter, Zone.Z1],
-    ["VTC", VideoParsers.video_resolution, Zone.Z1],
-    ["VTD", VideoParsers.pure_cinema, Zone.Z1],
-    ["VTE", VideoParsers.prog_motion, Zone.Z1],
-    ["VTF", VideoParsers.stream_smoother, Zone.Z1],
-    ["VTG", VideoParsers.advanced_video_adjust, Zone.Z1],
-    ["VTH", VideoParsers.output_ynr, Zone.Z1],
-    ["VTI", VideoParsers.output_cnr, Zone.Z1],
-    ["VTJ", VideoParsers.output_bnr, Zone.Z1],
-    ["VTK", VideoParsers.output_mnr, Zone.Z1],
-    ["VTL", VideoParsers.output_detail, Zone.Z1],
-    ["VTM", VideoParsers.output_sharpness, Zone.Z1],
-    ["VTN", VideoParsers.output_brightness, Zone.Z1],
-    ["VTO", VideoParsers.output_contrast, Zone.Z1],
-    ["VTP", VideoParsers.output_hue, Zone.Z1],
-    ["VTQ", VideoParsers.output_chroma, Zone.Z1],
-    ["VTR", VideoParsers.black_setup, Zone.Z1],
-    ["VTS", VideoParsers.aspect, Zone.Z1],
-    ["VTT", VideoParsers.super_resolution, Zone.Z1],
+    ["VTB", AVRCodeBoolMap, Zone.Z1, "video", "converter"],
+    ["VTC", VideoResolutionModes, Zone.Z1, "video", "resolution"],
+    ["VTD", VideoPureCinemaModes, Zone.Z1, "video", "pure_cinema"],
+    ["VTE", VideoInt44Map, Zone.Z1, "video", "prog_motion"],
+    ["VTF", VideoStreamSmootherModes, Zone.Z1, "video", "stream_smoother"],
+    ["VTG", AdvancedVideoAdjustModes, Zone.Z1, "video", "advanced_video_adjust"],
+    ["VTH", VideoInt08Map, Zone.Z1, "video", "ynr"],
+    ["VTI", VideoInt08Map, Zone.Z1, "video", "cnr"],
+    ["VTJ", VideoInt08Map, Zone.Z1, "video", "bnr"],
+    ["VTK", VideoInt08Map, Zone.Z1, "video", "mnr"],
+    ["VTL", VideoInt08Map, Zone.Z1, "video", "detail"],
+    ["VTM", VideoInt08Map, Zone.Z1, "video", "sharpness"],
+    ["VTN", VideoInt66Map, Zone.Z1, "video", "brightness"],
+    ["VTO", VideoInt66Map, Zone.Z1, "video", "contrast"],
+    ["VTP", VideoInt66Map, Zone.Z1, "video", "hue"],
+    ["VTQ", VideoInt66Map, Zone.Z1, "video", "chroma"],
+    ["VTR", AVRCodeBoolMap, Zone.Z1, "video", "black_setup"],
+    ["VTS", VideoAspectModes, Zone.Z1, "video", "aspect"],
+    ["VTT", VideoSuperResolution, Zone.Z1, "video", "super_resolution"],
 ]
 
 

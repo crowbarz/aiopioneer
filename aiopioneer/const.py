@@ -384,51 +384,6 @@ class ToneDB(AVRCodeStrMap):
     }
 
 
-class VideoInt08Map(AVRCodeInt50Map):
-    """Video map for integer values between 0 and +8."""
-
-    value_min = 0
-    value_max = 8
-
-
-class VideoInt66Map(AVRCodeInt50Map):
-    """Video map for integer values between -6 and +6."""
-
-    value_min = -6
-    value_max = 6
-
-
-class VideoInt44Map(AVRCodeInt50Map):
-    """Video map for integer values between -6 and +6."""
-
-    value_min = -4
-    value_max = 4
-
-
-class VideoPureCinemaModes(AVRCodeStrMap):
-    """Video pure cinema modes."""
-
-    code_map = {"0": "AUTO", "1": "ON", "2": "OFF"}
-
-
-class VideoStreamSmootherModes(AVRCodeStrMap):
-    """Video stream smoother modes."""
-
-    code_map = {"0": "OFF", "1": "ON", "2": "AUTO"}
-
-
-class VideoAspectModes(AVRCodeStrMap):
-    """Video aspect modes."""
-
-    code_map = {"0": "PASSTHROUGH", "1": "NORMAL"}
-
-
-class AdvancedVideoAdjustModes(AVRCodeStrMap):
-    """Advanced video adjust modes."""
-
-    code_map = {"0": "PDP", "1": "LCD", "2": "FPJ", "3": "Professional", "4": "Memory"}
-
-
 CHANNEL_LEVELS_OBJ = {
     "C": 0,
     "L": 0,
@@ -443,13 +398,6 @@ CHANNEL_LEVELS_OBJ = {
     "LW": 0,
     "RW": 0,
 }
-
-
-class VideoSuperResolution(AVRCodeIntMap):
-    """Video super resolution."""
-
-    value_min = 0
-    value_max = 3
 
 
 class DSPAutoManual(AVRCodeStrMap):
@@ -652,22 +600,6 @@ VIDEO_SIGNAL_3D_MODES = {
     "07": "Top-and-Bottom",
     "08": "Side-by-Side(Half)",
 }
-
-
-class VideoResolutionModes(AVRCodeStrMap):
-    """Video resolution modes."""
-
-    code_map = {
-        "0": "AUTO",
-        "1": "PURE",
-        "3": "480/576p",
-        "4": "720p",
-        "5": "1080i",
-        "6": "1080p",
-        "7": "1080/24p",
-        "8": "4K",
-        "9": "4K/24p",
-    }
 
 
 MCACC_MEASUREMENT_ERROR = {
