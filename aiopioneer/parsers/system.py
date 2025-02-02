@@ -2,8 +2,6 @@
 
 import re
 
-from aiopioneer.const import AVRCodeStrMap
-
 from ..const import (
     SOURCE_TUNER,
     MEDIA_CONTROL_SOURCES,
@@ -15,6 +13,7 @@ from ..params import (
     PARAM_MHL_SOURCE,
     PARAM_SPEAKER_SYSTEM_MODES,
 )
+from .code_map import AVRCodeStrMap
 from .response import Response
 
 

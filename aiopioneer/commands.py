@@ -1,5 +1,6 @@
 """Pioneer AVR commands."""
 
+from .parsers.code_map import AVRCodeBoolMap
 from .parsers.video import (
     AdvancedVideoAdjustModes,
     VideoAspectModes,
@@ -13,7 +14,6 @@ from .parsers.video import (
 )
 from .const import (
     Zone,
-    AVRCodeBoolMap,
     DSPAutoManual,
     DSPPhaseControl,
     DSPSignalSelect,

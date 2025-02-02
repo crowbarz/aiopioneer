@@ -1,7 +1,6 @@
 """Pioneer AVR response parsers for video parameters."""
 
-from aiopioneer.const import AVRCodeInt50Map, AVRCodeIntMap, AVRCodeStrMap
-from ..const import AVRCodeInt50Map
+from .code_map import AVRCodeInt50Map, AVRCodeIntMap, AVRCodeStrMap
 
 
 class VideoInt08Map(AVRCodeInt50Map):

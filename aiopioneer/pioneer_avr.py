@@ -9,6 +9,8 @@ import time
 
 from collections.abc import Callable
 
+from .parsers.code_map import AVRCodeMapBase
+
 from .commands import PIONEER_COMMANDS
 from .connection import PioneerAVRConnection
 from .const import (
@@ -24,7 +26,6 @@ from .const import (
     ToneDB,
     MEDIA_CONTROL_COMMANDS,
     CHANNEL_LEVELS_OBJ,
-    AVRCodeMapBase,
 )
 from .exceptions import (
     AVRUnavailableError,
@@ -59,7 +60,7 @@ from .parsers.system import AMPModes, DimmerModes, HDMIOutModes, PanelLock, Spea
 from .properties import PioneerAVRProperties
 from .util import cancel_task
 
-from .parsers import process_raw_response
+from .parsers.parse import process_raw_response
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -5,15 +5,21 @@ import logging
 
 from ..const import (
     Zone,
-    AVRCodeMapBase,
-    AVRCodeIntMap,
-    AVRCodeBoolMap,
-    AVRCodeInverseBoolMap,
 )
 from ..exceptions import AVRResponseParseError
 from ..params import PioneerAVRParams
 from ..properties import PioneerAVRProperties
+from .audio import AudioParsers
+from .code_map import (
+    AVRCodeBoolMap,
+    AVRCodeIntMap,
+    AVRCodeInverseBoolMap,
+    AVRCodeMapBase,
+)
+from .dsp import DspParsers
+from .information import InformationParsers
 from .response import Response
+from .settings import SettingsParsers
 from .system import (
     SystemParsers,
     SpeakerModes,
@@ -24,10 +30,7 @@ from .system import (
     AMPModes,
     PanelLock,
 )
-from .audio import AudioParsers
 from .tuner import TunerParsers
-from .dsp import DspParsers
-from .information import InformationParsers
 from .video import (
     VideoInt08Map,
     VideoProgMotion,
@@ -39,7 +42,6 @@ from .video import (
     VideoAspectModes,
     VideoSuperResolution,
 )
-from .settings import SettingsParsers
 
 _LOGGER = logging.getLogger(__name__)
 
