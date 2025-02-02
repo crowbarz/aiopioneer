@@ -42,7 +42,7 @@ SOURCE_TUNER = "02"
 
 
 class AVRCodeMapBase(dict):
-    """Map of AVR codes to values."""
+    """Map AVR codes to values."""
 
     def __new__(cls, value):
         return cls.value_to_code(value)
@@ -66,8 +66,36 @@ class AVRCodeMapBase(dict):
         return v == value
 
 
+class AVRCodeBoolMap(AVRCodeMapBase):
+    """Map AVR codes to bool values."""
+
+    @classmethod
+    def value_to_code(cls, value: bool) -> Any:
+        if not isinstance(value, bool):
+            raise ValueError(f"Value {value} expected for {cls.__name__}")
+        return str(bool(value))
+
+    @classmethod
+    def code_to_value(cls, code: str) -> str:
+        return bool(code)
+
+
+class AVRCodeInverseBoolMap(AVRCodeBoolMap):
+    """Map AVR codes to inverse bool values."""
+
+    @classmethod
+    def value_to_code(cls, value: bool) -> Any:
+        if not isinstance(value, bool):
+            raise ValueError(f"Value {value} expected for {cls.__name__}")
+        return super().value_to_code(not value)
+
+    @classmethod
+    def code_to_value(cls, code: str) -> str:
+        return not super().value_to_code(code)
+
+
 class AVRCodeMap(AVRCodeMapBase):
-    """Map of AVR codes to values."""
+    """Map AVR codes to generic map of values."""
 
     code_map: dict[str, Any] = {}
 
@@ -86,13 +114,13 @@ class AVRCodeMap(AVRCodeMapBase):
 
 
 class AVRCodeStrMap(AVRCodeMap):
-    """Map of AVR codes to values."""
+    """Map AVR codes to str values."""
 
     code_map: dict[str, str] = {}
 
 
 class AVRCodeListMap(AVRCodeMap):
-    """Map of AVR codes to a list with value as first element."""
+    """Map AVR codes to a list with value as first element."""
 
     code_map: dict[str, list] = {}
 
@@ -108,7 +136,7 @@ class AVRCodeListMap(AVRCodeMap):
 
 
 class AVRCodeIntMap(AVRCodeMapBase):
-    """Map of AVR codes to an integer."""
+    """Map AVR codes to integer values."""
 
     code_zfill: int = None
     value_min: int = 0
@@ -132,7 +160,7 @@ class AVRCodeIntMap(AVRCodeMapBase):
 
 
 class AVRCodeInt50Map(AVRCodeIntMap):
-    """Video program motion setting."""
+    """Map AVR codes to integer values with +50 delta."""
 
     @classmethod
     def value_to_code(cls, value: int) -> str:
