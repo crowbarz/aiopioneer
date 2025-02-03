@@ -2,7 +2,6 @@
 
 from enum import StrEnum
 
-from .parsers.code_map import AVRCodeStrMap
 
 VERSION = "0.8.1"
 DEFAULT_TIMEOUT = 2
@@ -229,32 +228,6 @@ MEDIA_CONTROL_COMMANDS = {
 }
 
 
-class ToneModes(AVRCodeStrMap):
-    """Tone modes."""
-
-    code_map = {"0": "Bypass", "1": "On", "9": "(cycle)"}
-
-
-class ToneDB(AVRCodeStrMap):
-    """Tone dB values."""
-
-    code_map = {
-        "00": "6dB",
-        "01": "5dB",
-        "02": "4dB",
-        "03": "3dB",
-        "04": "2dB",
-        "05": "1dB",
-        "06": "0dB",
-        "07": "-1dB",
-        "08": "-2dB",
-        "09": "-3dB",
-        "10": "-4dB",
-        "11": "-5dB",
-        "12": "-6dB",
-    }
-
-
 CHANNEL_LEVELS_OBJ = {
     "C": 0,
     "L": 0,
@@ -453,41 +426,6 @@ STANDING_WAVE_FREQUENCIES = {
     "30": "229Hz",
     "31": "239Hz",
     "32": "250Hz",
-}
-
-XOVER_SETTING = {
-    "0": "50Hz",
-    "1": "80Hz",
-    "2": "100Hz",
-    "3": "150Hz",
-    "4": "200Hz",
-}
-
-OSD_LANGUAGES = {
-    "00": "English",
-    "01": "French",
-    "03": "German",
-    "04": "Italian",
-    "05": "Spanish",
-    "06": "Dutch",
-    "07": "Russian",
-    "08": "Chinese (簡体)",
-    "09": "Chinese (繁体)",
-    "10": "Japanese",
-}
-
-STANDBY_PASSTHROUGH_OPTIONS = {
-    "00": "OFF",
-    "01": "LAST",
-    "02": "BD",
-    "03": "HDMI1",
-    "04": "HDMI2",
-    "05": "HDMI3",
-    "06": "HDMI4",
-    "07": "HDMI5",
-    "08": "HDMI6",
-    "09": "HDMI7",
-    "10": "HDMI8",
 }
 
 EXTERNAL_HDMI_TRIGGER_OPTIONS = {

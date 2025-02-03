@@ -4,36 +4,86 @@ from ..const import (
     MCACC_MEASUREMENT_STATUS,
     MCACC_MEASUREMENT_ERROR,
     STANDING_WAVE_FREQUENCIES,
-    XOVER_SETTING,
-    OSD_LANGUAGES,
-    STANDBY_PASSTHROUGH_OPTIONS,
     EXTERNAL_HDMI_TRIGGER_OPTIONS,
 )
 from ..params import PioneerAVRParams
+from .code_map import AVRCodeStrMap, AVRCodeFloatMap
 from .response import Response
+
+
+class SurroundPosition(AVRCodeStrMap):
+    """Surround position."""
+
+    code_map = {"0": "side", "1": "rear"}
+
+
+class XOver(AVRCodeStrMap):
+    """X over."""
+
+    code_map = {"0": "50Hz", "1": "80Hz", "2": "100Hz", "3": "150Hz", "4": "200Hz"}
+
+
+class XCurve(AVRCodeFloatMap):
+    """X curve (1step=0.5)"""
+
+    code_zfill = 2
+
+    @classmethod
+    def value_to_code(cls, value: float) -> str:
+        if value % 0.5:
+            raise ValueError(
+                f"Value {value} is not a multiple of 0.5 for {cls.__name__}"
+            )
+        return str(abs(int(value * 2)))
+
+    @classmethod
+    def code_to_value(cls, code: str) -> float:
+        return -(int(code) / 2)
+
+
+class SbchProcessing(AVRCodeStrMap):
+    """SBch processing (THX Audio)."""
+
+    code_map = {"0": "auto", "1": "manual"}
+
+
+class OsdLanguages(AVRCodeStrMap):
+    """OSD languages."""
+
+    code_map = {
+        "00": "English",
+        "01": "French",
+        "03": "German",
+        "04": "Italian",
+        "05": "Spanish",
+        "06": "Dutch",
+        "07": "Russian",
+        "08": "Chinese (簡体)",
+        "09": "Chinese (繁体)",
+        "10": "Japanese",
+    }
+
+
+class StandbyPassthrough(AVRCodeStrMap):
+    """Standby Passthrough."""
+
+    code_map = {
+        "00": "OFF",
+        "01": "LAST",
+        "02": "BD",
+        "03": "HDMI1",
+        "04": "HDMI2",
+        "05": "HDMI3",
+        "06": "HDMI4",
+        "07": "HDMI5",
+        "08": "HDMI6",
+        "09": "HDMI7",
+        "10": "HDMI8",
+    }
 
 
 class SettingsParsers:
     """AVR Setting related parsers."""
-
-    @staticmethod
-    def home_menu_status(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SSL"
-    ) -> list[Response]:
-        """Response parser for home menu status."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="home_menu_status",
-                zone=zone,
-                value=(raw == "1"),
-                queue_commands=None,
-            )
-        )
-        return parsed
 
     @staticmethod
     def mcacc_diagnostic_status(
@@ -204,82 +254,6 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def x_over(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SSQ"
-    ) -> list[Response]:
-        """Response parser for X.OVER setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="x_over",
-                zone=zone,
-                value=XOVER_SETTING.get(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def x_curve(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SST"
-    ) -> list[Response]:
-        """Response parser for X-Curve setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="x_over",
-                zone=zone,
-                value=-(int(raw) / 2),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def loudness_plus(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SSU"
-    ) -> list[Response]:
-        """Response parser for Loudness Plus setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="loudness_plus",
-                zone=zone,
-                value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def sbch_processing(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SSV"
-    ) -> list[Response]:
-        """Response parser for SBch Processing (THX Audio) setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="sbch_processing",
-                zone=zone,
-                value="auto" if raw == "0" else "manual",
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
     def speaker_setting(
         raw: str, _params: PioneerAVRParams, zone=None, command="SSG"
     ) -> list[Response]:
@@ -414,198 +388,6 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def thx_ultraselect2_sw(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SSW"
-    ) -> list[Response]:
-        """Response parser for THX Ultra2/Select2 SW (THX Audio) setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="thx_ultraselect2",
-                zone=zone,
-                value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def boundary_gain_compression(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SSX"
-    ) -> list[Response]:
-        """Response parser for BGC (THX Audio) setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="boundary_gain_compression",
-                zone=zone,
-                value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def re_equalization(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SSB"
-    ) -> list[Response]:
-        """Response parser for Re-EQ (THX Audio) setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="re_equalization",
-                zone=zone,
-                value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def osd_language(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SSE"
-    ) -> list[Response]:
-        """Response parser for OSD language setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="osd_language",
-                zone=zone,
-                value=OSD_LANGUAGES.get(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def dhcp(
-        raw: str, _params: PioneerAVRParams, zone=None, command="STA"
-    ) -> list[Response]:
-        """Response parser for DHCP setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="network_dhcp",
-                zone=zone,
-                value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def proxy_enabled(
-        raw: str, _params: PioneerAVRParams, zone=None, command="STG"
-    ) -> list[Response]:
-        """Response parser for proxy server setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="network_proxy_active",
-                zone=zone,
-                value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def network_standby(
-        raw: str, _params: PioneerAVRParams, zone=None, command="STJ"
-    ) -> list[Response]:
-        """Response parser for network standby setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="network_standby",
-                zone=zone,
-                value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def friendly_name(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SSO"
-    ) -> list[Response]:
-        """Response parser for friendly name setting."""
-        value = raw.split('"')[1]
-
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="friendly_name",
-                zone=zone,
-                value=value,
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def parental_lock(
-        raw: str, _params: PioneerAVRParams, zone=None, command="STK"
-    ) -> list[Response]:
-        """Response parser for parental lock setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="parental_lock",
-                zone=zone,
-                value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def parental_lock_password(
-        raw: str, _params: PioneerAVRParams, zone=None, command="STL"
-    ) -> list[Response]:
-        """Response parser for parental lock password setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="parental_lock_password",
-                zone=zone,
-                value=raw,
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
     def port_numbers(
         raw: str, _params: PioneerAVRParams, zone=None, command="SUM"
     ) -> list[Response]:
@@ -631,44 +413,6 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def hdmi_control(
-        raw: str, _params: PioneerAVRParams, zone=None, command="STQ"
-    ) -> list[Response]:
-        """Response parser for HDMI control setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="hdmi_control",
-                zone=zone,
-                value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def hdmi_control_mode(
-        raw: str, _params: PioneerAVRParams, zone=None, command="STR"
-    ) -> list[Response]:
-        """Response parser for HDMI Control Mode setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="hdmi_control_mode",
-                zone=zone,
-                value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
     def hdmi_arc(
         raw: str, _params: PioneerAVRParams, zone=None, command="STT"
     ) -> list[Response]:
@@ -682,63 +426,6 @@ class SettingsParsers:
                 property_name="hdmi_arc",
                 zone=zone,
                 value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def pqls_for_backup(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SVL"
-    ) -> list[Response]:
-        """Response parser for PQLS for backup setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="pqls_for_backup",
-                zone=zone,
-                value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def speaker_b_link(
-        raw: str, _params: PioneerAVRParams, zone=None, command="STX"
-    ) -> list[Response]:
-        """Response parser for speaker B link setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="speaker_b_link",
-                zone=zone,
-                value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def standby_passthrough(
-        raw: str, _params: PioneerAVRParams, zone=None, command="STU"
-    ) -> list[Response]:
-        """Response parser for standby passthrough setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="standby_passthrough",
-                zone=zone,
-                value=STANDBY_PASSTHROUGH_OPTIONS.get(raw),
                 queue_commands=None,
             )
         )
@@ -760,63 +447,6 @@ class SettingsParsers:
                 property_name=f"external_hdmi_trigger_{trigger}",
                 zone=zone,
                 value=EXTERNAL_HDMI_TRIGGER_OPTIONS.get(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def osd_overlay(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SVA"
-    ) -> list[Response]:
-        """Response parser for OSD overlay status."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="osd_overlay",
-                zone=zone,
-                value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def additional_service(
-        raw: str, _params: PioneerAVRParams, zone=None, command="ADS"
-    ) -> list[Response]:
-        """Response parser for additional service setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="additional_service",
-                zone=zone,
-                value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def user_lock(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SUT"
-    ) -> list[Response]:
-        """Response parser for user lock setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="user_lock",
-                zone=zone,
-                value=bool(raw),
                 queue_commands=None,
             )
         )

@@ -1,7 +1,12 @@
 """aiopioneer response parsers for DSP functions. Most responses are only valid for Zone 1."""
 
-from aiopioneer.const import AVRCodeStrMap
-from .code_map import AVRCodeMapBase, AVRCodeIntMap, AVRCodeInt50Map, AVRCodeFloatMap
+from .code_map import (
+    AVRCodeMapBase,
+    AVRCodeIntMap,
+    AVRCodeInt50Map,
+    AVRCodeFloatMap,
+    AVRCodeStrMap,
+)
 
 
 class DSPFloat10Map(AVRCodeFloatMap):
@@ -151,7 +156,9 @@ class DSPEffect(AVRCodeIntMap):
     @classmethod
     def value_to_code(cls, value: int) -> str:
         if value % 10:
-            raise ValueError(f"Value {value} is not divisible by 10 for {cls.__name__}")
+            raise ValueError(
+                f"Value {value} is not a multiple of 10 for {cls.__name__}"
+            )
         return str(int(value / 10))
 
     @classmethod

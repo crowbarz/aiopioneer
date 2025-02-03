@@ -7,7 +7,7 @@ from ..const import Zone
 from ..exceptions import AVRResponseParseError
 from ..params import PioneerAVRParams
 from ..properties import PioneerAVRProperties
-from .audio import AudioParsers
+from .audio import AudioParsers, ToneModes, ToneDB
 from .code_map import (
     AVRCodeBoolMap,
     AVRCodeIntMap,
@@ -38,7 +38,15 @@ from .dsp import (
 )
 from .information import InformationParsers
 from .response import Response
-from .settings import SettingsParsers
+from .settings import (
+    SettingsParsers,
+    SurroundPosition,
+    XOver,
+    XCurve,
+    SbchProcessing,
+    OsdLanguages,
+    StandbyPassthrough,
+)
 from .system import (
     SystemParsers,
     SpeakerModes,
@@ -65,6 +73,7 @@ from .video import (
 _LOGGER = logging.getLogger(__name__)
 
 RESPONSE_DATA = [
+    ## system
     ["PWR", SystemParsers.power, Zone.Z1],
     ["APR", SystemParsers.power, Zone.Z2],
     ["BPR", SystemParsers.power, Zone.Z3],
@@ -89,7 +98,7 @@ RESPONSE_DATA = [
     ["SAB", AVRCodeIntMap, Zone.ALL, "amp", "sleep"],
     ["SAC", AMPModes, Zone.ALL, "amp", "status"],
     ["PKL", PanelLock, Zone.ALL, "amp", "panel_lock"],
-    ["RML", AVRCodeMapBase, Zone.ALL, "amp", "remote_lock"],  ## TODO: add code map
+    ["RML", AVRCodeBoolMap, Zone.ALL, "amp", "remote_lock"],
     ["SSF", SystemParsers.speaker_system, Zone.ALL],
     ["RGB", SystemParsers.input_name, Zone.ALL],
     ["SVB", SystemParsers.mac_address, Zone.ALL],
@@ -97,58 +106,58 @@ RESPONSE_DATA = [
     ["SSI", SystemParsers.software_version, Zone.ALL],
     ["AUA", SystemParsers.audio_parameter_prohibitation, Zone.Z1],
     ["AUB", SystemParsers.audio_parameter_working, Zone.Z1],
-    ##
-    ["SSL", SettingsParsers.home_menu_status, Zone.ALL],
+    ## settings
+    ["SSL", AVRCodeBoolMap, Zone.ALL, "system", "home_menu_status"],
     ["SSJ", SettingsParsers.mcacc_diagnostic_status, Zone.ALL],
     ["SUU", SettingsParsers.standing_wave_setting, Zone.ALL],
     ["SUV", SettingsParsers.standing_wave_sw_trim, Zone.ALL],
-    ["SSP", SettingsParsers.surround_position, Zone.ALL],
-    ["SSQ", SettingsParsers.x_over, Zone.ALL],
-    ["SST", SettingsParsers.x_curve, Zone.ALL],
-    ["SSU", SettingsParsers.loudness_plus, Zone.ALL],
-    ["SSV", SettingsParsers.sbch_processing, Zone.ALL],
+    ["SSP", SurroundPosition, Zone.ALL, "system", "surround_position"],
+    ["SSQ", XOver, Zone.ALL, "system", "x_over"],
+    ["SST", XCurve, Zone.ALL, "system", "x_curve"],
+    ["SSU", AVRCodeBoolMap, Zone.ALL, "system", "loudness_plus"],
+    ["SSV", SbchProcessing, Zone.ALL, "system", "sbch_processing"],
     ["SSG", SettingsParsers.speaker_setting, Zone.ALL],
     ["ILA", SettingsParsers.input_level_adjust, Zone.ALL],
     ["SSS", SettingsParsers.speaker_distance_mcacc, Zone.ALL],
-    ["SSW", SettingsParsers.thx_ultraselect2_sw, Zone.ALL],
-    ["SSX", SettingsParsers.boundary_gain_compression, Zone.ALL],
-    ["SSB", SettingsParsers.re_equalization, Zone.ALL],
-    ["SSE", SettingsParsers.osd_language, Zone.ALL],
-    ["STA", SettingsParsers.dhcp, Zone.ALL],
-    ["STG", SettingsParsers.proxy_enabled, Zone.ALL],
-    ["STJ", SettingsParsers.network_standby, Zone.ALL],
-    ["SSO", SettingsParsers.friendly_name, Zone.ALL],
-    ["STK", SettingsParsers.parental_lock, Zone.ALL],
-    ["STL", SettingsParsers.parental_lock_password, Zone.ALL],
+    ["SSW", AVRCodeBoolMap, Zone.ALL, "system", "thx_ultraselect2"],
+    ["SSX", AVRCodeBoolMap, Zone.ALL, "system", "boundary_gain_compression"],
+    ["SSB", AVRCodeBoolMap, Zone.ALL, "system", "re_equalization"],
+    ["SSE", OsdLanguages, Zone.ALL, "system", "osd_language"],
+    ["STA", AVRCodeBoolMap, Zone.ALL, "system", "network_dhcp"],
+    ["STG", AVRCodeBoolMap, Zone.ALL, "system", "network_proxy_active"],
+    ["STJ", AVRCodeBoolMap, Zone.ALL, "system", "network_standby"],
+    ["SSO", AVRCodeMapBase, Zone.ALL, "system", "friendly_name"],
+    ["STK", AVRCodeBoolMap, Zone.ALL, "system", "parental_lock"],
+    ["STL", AVRCodeMapBase, Zone.ALL, "system", "parental_lock_password"],
     ["SUM", SettingsParsers.port_numbers, Zone.ALL],
-    ["STQ", SettingsParsers.hdmi_control, Zone.ALL],
-    ["STR", SettingsParsers.hdmi_control_mode, Zone.ALL],
-    ["STT", SettingsParsers.hdmi_arc, Zone.ALL],
-    ["SVL", SettingsParsers.pqls_for_backup, Zone.ALL],
-    ["STU", SettingsParsers.standby_passthrough, Zone.ALL],
+    ["STQ", AVRCodeBoolMap, Zone.ALL, "system", "hdmi_control"],
+    ["STR", AVRCodeBoolMap, Zone.ALL, "system", "hdmi_control_mode"],
+    ["STT", AVRCodeBoolMap, Zone.ALL, "system", "hdmi_arc"],
+    ["SVL", AVRCodeBoolMap, Zone.ALL, "system", "pqls_for_backup"],
+    ["STU", StandbyPassthrough, Zone.ALL, "system", "standby_passthrough"],
     ["STV", SettingsParsers.external_hdmi_trigger, Zone.ALL],
     ["STW", SettingsParsers.external_hdmi_trigger, Zone.ALL],
-    ["STX", SettingsParsers.speaker_b_link, Zone.ALL],
-    ["SVA", SettingsParsers.osd_overlay, Zone.ALL],
-    ["ADS", SettingsParsers.additional_service, Zone.ALL],
-    ["SUT", SettingsParsers.user_lock, Zone.ALL],
-    ##
+    ["STX", AVRCodeBoolMap, Zone.ALL, "system", "speaker_b_link"],
+    ["SVA", AVRCodeBoolMap, Zone.ALL, "system", "osd_overlay"],
+    ["ADS", AVRCodeBoolMap, Zone.ALL, "system", "additional_service"],
+    ["SUT", AVRCodeBoolMap, Zone.ALL, "system", "user_lock"],
+    ## audio
     ["CLV", AudioParsers.channel_levels, Zone.Z1],
     ["ZGE", AudioParsers.channel_levels, Zone.Z2],
     ["ZHE", AudioParsers.channel_levels, Zone.Z3],
     ["SR", AudioParsers.listening_mode, Zone.ALL],
-    ["TO", AudioParsers.tone, Zone.Z1],
-    ["BA", AudioParsers.tone_bass, Zone.Z1],
-    ["TR", AudioParsers.tone_treble, Zone.Z1],
-    ["ZGA", AudioParsers.tone, Zone.Z2],
-    ["ZGB", AudioParsers.tone_bass, Zone.Z2],
-    ["ZGC", AudioParsers.tone_treble, Zone.Z2],
-    ##
+    ["TO", ToneModes, Zone.Z1, "tone", "status"],
+    ["BA", ToneDB, Zone.Z1, "tone", "bass"],
+    ["TR", ToneDB, Zone.Z1, "tone", "treble"],
+    ["ZGA", ToneModes, Zone.Z2, "tone", "status"],
+    ["ZGB", ToneDB, Zone.Z2, "tone", "bass"],
+    ["ZGC", ToneDB, Zone.Z2, "tone", "treble"],
+    ## tuner
     ["FRF", TunerParsers.frequency_fm, Zone.ALL],
     ["FRA", TunerParsers.frequency_am, Zone.ALL],
     ["PR", TunerParsers.preset, Zone.ALL],
     ["SUQ", TunerParsers.am_frequency_step, Zone.ALL],
-    ##
+    ## dsp
     ["MC", DspMcaccMemorySet, Zone.ALL, "dsp", "mcacc_memory_set"],
     ["IS", DSPPhaseControl, Zone.ALL, "dsp", "phase_control"],
     ["VSP", DSPAudioScaler, Zone.ALL, "dsp", "virtual_speakers"],
@@ -184,11 +193,11 @@ RESPONSE_DATA = [
     ["VDP", DSPVirtualDepth, Zone.ALL, "dsp", "virtual_depth"],
     ["VWD", AVRCodeBoolMap, Zone.ALL, "dsp", "virtual_wide"],
     ["ARB", DSPRenderingMode, Zone.ALL, "dsp", "rendering_mode"],
-    ##
+    ## information
     ["AST", InformationParsers.audio_information, Zone.ALL],
     ["VST", InformationParsers.video_information, Zone.ALL],
     ["FL", InformationParsers.device_display_information, Zone.ALL],
-    ##
+    ## video
     ["VTB", AVRCodeBoolMap, Zone.Z1, "video", "converter"],
     ["VTC", VideoResolutionModes, Zone.Z1, "video", "resolution"],
     ["VTD", VideoPureCinemaModes, Zone.Z1, "video", "pure_cinema"],

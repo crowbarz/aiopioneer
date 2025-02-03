@@ -9,8 +9,6 @@ import time
 
 from collections.abc import Callable
 
-from .parsers.code_map import AVRCodeMapBase
-
 from .commands import PIONEER_COMMANDS
 from .connection import PioneerAVRConnection
 from .const import (
@@ -22,8 +20,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     MIN_RESCAN_INTERVAL,
     SOURCE_TUNER,
-    ToneModes,
-    ToneDB,
     MEDIA_CONTROL_COMMANDS,
     CHANNEL_LEVELS_OBJ,
 )
@@ -56,11 +52,12 @@ from .params import (
     PARAM_QUERY_SOURCES,
     PARAM_ZONES_INITIAL_REFRESH,
 )
+from .parsers.audio import ToneDB, ToneModes
+from .parsers.code_map import AVRCodeMapBase, AVRCodeBoolMap
+from .parsers.parse import process_raw_response
 from .parsers.system import AMPModes, DimmerModes, HDMIOutModes, PanelLock, SpeakerModes
 from .properties import PioneerAVRProperties
 from .util import cancel_task
-
-from .parsers.parse import process_raw_response
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -706,7 +703,9 @@ class PioneerAVR(PioneerAVRConnection):
 
     async def set_remote_lock(self, remote_lock: bool) -> None:
         """Set the remote lock."""
-        await self.send_command("set_amp_remote_lock", prefix=str(int(remote_lock)))
+        await self.send_command(
+            "set_amp_remote_lock", prefix=AVRCodeBoolMap(remote_lock)
+        )
 
     async def set_dimmer(self, dimmer: str) -> None:
         """Set the display dimmer."""
