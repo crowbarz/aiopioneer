@@ -117,11 +117,11 @@ class DSPSacdGain(AVRCodeMapBase):
     def value_to_code(cls, value: int) -> str:
         if value not in [0, 6]:
             raise ValueError(f"Value {value} not in [1, 6] for {cls.__name__}")
-        return str(int(bool(value)))
+        return "1" if value == 6 else "0"
 
     @classmethod
     def code_to_value(cls, code: str) -> int:
-        return 6 if code else 0
+        return 6 if code == "1" else 0
 
 
 class DSPCenterWidth(AVRCodeIntMap):
