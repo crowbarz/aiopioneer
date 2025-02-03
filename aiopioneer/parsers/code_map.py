@@ -75,14 +75,14 @@ class AVRCodeDictMap(AVRCodeMapBase):
         raise ValueError(f"Key {code} not found in {cls.__name__}")
 
 
-class AVRCodeStrMap(AVRCodeDictMap):
-    """Map AVR codes to str values."""
+class AVRCodeStrDictMap(AVRCodeDictMap):
+    """Map AVR codes to dict of str values."""
 
     code_map: dict[str, str] = {}
 
 
-class AVRCodeListMap(AVRCodeDictMap):
-    """Map AVR codes to a list with value as first element."""
+class AVRCodeListDictMap(AVRCodeDictMap):
+    """Map AVR codes to a dict of list items with value as first element."""
 
     code_map: dict[str, list] = {}
 

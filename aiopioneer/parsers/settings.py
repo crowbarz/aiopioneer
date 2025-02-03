@@ -7,17 +7,17 @@ from ..const import (
     EXTERNAL_HDMI_TRIGGER_OPTIONS,
 )
 from ..params import PioneerAVRParams
-from .code_map import AVRCodeStrMap, AVRCodeFloatMap
+from .code_map import AVRCodeStrDictMap, AVRCodeFloatMap
 from .response import Response
 
 
-class SurroundPosition(AVRCodeStrMap):
+class SurroundPosition(AVRCodeStrDictMap):
     """Surround position."""
 
     code_map = {"0": "side", "1": "rear"}
 
 
-class XOver(AVRCodeStrMap):
+class XOver(AVRCodeStrDictMap):
     """X over."""
 
     code_map = {"0": "50Hz", "1": "80Hz", "2": "100Hz", "3": "150Hz", "4": "200Hz"}
@@ -41,13 +41,13 @@ class XCurve(AVRCodeFloatMap):
         return -(int(code) / 2)
 
 
-class SbchProcessing(AVRCodeStrMap):
+class SbchProcessing(AVRCodeStrDictMap):
     """SBch processing (THX Audio)."""
 
     code_map = {"0": "auto", "1": "manual"}
 
 
-class OsdLanguages(AVRCodeStrMap):
+class OsdLanguages(AVRCodeStrDictMap):
     """OSD languages."""
 
     code_map = {
@@ -64,7 +64,7 @@ class OsdLanguages(AVRCodeStrMap):
     }
 
 
-class StandbyPassthrough(AVRCodeStrMap):
+class StandbyPassthrough(AVRCodeStrDictMap):
     """Standby Passthrough."""
 
     code_map = {

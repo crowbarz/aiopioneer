@@ -1,6 +1,6 @@
 """Pioneer AVR response parsers for video parameters."""
 
-from .code_map import AVRCodeInt50Map, AVRCodeIntMap, AVRCodeStrMap
+from .code_map import AVRCodeInt50Map, AVRCodeIntMap, AVRCodeStrDictMap
 
 
 class VideoInt08Map(AVRCodeInt50Map):
@@ -17,7 +17,7 @@ class VideoInt66Map(AVRCodeInt50Map):
     value_max = 6
 
 
-class VideoResolutionModes(AVRCodeStrMap):
+class VideoResolutionModes(AVRCodeStrDictMap):
     """Video resolution modes."""
 
     code_map = {
@@ -33,7 +33,7 @@ class VideoResolutionModes(AVRCodeStrMap):
     }
 
 
-class VideoPureCinemaModes(AVRCodeStrMap):
+class VideoPureCinemaModes(AVRCodeStrDictMap):
     """Video pure cinema modes."""
 
     code_map = {"0": "AUTO", "1": "ON", "2": "OFF"}
@@ -46,19 +46,19 @@ class VideoProgMotion(AVRCodeInt50Map):
     value_max = 4
 
 
-class VideoStreamSmootherModes(AVRCodeStrMap):
+class VideoStreamSmootherModes(AVRCodeStrDictMap):
     """Video stream smoother modes."""
 
     code_map = {"0": "OFF", "1": "ON", "2": "AUTO"}
 
 
-class AdvancedVideoAdjustModes(AVRCodeStrMap):
+class AdvancedVideoAdjustModes(AVRCodeStrDictMap):
     """Advanced video adjust modes."""
 
     code_map = {"0": "PDP", "1": "LCD", "2": "FPJ", "3": "Professional", "4": "Memory"}
 
 
-class VideoAspectModes(AVRCodeStrMap):
+class VideoAspectModes(AVRCodeStrDictMap):
     """Video aspect modes."""
 
     code_map = {"0": "PASSTHROUGH", "1": "NORMAL"}

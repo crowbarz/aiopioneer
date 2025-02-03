@@ -5,7 +5,7 @@ from .code_map import (
     AVRCodeIntMap,
     AVRCodeInt50Map,
     AVRCodeFloatMap,
-    AVRCodeStrMap,
+    AVRCodeStrDictMap,
 )
 
 
@@ -32,13 +32,13 @@ class DspMcaccMemorySet(AVRCodeIntMap):
     value_max = 6
 
 
-class DSPPhaseControl(AVRCodeStrMap):
+class DSPPhaseControl(AVRCodeStrDictMap):
     """DSP phase control."""
 
     code_map = {"0": "off", "1": "on", "2": "full band on"}
 
 
-class DSPSignalSelect(AVRCodeStrMap):
+class DSPSignalSelect(AVRCodeStrDictMap):
     """DSP signal select."""
 
     code_map = {"0": "AUTO", "1": "ANALOG", "2": "DIGITAL", "3": "HDMI"}
@@ -71,25 +71,25 @@ class DSPSoundDelay(DSPFloat10Map):
     code_zfill = 3
 
 
-class DSPAudioScaler(AVRCodeStrMap):
+class DSPAudioScaler(AVRCodeStrDictMap):
     """DSP audio scaler."""
 
     code_map = {"0": "AUTO", "1": "MANUAL"}
 
 
-class DSPDialogEnhancement(AVRCodeStrMap):
+class DSPDialogEnhancement(AVRCodeStrDictMap):
     """DSP dialog enhancement."""
 
     code_map = {"0": "off", "1": "flat", "2": "+1", "3": "+2", "4": "+3", "5": "+4"}
 
 
-class DSPDualMono(AVRCodeStrMap):
+class DSPDualMono(AVRCodeStrDictMap):
     """DSP dual mono."""
 
     code_map = {"0": "CH1+CH2", "1": "CH1", "2": "CH2"}
 
 
-class DSPDynamicRange(AVRCodeStrMap):
+class DSPDynamicRange(AVRCodeStrDictMap):
     """DSP dyanmic range."""
 
     code_map = {"0": "off", "1": "auto", "2": "mid", "3": "max"}
@@ -170,31 +170,31 @@ class DSPEffect(AVRCodeIntMap):
         return int(code) * 10
 
 
-class DSPHeightGain(AVRCodeStrMap):
+class DSPHeightGain(AVRCodeStrDictMap):
     """DSP height gain."""
 
     code_map = {"0": "low", "1": "mid", "2": "high"}
 
 
-class DSPDigitalFilter(AVRCodeStrMap):
+class DSPDigitalFilter(AVRCodeStrDictMap):
     """DSP digital filter."""
 
     code_map = {"0": "slow", "1": "sharp", "2": "short"}
 
 
-class DSPUpSampling(AVRCodeStrMap):
+class DSPUpSampling(AVRCodeStrDictMap):
     """DSP up sampling."""
 
     code_map = {"0": "off", "1": "2 times", "2": "4 times"}
 
 
-class DSPVirtualDepth(AVRCodeStrMap):
+class DSPVirtualDepth(AVRCodeStrDictMap):
     """DSP virtual depth."""
 
     code_map = {"0": "off", "1": "min", "2": "mid", "3": "max"}
 
 
-class DSPRenderingMode(AVRCodeStrMap):
+class DSPRenderingMode(AVRCodeStrDictMap):
     """DSP rendering mode."""
 
     code_map = {"0": "object base", "1": "channel base"}
