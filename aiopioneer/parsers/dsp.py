@@ -14,6 +14,10 @@ class DSPFloat10Map(AVRCodeFloatMap):
 
     @classmethod
     def value_to_code(cls, value: float) -> str:
+        if value % 0.1:
+            raise ValueError(
+                f"Value {value} is not a multiple of 0.1 for {cls.__name__}"
+            )
         return str(int(value * 10))
 
     @classmethod
