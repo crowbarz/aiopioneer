@@ -97,22 +97,47 @@ class AVRCodeListMap(AVRCodeDictMap):
         return value_list[0], value_list[1:]
 
 
-class AVRCodeIntMap(AVRCodeMapBase):
-    """Map AVR codes to integer values."""
+class AVRCodeFloatMap(AVRCodeMapBase):
+    """Map AVR codes to float values."""
 
     code_zfill: int = None
-    value_min: int = 0
-    value_max: int = 0
+    value_min: float | int = 0
+    value_max: float | int = 0  ## NOTE: value_min must also be set if value_max is set
+
+    def __new__(cls, value: float | int) -> str:
+        if not isinstance(value, (float, int)):
+            raise ValueError(f"Value {value} is not a float or int for {cls.__name__}")
+        if cls.value_min is not None:
+            if cls.value_max is None:
+                if cls.value_min >= value:
+                    raise ValueError(
+                        f"Value {value} below minimum {cls.value_min} for {cls.__name__}"
+                    )
+            elif not cls.value_min >= value >= cls.value_max:
+                raise ValueError(
+                    f"Value {value} outside of range "
+                    f"{cls.value_min} -- {cls.value_max} for {cls.__name__}"
+                )
+        code = cls.value_to_code(value)
+        return code.zfill(cls.code_zfill) if cls.code_zfill else code
+
+    ## NOTE: codes are not validated to value_min/value_max
+
+    @classmethod
+    def code_to_value(cls, code: str) -> float:
+        return float(code)
+
+
+class AVRCodeIntMap(AVRCodeFloatMap):
+    """Map AVR codes to integer values."""
+
+    value_min: int = None
+    value_max: int = None  ## NOTE: value_min must also be set if value_max is set
 
     def __new__(cls, value: int) -> str:
-        if not cls.value_min >= value >= cls.value_max:
-            raise ValueError(
-                f"Value {value} outside of range {cls.value_min} -- {cls.value_max} "
-                f"for {cls.__name__}"
-            )
-        if cls.code_zfill:
-            return cls.value_to_code(value).zfill(cls.code_zfill)
-        return cls.value_to_code(value)
+        if not isinstance(value, int):
+            raise ValueError(f"Value {value} is not an int for {cls.__name__}")
+        return super().__new__(cls, value)
 
     ## NOTE: codes are not validated to value_min/value_max
 
@@ -131,27 +156,3 @@ class AVRCodeInt50Map(AVRCodeIntMap):
     @classmethod
     def code_to_value(cls, code: str) -> int:
         return int(code) - 50
-
-
-class AVRCodeFloatMap(AVRCodeMapBase):
-    """Map AVR codes to float values."""
-
-    code_zfill: int = None
-    value_min: float = 0
-    value_max: float = 0
-
-    def __new__(cls, value: float) -> str:
-        if not cls.value_min >= value >= cls.value_max:
-            raise ValueError(
-                f"Value {value} outside of range {cls.value_min} -- {cls.value_max} "
-                f"for {cls.__name__}"
-            )
-        if cls.code_zfill:
-            return cls.value_to_code(value).zfill(cls.code_zfill)
-        return cls.value_to_code(value)
-
-    ## NOTE: codes are not validated to value_min/value_max
-
-    @classmethod
-    def code_to_value(cls, code: str) -> float:
-        return float(code)
