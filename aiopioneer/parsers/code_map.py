@@ -3,6 +3,16 @@
 from typing import Any, Tuple
 
 
+class AVRCodeDefault:
+    """Default code for map."""
+
+    def __hash__(self):
+        return hash("default")
+
+    def __eq__(self, value):
+        return isinstance(value, AVRCodeDefault)
+
+
 class AVRCodeMapBase(dict):
     """Map AVR codes to values."""
 
@@ -70,8 +80,10 @@ class AVRCodeDictMap(AVRCodeMapBase):
 
     @classmethod
     def code_to_value(cls, code: str) -> Any:
-        if (value := cls.code_map.get(code)) is not None:
-            return value
+        if code in cls.code_map:
+            return cls.code_map[code]
+        if AVRCodeDefault() in cls.code_map:
+            return cls.code_map[AVRCodeDefault()]
         raise ValueError(f"Key {code} not found in {cls.__name__}")
 
 
@@ -93,7 +105,7 @@ class AVRCodeListDictMap(AVRCodeDictMap):
 
     @classmethod
     def code_to_value(cls, code: str) -> Tuple[str, list]:
-        value_list = cls.code_map[code]
+        value_list = super().code_to_value(code)
         return value_list[0], value_list[1:]
 
 
