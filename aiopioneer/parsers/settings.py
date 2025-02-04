@@ -1,13 +1,9 @@
 """aiopioneer response parsers for AVR settings."""
 
-from ..const import (
-    MCACC_MEASUREMENT_STATUS,
-    MCACC_MEASUREMENT_ERROR,
-    STANDING_WAVE_FREQUENCIES,
-    EXTERNAL_HDMI_TRIGGER_OPTIONS,
-)
+from typing import Tuple
+
 from ..params import PioneerAVRParams
-from .code_map import AVRCodeStrDictMap, AVRCodeFloatMap
+from .code_map import AVRCodeDefault, AVRCodeDictMap, AVRCodeStrDictMap, AVRCodeFloatMap
 from .response import Response
 
 
@@ -82,6 +78,104 @@ class StandbyPassthrough(AVRCodeStrDictMap):
     }
 
 
+class SpeakerSettings(AVRCodeDictMap):
+    """Speaker settings."""
+
+    code_map = {
+        "05": {
+            "0": "small*2",
+            "1": "large*1",
+            "2": "large*2",
+            "3": "no",
+            "4": "small*1",
+        },
+        "06": {"0": "yes", "1": "plus", "2": "no"},
+        AVRCodeDefault(): {"0": "small", "1": "large", "2": "off"},
+    }
+
+    ## NOTE: value_to_code unimplemented
+
+    @classmethod
+    def code_to_value(cls, code: str) -> Tuple[str, str]:
+        """Convert code to value."""
+        speaker = code[:2]
+        speaker_type = code[2]
+        value_map: dict[str, str] = super().code_to_value(speaker)
+        return speaker, value_map.get(speaker_type, speaker_type)
+
+
+class McaccMeasurementError(AVRCodeStrDictMap):
+    """MCACC measurement error."""
+
+    code_map = {
+        "0": "No error",
+        "1": "No microphone",
+        "2": "Ambient noise",
+        "3": "Microphone",
+        "4": "Unsupported connection",
+        "5": "Reverse phase",
+        "6": "Subwoofer level",
+    }
+
+
+class McaccMeasurementStatus(AVRCodeStrDictMap):
+    """MCACC measurement status."""
+
+    code_map = {"0": "Inactive", "1": "Measuring"}
+
+
+class StandingWaveFrequencies(AVRCodeStrDictMap):
+    """Standing Wave Frequencies."""
+
+    code_map = {
+        "00": "63Hz",
+        "01": "65Hz",
+        "02": "68Hz",
+        "03": "71Hz",
+        "04": "74Hz",
+        "05": "78Hz",
+        "06": "81Hz",
+        "07": "85Hz",
+        "08": "88Hz",
+        "09": "92Hz",
+        "10": "96Hz",
+        "11": "101Hz",
+        "12": "105Hz",
+        "13": "110Hz",
+        "14": "115Hz",
+        "15": "120Hz",
+        "16": "125Hz",
+        "17": "131Hz",
+        "18": "136Hz",
+        "19": "142Hz",
+        "20": "149Hz",
+        "21": "155Hz",
+        "22": "162Hz",
+        "23": "169Hz",
+        "24": "177Hz",
+        "25": "185Hz",
+        "26": "193Hz",
+        "27": "201Hz",
+        "28": "210Hz",
+        "29": "220Hz",
+        "30": "229Hz",
+        "31": "239Hz",
+        "32": "250Hz",
+    }
+
+
+class ExternalHdmiTriggerOptions(AVRCodeStrDictMap):
+    """External HDMI trigger options."""
+
+    code_map = {
+        "0": "OFF",
+        "1": "HDMIOUT1",
+        "2": "HDMIOUT2",
+        "3": "HDMIOUT3",
+        "4": "HDMIOUT4/HDBaseT",
+    }
+
+
 class SettingsParsers:
     """AVR Setting related parsers."""
 
@@ -121,7 +215,7 @@ class SettingsParsers:
                 base_property="system",
                 property_name="mcacc_diagnostic_status",
                 zone=zone,
-                value=MCACC_MEASUREMENT_STATUS.get(raw[5]),
+                value=McaccMeasurementStatus[raw[5]],
                 queue_commands=None,
             )
         )
@@ -132,7 +226,7 @@ class SettingsParsers:
                 base_property="system",
                 property_name="mcacc_diagnostic_error",
                 zone=zone,
-                value=MCACC_MEASUREMENT_ERROR.get(raw[len(raw) - 1]),
+                value=McaccMeasurementError[raw[len(raw) - 1]],
                 queue_commands=None,
             )
         )
@@ -184,7 +278,7 @@ class SettingsParsers:
                 base_property="system",
                 property_name="standing_wave_frequency",
                 zone=zone,
-                value=STANDING_WAVE_FREQUENCIES.get(raw[4:6]),
+                value=StandingWaveFrequencies[raw[4:6]],
                 queue_commands=None,
             )
         )
@@ -258,35 +352,7 @@ class SettingsParsers:
         raw: str, _params: PioneerAVRParams, zone=None, command="SSG"
     ) -> list[Response]:
         """Response parser for speaker setting."""
-        value = raw[2]
-        speaker = raw[:2]
-
-        if speaker == "05":
-            if value == "0":
-                value = "small*2"
-            elif value == "1":
-                value = "large*1"
-            elif value == "2":
-                value = "large*2"
-            elif value == "3":
-                value = "no"
-            elif value == "4":
-                value = "small*1"
-        elif speaker == "06":
-            if value == "0":
-                value = "yes"
-            elif value == "1":
-                value = "plus"
-            elif value == "2":
-                value = "no"
-        else:
-            if value == "0":
-                value = "small"
-            elif value == "1":
-                value = "large"
-            elif value == "2":
-                value = "off"
-
+        speaker, speaker_type = SpeakerSettings[raw]
         parsed = []
         parsed.append(
             Response(
@@ -295,7 +361,7 @@ class SettingsParsers:
                 base_property="system",
                 property_name=f"speaker_setting.{speaker}",
                 zone=zone,
-                value=value,
+                value=speaker_type,
                 queue_commands=None,
             )
         )
@@ -446,7 +512,7 @@ class SettingsParsers:
                 base_property="system",
                 property_name=f"external_hdmi_trigger_{trigger}",
                 zone=zone,
-                value=EXTERNAL_HDMI_TRIGGER_OPTIONS.get(raw),
+                value=ExternalHdmiTriggerOptions[raw],
                 queue_commands=None,
             )
         )
