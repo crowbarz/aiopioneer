@@ -52,10 +52,10 @@ from .params import (
     PARAM_QUERY_SOURCES,
     PARAM_ZONES_INITIAL_REFRESH,
 )
-from .parsers.audio import ToneDB, ToneModes
-from .parsers.code_map import AVRCodeMapBase, AVRCodeBoolMap
+from .parsers.audio import ToneDb, ToneModes
+from .parsers.code_map import CodeMapBase, CodeBoolMap
 from .parsers.parse import process_raw_response
-from .parsers.system import AMPModes, DimmerModes, HDMIOutModes, PanelLock, SpeakerModes
+from .parsers.system import AmpModes, DimmerModes, HdmiOutModes, PanelLock, SpeakerModes
 from .properties import PioneerAVRProperties
 from .util import cancel_task
 
@@ -703,9 +703,7 @@ class PioneerAVR(PioneerAVRConnection):
 
     async def set_remote_lock(self, remote_lock: bool) -> None:
         """Set the remote lock."""
-        await self.send_command(
-            "set_amp_remote_lock", prefix=AVRCodeBoolMap(remote_lock)
-        )
+        await self.send_command("set_amp_remote_lock", prefix=CodeBoolMap(remote_lock))
 
     async def set_dimmer(self, dimmer: str) -> None:
         """Set the display dimmer."""
@@ -742,10 +740,10 @@ class PioneerAVR(PioneerAVRConnection):
             bass_str = f"{str(bass)}dB"
             if treble is not None:
                 await self.send_command(
-                    "set_tone_treble", zone, prefix=ToneDB(treble_str)
+                    "set_tone_treble", zone, prefix=ToneDb(treble_str)
                 )
             if bass is not None:
-                await self.send_command("set_tone_bass", zone, prefix=ToneDB(bass_str))
+                await self.send_command("set_tone_bass", zone, prefix=ToneDb(bass_str))
 
     async def set_amp_settings(
         self,
@@ -771,7 +769,7 @@ class PioneerAVR(PioneerAVRConnection):
         # FUNC: HDMI OUTPUT SELECT (use PARAM_HDMI_OUT_MODES)
         if self.properties.amp.get("hdmi_out") is not None and hdmi_out is not None:
             await self.send_command(
-                "set_amp_hdmi_out_status", zone, prefix=HDMIOutModes(hdmi_out)
+                "set_amp_hdmi_out_status", zone, prefix=HdmiOutModes(hdmi_out)
             )
 
         # FUNC: HDMI AUDIO (simple bool, True is on, otherwise audio only goes to amp)
@@ -791,7 +789,7 @@ class PioneerAVR(PioneerAVRConnection):
 
         # FUNC: AMP (use PARAM_AMP_MODES)
         if self.properties.amp.get("status") is not None and amp is not None:
-            await self.send_command("set_amp_status", zone, prefix=AMPModes(amp))
+            await self.send_command("set_amp_status", zone, prefix=AmpModes(amp))
 
     async def select_tuner_band(self, band: TunerBand = TunerBand.FM) -> None:
         """Set the tuner band."""
@@ -981,7 +979,7 @@ class PioneerAVR(PioneerAVRConnection):
                 raise AVRUnknownCommandError(command=command, zone=zone)
             arg_format = PIONEER_COMMANDS[command].get("args")
             arg_code_map = arg_format[0] if isinstance(arg_format, list) else None
-            if not arg_format or not isinstance(arg_code_map, AVRCodeMapBase):
+            if not arg_format or not isinstance(arg_code_map, CodeMapBase):
                 raise RuntimeError(
                     f"Invalid code map {arg_code_map} for video setting {arg}"
                 )
@@ -1007,7 +1005,7 @@ class PioneerAVR(PioneerAVRConnection):
                 raise AVRUnknownCommandError(command=command, zone=zone)
             arg_format = PIONEER_COMMANDS[command].get("args")
             arg_code_map = arg_format[0] if isinstance(arg_format, list) else None
-            if not arg_format or not isinstance(arg_code_map, AVRCodeMapBase):
+            if not arg_format or not isinstance(arg_code_map, CodeMapBase):
                 raise RuntimeError(
                     f"Invalid code map {arg_code_map} for DSP setting {arg}"
                 )

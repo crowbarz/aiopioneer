@@ -13,35 +13,35 @@ from ..params import (
     PARAM_MHL_SOURCE,
     PARAM_SPEAKER_SYSTEM_MODES,
 )
-from .code_map import AVRCodeStrDictMap
+from .code_map import CodeDictStrMap
 from .response import Response
 
 
-class SpeakerModes(AVRCodeStrDictMap):
+class SpeakerModes(CodeDictStrMap):
     """Speaker modes."""
 
     code_map = {"0": "OFF", "1": "A", "2": "B", "3": "A+B"}
 
 
-class HDMIOutModes(AVRCodeStrDictMap):
+class HdmiOutModes(CodeDictStrMap):
     """HDMI out modes."""
 
     code_map = {"0": "ALL", "1": "HDMI 1", "2": "HDMI 2", "3": "HDMI (cyclic)"}
 
 
-class HDMIAudioModes(AVRCodeStrDictMap):
+class HdmiAudioModes(CodeDictStrMap):
     """HDMI audio modes."""
 
     code_map = {"0": "AMP", "1": "PASSTHROUGH"}
 
 
-class PQLSModes(AVRCodeStrDictMap):
+class PqlsModes(CodeDictStrMap):
     """PQLS modes."""
 
     code_map = {"0": "OFF", "1": "AUTO"}
 
 
-class DimmerModes(AVRCodeStrDictMap):
+class DimmerModes(CodeDictStrMap):
     """Dimmer modes."""
 
     code_map = {
@@ -53,7 +53,7 @@ class DimmerModes(AVRCodeStrDictMap):
     }
 
 
-class AMPModes(AVRCodeStrDictMap):
+class AmpModes(CodeDictStrMap):
     """AMP modes."""
 
     code_map = {
@@ -64,7 +64,7 @@ class AMPModes(AVRCodeStrDictMap):
     }
 
 
-class PanelLock(AVRCodeStrDictMap):
+class PanelLock(CodeDictStrMap):
     """Panel lock settings."""
 
     code_map = {"0": "OFF", "1": "PANEL ONLY", "2": "PANEL + VOLUME"}

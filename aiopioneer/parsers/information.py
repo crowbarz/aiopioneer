@@ -2,11 +2,17 @@
 
 from ..const import Zone
 from ..params import PioneerAVRParams
-from .code_map import AVRCodeDefault, AVRCodeStrDictMap
+from .code_map import (
+    CodeMapBase,
+    CodeDefault,
+    CodeBoolMap,
+    CodeDictStrMap,
+    CodeIntMap,
+)
 from .response import Response
 
 
-class AudioSignalInputInfo(AVRCodeStrDictMap):
+class AudioSignalInputInfo(CodeDictStrMap):
     """Audio signal input info."""
 
     code_map = {
@@ -54,11 +60,11 @@ class AudioSignalInputInfo(AVRCodeStrDictMap):
     }
 
 
-class AudioSignalInputFreq(AVRCodeStrDictMap):
+class AudioSignalInputFreq(CodeDictStrMap):
     """Audio signal input frequency."""
 
     code_map = {
-        AVRCodeDefault(): None,
+        CodeDefault(): None,
         "00": "32kHz",
         "01": "44.1kHz",
         "02": "48kHz",
@@ -72,17 +78,26 @@ class AudioSignalInputFreq(AVRCodeStrDictMap):
     }
 
 
-class AudioWorkingPqls(AVRCodeStrDictMap):
+class AudioChannelActive(CodeDictStrMap):
+    """Audio active."""
+
+    code_map = {
+        "0": "inactive",
+        "1": "active",
+    }
+
+
+class AudioWorkingPqls(CodeDictStrMap):
     """Audio working PQLS."""
 
     code_map = {"0": "off", "1": "2h", "2": "Multi-channel", "3": "Bitstream"}
 
 
-class VideoSignalInputTerminal(AVRCodeStrDictMap):
+class VideoSignalInputTerminal(CodeDictStrMap):
     """Video signal input terminal."""
 
     code_map = {
-        AVRCodeDefault(): None,
+        CodeDefault(): None,
         # "0": "---",
         "1": "VIDEO",
         "2": "S-VIDEO",
@@ -92,11 +107,11 @@ class VideoSignalInputTerminal(AVRCodeStrDictMap):
     }
 
 
-class VideoSignalFormats(AVRCodeStrDictMap):
+class VideoSignalFormats(CodeDictStrMap):
     """Video signal formats."""
 
     code_map = {
-        AVRCodeDefault(): None,
+        CodeDefault(): None,
         # "00": "---",
         "01": "480/60i",
         "02": "576/50i",
@@ -118,11 +133,11 @@ class VideoSignalFormats(AVRCodeStrDictMap):
     }
 
 
-class VideoSignalAspects(AVRCodeStrDictMap):
+class VideoSignalAspects(CodeDictStrMap):
     """Video signal aspects."""
 
     code_map = {
-        AVRCodeDefault(): None,
+        CodeDefault(): None,
         # "0": "---",
         "1": "4:3",
         "2": "16:9",
@@ -130,11 +145,11 @@ class VideoSignalAspects(AVRCodeStrDictMap):
     }
 
 
-class VideoSignalColorspace(AVRCodeStrDictMap):
+class VideoSignalColorspace(CodeDictStrMap):
     """Video signal colorspace."""
 
     code_map = {
-        AVRCodeDefault(): None,
+        CodeDefault(): None,
         # "0": "---",
         "1": "RGB Limit",
         "2": "RGB Full",
@@ -144,11 +159,11 @@ class VideoSignalColorspace(AVRCodeStrDictMap):
     }
 
 
-class VideoSignalBits(AVRCodeStrDictMap):
+class VideoSignalBits(CodeDictStrMap):
     """Video signal bits."""
 
     code_map = {
-        AVRCodeDefault(): None,
+        CodeDefault(): None,
         # "0": "---",
         "1": "24bit (8bit*3)",
         "2": "30bit (10bit*3)",
@@ -157,11 +172,11 @@ class VideoSignalBits(AVRCodeStrDictMap):
     }
 
 
-class VideoSignalExtColorspace(AVRCodeStrDictMap):
+class VideoSignalExtColorspace(CodeDictStrMap):
     """Video signal ext colorspace."""
 
     code_map = {
-        AVRCodeDefault(): None,
+        CodeDefault(): None,
         # "0": "---",
         "1": "Standard",
         "2": "xvYCC601",
@@ -172,11 +187,11 @@ class VideoSignalExtColorspace(AVRCodeStrDictMap):
     }
 
 
-class VideoSignal3DModes(AVRCodeStrDictMap):
+class VideoSignal3DModes(CodeDictStrMap):
     """Video signal 3D modes."""
 
     code_map = {
-        AVRCodeDefault(): None,
+        CodeDefault(): None,
         # "00": "---",
         "01": "Frame packing",
         "02": "Field alternative",
@@ -189,6 +204,21 @@ class VideoSignal3DModes(AVRCodeStrDictMap):
     }
 
 
+class DisplayText(CodeMapBase):
+    """Display information."""
+
+    ## NOTE: value_to_code not implemented
+
+    @classmethod
+    def code_to_value(cls, code: str) -> str:
+        """Convert code to value."""
+        return (
+            "".join([chr(int(code[i : i + 2], 16)) for i in range(2, len(code) - 1, 2)])
+            .expandtabs(1)
+            .strip()
+        )
+
+
 class InformationParsers:
     """AVR operation information parsers."""
 
@@ -198,7 +228,6 @@ class InformationParsers:
     ) -> list[Response]:
         """Response parser for audio information."""
         parsed = []
-
         parsed.append(
             Response(
                 raw=raw,
@@ -221,388 +250,70 @@ class InformationParsers:
                 queue_commands=None,
             )
         )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_channels.L",
-                zone=zone,
-                value="active" if bool(int(raw[4])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_channels.C",
-                zone=zone,
-                value="active" if bool(int(raw[5])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_channels.R",
-                zone=zone,
-                value="active" if bool(int(raw[6])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_channels.SL",
-                zone=zone,
-                value="active" if bool(int(raw[7])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_channels.SR",
-                zone=zone,
-                value="active" if bool(int(raw[8])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_channels.SBL",
-                zone=zone,
-                value="active" if bool(int(raw[9])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_channels.SBC",
-                zone=zone,
-                value="active" if bool(int(raw[10])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_channels.SBR",
-                zone=zone,
-                value="active" if bool(int(raw[11])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_channels.LFE",
-                zone=zone,
-                value="active" if bool(int(raw[12])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_channels.FHL",
-                zone=zone,
-                value="active" if bool(int(raw[13])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_channels.FHR",
-                zone=zone,
-                value="active" if bool(int(raw[14])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_channels.FWL",
-                zone=zone,
-                value="active" if bool(int(raw[15])) else "inactive",
-                queue_commands=None,
-            )
-        )
 
-        parsed.append(
-            Response(
+        def input_channel(channel: str, raw: str) -> Response:
+            return Response(
                 raw=raw,
                 response_command=command,
                 base_property="audio",
-                property_name="input_channels.FWR",
+                property_name=f"input_channels.{channel}",
                 zone=zone,
-                value="active" if bool(int(raw[16])) else "inactive",
+                value=AudioChannelActive[raw],
                 queue_commands=None,
             )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_channels.XL",
-                zone=zone,
-                value="active" if bool(int(raw[17])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_channels.XC",
-                zone=zone,
-                value="active" if bool(int(raw[18])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_channels.XR",
-                zone=zone,
-                value="active" if bool(int(raw[19])) else "inactive",
-                queue_commands=None,
-            )
-        )
+
+        parsed.append(input_channel("L", raw[4]))
+        parsed.append(input_channel("C", raw[5]))
+        parsed.append(input_channel("R", raw[6]))
+        parsed.append(input_channel("SL", raw[7]))
+        parsed.append(input_channel("SR", raw[8]))
+        parsed.append(input_channel("SBL", raw[9]))
+        parsed.append(input_channel("SBC", raw[10]))
+        parsed.append(input_channel("SBR", raw[11]))
+        parsed.append(input_channel("LFE", raw[12]))
+        parsed.append(input_channel("FHL", raw[13]))
+        parsed.append(input_channel("FHR", raw[14]))
+        parsed.append(input_channel("FWL", raw[15]))
+        parsed.append(input_channel("FWR", raw[16]))
+        parsed.append(input_channel("XL", raw[17]))
+        parsed.append(input_channel("XC", raw[18]))
+        parsed.append(input_channel("XR", raw[19]))
 
         ## (data21) to (data25) are reserved according to FY16AVRs
         ## Decode output signal data
-        parsed.append(
-            Response(
+
+        def output_channel(channel: str, raw: str) -> Response:
+            return Response(
                 raw=raw,
                 response_command=command,
                 base_property="audio",
-                property_name="output_channels.L",
+                property_name=f"output_channels.{channel}",
                 zone=zone,
-                value="active" if bool(int(raw[25])) else "inactive",
+                value=AudioChannelActive[raw],
                 queue_commands=None,
             )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="output_channels.C",
-                zone=zone,
-                value="active" if bool(int(raw[26])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="output_channels.R",
-                zone=zone,
-                value="active" if bool(int(raw[27])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="output_channels.SL",
-                zone=zone,
-                value="active" if bool(int(raw[28])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="output_channels.SR",
-                zone=zone,
-                value="active" if bool(int(raw[29])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="output_channels.SBL",
-                zone=zone,
-                value="active" if bool(int(raw[30])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="output_channels.SB",
-                zone=zone,
-                value="active" if bool(int(raw[31])) else "inactive",
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="output_channels.SBR",
-                zone=zone,
-                value="active" if bool(int(raw[32])) else "inactive",
-                queue_commands=None,
-            )
-        )
+
+        parsed.append(output_channel("L", raw[25]))
+        parsed.append(output_channel("C", raw[26]))
+        parsed.append(output_channel("R", raw[27]))
+        parsed.append(output_channel("SL", raw[28]))
+        parsed.append(output_channel("SR", raw[29]))
+        parsed.append(output_channel("SBL", raw[30]))
+        parsed.append(output_channel("SB", raw[31]))
+        parsed.append(output_channel("SBR", raw[32]))
 
         ## Some older AVRs do not have more than 33 data bits
         if len(raw) > 33:
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="audio",
-                    property_name="output_channels.SW",
-                    zone=zone,
-                    value="active" if bool(int(raw[33])) else "inactive",
-                    queue_commands=None,
-                )
-            )
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="audio",
-                    property_name="output_channels.FHL",
-                    zone=zone,
-                    value="active" if bool(int(raw[34])) else "inactive",
-                    queue_commands=None,
-                )
-            )
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="audio",
-                    property_name="output_channels.FHR",
-                    zone=zone,
-                    value="active" if bool(int(raw[35])) else "inactive",
-                    queue_commands=None,
-                )
-            )
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="audio",
-                    property_name="output_channels.FWL",
-                    zone=zone,
-                    value="active" if bool(int(raw[36])) else "inactive",
-                    queue_commands=None,
-                )
-            )
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="audio",
-                    property_name="output_channels.FWR",
-                    zone=zone,
-                    value="active" if bool(int(raw[37])) else "inactive",
-                    queue_commands=None,
-                )
-            )
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="audio",
-                    property_name="output_channels.TML",
-                    zone=zone,
-                    value="active" if bool(int(raw[38])) else "inactive",
-                    queue_commands=None,
-                )
-            )
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="audio",
-                    property_name="output_channels.TMR",
-                    zone=zone,
-                    value="active" if bool(int(raw[39])) else "inactive",
-                    queue_commands=None,
-                )
-            )
-
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="audio",
-                    property_name="output_channels.TRL",
-                    zone=zone,
-                    value="active" if bool(int(raw[40])) else "inactive",
-                    queue_commands=None,
-                )
-            )
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="audio",
-                    property_name="output_channels.TRR",
-                    zone=zone,
-                    value="active" if bool(int(raw[41])) else "inactive",
-                    queue_commands=None,
-                )
-            )
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="audio",
-                    property_name="output_channels.SW2",
-                    zone=zone,
-                    value="active" if bool(int(raw[42])) else "inactive",
-                    queue_commands=None,
-                )
-            )
+            parsed.append(output_channel("SW", raw[33]))
+            parsed.append(output_channel("FHL", raw[34]))
+            parsed.append(output_channel("FHR", raw[35]))
+            parsed.append(output_channel("FWL", raw[36]))
+            parsed.append(output_channel("FWR", raw[37]))
+            parsed.append(output_channel("TML", raw[38]))
+            parsed.append(output_channel("TMR", raw[39]))
+            parsed.append(output_channel("TRL", raw[40]))
+            parsed.append(output_channel("TRR", raw[41]))
+            parsed.append(output_channel("SW2", raw[42]))
 
         ## FY11 AVRs do not have more than data 43 data bits (VSX-1021)
         if len(raw) > 43:
@@ -624,7 +335,7 @@ class InformationParsers:
                     base_property="audio",
                     property_name="output_bits",
                     zone=zone,
-                    value=int(raw[45:47]),
+                    value=CodeIntMap[raw[45:47]],
                     queue_commands=None,
                 )
             )
@@ -635,7 +346,7 @@ class InformationParsers:
                     base_property="audio",
                     property_name="output_pqls",
                     zone=zone,
-                    value=AudioWorkingPqls[raw[51:52]],
+                    value=AudioWorkingPqls[raw[51]],
                     queue_commands=None,
                 )
             )
@@ -646,7 +357,7 @@ class InformationParsers:
                     base_property="audio",
                     property_name="output_auto_phase_control_plus",
                     zone=zone,
-                    value=int(raw[52:54]),
+                    value=CodeIntMap[raw[52:54]],
                     queue_commands=None,
                 )
             )
@@ -657,7 +368,7 @@ class InformationParsers:
                     base_property="audio",
                     property_name="output_reverse_phase",
                     zone=zone,
-                    value=bool(raw[54:55]),
+                    value=CodeBoolMap[raw[54]],
                     queue_commands=None,
                 )
             )
@@ -670,7 +381,7 @@ class InformationParsers:
                 base_property="audio",
                 property_name="input_multichannel",
                 zone=zone,
-                value=(bool(int(raw[4])) and bool(int(raw[5])) and bool(int(raw[6]))),
+                value=all([CodeBoolMap[r] for r in raw[4:7]]),
                 queue_commands=None,
             )
         )
@@ -918,28 +629,4 @@ class InformationParsers:
                     queue_commands=None,
                 )
             )
-        return parsed
-
-    @staticmethod
-    def device_display_information(
-        raw: str, _params: PioneerAVRParams, zone=None, command="FL"
-    ) -> list[Response]:
-        """Response parser for AVR display text."""
-        display_str = (
-            "".join([chr(int(raw[i : i + 2], 16)) for i in range(2, len(raw) - 1, 2)])
-            .expandtabs(1)
-            .rstrip("\n")
-        )
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="amp",
-                property_name="display",
-                zone=zone,
-                value=display_str,
-                queue_commands=None,
-            )
-        )
         return parsed

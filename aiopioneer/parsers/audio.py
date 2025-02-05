@@ -2,17 +2,17 @@
 
 from ..const import Zone
 from ..params import PioneerAVRParams, PARAM_ALL_LISTENING_MODES
-from .code_map import AVRCodeStrDictMap
+from .code_map import CodeDictStrMap
 from .response import Response
 
 
-class ToneModes(AVRCodeStrDictMap):
+class ToneModes(CodeDictStrMap):
     """Tone modes."""
 
     code_map = {"0": "Bypass", "1": "On", "9": "(cycle)"}
 
 
-class ToneDB(AVRCodeStrDictMap):
+class ToneDb(CodeDictStrMap):
     """Tone dB values."""
 
     code_map = {

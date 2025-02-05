@@ -3,23 +3,23 @@
 from typing import Tuple
 
 from ..params import PioneerAVRParams
-from .code_map import AVRCodeDefault, AVRCodeDictMap, AVRCodeStrDictMap, AVRCodeFloatMap
+from .code_map import CodeDefault, CodeDictMap, CodeDictStrMap, CodeFloatMap
 from .response import Response
 
 
-class SurroundPosition(AVRCodeStrDictMap):
+class SurroundPosition(CodeDictStrMap):
     """Surround position."""
 
     code_map = {"0": "side", "1": "rear"}
 
 
-class XOver(AVRCodeStrDictMap):
+class XOver(CodeDictStrMap):
     """X over."""
 
     code_map = {"0": "50Hz", "1": "80Hz", "2": "100Hz", "3": "150Hz", "4": "200Hz"}
 
 
-class XCurve(AVRCodeFloatMap):
+class XCurve(CodeFloatMap):
     """X curve (1step=0.5)"""
 
     code_zfill = 2
@@ -37,13 +37,13 @@ class XCurve(AVRCodeFloatMap):
         return -(int(code) / 2)
 
 
-class SbchProcessing(AVRCodeStrDictMap):
+class SbchProcessing(CodeDictStrMap):
     """SBch processing (THX Audio)."""
 
     code_map = {"0": "auto", "1": "manual"}
 
 
-class OsdLanguages(AVRCodeStrDictMap):
+class OsdLanguages(CodeDictStrMap):
     """OSD languages."""
 
     code_map = {
@@ -60,7 +60,7 @@ class OsdLanguages(AVRCodeStrDictMap):
     }
 
 
-class StandbyPassthrough(AVRCodeStrDictMap):
+class StandbyPassthrough(CodeDictStrMap):
     """Standby Passthrough."""
 
     code_map = {
@@ -78,7 +78,7 @@ class StandbyPassthrough(AVRCodeStrDictMap):
     }
 
 
-class SpeakerSettings(AVRCodeDictMap):
+class SpeakerSettings(CodeDictMap):
     """Speaker settings."""
 
     code_map = {
@@ -90,7 +90,7 @@ class SpeakerSettings(AVRCodeDictMap):
             "4": "small*1",
         },
         "06": {"0": "yes", "1": "plus", "2": "no"},
-        AVRCodeDefault(): {"0": "small", "1": "large", "2": "off"},
+        CodeDefault(): {"0": "small", "1": "large", "2": "off"},
     }
 
     ## NOTE: value_to_code unimplemented
@@ -104,7 +104,7 @@ class SpeakerSettings(AVRCodeDictMap):
         return speaker, value_map.get(speaker_type, speaker_type)
 
 
-class McaccMeasurementError(AVRCodeStrDictMap):
+class McaccMeasurementError(CodeDictStrMap):
     """MCACC measurement error."""
 
     code_map = {
@@ -118,13 +118,13 @@ class McaccMeasurementError(AVRCodeStrDictMap):
     }
 
 
-class McaccMeasurementStatus(AVRCodeStrDictMap):
+class McaccMeasurementStatus(CodeDictStrMap):
     """MCACC measurement status."""
 
     code_map = {"0": "Inactive", "1": "Measuring"}
 
 
-class StandingWaveFrequencies(AVRCodeStrDictMap):
+class StandingWaveFrequencies(CodeDictStrMap):
     """Standing Wave Frequencies."""
 
     code_map = {
@@ -164,7 +164,7 @@ class StandingWaveFrequencies(AVRCodeStrDictMap):
     }
 
 
-class ExternalHdmiTriggerOptions(AVRCodeStrDictMap):
+class ExternalHdmiTriggerOptions(CodeDictStrMap):
     """External HDMI trigger options."""
 
     code_map = {

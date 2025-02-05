@@ -3,17 +3,17 @@
 from typing import Any, Tuple
 
 
-class AVRCodeDefault:
+class CodeDefault:
     """Default code for map."""
 
     def __hash__(self):
         return hash("default")
 
     def __eq__(self, value):
-        return isinstance(value, AVRCodeDefault)
+        return isinstance(value, CodeDefault)
 
 
-class AVRCodeMapBase(dict):
+class CodeMapBase(dict):
     """Map AVR codes to values."""
 
     def __new__(cls, value):
@@ -38,7 +38,7 @@ class AVRCodeMapBase(dict):
         return v == value
 
 
-class AVRCodeBoolMap(AVRCodeMapBase):
+class CodeBoolMap(CodeMapBase):
     """Map AVR codes to bool values."""
 
     @classmethod
@@ -52,7 +52,7 @@ class AVRCodeBoolMap(AVRCodeMapBase):
         return bool(int(code))
 
 
-class AVRCodeInverseBoolMap(AVRCodeBoolMap):
+class CodeInverseBoolMap(CodeBoolMap):
     """Map AVR codes to inverse bool values."""
 
     @classmethod
@@ -66,7 +66,7 @@ class AVRCodeInverseBoolMap(AVRCodeBoolMap):
         return not bool(code)
 
 
-class AVRCodeDictMap(AVRCodeMapBase):
+class CodeDictMap(CodeMapBase):
     """Map AVR codes to generic map of values."""
 
     code_map: dict[str, Any] = {}
@@ -82,18 +82,18 @@ class AVRCodeDictMap(AVRCodeMapBase):
     def code_to_value(cls, code: str) -> Any:
         if code in cls.code_map:
             return cls.code_map[code]
-        if AVRCodeDefault() in cls.code_map:
-            return cls.code_map[AVRCodeDefault()]
+        if CodeDefault() in cls.code_map:
+            return cls.code_map[CodeDefault()]
         raise ValueError(f"Key {code} not found in {cls.__name__}")
 
 
-class AVRCodeStrDictMap(AVRCodeDictMap):
+class CodeDictStrMap(CodeDictMap):
     """Map AVR codes to dict of str values."""
 
     code_map: dict[str, str] = {}
 
 
-class AVRCodeListDictMap(AVRCodeDictMap):
+class CodeDictListMap(CodeDictMap):
     """Map AVR codes to a dict of list items with value as first element."""
 
     code_map: dict[str, list] = {}
@@ -109,7 +109,7 @@ class AVRCodeListDictMap(AVRCodeDictMap):
         return value_list[0], value_list[1:]
 
 
-class AVRCodeFloatMap(AVRCodeMapBase):
+class CodeFloatMap(CodeMapBase):
     """Map AVR codes to float values."""
 
     code_zfill: int = None
@@ -140,7 +140,7 @@ class AVRCodeFloatMap(AVRCodeMapBase):
         return float(code)
 
 
-class AVRCodeIntMap(AVRCodeFloatMap):
+class CodeIntMap(CodeFloatMap):
     """Map AVR codes to integer values."""
 
     value_min: int = None
@@ -158,7 +158,7 @@ class AVRCodeIntMap(AVRCodeFloatMap):
         return int(code)
 
 
-class AVRCodeInt50Map(AVRCodeIntMap):
+class CodeInt50Map(CodeIntMap):
     """Map AVR codes to integer values with +50 delta."""
 
     @classmethod
