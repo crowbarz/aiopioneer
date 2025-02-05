@@ -278,8 +278,11 @@ PIONEER_COMMANDS = {
     "set_video_black_setup": {Zone.Z1: ["VTR", "VTR"], "args": [CodeBoolMap]},
     "query_video_aspect": {Zone.Z1: ["?VTS", "VTS"]},
     "set_video_aspect": {Zone.Z1: ["VTS", "VTS"], "args": [VideoAspectModes]},
-    "query_super_resolution": {Zone.Z1: ["?VTT", "VTT"]},
-    "set_super_resolution": {Zone.Z1: ["VTT", "VTT"], "args": [VideoSuperResolution]},
+    "query_video_super_resolution": {Zone.Z1: ["?VTT", "VTT"]},
+    "set_video_super_resolution": {
+        Zone.Z1: ["VTT", "VTT"],
+        "args": [VideoSuperResolution],
+    },
     ## operation
     "operation_direct_access": {Zone.Z1: ["TAC", "TAC"]},
     "operation_tuner_digit": {Zone.Z1: ["TP", "TP"]},
