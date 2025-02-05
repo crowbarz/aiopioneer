@@ -227,162 +227,89 @@ class InformationParsers:
         raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="AST"
     ) -> list[Response]:
         """Response parser for audio information."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_signal",
-                zone=zone,
-                value=AudioSignalInputInfo[raw[:2]],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_frequency",
-                zone=zone,
-                value=AudioSignalInputFreq[raw[2:4]],
-                queue_commands=None,
-            )
-        )
 
-        def input_channel(channel: str, raw: str) -> Response:
+        def audio_response(property_name: str, value: str) -> Response:
             return Response(
                 raw=raw,
                 response_command=command,
                 base_property="audio",
-                property_name=f"input_channels.{channel}",
+                property_name=property_name,
                 zone=zone,
-                value=AudioChannelActive[raw],
+                value=value,
                 queue_commands=None,
             )
 
-        parsed.append(input_channel("L", raw[4]))
-        parsed.append(input_channel("C", raw[5]))
-        parsed.append(input_channel("R", raw[6]))
-        parsed.append(input_channel("SL", raw[7]))
-        parsed.append(input_channel("SR", raw[8]))
-        parsed.append(input_channel("SBL", raw[9]))
-        parsed.append(input_channel("SBC", raw[10]))
-        parsed.append(input_channel("SBR", raw[11]))
-        parsed.append(input_channel("LFE", raw[12]))
-        parsed.append(input_channel("FHL", raw[13]))
-        parsed.append(input_channel("FHR", raw[14]))
-        parsed.append(input_channel("FWL", raw[15]))
-        parsed.append(input_channel("FWR", raw[16]))
-        parsed.append(input_channel("XL", raw[17]))
-        parsed.append(input_channel("XC", raw[18]))
-        parsed.append(input_channel("XR", raw[19]))
+        def input_channel(channel: str, raw: str) -> Response:
+            return audio_response(f"input_channels.{channel}", AudioChannelActive[raw])
+
+        def output_channel(channel: str, raw: str) -> Response:
+            return audio_response(f"output_channels.{channel}", AudioChannelActive[raw])
+
+        parsed = []
+        parsed += [
+            audio_response("input_signal", AudioSignalInputInfo[raw[:2]]),
+            audio_response("input_frequency", AudioSignalInputFreq[raw[2:4]]),
+            input_channel("L", raw[4]),
+            input_channel("C", raw[5]),
+            input_channel("R", raw[6]),
+            input_channel("SL", raw[7]),
+            input_channel("SR", raw[8]),
+            input_channel("SBL", raw[9]),
+            input_channel("SBC", raw[10]),
+            input_channel("SBR", raw[11]),
+            input_channel("LFE", raw[12]),
+            input_channel("FHL", raw[13]),
+            input_channel("FHR", raw[14]),
+            input_channel("FWL", raw[15]),
+            input_channel("FWR", raw[16]),
+            input_channel("XL", raw[17]),
+            input_channel("XC", raw[18]),
+            input_channel("XR", raw[19]),
+        ]
 
         ## (data21) to (data25) are reserved according to FY16AVRs
         ## Decode output signal data
-
-        def output_channel(channel: str, raw: str) -> Response:
-            return Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name=f"output_channels.{channel}",
-                zone=zone,
-                value=AudioChannelActive[raw],
-                queue_commands=None,
-            )
-
-        parsed.append(output_channel("L", raw[25]))
-        parsed.append(output_channel("C", raw[26]))
-        parsed.append(output_channel("R", raw[27]))
-        parsed.append(output_channel("SL", raw[28]))
-        parsed.append(output_channel("SR", raw[29]))
-        parsed.append(output_channel("SBL", raw[30]))
-        parsed.append(output_channel("SB", raw[31]))
-        parsed.append(output_channel("SBR", raw[32]))
+        parsed += [
+            output_channel("L", raw[25]),
+            output_channel("C", raw[26]),
+            output_channel("R", raw[27]),
+            output_channel("SL", raw[28]),
+            output_channel("SR", raw[29]),
+            output_channel("SBL", raw[30]),
+            output_channel("SB", raw[31]),
+            output_channel("SBR", raw[32]),
+        ]
 
         ## Some older AVRs do not have more than 33 data bits
         if len(raw) > 33:
-            parsed.append(output_channel("SW", raw[33]))
-            parsed.append(output_channel("FHL", raw[34]))
-            parsed.append(output_channel("FHR", raw[35]))
-            parsed.append(output_channel("FWL", raw[36]))
-            parsed.append(output_channel("FWR", raw[37]))
-            parsed.append(output_channel("TML", raw[38]))
-            parsed.append(output_channel("TMR", raw[39]))
-            parsed.append(output_channel("TRL", raw[40]))
-            parsed.append(output_channel("TRR", raw[41]))
-            parsed.append(output_channel("SW2", raw[42]))
+            parsed += [
+                output_channel("SW", raw[33]),
+                output_channel("FHL", raw[34]),
+                output_channel("FHR", raw[35]),
+                output_channel("FWL", raw[36]),
+                output_channel("FWR", raw[37]),
+                output_channel("TML", raw[38]),
+                output_channel("TMR", raw[39]),
+                output_channel("TRL", raw[40]),
+                output_channel("TRR", raw[41]),
+                output_channel("SW2", raw[42]),
+            ]
 
         ## FY11 AVRs do not have more than data 43 data bits (VSX-1021)
         if len(raw) > 43:
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="audio",
-                    property_name="output_frequency",
-                    zone=zone,
-                    value=AudioSignalInputFreq[raw[43:45]],
-                    queue_commands=None,
-                )
-            )
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="audio",
-                    property_name="output_bits",
-                    zone=zone,
-                    value=CodeIntMap[raw[45:47]],
-                    queue_commands=None,
-                )
-            )
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="audio",
-                    property_name="output_pqls",
-                    zone=zone,
-                    value=AudioWorkingPqls[raw[51]],
-                    queue_commands=None,
-                )
-            )
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="audio",
-                    property_name="output_auto_phase_control_plus",
-                    zone=zone,
-                    value=CodeIntMap[raw[52:54]],
-                    queue_commands=None,
-                )
-            )
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="audio",
-                    property_name="output_reverse_phase",
-                    zone=zone,
-                    value=CodeBoolMap[raw[54]],
-                    queue_commands=None,
-                )
-            )
+            for property_name, value in {
+                "output_frequency": AudioSignalInputFreq[raw[43:45]],
+                "output_bits": CodeIntMap[raw[45:47]],
+                "output_pqls": AudioWorkingPqls[raw[51]],
+                "output_auto_phase_control_plus": CodeIntMap[raw[52:54]],
+                "output_reverse_phase": CodeBoolMap[raw[54]],
+            }.items():
+                audio_response(property_name, value)
 
         ## Set multichannel value
         parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name="input_multichannel",
-                zone=zone,
-                value=all([CodeBoolMap[r] for r in raw[4:7]]),
-                queue_commands=None,
+            audio_response(
+                "input_multichannel", all([CodeBoolMap[r] for r in raw[4:7]])
             )
         )
         return parsed
@@ -392,241 +319,47 @@ class InformationParsers:
         raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VST"
     ) -> list[Response]:
         """Response parser for video information."""
+
+        def video_response(property_name: str, value: str) -> Response:
+            return Response(
+                raw=raw,
+                response_command=command,
+                base_property="video",
+                property_name=property_name,
+                zone=zone,
+                value=value,
+                queue_commands=None,
+            )
+
         parsed = []
-
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="signal_input_terminal",
-                zone=zone,
-                value=VideoSignalInputTerminal[raw[0]],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="signal_input_resolution",
-                zone=zone,
-                value=VideoSignalFormats[raw[1:3]],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="signal_input_aspect",
-                zone=zone,
-                value=VideoSignalAspects[raw[3]],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="signal_input_color_format",
-                zone=zone,
-                value=VideoSignalColorspace[raw[4]],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="signal_input_bit",
-                zone=zone,
-                value=VideoSignalBits[raw[5]],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="signal_input_extended_colorspace",
-                zone=zone,
-                value=VideoSignalExtColorspace[raw[6]],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="signal_output_resolution",
-                zone=zone,
-                value=VideoSignalFormats[raw[7:9]],
-                queue_commands=None,
-            )
-        )
-
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="signal_output_aspect",
-                zone=zone,
-                value=VideoSignalAspects[raw[9]],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="signal_output_color_format",
-                zone=zone,
-                value=VideoSignalColorspace[raw[10]],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="signal_output_bit",
-                zone=zone,
-                value=VideoSignalBits[raw[11]],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="signal_output_extended_colorspace",
-                zone=zone,
-                value=VideoSignalExtColorspace[raw[12]],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="signal_hdmi1_recommended_resolution",
-                zone=zone,
-                value=VideoSignalFormats[raw[13:15]],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="signal_hdmi1_deepcolor",
-                zone=zone,
-                value=VideoSignalBits[raw[15]],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="signal_hdmi2_recommended_resolution",
-                zone=zone,
-                value=VideoSignalFormats[raw[21:23]],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name="signal_hdmi2_deepcolor",
-                zone=zone,
-                value=VideoSignalBits[raw[23]],
-                queue_commands=None,
-            )
-        )
+        for property_name, value in {
+            "signal_input_terminal": VideoSignalInputTerminal[raw[0]],
+            "signal_input_resolution": VideoSignalFormats[raw[1:3]],
+            "signal_input_aspect": VideoSignalAspects[raw[3]],
+            "signal_input_color_format": VideoSignalColorspace[raw[4]],
+            "signal_input_bit": VideoSignalBits[raw[5]],
+            "signal_input_extended_colorspace": VideoSignalExtColorspace[raw[6]],
+            "signal_output_resolution": VideoSignalFormats[raw[7:9]],
+            "signal_output_aspect": VideoSignalAspects[raw[9]],
+            "signal_output_color_format": VideoSignalColorspace[raw[10]],
+            "signal_output_bit": VideoSignalBits[raw[11]],
+            "signal_output_extended_colorspace": VideoSignalExtColorspace[raw[12]],
+            "signal_hdmi1_recommended_resolution": VideoSignalFormats[raw[13:15]],
+            "signal_hdmi1_deepcolor": VideoSignalBits[raw[15]],
+            "signal_hdmi2_recommended_resolution": VideoSignalFormats[raw[21:23]],
+            "signal_hdmi2_deepcolor": VideoSignalBits[raw[23]],
+        }.items():
+            parsed.append(video_response(property_name, value))
 
         ## FY11 AVRs only return 25 data values
         if len(raw) > 40:
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="video",
-                    property_name="signal_hdmi3_recommended_resolution",
-                    zone=zone,
-                    value=VideoSignalFormats[raw[29:31]],
-                    queue_commands=None,
-                )
-            )
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="video",
-                    property_name="signal_hdmi3_deepcolor",
-                    zone=zone,
-                    value=VideoSignalBits[raw[31]],
-                    queue_commands=None,
-                )
-            )
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="video",
-                    property_name="input_3d_format",
-                    zone=zone,
-                    value=VideoSignal3DModes[raw[37:39]],
-                    queue_commands=None,
-                )
-            )
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="video",
-                    property_name="output_3d_format",
-                    zone=zone,
-                    value=VideoSignal3DModes[raw[39:41]],
-                    queue_commands=None,
-                )
-            )
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="video",
-                    property_name="signal_hdmi4_recommended_resolution",
-                    zone=zone,
-                    value=VideoSignalFormats[raw[41:43]],
-                    queue_commands=None,
-                )
-            )
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="video",
-                    property_name="signal_hdmi4_deepcolor",
-                    zone=zone,
-                    value=VideoSignalBits[raw[44]],
-                    queue_commands=None,
-                )
-            )
+            for property_name, value in {
+                "signal_hdmi3_recommended_resolution": VideoSignalFormats[raw[29:31]],
+                "signal_hdmi3_deepcolor": VideoSignalBits[raw[31]],
+                "input_3d_format": VideoSignal3DModes[raw[37:39]],
+                "output_3d_format": VideoSignal3DModes[raw[39:41]],
+                "signal_hdmi4_recommended_resolution": VideoSignalFormats[raw[41:43]],
+                "signal_hdmi4_deepcolor": VideoSignalBits[raw[44]],
+            }.items():
+                parsed.append(video_response(property_name, value))
         return parsed
