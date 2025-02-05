@@ -125,7 +125,7 @@ class CodeFloatMap(CodeMapBase):
                     raise ValueError(
                         f"Value {value} below minimum {cls.value_min} for {cls.__name__}"
                     )
-            elif not cls.value_min >= value >= cls.value_max:
+            elif not cls.value_min <= value <= cls.value_max:
                 raise ValueError(
                     f"Value {value} outside of range "
                     f"{cls.value_min} -- {cls.value_max} for {cls.__name__}"
