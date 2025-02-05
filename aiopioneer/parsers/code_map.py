@@ -113,8 +113,8 @@ class AVRCodeFloatMap(AVRCodeMapBase):
     """Map AVR codes to float values."""
 
     code_zfill: int = None
-    value_min: float | int = 0
-    value_max: float | int = 0  ## NOTE: value_min must also be set if value_max is set
+    value_min: float | int = None
+    value_max: float | int = None  ## NOTE: value_min must be set if value_max is set
 
     def __new__(cls, value: float | int) -> str:
         if not isinstance(value, (float, int)):
@@ -144,7 +144,7 @@ class AVRCodeIntMap(AVRCodeFloatMap):
     """Map AVR codes to integer values."""
 
     value_min: int = None
-    value_max: int = None  ## NOTE: value_min must also be set if value_max is set
+    value_max: int = None  ## NOTE: value_min must be set if value_max is set
 
     def __new__(cls, value: int) -> str:
         if not isinstance(value, int):
