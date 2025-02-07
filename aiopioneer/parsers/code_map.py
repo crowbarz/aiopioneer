@@ -2,6 +2,9 @@
 
 from typing import Any, Tuple
 
+CODE_MAP_NDIGITS = 3
+CODE_MAP_EXP = pow(10, CODE_MAP_NDIGITS)
+
 
 class CodeDefault:
     """Default code for map."""
@@ -115,6 +118,9 @@ class CodeFloatMap(CodeMapBase):
     code_zfill: int = None
     value_min: float | int = None
     value_max: float | int = None  ## NOTE: value_min must be set if value_max is set
+    value_step: float | int = 1
+    value_divider: float | int = 1
+    value_offset: float | int = 0
 
     def __new__(cls, value: float | int) -> str:
         if not isinstance(value, (float, int)):
@@ -130,14 +136,29 @@ class CodeFloatMap(CodeMapBase):
                     f"Value {value} outside of range "
                     f"{cls.value_min} -- {cls.value_max} for {cls.__name__}"
                 )
+        if cls.value_step != 1 and int(value * CODE_MAP_EXP) % int(
+            cls.value_step * CODE_MAP_EXP
+        ):
+            raise ValueError(
+                f"Value {value} is not a multiple of {cls.value_step} for {cls.__name__}"
+            )
         code = cls.value_to_code(value)
         return code.zfill(cls.code_zfill) if cls.code_zfill else code
+
+    @classmethod
+    def value_to_code(cls, value) -> str:
+        """Convert value to code."""
+        return str(
+            int(round((value + cls.value_offset) / cls.value_divider, CODE_MAP_NDIGITS))
+        )
 
     ## NOTE: codes are not validated to value_min/value_max
 
     @classmethod
     def code_to_value(cls, code: str) -> float:
-        return float(code)
+        return round(
+            float(code) * cls.value_divider - cls.value_offset, CODE_MAP_NDIGITS
+        )
 
 
 class CodeIntMap(CodeFloatMap):
@@ -145,6 +166,9 @@ class CodeIntMap(CodeFloatMap):
 
     value_min: int = None
     value_max: int = None  ## NOTE: value_min must be set if value_max is set
+    value_step: int = 1
+    value_divider: int = 1
+    value_offset: int = 0
 
     def __new__(cls, value: int) -> str:
         if not isinstance(value, int):
@@ -155,16 +179,4 @@ class CodeIntMap(CodeFloatMap):
 
     @classmethod
     def code_to_value(cls, code: str) -> int:
-        return int(code)
-
-
-class CodeInt50Map(CodeIntMap):
-    """Map AVR codes to integer values with +50 delta."""
-
-    @classmethod
-    def value_to_code(cls, value: int) -> str:
-        return str(value + 50)
-
-    @classmethod
-    def code_to_value(cls, code: str) -> int:
-        return int(code) - 50
+        return int(code) * cls.value_divider - cls.value_offset

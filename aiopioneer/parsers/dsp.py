@@ -3,26 +3,9 @@
 from .code_map import (
     CodeMapBase,
     CodeIntMap,
-    CodeInt50Map,
     CodeFloatMap,
     CodeDictStrMap,
 )
-
-
-class DSPFloat10Map(CodeFloatMap):
-    """DSP float map * 10."""
-
-    @classmethod
-    def value_to_code(cls, value: float) -> str:
-        if value % 0.1:
-            raise ValueError(
-                f"Value {value} is not a multiple of 0.1 for {cls.__name__}"
-            )
-        return str(int(value * 10))
-
-    @classmethod
-    def code_to_value(cls, code: str) -> float:
-        return float(code) / 10
 
 
 class DspMcaccMemorySet(CodeIntMap):
@@ -63,11 +46,13 @@ class DspPhaseControlPlus(CodeIntMap):
         return super().code_to_value(code)
 
 
-class DspSoundDelay(DSPFloat10Map):
-    """DSP sound delay. (1step=0.1frame)"""
+class DspSoundDelay(CodeIntMap):
+    """DSP sound delay. (1step=5ms)"""
 
     value_min = 0
     value_max = 800
+    value_step = 5
+    value_divider = 5
     code_zfill = 3
 
 
@@ -135,18 +120,21 @@ class DspCenterWidth(CodeIntMap):
     value_max = 7
 
 
-class DspDimension(CodeInt50Map):
+class DspDimension(CodeIntMap):
     """DSP dimension."""
 
     value_min = -3
     value_max = 3
+    value_offset = 50
 
 
-class DspCenterImage(DSPFloat10Map):
+class DspCenterImage(CodeFloatMap):
     """DSP center image. (1step=0.1)"""
 
     value_min = 0
-    value_max = 10
+    value_max = 1
+    value_step = 0.1
+    value_divider = 0.1
     code_zfill = 2
 
 

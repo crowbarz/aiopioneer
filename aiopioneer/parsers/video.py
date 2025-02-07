@@ -1,20 +1,22 @@
 """Pioneer AVR response parsers for video parameters."""
 
-from .code_map import CodeInt50Map, CodeIntMap, CodeDictStrMap
+from .code_map import CodeIntMap, CodeDictStrMap
 
 
-class VideoInt08Map(CodeInt50Map):
+class VideoInt08Map(CodeIntMap):
     """Video map for integer values between 0 and +8."""
 
     value_min = 0
     value_max = 8
+    value_offset = 50
 
 
-class VideoInt66Map(CodeInt50Map):
+class VideoInt66Map(CodeIntMap):
     """Video map for integer values between -6 and +6."""
 
     value_min = -6
     value_max = 6
+    value_offset = 50
 
 
 class VideoResolutionModes(CodeDictStrMap):
@@ -39,11 +41,12 @@ class VideoPureCinemaModes(CodeDictStrMap):
     code_map = {"0": "AUTO", "1": "ON", "2": "OFF"}
 
 
-class VideoProgMotion(CodeInt50Map):
+class VideoProgMotion(CodeIntMap):
     """Video prog motion."""
 
     value_min = -4
     value_max = 4
+    value_offset = 50
 
 
 class VideoStreamSmootherModes(CodeDictStrMap):
