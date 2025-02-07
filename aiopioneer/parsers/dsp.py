@@ -56,7 +56,7 @@ class DspSoundDelay(CodeIntMap):
     code_zfill = 3
 
 
-class DspAudioScaler(CodeDictStrMap):
+class DspAutoManual(CodeDictStrMap):
     """DSP audio scaler."""
 
     code_map = {"0": "AUTO", "1": "MANUAL"}
@@ -75,7 +75,7 @@ class DspDualMono(CodeDictStrMap):
 
 
 class DspDynamicRange(CodeDictStrMap):
-    """DSP dyanmic range."""
+    """DSP dynamic range."""
 
     code_map = {"0": "off", "1": "auto", "2": "mid", "3": "max"}
 
@@ -86,17 +86,18 @@ class DspLfeAttenuator(CodeIntMap):
     value_min = -20
     value_max = 0
     code_zfill = 2
+    value_divider = -1
 
-    def __new__(cls, value: int | bool) -> str:
-        if value is False:
+    def __new__(cls, value: int | str) -> str:
+        if value == "off":
             return "50"
-        return super().__new__(cls, abs(value))
+        return super().__new__(cls, value)
 
     @classmethod
-    def code_to_value(cls, code: str) -> int | bool:
+    def code_to_value(cls, code: str) -> int | str:
         if code == "50":
-            return False
-        return -super().code_to_value(code)
+            return "off"
+        return super().code_to_value(code)
 
 
 class DspSacdGain(CodeMapBase):
@@ -105,7 +106,7 @@ class DspSacdGain(CodeMapBase):
     @classmethod
     def value_to_code(cls, value: int) -> str:
         if value not in [0, 6]:
-            raise ValueError(f"Value {value} not in [1, 6] for {cls.__name__}")
+            raise ValueError(f"Value {value} not in [0, 6] for {cls.__name__}")
         return "1" if value == 6 else "0"
 
     @classmethod
@@ -143,19 +144,9 @@ class DspEffect(CodeIntMap):
 
     value_min = 10
     value_max = 90
+    value_step = 10
+    value_divider = 10
     code_zfill = 2
-
-    @classmethod
-    def value_to_code(cls, value: int) -> str:
-        if value % 10:
-            raise ValueError(
-                f"Value {value} is not a multiple of 10 for {cls.__name__}"
-            )
-        return str(int(value / 10))
-
-    @classmethod
-    def code_to_value(cls, code: str) -> int:
-        return int(code) * 10
 
 
 class DspHeightGain(CodeDictStrMap):

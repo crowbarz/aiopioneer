@@ -20,7 +20,7 @@ from .dsp import (
     DspSignalSelect,
     DspPhaseControlPlus,
     DspSoundDelay,
-    DspAudioScaler,
+    DspAutoManual,
     DspDialogEnhancement,
     DspDualMono,
     DspDynamicRange,
@@ -160,7 +160,7 @@ RESPONSE_DATA = [
     ## dsp
     ["MC", DspMcaccMemorySet, Zone.ALL, "dsp", "mcacc_memory_set"],
     ["IS", DspPhaseControl, Zone.ALL, "dsp", "phase_control"],
-    ["VSP", DspAudioScaler, Zone.ALL, "dsp", "virtual_speakers"],
+    ["VSP", DspAutoManual, Zone.ALL, "dsp", "virtual_speakers"],
     ["VSB", CodeBoolMap, Zone.ALL, "dsp", "virtual_sb"],  # virtual_soundback
     ["VHT", CodeBoolMap, Zone.ALL, "dsp", "virtual_height"],
     ["SDA", DspSignalSelect, Zone.ALL, "dsp", "signal_select"],
@@ -187,7 +187,7 @@ RESPONSE_DATA = [
     ["ATU", DspHeightGain, Zone.ALL, "dsp", "height_gain"],
     ["ATV", DspDigitalFilter, Zone.ALL, "dsp", "digital_filter"],
     ["ATW", CodeBoolMap, Zone.ALL, "dsp", "loudness_management"],
-    ["ATY", DspAudioScaler, Zone.ALL, "dsp", "audio_scaler"],
+    ["ATY", DspAutoManual, Zone.ALL, "dsp", "audio_scaler"],
     ["ATZ", DspUpSampling, Zone.ALL, "dsp", "up_sampling"],
     ["ARA", CodeBoolMap, Zone.ALL, "dsp", "center_spread"],
     ["VDP", DspVirtualDepth, Zone.ALL, "dsp", "virtual_depth"],
