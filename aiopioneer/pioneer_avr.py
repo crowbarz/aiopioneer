@@ -976,18 +976,29 @@ class PioneerAVR(PioneerAVRConnection):
                 zone=zone,
             )
 
+        async def set_dsp_setting(
+            command: str, _arg: str, value: Any, arg_code_map: CodeMapBase
+        ):
+            await self.send_command(command, zone, prefix=arg_code_map(value))
+
         for arg, value in arguments.items():
             if self.properties.dsp.get(arg) == value:
                 continue
             if (command := "set_dsp_" + arg) not in PIONEER_COMMANDS:
                 raise AVRUnknownCommandError(command=command, zone=zone)
             arg_format = PIONEER_COMMANDS[command].get("args")
-            arg_code_map = arg_format[0] if isinstance(arg_format, list) else None
-            if not arg_format or not isinstance(arg_code_map, CodeMapBase):
+            if not isinstance(arg_format, list):
+                raise RuntimeError(f"No arguments defined for DSP setting {arg}")
+            if not issubclass(arg_code_map := arg_format[0], CodeMapBase):
                 raise RuntimeError(
                     f"Invalid code map {arg_code_map} for DSP setting {arg}"
                 )
-            await self.send_command(command, zone, prefix=arg_code_map(value))
+            try:
+                set_dsp_setting(command, arg, value, arg_code_map)
+            except PioneerError:
+                raise
+            except Exception as exc:  # pylint: disable=broad-except
+                raise AVRLocalCommandError(command=command, exc=exc) from exc
 
     async def media_control(self, action: str, zone: Zone = Zone.Z1) -> None:
         """
