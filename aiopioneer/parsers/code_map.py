@@ -44,29 +44,25 @@ class CodeMapBase(dict):
 class CodeBoolMap(CodeMapBase):
     """Map AVR codes to bool values."""
 
+    code_true = "1"
+    code_false = "0"
+
     @classmethod
     def value_to_code(cls, value: bool) -> str:
         if not isinstance(value, bool):
             raise ValueError(f"Boolean value expected for {cls.__name__}")
-        return str(int(value))
+        return cls.code_true if value else cls.code_false
 
     @classmethod
     def code_to_value(cls, code: str) -> bool:
-        return bool(int(code))
+        return True if code == cls.code_true else False
 
 
 class CodeInverseBoolMap(CodeBoolMap):
     """Map AVR codes to inverse bool values."""
 
-    @classmethod
-    def value_to_code(cls, value: bool) -> str:
-        if not isinstance(value, bool):
-            raise ValueError(f"Boolean value expected for {cls.__name__}")
-        return str(not bool(value))
-
-    @classmethod
-    def code_to_value(cls, code: str) -> bool:
-        return not bool(code)
+    code_true = "0"
+    code_false = "1"
 
 
 class CodeDictMap(CodeMapBase):
