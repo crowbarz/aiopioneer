@@ -740,7 +740,7 @@ class PioneerAVR(PioneerAVRConnection):
 
         async def set_amp_setting(
             command: str, arg: str, value: Any, arg_code_map: CodeMapBase
-        ):
+        ) -> None:
             if arg in (
                 ["speaker_mode", "hdmi_out", "hdmi3_out", "hdmi_audio", "pqls", "mode"]
             ):
@@ -763,7 +763,7 @@ class PioneerAVR(PioneerAVRConnection):
                     f"Invalid code map {arg_code_map} for amp setting {arg}"
                 )
             try:
-                set_amp_setting(command, arg, value, arg_code_map)
+                await set_amp_setting(command, arg, value, arg_code_map)
             except PioneerError:
                 raise
             except Exception as exc:  # pylint: disable=broad-except
@@ -950,7 +950,7 @@ class PioneerAVR(PioneerAVRConnection):
 
         async def set_video_setting(
             command: str, arg: str, value: Any, arg_code_map: CodeMapBase
-        ):
+        ) -> None:
             if arg == "resolution":
                 if value not in self.params.get_param(PARAM_VIDEO_RESOLUTION_MODES):
                     raise AVRLocalCommandError(
@@ -973,7 +973,7 @@ class PioneerAVR(PioneerAVRConnection):
                     f"Invalid code map {arg_code_map} for command {command}"
                 )
             try:
-                set_video_setting(command, arg, value, arg_code_map)
+                await set_video_setting(command, arg, value, arg_code_map)
             except PioneerError:
                 raise
             except Exception as exc:  # pylint: disable=broad-except
@@ -991,7 +991,7 @@ class PioneerAVR(PioneerAVRConnection):
 
         async def set_dsp_setting(
             command: str, _arg: str, value: Any, arg_code_map: CodeMapBase
-        ):
+        ) -> None:
             await self.send_command(command, zone, prefix=arg_code_map(value))
 
         for arg, value in arguments.items():
@@ -1007,7 +1007,7 @@ class PioneerAVR(PioneerAVRConnection):
                     f"Invalid code map {arg_code_map} for DSP setting {arg}"
                 )
             try:
-                set_dsp_setting(command, arg, value, arg_code_map)
+                await set_dsp_setting(command, arg, value, arg_code_map)
             except PioneerError:
                 raise
             except Exception as exc:  # pylint: disable=broad-except
