@@ -948,23 +948,36 @@ class PioneerAVR(PioneerAVRConnection):
                 zone=zone,
             )
 
-        # This is a complex function and supports handles requests to update any
-        # video related parameters
+        async def set_video_setting(
+            command: str, arg: str, value: Any, arg_code_map: CodeMapBase
+        ):
+            if arg == "resolution":
+                if value not in self.params.get_param(PARAM_VIDEO_RESOLUTION_MODES):
+                    raise AVRLocalCommandError(
+                        command=command,
+                        err_key="resolution_unavailable",
+                        resolution=value,
+                    )
+            await self.send_command(command, zone, prefix=arg_code_map(value))
+
         for arg, value in arguments.items():
             if self.properties.video.get(arg) == value:
                 continue
             if (command := "set_video_" + arg) not in PIONEER_COMMANDS:
                 raise AVRUnknownCommandError(command=command, zone=zone)
             arg_format = PIONEER_COMMANDS[command].get("args")
-            arg_code_map = arg_format[0] if isinstance(arg_format, list) else None
-            if not arg_format or not isinstance(arg_code_map, CodeMapBase):
+            if not isinstance(arg_format, list):
+                raise RuntimeError(f"No arguments defined for command {command}")
+            if not issubclass(arg_code_map := arg_format[0], CodeMapBase):
                 raise RuntimeError(
-                    f"Invalid code map {arg_code_map} for video setting {arg}"
+                    f"Invalid code map {arg_code_map} for command {command}"
                 )
-            if arg == "resolution":
-                if value not in self.params.get_param(PARAM_VIDEO_RESOLUTION_MODES):
-                    raise ValueError(f"Resolution {value} unavailable")
-            await self.send_command(command, zone, prefix=arg_code_map(value))
+            try:
+                set_video_setting(command, arg, value, arg_code_map)
+            except PioneerError:
+                raise
+            except Exception as exc:  # pylint: disable=broad-except
+                raise AVRLocalCommandError(command=command, exc=exc) from exc
 
     async def set_dsp_settings(self, zone: Zone, **arguments) -> None:
         """Set the DSP settings for the amplifier."""

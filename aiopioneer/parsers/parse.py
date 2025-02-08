@@ -200,8 +200,8 @@ RESPONSE_DATA = [
     ["VST", InformationParsers.video_information, Zone.ALL],
     ["FL", DisplayText, Zone.ALL, "amp", "display"],
     ## video
-    ["VTB", CodeBoolMap, Zone.Z1, "video", "converter"],
     ["VTC", VideoResolutionModes, Zone.Z1, "video", "resolution"],
+    ["VTB", CodeBoolMap, Zone.Z1, "video", "converter"],
     ["VTD", VideoPureCinemaModes, Zone.Z1, "video", "pure_cinema"],
     ["VTE", VideoProgMotion, Zone.Z1, "video", "prog_motion"],
     ["VTF", VideoStreamSmootherModes, Zone.Z1, "video", "stream_smoother"],

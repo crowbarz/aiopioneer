@@ -183,6 +183,7 @@ LocalCommandErrorFormatText = {
     "hdmi_audio_unavailable": "HDMI audio configuration not supported",
     "media_controls_not_supported": "Media controls not supported on source {source}",
     "media_action_not_supported": "Media action {action} not supported on source {source}",
+    "resolution_unavailable": "Resolution {resolution} unavailable",
 }
 
 ConnectErrorFormatText = {
