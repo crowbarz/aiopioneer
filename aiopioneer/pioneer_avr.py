@@ -8,6 +8,7 @@ import math
 import time
 
 from collections.abc import Callable
+from typing import Any
 
 from .commands import PIONEER_COMMANDS
 from .connection import PioneerAVRConnection
@@ -24,6 +25,7 @@ from .const import (
     CHANNEL_LEVELS_OBJ,
 )
 from .exceptions import (
+    PioneerError,
     AVRUnavailableError,
     AVRResponseTimeoutError,
     AVRCommandError,
@@ -53,9 +55,8 @@ from .params import (
     PARAM_ZONES_INITIAL_REFRESH,
 )
 from .parsers.audio import ToneDb, ToneModes
-from .parsers.code_map import CodeMapBase, CodeBoolMap
+from .parsers.code_map import CodeMapBase
 from .parsers.parse import process_raw_response
-from .parsers.system import AmpModes, DimmerModes, HdmiOutModes, PanelLock, SpeakerModes
 from .properties import PioneerAVRProperties
 from .util import cancel_task
 
@@ -697,18 +698,6 @@ class PioneerAVR(PioneerAVRConnection):
             raise ValueError(f"listening mode {mode_name} not available")
         await self.send_command("set_listening_mode", prefix=mode_id)
 
-    async def set_panel_lock(self, panel_lock: str) -> None:
-        """Set the panel lock."""
-        await self.send_command("set_amp_panel_lock", prefix=PanelLock(panel_lock))
-
-    async def set_remote_lock(self, remote_lock: bool) -> None:
-        """Set the remote lock."""
-        await self.send_command("set_amp_remote_lock", prefix=CodeBoolMap(remote_lock))
-
-    async def set_dimmer(self, dimmer: str) -> None:
-        """Set the display dimmer."""
-        await self.send_command("set_amp_dimmer", prefix=DimmerModes(dimmer))
-
     async def set_tone_settings(
         self,
         tone: str = None,
@@ -745,51 +734,40 @@ class PioneerAVR(PioneerAVRConnection):
             if bass is not None:
                 await self.send_command("set_tone_bass", zone, prefix=ToneDb(bass_str))
 
-    async def set_amp_settings(
-        self,
-        speaker_config: str = None,
-        hdmi_out: str = None,
-        hdmi_audio_output: bool = None,
-        pqls: bool = None,
-        amp: str = None,
-        zone: Zone = Zone.Z1,
-    ) -> None:
-        """Set amplifier function settings for a given zone."""
-        zone = self._check_zone(zone)
+    async def set_amp_settings(self, **kwargs) -> None:
+        """Set amplifier settings."""
+        zone = Zone.Z1
 
-        # FUNC: SPEAKERS (use PARAM_SPEAKER_MODES)
-        if (
-            self.properties.amp.get("speakers") is not None
-            and speaker_config is not None
+        async def set_amp_setting(
+            command: str, arg: str, value: Any, arg_code_map: CodeMapBase
         ):
-            await self.send_command(
-                "set_amp_speaker_status", zone, prefix=SpeakerModes(speaker_config)
-            )
+            if arg in (
+                ["speaker_mode", "hdmi_out", "hdmi3_out", "hdmi_audio", "pqls", "mode"]
+            ):
+                if self.properties.amp.get(arg) is None:
+                    raise AVRLocalCommandError(
+                        command=command, err_key=f"{arg}_unavailable"
+                    )
+            await self.send_command(command, zone, prefix=arg_code_map(value))
 
-        # FUNC: HDMI OUTPUT SELECT (use PARAM_HDMI_OUT_MODES)
-        if self.properties.amp.get("hdmi_out") is not None and hdmi_out is not None:
-            await self.send_command(
-                "set_amp_hdmi_out_status", zone, prefix=HdmiOutModes(hdmi_out)
-            )
-
-        # FUNC: HDMI AUDIO (simple bool, True is on, otherwise audio only goes to amp)
-        if (
-            self.properties.amp.get("hdmi_audio") is not None
-            and hdmi_audio_output is not None
-        ):
-            await self.send_command(
-                "set_amp_hdmi_audio_status",
-                zone,
-                prefix=str(int(hdmi_audio_output)),
-            )
-
-        # FUNC: PQLS (simple bool, True is auto, False is off)
-        if self.properties.amp.get("pqls") is not None and pqls is not None:
-            await self.send_command("set_amp_pqls_status", zone, prefix=str(int(pqls)))
-
-        # FUNC: AMP (use PARAM_AMP_MODES)
-        if self.properties.amp.get("status") is not None and amp is not None:
-            await self.send_command("set_amp_status", zone, prefix=AmpModes(amp))
+        for arg, value in kwargs.items():
+            if self.properties.amp.get(arg) == value:
+                continue
+            if (command := "set_amp_" + arg) not in PIONEER_COMMANDS:
+                raise AVRUnknownCommandError(command=command, zone=zone)
+            arg_format = PIONEER_COMMANDS[command].get("args")
+            if not isinstance(arg_format, list):
+                raise RuntimeError(f"No arguments defined for amp setting {arg}")
+            if not issubclass(arg_code_map := arg_format[0], CodeMapBase):
+                raise RuntimeError(
+                    f"Invalid code map {arg_code_map} for amp setting {arg}"
+                )
+            try:
+                set_amp_setting(command, arg, value, arg_code_map)
+            except PioneerError:
+                raise
+            except Exception as exc:  # pylint: disable=broad-except
+                raise AVRLocalCommandError(command=command, exc=exc) from exc
 
     async def select_tuner_band(self, band: TunerBand = TunerBand.FM) -> None:
         """Set the tuner band."""

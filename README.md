@@ -155,17 +155,9 @@ Query the AVR for available zones by querying the power status for each zone and
 Ignores zones listed in the `ignored_zones` parameter. <br/>
 If the `ignore_volume_check` parameter is not set, then additionally query the zone volume as well.
 
-_awaitable_ `PioneerAVR.set_panel_lock(`_panel_lock_: **str**`)`:
+_awaitable_ `PioneerAVR.set_amp_settings(`_**kwargs_`)` -> **None**
 
-Set the panel lock.
-
-_awaitable_ `PioneerAVR.set_remote_lock(`_remote_lock_: **bool**`)`:
-
-Set the remote lock.
-
-_awaitable_ `PioneerAVR.set_dimmer(`_dimmer_: **str**, _zone_: Zone = Zone.Z1`)`:
-
-Set the display dimmer.
+Set amplifier settings. Any `set_amp` command can be sent by specifying the command as an argument. **TODO**
 
 ### AVR source methods
 
@@ -297,10 +289,6 @@ Turn mute off for zone _zone_.
 _awaitable_ `PioneerAVR.set_tone_settings(`_tone_: **str** = **None**, _treble_: **int** = **None**, _bass_: **int** = **None**, _zone_: Zone = Zone.Z1 `)`*
 
 Set the tone settings for zone _zone_ to _tone_. When _tone_ is set to `On`, _treble_ specifies the treble and _bass_ specifies the bass.
-
-_awaitable_ `PioneerAVR.set_amp_settings(`_speaker_config_: **str** = **None**, _hdmi_out_: **str** = **None**, _hdmi_audio_output_: **bool** = **None**, _pqls_: **bool** = **None**, _amp_: **str** = **None**, _zone_: Zone = Zone.Z1`)` -> **bool**
-
-Set amplifier function settings for zone _zone_.
 
 `PioneerAVRProperties.get_supported_media_controls(`_zone_: Zone`)` -> **list**[**str**]
 

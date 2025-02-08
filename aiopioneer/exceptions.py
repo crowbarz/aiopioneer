@@ -177,6 +177,10 @@ LocalCommandErrorFormatText = {
     "channel_levels_unavailable": "channel levels not supported for {zone.full_name}",
     "video_settings_unavailable": "video settings not supported for {zone.full_name}",
     "dsp_settings_unavailable": "DSP settings not supported for {zone.full_name}",
+    "speaker_mode_unavailable": "speaker configuration not supported",
+    "hdmi_out_unavailable": "HDMI out configuration not supported",
+    "hdmi3_out_unavailable": "HDMI3 out configuration not supported",
+    "hdmi_audio_unavailable": "HDMI audio configuration not supported",
     "media_controls_not_supported": "Media controls not supported on source {source}",
     "media_action_not_supported": "Media action {action} not supported on source {source}",
 }

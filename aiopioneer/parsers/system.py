@@ -13,7 +13,7 @@ from ..params import (
     PARAM_MHL_SOURCE,
     PARAM_SPEAKER_SYSTEM_MODES,
 )
-from .code_map import CodeDictStrMap
+from .code_map import CodeBoolMap, CodeDictStrMap, CodeIntMap
 from .response import Response
 
 
@@ -27,6 +27,13 @@ class HdmiOutModes(CodeDictStrMap):
     """HDMI out modes."""
 
     code_map = {"0": "ALL", "1": "HDMI 1", "2": "HDMI 2", "3": "HDMI (cyclic)"}
+
+
+class Hdmi3OutModes(CodeBoolMap):
+    """HDMI3 out modes."""
+
+    code_true = "1"
+    code_false = "3"
 
 
 class HdmiAudioModes(CodeDictStrMap):
@@ -51,6 +58,15 @@ class DimmerModes(CodeDictStrMap):
         "3": "Off",
         "9": "(cycle)",
     }
+
+
+class SleepTime(CodeIntMap):
+    """Sleep time."""
+
+    value_min = 0
+    value_max = 90
+    value_step = 30
+    code_zfill = 3
 
 
 class AmpModes(CodeDictStrMap):
