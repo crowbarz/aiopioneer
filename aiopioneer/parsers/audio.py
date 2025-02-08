@@ -9,7 +9,7 @@ from .response import Response
 class ToneModes(CodeDictStrMap):
     """Tone modes."""
 
-    code_map = {"0": "Bypass", "1": "On", "9": "(cycle)"}
+    code_map = {"0": "bypass", "1": "on"}
 
 
 class ToneDb(CodeDictStrMap):

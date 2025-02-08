@@ -23,8 +23,8 @@ class VideoResolutionModes(CodeDictStrMap):
     """Video resolution modes."""
 
     code_map = {
-        "0": "AUTO",
-        "1": "PURE",
+        "0": "auto",
+        "1": "pure",
         "3": "480/576p",
         "4": "720p",
         "5": "1080i",
@@ -38,7 +38,7 @@ class VideoResolutionModes(CodeDictStrMap):
 class VideoPureCinemaModes(CodeDictStrMap):
     """Video pure cinema modes."""
 
-    code_map = {"0": "AUTO", "1": "ON", "2": "OFF"}
+    code_map = {"0": "auto", "1": "on", "2": "off"}
 
 
 class VideoProgMotion(CodeIntMap):
@@ -52,19 +52,19 @@ class VideoProgMotion(CodeIntMap):
 class VideoStreamSmootherModes(CodeDictStrMap):
     """Video stream smoother modes."""
 
-    code_map = {"0": "OFF", "1": "ON", "2": "AUTO"}
+    code_map = {"0": "off", "1": "on", "2": "auto"}
 
 
 class AdvancedVideoAdjustModes(CodeDictStrMap):
     """Advanced video adjust modes."""
 
-    code_map = {"0": "PDP", "1": "LCD", "2": "FPJ", "3": "Professional", "4": "Memory"}
+    code_map = {"0": "PDP", "1": "LCD", "2": "FPJ", "3": "professional", "4": "memory"}
 
 
 class VideoAspectModes(CodeDictStrMap):
     """Video aspect modes."""
 
-    code_map = {"0": "PASSTHROUGH", "1": "NORMAL"}
+    code_map = {"0": "passthrough", "1": "normal"}
 
 
 class VideoSuperResolution(CodeIntMap):

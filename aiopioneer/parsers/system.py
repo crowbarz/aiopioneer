@@ -20,13 +20,13 @@ from .response import Response
 class SpeakerModes(CodeDictStrMap):
     """Speaker modes."""
 
-    code_map = {"0": "OFF", "1": "A", "2": "B", "3": "A+B"}
+    code_map = {"0": "off", "1": "A", "2": "B", "3": "A+B"}
 
 
 class HdmiOutModes(CodeDictStrMap):
     """HDMI out modes."""
 
-    code_map = {"0": "ALL", "1": "HDMI 1", "2": "HDMI 2", "3": "HDMI (cyclic)"}
+    code_map = {"0": "all", "1": "HDMI 1", "2": "HDMI 2"}
 
 
 class Hdmi3OutModes(CodeBoolMap):
@@ -39,24 +39,23 @@ class Hdmi3OutModes(CodeBoolMap):
 class HdmiAudioModes(CodeDictStrMap):
     """HDMI audio modes."""
 
-    code_map = {"0": "AMP", "1": "PASSTHROUGH"}
+    code_map = {"0": "amp", "1": "passthrough"}
 
 
 class PqlsModes(CodeDictStrMap):
     """PQLS modes."""
 
-    code_map = {"0": "OFF", "1": "AUTO"}
+    code_map = {"0": "off", "1": "auto"}
 
 
 class DimmerModes(CodeDictStrMap):
     """Dimmer modes."""
 
     code_map = {
-        "0": "Brightest",
-        "1": "Bright",
-        "2": "Dark",
-        "3": "Off",
-        "9": "(cycle)",
+        "0": "brightest",
+        "1": "bright",
+        "2": "dark",
+        "3": "off",
     }
 
 
@@ -73,17 +72,17 @@ class AmpModes(CodeDictStrMap):
     """AMP modes."""
 
     code_map = {
-        "0": "AMP ON",
-        "1": "AMP Front OFF",
-        "2": "AMP Front & Center OFF",
-        "3": "AMP OFF",
+        "0": "amp on",
+        "1": "amp front off",
+        "2": "amp front & center off",
+        "3": "amp off",
     }
 
 
 class PanelLock(CodeDictStrMap):
     """Panel lock settings."""
 
-    code_map = {"0": "OFF", "1": "PANEL ONLY", "2": "PANEL + VOLUME"}
+    code_map = {"0": "off", "1": "panel only", "2": "panel + volume"}
 
 
 class SystemParsers:

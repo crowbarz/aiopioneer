@@ -24,7 +24,7 @@ class DspPhaseControl(CodeDictStrMap):
 class DspSignalSelect(CodeDictStrMap):
     """DSP signal select."""
 
-    code_map = {"0": "AUTO", "1": "ANALOG", "2": "DIGITAL", "3": "HDMI"}
+    code_map = {"0": "auto", "1": "analog", "2": "digital", "3": "HDMI"}
 
 
 class DspPhaseControlPlus(CodeIntMap):
