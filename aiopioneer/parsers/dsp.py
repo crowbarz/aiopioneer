@@ -46,6 +46,12 @@ class DspPhaseControlPlus(CodeIntMap):
         return super().code_to_value(code)
 
 
+class DspVirtualSpeakers(CodeDictStrMap):
+    """DSP virtual speakers."""
+
+    code_map = {"0": "auto", "1": "manual"}
+
+
 class DspSoundDelay(CodeIntMap):
     """DSP sound delay. (1step=5ms)"""
 
@@ -56,10 +62,10 @@ class DspSoundDelay(CodeIntMap):
     code_zfill = 3
 
 
-class DspAutoManual(CodeDictStrMap):
+class DspAudioScaler(CodeDictStrMap):
     """DSP audio scaler."""
 
-    code_map = {"0": "AUTO", "1": "MANUAL"}
+    code_map = {"0": "auto", "1": "manual"}
 
 
 class DspDialogEnhancement(CodeDictStrMap):
