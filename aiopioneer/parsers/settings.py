@@ -479,25 +479,6 @@ class SettingsParsers:
         return parsed
 
     @staticmethod
-    def hdmi_arc(
-        raw: str, _params: PioneerAVRParams, zone=None, command="STT"
-    ) -> list[Response]:
-        """Response parser for HDMI ARC setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="hdmi_arc",
-                zone=zone,
-                value=bool(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
     def external_hdmi_trigger(
         raw: str, _params: PioneerAVRParams, zone=None, command="STV"
     ) -> list[Response]:
