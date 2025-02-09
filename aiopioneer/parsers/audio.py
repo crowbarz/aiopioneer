@@ -6,7 +6,7 @@ from .code_map import CodeDictStrMap, CodeIntMap
 from .response import Response
 
 
-class ToneModes(CodeDictStrMap):
+class ToneMode(CodeDictStrMap):
     """Tone modes."""
 
     code_map = {"0": "bypass", "1": "on"}

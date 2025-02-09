@@ -7,7 +7,7 @@ from ..const import Zone
 from ..exceptions import AVRResponseParseError
 from ..params import PioneerAVRParams
 from ..properties import PioneerAVRProperties
-from .audio import AudioParsers, ToneModes, ToneDb
+from .audio import AudioParsers, ToneMode, ToneDb
 from .code_map import (
     CodeMapBase,
     CodeBoolMap,
@@ -45,18 +45,18 @@ from .settings import (
     XOver,
     XCurve,
     SbchProcessing,
-    OsdLanguages,
+    OsdLanguage,
     StandbyPassthrough,
 )
 from .system import (
     SystemParsers,
-    SpeakerModes,
-    HdmiOutModes,
-    Hdmi3OutModes,
-    HdmiAudioModes,
-    PqlsModes,
-    DimmerModes,
-    AmpModes,
+    SpeakerMode,
+    HdmiOut,
+    Hdmi3Out,
+    HdmiAudio,
+    Pqls,
+    Dimmer,
+    AmpStatus,
     PanelLock,
 )
 from .tuner import TunerParsers
@@ -92,14 +92,14 @@ RESPONSE_DATA = [
     ["Z2MUT", CodeInverseBoolMap, Zone.Z2, "mute"],
     ["Z3MUT", CodeInverseBoolMap, Zone.Z3, "mute"],
     ["HZMUT", CodeInverseBoolMap, Zone.HDZ, "mute"],
-    ["SPK", SpeakerModes, Zone.ALL, "amp", "speaker_mode"],
-    ["HO", HdmiOutModes, Zone.ALL, "amp", "hdmi_out"],
-    ["HDO", Hdmi3OutModes, Zone.ALL, "amp", "hdmi3_out"],
-    ["HA", HdmiAudioModes, Zone.ALL, "amp", "hdmi_audio"],
-    ["PQ", PqlsModes, Zone.ALL, "amp", "pqls"],
-    ["SAA", DimmerModes, Zone.ALL, "amp", "dimmer"],
+    ["SPK", SpeakerMode, Zone.ALL, "amp", "speaker_mode"],
+    ["HO", HdmiOut, Zone.ALL, "amp", "hdmi_out"],
+    ["HDO", Hdmi3Out, Zone.ALL, "amp", "hdmi3_out"],
+    ["HA", HdmiAudio, Zone.ALL, "amp", "hdmi_audio"],
+    ["PQ", Pqls, Zone.ALL, "amp", "pqls"],
+    ["SAA", Dimmer, Zone.ALL, "amp", "dimmer"],
     ["SAB", CodeIntMap, Zone.ALL, "amp", "sleep_time"],
-    ["SAC", AmpModes, Zone.ALL, "amp", "status"],
+    ["SAC", AmpStatus, Zone.ALL, "amp", "status"],
     ["PKL", PanelLock, Zone.ALL, "amp", "panel_lock"],
     ["RML", CodeBoolMap, Zone.ALL, "amp", "remote_lock"],
     ["SSF", SystemParsers.speaker_system, Zone.ALL],
@@ -125,7 +125,7 @@ RESPONSE_DATA = [
     ["SSW", CodeBoolMap, Zone.ALL, "system", "thx_ultraselect2"],
     ["SSX", CodeBoolMap, Zone.ALL, "system", "boundary_gain_compression"],
     ["SSB", CodeBoolMap, Zone.ALL, "system", "re_equalization"],
-    ["SSE", OsdLanguages, Zone.ALL, "system", "osd_language"],
+    ["SSE", OsdLanguage, Zone.ALL, "system", "osd_language"],
     ["STA", CodeBoolMap, Zone.ALL, "system", "network_dhcp"],
     ["STG", CodeBoolMap, Zone.ALL, "system", "network_proxy_active"],
     ["STJ", CodeBoolMap, Zone.ALL, "system", "network_standby"],
@@ -149,10 +149,10 @@ RESPONSE_DATA = [
     ["ZGE", AudioParsers.channel_levels, Zone.Z2],
     ["ZHE", AudioParsers.channel_levels, Zone.Z3],
     ["SR", AudioParsers.listening_mode, Zone.ALL],
-    ["TO", ToneModes, Zone.Z1, "tone", "status"],
+    ["TO", ToneMode, Zone.Z1, "tone", "status"],
     ["BA", ToneDb, Zone.Z1, "tone", "bass"],
     ["TR", ToneDb, Zone.Z1, "tone", "treble"],
-    ["ZGA", ToneModes, Zone.Z2, "tone", "status"],
+    ["ZGA", ToneMode, Zone.Z2, "tone", "status"],
     ["ZGB", ToneDb, Zone.Z2, "tone", "bass"],
     ["ZGC", ToneDb, Zone.Z2, "tone", "treble"],
     ## tuner

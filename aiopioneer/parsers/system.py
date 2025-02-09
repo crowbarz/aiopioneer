@@ -17,39 +17,39 @@ from .code_map import CodeBoolMap, CodeDictStrMap, CodeIntMap
 from .response import Response
 
 
-class SpeakerModes(CodeDictStrMap):
-    """Speaker modes."""
+class SpeakerMode(CodeDictStrMap):
+    """Speaker mode."""
 
     code_map = {"0": "off", "1": "A", "2": "B", "3": "A+B"}
 
 
-class HdmiOutModes(CodeDictStrMap):
-    """HDMI out modes."""
+class HdmiOut(CodeDictStrMap):
+    """HDMI out mode."""
 
     code_map = {"0": "all", "1": "HDMI 1", "2": "HDMI 2"}
 
 
-class Hdmi3OutModes(CodeBoolMap):
-    """HDMI3 out modes."""
+class Hdmi3Out(CodeBoolMap):
+    """HDMI3 out mode."""
 
     code_true = "1"
     code_false = "3"
 
 
-class HdmiAudioModes(CodeDictStrMap):
-    """HDMI audio modes."""
+class HdmiAudio(CodeDictStrMap):
+    """HDMI audio mode."""
 
     code_map = {"0": "amp", "1": "passthrough"}
 
 
-class PqlsModes(CodeDictStrMap):
-    """PQLS modes."""
+class Pqls(CodeDictStrMap):
+    """PQLS mode."""
 
     code_map = {"0": "off", "1": "auto"}
 
 
-class DimmerModes(CodeDictStrMap):
-    """Dimmer modes."""
+class Dimmer(CodeDictStrMap):
+    """Dimmer mode."""
 
     code_map = {
         "0": "brightest",
@@ -68,8 +68,8 @@ class SleepTime(CodeIntMap):
     code_zfill = 3
 
 
-class AmpModes(CodeDictStrMap):
-    """AMP modes."""
+class AmpStatus(CodeDictStrMap):
+    """AMP mode."""
 
     code_map = {
         "0": "amp on",

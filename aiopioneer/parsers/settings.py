@@ -43,8 +43,8 @@ class SbchProcessing(CodeDictStrMap):
     code_map = {"0": "auto", "1": "manual"}
 
 
-class OsdLanguages(CodeDictStrMap):
-    """OSD languages."""
+class OsdLanguage(CodeDictStrMap):
+    """OSD language."""
 
     code_map = {
         "00": "English",

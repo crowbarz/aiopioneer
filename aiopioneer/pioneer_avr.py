@@ -54,7 +54,7 @@ from .params import (
     PARAM_QUERY_SOURCES,
     PARAM_ZONES_INITIAL_REFRESH,
 )
-from .parsers.audio import ToneDb, ToneModes
+from .parsers.audio import ToneDb, ToneMode
 from .parsers.code_map import CodeMapBase
 from .parsers.parse import process_raw_response
 from .properties import PioneerAVRProperties
@@ -714,7 +714,7 @@ class PioneerAVR(PioneerAVRConnection):
             )
 
         if tone is not None:
-            await self.send_command("set_tone_mode", zone=zone, prefix=ToneModes(tone))
+            await self.send_command("set_tone_mode", zone=zone, prefix=ToneMode(tone))
 
         ## Set treble and bass only if zone tone status is set to "On"
         if self.properties.tone[zone].get("status") == "on":

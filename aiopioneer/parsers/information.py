@@ -133,8 +133,8 @@ class VideoSignalFormats(CodeDictStrMap):
     }
 
 
-class VideoSignalAspects(CodeDictStrMap):
-    """Video signal aspects."""
+class VideoSignalAspect(CodeDictStrMap):
+    """Video signal aspect."""
 
     code_map = {
         CodeDefault(): None,
@@ -187,8 +187,8 @@ class VideoSignalExtColorspace(CodeDictStrMap):
     }
 
 
-class VideoSignal3DModes(CodeDictStrMap):
-    """Video signal 3D modes."""
+class VideoSignal3DMode(CodeDictStrMap):
+    """Video signal 3D mode."""
 
     code_map = {
         CodeDefault(): None,
@@ -335,12 +335,12 @@ class InformationParsers:
         for property_name, value in {
             "signal_input_terminal": VideoSignalInputTerminal[raw[0]],
             "signal_input_resolution": VideoSignalFormats[raw[1:3]],
-            "signal_input_aspect": VideoSignalAspects[raw[3]],
+            "signal_input_aspect": VideoSignalAspect[raw[3]],
             "signal_input_color_format": VideoSignalColorspace[raw[4]],
             "signal_input_bit": VideoSignalBits[raw[5]],
             "signal_input_extended_colorspace": VideoSignalExtColorspace[raw[6]],
             "signal_output_resolution": VideoSignalFormats[raw[7:9]],
-            "signal_output_aspect": VideoSignalAspects[raw[9]],
+            "signal_output_aspect": VideoSignalAspect[raw[9]],
             "signal_output_color_format": VideoSignalColorspace[raw[10]],
             "signal_output_bit": VideoSignalBits[raw[11]],
             "signal_output_extended_colorspace": VideoSignalExtColorspace[raw[12]],
@@ -356,8 +356,8 @@ class InformationParsers:
             for property_name, value in {
                 "signal_hdmi3_recommended_resolution": VideoSignalFormats[raw[29:31]],
                 "signal_hdmi3_deepcolor": VideoSignalBits[raw[31]],
-                "input_3d_format": VideoSignal3DModes[raw[37:39]],
-                "output_3d_format": VideoSignal3DModes[raw[39:41]],
+                "input_3d_format": VideoSignal3DMode[raw[37:39]],
+                "output_3d_format": VideoSignal3DMode[raw[39:41]],
                 "signal_hdmi4_recommended_resolution": VideoSignalFormats[raw[41:43]],
                 "signal_hdmi4_deepcolor": VideoSignalBits[raw[44]],
             }.items():
