@@ -708,31 +708,22 @@ class PioneerAVR(PioneerAVRConnection):
         """Set the tone settings for a given zone."""
         ## Check the zone supports tone settings and that inputs are within range
         zone = self._check_zone(zone)
-        if self.properties.tone.get(zone.value) is None:
+        if self.properties.tone.get(zone) is None:
             raise AVRLocalCommandError(
                 command="set_tone_settings", err_key="tone_unavailable", zone=zone
             )
-        if not -6 <= treble <= 6:
-            raise ValueError(f"invalid treble value: {treble}")
-        if not -6 <= bass <= 6:
-            raise ValueError(f"invalid bass value: {bass}")
 
         if tone is not None:
-            await self.send_command(
-                "set_tone_mode",
-                zone,
-                prefix=ToneModes(tone),
-            )
+            await self.send_command("set_tone_mode", zone=zone, prefix=ToneModes(tone))
+
         ## Set treble and bass only if zone tone status is set to "On"
-        if self.properties.tone.get(zone.value, {}).get("status") == "On":
-            treble_str = f"{str(treble)}dB"
-            bass_str = f"{str(bass)}dB"
+        if self.properties.tone[zone].get("status") == "on":
             if treble is not None:
                 await self.send_command(
-                    "set_tone_treble", zone, prefix=ToneDb(treble_str)
+                    "set_tone_treble", zone=zone, prefix=ToneDb(treble)
                 )
             if bass is not None:
-                await self.send_command("set_tone_bass", zone, prefix=ToneDb(bass_str))
+                await self.send_command("set_tone_bass", zone=zone, prefix=ToneDb(bass))
 
     async def set_amp_settings(self, **kwargs) -> None:
         """Set amplifier settings."""

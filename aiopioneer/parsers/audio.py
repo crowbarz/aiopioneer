@@ -2,7 +2,7 @@
 
 from ..const import Zone
 from ..params import PioneerAVRParams, PARAM_ALL_LISTENING_MODES
-from .code_map import CodeDictStrMap
+from .code_map import CodeDictStrMap, CodeIntMap
 from .response import Response
 
 
@@ -12,24 +12,14 @@ class ToneModes(CodeDictStrMap):
     code_map = {"0": "bypass", "1": "on"}
 
 
-class ToneDb(CodeDictStrMap):
+class ToneDb(CodeIntMap):
     """Tone dB values."""
 
-    code_map = {
-        "00": "6dB",
-        "01": "5dB",
-        "02": "4dB",
-        "03": "3dB",
-        "04": "2dB",
-        "05": "1dB",
-        "06": "0dB",
-        "07": "-1dB",
-        "08": "-2dB",
-        "09": "-3dB",
-        "10": "-4dB",
-        "11": "-5dB",
-        "12": "-6dB",
-    }
+    value_min = -6
+    value_max = 6
+    value_divider = -1
+    value_offset = -6
+    code_zfill = 2
 
 
 class AudioParsers:
