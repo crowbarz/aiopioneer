@@ -19,8 +19,8 @@ class VideoInt66Map(CodeIntMap):
     value_offset = 50
 
 
-class VideoResolutionModes(CodeDictStrMap):
-    """Video resolution modes."""
+class VideoResolution(CodeDictStrMap):
+    """Video resolution."""
 
     code_map = {
         "0": "auto",
@@ -35,8 +35,8 @@ class VideoResolutionModes(CodeDictStrMap):
     }
 
 
-class VideoPureCinemaModes(CodeDictStrMap):
-    """Video pure cinema modes."""
+class VideoPureCinema(CodeDictStrMap):
+    """Video pure cinema."""
 
     code_map = {"0": "auto", "1": "on", "2": "off"}
 
@@ -49,20 +49,20 @@ class VideoProgMotion(CodeIntMap):
     value_offset = 50
 
 
-class VideoStreamSmootherModes(CodeDictStrMap):
-    """Video stream smoother modes."""
+class VideoStreamSmoother(CodeDictStrMap):
+    """Video stream smoother."""
 
     code_map = {"0": "off", "1": "on", "2": "auto"}
 
 
-class AdvancedVideoAdjustModes(CodeDictStrMap):
-    """Advanced video adjust modes."""
+class AdvancedVideoAdjust(CodeDictStrMap):
+    """Advanced video adjust."""
 
     code_map = {"0": "PDP", "1": "LCD", "2": "FPJ", "3": "professional", "4": "memory"}
 
 
-class VideoAspectModes(CodeDictStrMap):
-    """Video aspect modes."""
+class VideoAspect(CodeDictStrMap):
+    """Video aspect."""
 
     code_map = {"0": "passthrough", "1": "normal"}
 

@@ -37,14 +37,14 @@ from .parsers.system import (
     PanelLock,
 )
 from .parsers.video import (
-    AdvancedVideoAdjustModes,
-    VideoAspectModes,
+    AdvancedVideoAdjust,
+    VideoAspect,
     VideoInt08Map,
     VideoProgMotion,
     VideoInt66Map,
-    VideoPureCinemaModes,
-    VideoResolutionModes,
-    VideoStreamSmootherModes,
+    VideoPureCinema,
+    VideoResolution,
+    VideoStreamSmoother,
     VideoSuperResolution,
 )
 
@@ -254,22 +254,22 @@ PIONEER_COMMANDS = {
     },
     ## video
     "query_video_resolution": {Zone.Z1: ["?VTC", "VTC"]},
-    "set_video_resolution": {Zone.Z1: ["VTC", "VTC"], "args": [VideoResolutionModes]},
+    "set_video_resolution": {Zone.Z1: ["VTC", "VTC"], "args": [VideoResolution]},
     "query_video_converter": {Zone.Z1: ["?VTB", "VTB"]},
     "set_video_converter": {Zone.Z1: ["VTB", "VTB"], "args": [CodeBoolMap]},
     "query_video_pure_cinema": {Zone.Z1: ["?VTD", "VTD"]},
-    "set_video_pure_cinema": {Zone.Z1: ["VTD", "VTD"], "args": [VideoPureCinemaModes]},
+    "set_video_pure_cinema": {Zone.Z1: ["VTD", "VTD"], "args": [VideoPureCinema]},
     "query_video_prog_motion": {Zone.Z1: ["?VTE", "VTE"]},
     "set_video_prog_motion": {Zone.Z1: ["VTE", "VTE"], "args": [VideoProgMotion]},
     "query_video_stream_smoother": {Zone.Z1: ["?VTF", "VTF"]},
     "set_video_stream_smoother": {
         Zone.Z1: ["VTF", "VTF"],
-        "args": [VideoStreamSmootherModes],
+        "args": [VideoStreamSmoother],
     },
     "query_video_advanced_video_adjust": {Zone.Z1: ["?VTG", "VTG"]},
     "set_video_advanced_video_adjust": {
         Zone.Z1: ["VTG", "VTG"],
-        "args": [AdvancedVideoAdjustModes],
+        "args": [AdvancedVideoAdjust],
     },
     "query_video_ynr": {Zone.Z1: ["?VTH", "VTH"]},
     "set_video_ynr": {Zone.Z1: ["VTH", "VTH"], "args": [VideoInt08Map]},
@@ -294,7 +294,7 @@ PIONEER_COMMANDS = {
     "query_video_black_setup": {Zone.Z1: ["?VTR", "VTR"]},
     "set_video_black_setup": {Zone.Z1: ["VTR", "VTR"], "args": [CodeBoolMap]},
     "query_video_aspect": {Zone.Z1: ["?VTS", "VTS"]},
-    "set_video_aspect": {Zone.Z1: ["VTS", "VTS"], "args": [VideoAspectModes]},
+    "set_video_aspect": {Zone.Z1: ["VTS", "VTS"], "args": [VideoAspect]},
     "query_video_super_resolution": {Zone.Z1: ["?VTT", "VTT"]},
     "set_video_super_resolution": {
         Zone.Z1: ["VTT", "VTT"],

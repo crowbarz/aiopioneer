@@ -64,11 +64,11 @@ from .video import (
     VideoInt08Map,
     VideoProgMotion,
     VideoInt66Map,
-    VideoResolutionModes,
-    VideoPureCinemaModes,
-    VideoStreamSmootherModes,
-    AdvancedVideoAdjustModes,
-    VideoAspectModes,
+    VideoResolution,
+    VideoPureCinema,
+    VideoStreamSmoother,
+    AdvancedVideoAdjust,
+    VideoAspect,
     VideoSuperResolution,
 )
 
@@ -201,12 +201,12 @@ RESPONSE_DATA = [
     ["VST", InformationParsers.video_information, Zone.ALL],
     ["FL", DisplayText, Zone.ALL, "amp", "display"],
     ## video
-    ["VTC", VideoResolutionModes, Zone.Z1, "video", "resolution"],
+    ["VTC", VideoResolution, Zone.Z1, "video", "resolution"],
     ["VTB", CodeBoolMap, Zone.Z1, "video", "converter"],
-    ["VTD", VideoPureCinemaModes, Zone.Z1, "video", "pure_cinema"],
+    ["VTD", VideoPureCinema, Zone.Z1, "video", "pure_cinema"],
     ["VTE", VideoProgMotion, Zone.Z1, "video", "prog_motion"],
-    ["VTF", VideoStreamSmootherModes, Zone.Z1, "video", "stream_smoother"],
-    ["VTG", AdvancedVideoAdjustModes, Zone.Z1, "video", "advanced_video_adjust"],
+    ["VTF", VideoStreamSmoother, Zone.Z1, "video", "stream_smoother"],
+    ["VTG", AdvancedVideoAdjust, Zone.Z1, "video", "advanced_video_adjust"],
     ["VTH", VideoInt08Map, Zone.Z1, "video", "ynr"],
     ["VTI", VideoInt08Map, Zone.Z1, "video", "cnr"],
     ["VTJ", VideoInt08Map, Zone.Z1, "video", "bnr"],
@@ -218,7 +218,7 @@ RESPONSE_DATA = [
     ["VTP", VideoInt66Map, Zone.Z1, "video", "hue"],
     ["VTQ", VideoInt66Map, Zone.Z1, "video", "chroma"],
     ["VTR", CodeBoolMap, Zone.Z1, "video", "black_setup"],
-    ["VTS", VideoAspectModes, Zone.Z1, "video", "aspect"],
+    ["VTS", VideoAspect, Zone.Z1, "video", "aspect"],
     ["VTT", VideoSuperResolution, Zone.Z1, "video", "super_resolution"],
 ]
 
