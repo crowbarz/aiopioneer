@@ -107,8 +107,8 @@ class VideoSignalInputTerminal(CodeDictStrMap):
     }
 
 
-class VideoSignalFormats(CodeDictStrMap):
-    """Video signal formats."""
+class VideoSignalFormat(CodeDictStrMap):
+    """Video signal format."""
 
     code_map = {
         CodeDefault(): None,
@@ -334,19 +334,19 @@ class InformationParsers:
         parsed = []
         for property_name, value in {
             "signal_input_terminal": VideoSignalInputTerminal[raw[0]],
-            "signal_input_resolution": VideoSignalFormats[raw[1:3]],
+            "signal_input_resolution": VideoSignalFormat[raw[1:3]],
             "signal_input_aspect": VideoSignalAspect[raw[3]],
             "signal_input_color_format": VideoSignalColorspace[raw[4]],
             "signal_input_bit": VideoSignalBits[raw[5]],
             "signal_input_extended_colorspace": VideoSignalExtColorspace[raw[6]],
-            "signal_output_resolution": VideoSignalFormats[raw[7:9]],
+            "signal_output_resolution": VideoSignalFormat[raw[7:9]],
             "signal_output_aspect": VideoSignalAspect[raw[9]],
             "signal_output_color_format": VideoSignalColorspace[raw[10]],
             "signal_output_bit": VideoSignalBits[raw[11]],
             "signal_output_extended_colorspace": VideoSignalExtColorspace[raw[12]],
-            "signal_hdmi1_recommended_resolution": VideoSignalFormats[raw[13:15]],
+            "signal_hdmi1_recommended_resolution": VideoSignalFormat[raw[13:15]],
             "signal_hdmi1_deepcolor": VideoSignalBits[raw[15]],
-            "signal_hdmi2_recommended_resolution": VideoSignalFormats[raw[21:23]],
+            "signal_hdmi2_recommended_resolution": VideoSignalFormat[raw[21:23]],
             "signal_hdmi2_deepcolor": VideoSignalBits[raw[23]],
         }.items():
             parsed.append(video_response(property_name, value))
@@ -354,11 +354,11 @@ class InformationParsers:
         ## FY11 AVRs only return 25 data values
         if len(raw) > 40:
             for property_name, value in {
-                "signal_hdmi3_recommended_resolution": VideoSignalFormats[raw[29:31]],
+                "signal_hdmi3_recommended_resolution": VideoSignalFormat[raw[29:31]],
                 "signal_hdmi3_deepcolor": VideoSignalBits[raw[31]],
                 "input_3d_format": VideoSignal3DMode[raw[37:39]],
                 "output_3d_format": VideoSignal3DMode[raw[39:41]],
-                "signal_hdmi4_recommended_resolution": VideoSignalFormats[raw[41:43]],
+                "signal_hdmi4_recommended_resolution": VideoSignalFormat[raw[41:43]],
                 "signal_hdmi4_deepcolor": VideoSignalBits[raw[44]],
             }.items():
                 parsed.append(video_response(property_name, value))

@@ -7,13 +7,13 @@ from .response import Response
 
 
 class ToneMode(CodeDictStrMap):
-    """Tone modes."""
+    """Tone mode."""
 
     code_map = {"0": "bypass", "1": "on"}
 
 
 class ToneDb(CodeIntMap):
-    """Tone dB values."""
+    """Tone dB."""
 
     value_min = -6
     value_max = 6

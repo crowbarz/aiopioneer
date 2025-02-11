@@ -24,32 +24,32 @@ class SpeakerMode(CodeDictStrMap):
 
 
 class HdmiOut(CodeDictStrMap):
-    """HDMI out mode."""
+    """HDMI out."""
 
     code_map = {"0": "all", "1": "HDMI 1", "2": "HDMI 2"}
 
 
 class Hdmi3Out(CodeBoolMap):
-    """HDMI3 out mode."""
+    """HDMI3 out."""
 
     code_true = "1"
     code_false = "3"
 
 
 class HdmiAudio(CodeDictStrMap):
-    """HDMI audio mode."""
+    """HDMI audio."""
 
     code_map = {"0": "amp", "1": "passthrough"}
 
 
 class Pqls(CodeDictStrMap):
-    """PQLS mode."""
+    """PQLS."""
 
     code_map = {"0": "off", "1": "auto"}
 
 
 class Dimmer(CodeDictStrMap):
-    """Dimmer mode."""
+    """Dimmer."""
 
     code_map = {
         "0": "brightest",
@@ -60,7 +60,7 @@ class Dimmer(CodeDictStrMap):
 
 
 class SleepTime(CodeIntMap):
-    """Sleep time."""
+    """Sleep time remaining."""
 
     value_min = 0
     value_max = 90
@@ -69,7 +69,7 @@ class SleepTime(CodeIntMap):
 
 
 class AmpStatus(CodeDictStrMap):
-    """AMP mode."""
+    """AMP status."""
 
     code_map = {
         "0": "amp on",
@@ -80,7 +80,7 @@ class AmpStatus(CodeDictStrMap):
 
 
 class PanelLock(CodeDictStrMap):
-    """Panel lock settings."""
+    """Panel lock."""
 
     code_map = {"0": "off", "1": "panel only", "2": "panel + volume"}
 

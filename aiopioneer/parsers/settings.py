@@ -125,7 +125,7 @@ class McaccMeasurementStatus(CodeDictStrMap):
 
 
 class StandingWaveFrequencies(CodeDictStrMap):
-    """Standing Wave Frequencies."""
+    """Standing wave frequencies."""
 
     code_map = {
         "00": "63Hz",
