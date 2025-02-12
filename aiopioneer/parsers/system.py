@@ -68,7 +68,7 @@ class SleepTime(CodeIntMap):
     code_zfill = 3
 
 
-class AmpStatus(CodeDictStrMap):
+class AmpMode(CodeDictStrMap):
     """AMP status."""
 
     code_map = {

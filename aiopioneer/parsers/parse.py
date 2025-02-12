@@ -56,7 +56,7 @@ from .system import (
     HdmiAudio,
     Pqls,
     Dimmer,
-    AmpStatus,
+    AmpMode,
     PanelLock,
 )
 from .tuner import TunerParsers
@@ -99,7 +99,7 @@ RESPONSE_DATA = [
     ["PQ", Pqls, Zone.ALL, "amp", "pqls"],
     ["SAA", Dimmer, Zone.ALL, "amp", "dimmer"],
     ["SAB", CodeIntMap, Zone.ALL, "amp", "sleep_time"],
-    ["SAC", AmpStatus, Zone.ALL, "amp", "status"],
+    ["SAC", AmpMode, Zone.ALL, "amp", "mode"],
     ["PKL", PanelLock, Zone.ALL, "amp", "panel_lock"],
     ["RML", CodeBoolMap, Zone.ALL, "amp", "remote_lock"],
     ["SSF", SystemParsers.speaker_system, Zone.ALL],

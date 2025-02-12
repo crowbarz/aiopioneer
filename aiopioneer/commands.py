@@ -33,7 +33,7 @@ from .parsers.system import (
     Pqls,
     Dimmer,
     SleepTime,
-    AmpStatus,
+    AmpMode,
     PanelLock,
 )
 from .parsers.video import (
@@ -145,7 +145,7 @@ PIONEER_COMMANDS = {
     "query_amp_sleep_time": {Zone.Z1: ["?SAB", "SAB"]},
     "set_amp_sleep_time": {Zone.Z1: ["SAB", "SAB"], "args": [SleepTime]},
     "query_amp_mode": {Zone.Z1: ["?SAC", "SAC"]},
-    "set_amp_mode": {Zone.Z1: ["SAC", "SAC"], "args": [AmpStatus]},
+    "set_amp_mode": {Zone.Z1: ["SAC", "SAC"], "args": [AmpMode]},
     "query_amp_panel_lock": {Zone.Z1: ["?PKL", "PKL"]},
     "set_amp_panel_lock": {Zone.Z1: ["PKL", "PKL"], "args": [PanelLock]},
     "query_amp_remote_lock": {Zone.Z1: ["?RML", "RML"]},
