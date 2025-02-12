@@ -6,19 +6,19 @@ from .const import Zone
 class PioneerError(RuntimeError):
     """Generic Pioneer AVR exception."""
 
-    translation_key = None
+    base_err_key = None
 
     def __init__(self, msg: str = None, **kwargs):
         self.kwargs = kwargs
         if msg is None:
-            msg = self.format_err(ErrorFormatText, self.translation_key, **kwargs)
+            msg = self.format_err(ErrorFormatText, self.base_err_key, **kwargs)
         super().__init__(msg)
 
     @staticmethod
     def format_err(err_dict: dict[str, str], err_key: str, **kwargs):
         """Get error message and interpolate arguments."""
         try:
-            return err_dict[err_key].format(**kwargs)
+            return err_dict.get(err_key, err_key).format(**kwargs)
         except Exception as err_exc:  # pylint: disable=broad-except
             return f"exception generating error {err_key}: {repr(err_exc)}"
 
@@ -26,7 +26,7 @@ class PioneerError(RuntimeError):
 class AVRConnectionError(PioneerError):
     """Base class for AVR connection errors."""
 
-    translation_key = "avr_connection_error"
+    base_err_key = "avr_connection_error"
 
     def __init__(
         self, err: str = None, err_key: str = None, exc: Exception = None, **kwargs
@@ -42,7 +42,7 @@ class AVRConnectionError(PioneerError):
 class AVRConnectError(AVRConnectionError):
     """Error with AVR connection."""
 
-    translation_key = "avr_connect_error"
+    base_err_key = "avr_connect_error"
 
 
 class AVRConnectTimeoutError(AVRConnectError):
@@ -62,19 +62,19 @@ class AVRConnectProtocolError(AVRConnectError):
 class AVRDisconnectError(AVRConnectionError):
     """Error disconnecting from AVR."""
 
-    translation_key = "avr_disconnect_error"
+    base_err_key = "avr_disconnect_error"
 
 
 class AVRUnavailableError(AVRConnectionError):
     """AVR connection not available."""
 
-    translation_key = "avr_unavailable"
+    base_err_key = "avr_unavailable"
 
 
 class AVRUnknownCommandError(PioneerError):
     """Invalid AVR command requested."""
 
-    translation_key = "unknown_command"
+    base_err_key = "unknown_command"
 
     def __init__(self, command: str, zone: Zone, **kwargs):
         super().__init__(command=command, zone=zone, **kwargs)
@@ -83,7 +83,7 @@ class AVRUnknownCommandError(PioneerError):
 class AVRUnknownLocalCommandError(PioneerError):
     """Invalid local command requested."""
 
-    translation_key = "unknown_local_command"
+    base_err_key = "unknown_local_command"
 
     def __init__(self, command: str, **kwargs):
         super().__init__(command=command, **kwargs)
@@ -92,7 +92,7 @@ class AVRUnknownLocalCommandError(PioneerError):
 class AVRResponseTimeoutError(PioneerError):
     """Expected AVR response was not received."""
 
-    translation_key = "response_timeout"
+    base_err_key = "response_timeout"
 
     def __init__(self, command: str, **kwargs):
         super().__init__(command=command, **kwargs)
@@ -101,7 +101,7 @@ class AVRResponseTimeoutError(PioneerError):
 class AVRCommandError(PioneerError):
     """AVR command resulted in an error."""
 
-    translation_key = "command_error"
+    base_err_key = "command_error"
 
     def __init__(self, command: str, err: str = None, exc: Exception = None, **kwargs):
         if exc and err is None:
@@ -119,7 +119,7 @@ class AVRCommandResponseError(AVRCommandError):
 class AVRResponseParseError(PioneerError):
     """AVR response could not be parsed."""
 
-    translation_key = "response_parse_error"
+    base_err_key = "response_parse_error"
 
     def __init__(self, response: str, exc: Exception, **kwargs):
         super().__init__(response=response, err=repr(exc), exc=exc, **kwargs)
@@ -128,7 +128,7 @@ class AVRResponseParseError(PioneerError):
 class AVRLocalCommandError(AVRCommandError):
     """Local command resulted in an error."""
 
-    translation_key = "local_command_error"
+    base_err_key = "local_command_error"
 
     def __init__(
         self,
