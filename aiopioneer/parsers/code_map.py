@@ -75,7 +75,7 @@ class CodeDictMap(CodeMapBase):
         for k, v in cls.code_map.items():
             if cls.match(v, value):
                 return k
-        raise ValueError(f"Name {value} not found in {cls.__name__}")
+        raise ValueError(f"Value {value} not found in {cls.__name__}")
 
     @classmethod
     def code_to_value(cls, code: str) -> Any:
