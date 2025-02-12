@@ -942,14 +942,16 @@ class PioneerAVR(PioneerAVRConnection):
         async def set_video_setting(
             command: str, arg: str, value: Any, arg_code_map: CodeMapBase
         ) -> None:
+            code = arg_code_map(value)
             if arg == "resolution":
-                if value not in self.params.get_param(PARAM_VIDEO_RESOLUTION_MODES):
+                resolution_modes = self.params.get_param(PARAM_VIDEO_RESOLUTION_MODES)
+                if not resolution_modes or code not in resolution_modes:
                     raise AVRLocalCommandError(
                         command=command,
                         err_key="resolution_unavailable",
                         resolution=value,
                     )
-            await self.send_command(command, zone, prefix=arg_code_map(value))
+            await self.send_command(command, zone, prefix=code)
 
         for arg, value in arguments.items():
             if self.properties.video.get(arg) == value:
