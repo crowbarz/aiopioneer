@@ -1012,16 +1012,16 @@ class PioneerAVR(PioneerAVRConnection):
         or rewind.
         """
         zone = self._check_zone(zone)
-        media_commands = self.properties.media_control_mode.get(zone)
-        if media_commands is not None:
+        control_mode = self.properties.media_control_mode.get(zone)
+        if control_mode is None:
             raise AVRLocalCommandError(
                 command="media_control",
                 err_key="media_controls_not_supported",
                 source=self.properties.source_name.get(zone.value),
             )
 
-        command = MEDIA_CONTROL_COMMANDS.get(media_commands, {}).get(action)
-        if command is not None:
+        command = MEDIA_CONTROL_COMMANDS.get(control_mode, {}).get(action)
+        if command is None:
             raise AVRLocalCommandError(
                 command="media_control",
                 err_key="media_action_not_supported",
