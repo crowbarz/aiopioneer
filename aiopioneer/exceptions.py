@@ -156,24 +156,24 @@ class AVRTunerUnavailableError(AVRLocalCommandError):
 
 ErrorFormatText = {
     "avr_connection_error": "AVR connection error: {err}",
-    "avr_connect_error": "Unable to connect to AVR: {err}",
-    "avr_disconnect_error": "Error disconnect from AVR: {err}",
+    "avr_connect_error": "unable to connect to AVR: {err}",
+    "avr_disconnect_error": "error disconnect from AVR: {err}",
     "avr_unavailable": "AVR connection is not available",
-    "unknown_command": "Unknown AVR command {command} for zone {zone}",
-    "unknown_local_command": "Unknown command {command}",
+    "unknown_command": "unknown AVR command {command} for zone {zone}",
+    "unknown_local_command": "unknown command {command}",
     "response_timeout": "AVR command {command} timed out",
     "command_error": "AVR command {command} returned error: {err}",
-    "response_parse_error": "Exception parsing response: {response}: {err}",
-    "local_command_error": "Command {command} error: {err}",
+    "response_parse_error": "exception parsing response: {response}: {err}",
+    "local_command_error": "command {command} error: {err}",
 }
 
 LocalCommandErrorFormatText = {
     "tuner_unavailable": "AVR tuner is unavailable",
-    "tone_unavailable": "Tone controls not supported for {zone.full_name}",
-    "freq_step_calc_error": "Unable to calculate AM frequency step",
-    "freq_step_unknown": "Unknown AM tuner frequency step, parameter 'am_frequency_step' required",
-    "freq_step_max_exceeded": "Maximum tuner frequency step count exceeded",
-    "freq_set_failed": "Unable to set tuner frequency to {frequency}",
+    "tone_unavailable": "tone controls not supported for {zone.full_name}",
+    "freq_step_calc_error": "unable to calculate AM frequency step",
+    "freq_step_unknown": "unknown AM tuner frequency step, parameter 'am_frequency_step' required",
+    "freq_step_max_exceeded": "maximum tuner frequency step count exceeded",
+    "freq_set_failed": "unable to set tuner frequency to {frequency}",
     "channel_levels_unavailable": "channel levels not supported for {zone.full_name}",
     "video_settings_unavailable": "video settings not supported for {zone.full_name}",
     "dsp_settings_unavailable": "DSP settings not supported for {zone.full_name}",
@@ -181,15 +181,15 @@ LocalCommandErrorFormatText = {
     "hdmi_out_unavailable": "HDMI out configuration not supported",
     "hdmi3_out_unavailable": "HDMI3 out configuration not supported",
     "hdmi_audio_unavailable": "HDMI audio configuration not supported",
-    "media_controls_not_supported": "Media controls not supported on source {source}",
-    "media_action_not_supported": "Media action {action} not supported on source {source}",
-    "resolution_unavailable": "Resolution {resolution} unavailable",
+    "media_controls_not_supported": "media controls not supported on source {source}",
+    "media_action_not_supported": "media action {action} not supported on source {source}",
+    "resolution_unavailable": "resolution {resolution} unavailable",
 }
 
 ConnectErrorFormatText = {
-    "connect_timeout_error": "Connection timed out",
+    "connect_timeout_error": "connection timed out",
     "already_connected": "AVR is already connected",
     "already_connecting": "AVR is already connecting",
     "already_disconnecting": "AVR is already disconnecting",
-    "protocol_error": "Device not responding to Pioneer AVR protocol",
+    "protocol_error": "device not responding to Pioneer AVR protocol",
 }
