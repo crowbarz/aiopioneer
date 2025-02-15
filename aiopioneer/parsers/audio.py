@@ -1,8 +1,25 @@
 """aiopioneer response parsers for audio parameters."""
 
-from ..const import Zone, TONE_MODES, TONE_DB_VALUES
+from ..const import Zone
 from ..params import PioneerAVRParams, PARAM_ALL_LISTENING_MODES
+from .code_map import CodeDictStrMap, CodeIntMap
 from .response import Response
+
+
+class ToneMode(CodeDictStrMap):
+    """Tone mode."""
+
+    code_map = {"0": "bypass", "1": "on"}
+
+
+class ToneDb(CodeIntMap):
+    """Tone dB."""
+
+    value_min = -6
+    value_max = 6
+    value_divider = -1
+    value_offset = -6
+    code_zfill = 2
 
 
 class AudioParsers:
@@ -36,63 +53,6 @@ class AudioParsers:
                 property_name=None,
                 zone=zone,
                 value=raw,
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def tone(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="TO"
-    ) -> list[Response]:
-        """Response parser for tone mode."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="tone",
-                property_name="status",
-                zone=zone,
-                value=TONE_MODES.get(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def tone_bass(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="BA"
-    ) -> list[Response]:
-        """Response parser for tone bass setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="tone",
-                property_name="bass",
-                zone=zone,
-                value=TONE_DB_VALUES.get(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def tone_treble(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="TO"
-    ) -> list[Response]:
-        """Response parser for tone treble setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="tone",
-                property_name="treble",
-                zone=zone,
-                value=TONE_DB_VALUES.get(raw),
                 queue_commands=None,
             )
         )

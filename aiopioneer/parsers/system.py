@@ -5,13 +5,6 @@ import re
 from ..const import (
     SOURCE_TUNER,
     MEDIA_CONTROL_SOURCES,
-    SPEAKER_MODES,
-    HDMI_AUDIO_MODES,
-    HDMI_OUT_MODES,
-    PQLS_MODES,
-    AMP_MODES,
-    PANEL_LOCK,
-    DIMMER_MODES,
     Zone,
 )
 from ..params import (
@@ -20,7 +13,76 @@ from ..params import (
     PARAM_MHL_SOURCE,
     PARAM_SPEAKER_SYSTEM_MODES,
 )
+from .code_map import CodeBoolMap, CodeDictStrMap, CodeIntMap
 from .response import Response
+
+
+class SpeakerMode(CodeDictStrMap):
+    """Speaker mode."""
+
+    code_map = {"0": "off", "1": "A", "2": "B", "3": "A+B"}
+
+
+class HdmiOut(CodeDictStrMap):
+    """HDMI out."""
+
+    code_map = {"0": "all", "1": "HDMI 1", "2": "HDMI 2"}
+
+
+class Hdmi3Out(CodeBoolMap):
+    """HDMI3 out."""
+
+    code_true = "1"
+    code_false = "3"
+
+
+class HdmiAudio(CodeDictStrMap):
+    """HDMI audio."""
+
+    code_map = {"0": "amp", "1": "passthrough"}
+
+
+class Pqls(CodeDictStrMap):
+    """PQLS."""
+
+    code_map = {"0": "off", "1": "auto"}
+
+
+class Dimmer(CodeDictStrMap):
+    """Dimmer."""
+
+    code_map = {
+        "0": "brightest",
+        "1": "bright",
+        "2": "dark",
+        "3": "off",
+    }
+
+
+class SleepTime(CodeIntMap):
+    """Sleep time remaining."""
+
+    value_min = 0
+    value_max = 90
+    value_step = 30
+    code_zfill = 3
+
+
+class AmpMode(CodeDictStrMap):
+    """AMP status."""
+
+    code_map = {
+        "0": "amp on",
+        "1": "amp front off",
+        "2": "amp front & center off",
+        "3": "amp off",
+    }
+
+
+class PanelLock(CodeDictStrMap):
+    """Panel lock."""
+
+    code_map = {"0": "off", "1": "panel only", "2": "panel + volume"}
 
 
 class SystemParsers:
@@ -144,217 +206,6 @@ class SystemParsers:
                     queue_commands=None,
                 )
             )
-        return parsed
-
-    @staticmethod
-    def volume(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VOL"
-    ) -> list[Response]:
-        """Response parser for zone volume setting."""
-        raw = "".join(filter(str.isnumeric, raw))  # select only numeric values from raw
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="volume",
-                property_name=None,
-                zone=zone,
-                value=int(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def mute(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="MUT"
-    ) -> list[Response]:
-        """Response parser for zone mute status."""
-        raw = "".join(filter(str.isnumeric, raw))  # select only numeric values from raw
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="mute",
-                property_name=None,
-                zone=zone,
-                value=(raw == "0"),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def speaker_modes(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SPK"
-    ) -> list[Response]:
-        """Response parser for speaker mode. (Zone 1 only)"""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="amp",
-                property_name="speakers",
-                zone=zone,
-                value=SPEAKER_MODES.get(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def hdmi_out(
-        raw: str, _params: PioneerAVRParams, zone=None, command="HO"
-    ) -> list[Response]:
-        """Response parser for HDMI out setting. (Zone 1 only)"""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="amp",
-                property_name="hdmi_out",
-                zone=zone,
-                value=HDMI_OUT_MODES.get(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def hdmi_audio(
-        raw: str, _params: PioneerAVRParams, zone=None, command="HA"
-    ) -> list[Response]:
-        """Response parser for HDMI audio mode. (Zone 1 only)"""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="amp",
-                property_name="hdmi_audio",
-                zone=zone,
-                value=HDMI_AUDIO_MODES.get(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def pqls(
-        raw: str, _params: PioneerAVRParams, zone=None, command="PQ"
-    ) -> list[Response]:
-        """Response parser for PQLS mode. (Zone 1 only)"""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="amp",
-                property_name="pqls",
-                zone=zone,
-                value=PQLS_MODES.get(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def dimmer(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SAA"
-    ) -> list[Response]:
-        """Response parser for display dimmer. (Zone 1 only)"""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="amp",
-                property_name="dimmer",
-                zone=zone,
-                value=DIMMER_MODES.get(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def sleep(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SAB"
-    ) -> list[Response]:
-        """Response parser for sleep timer. (Zone 1 only)"""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="amp",
-                property_name="sleep",
-                zone=zone,
-                value=int(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def amp_status(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SAC"
-    ) -> list[Response]:
-        """Response parser for AMP status. (Zone 1 only)"""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="amp",
-                property_name="status",
-                zone=zone,
-                value=AMP_MODES.get(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def panel_lock(
-        raw: str, _params: PioneerAVRParams, zone=None, command="PKL"
-    ) -> list[Response]:
-        """Response parser for panel lock. (Zone 1 only)"""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="amp",
-                property_name="panel_lock",
-                zone=zone,
-                value=PANEL_LOCK.get(raw),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def remote_lock(
-        raw: str, _params: PioneerAVRParams, zone=None, command="RML"
-    ) -> list[Response]:
-        """Response parser for remote lock. (Zone 1 only)"""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="amp",
-                property_name="remote_lock",
-                zone=zone,
-                value=raw,
-                queue_commands=None,
-            )
-        )
         return parsed
 
     @staticmethod
