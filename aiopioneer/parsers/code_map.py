@@ -1,6 +1,9 @@
 """aiopioneer code map class."""
 
 from typing import Any, Tuple
+from .response import Response
+from ..params import PioneerAVRParams
+from ..properties import PioneerAVRProperties
 
 CODE_MAP_NDIGITS = 3
 CODE_MAP_EXP = pow(10, CODE_MAP_NDIGITS)
@@ -39,6 +42,17 @@ class CodeMapBase(dict):
     def match(cls, v, value):
         """Default value match function."""
         return v == value
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        properties: PioneerAVRProperties,  # pylint: disable=unused-argument
+    ) -> list[Response]:
+        """Parse a response."""
+        response.update(value=cls.code_to_value(response.raw))
+        return [response]
 
 
 class CodeBoolMap(CodeMapBase):

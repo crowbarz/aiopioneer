@@ -311,24 +311,24 @@ def process_raw_response(
         parse_cmd: str = match_resp[0]
         parse_func = match_resp[1]
         parse_zone: Zone = match_resp[2]
-        raw = raw_resp[len(parse_cmd) :]
+        code = raw_resp[len(parse_cmd) :]
         responses: list[Response] = []
         if isinstance(parse_func, FunctionType):
-            responses = parse_func(raw, params, zone=parse_zone, command=parse_cmd)
+            responses = parse_func(code, params, zone=parse_zone, command=parse_cmd)
         elif issubclass(parse_func, CodeMapBase):
-            responses = [
-                Response(
-                    raw=raw,
+            responses = parse_func.parse_response(
+                response=Response(
+                    raw=code,
                     response_command=parse_cmd,
-                    base_property=match_resp[3],
+                    base_property=match_resp[3] if len(match_resp) >= 4 else None,
                     property_name=match_resp[4] if len(match_resp) >= 5 else None,
                     zone=parse_zone,
-                    value=parse_func[raw],
-                    queue_commands=None,
-                )
-            ]
+                ),
+                params=params,
+                properties=properties,
+            )
         else:
-            raise RuntimeError(f"Invalid parser {parse_func} for response: {raw}")
+            raise RuntimeError(f"invalid parser {parse_func} for response: {code}")
     except Exception as exc:  # pylint: disable=broad-except
         raise AVRResponseParseError(response=raw_resp, exc=exc) from exc
 
