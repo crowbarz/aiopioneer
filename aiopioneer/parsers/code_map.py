@@ -19,7 +19,7 @@ class CodeDefault:
         return isinstance(value, CodeDefault)
 
 
-class CodeMapBase(dict):
+class CodeMapBase:
     """Map AVR codes to values."""
 
     def __new__(cls, value):
@@ -99,6 +99,21 @@ class CodeDictMap(CodeMapBase):
             return cls.code_map[CodeDefault()]
         raise ValueError(f"Key {code} not found in {cls.__name__}")
 
+    @classmethod
+    def keys(cls) -> list[str]:
+        """Return list of keys for code map."""
+        return cls.code_map.keys()
+
+    @classmethod
+    def values(cls) -> list[Any]:
+        """Return list of values for code map."""
+        return cls.code_map.values()
+
+    @classmethod
+    def items(cls) -> list[tuple[str, Any]]:
+        """Return list of items for code map."""
+        return cls.code_map.items()
+
 
 class CodeDictStrMap(CodeDictMap):
     """Map AVR codes to dict of str values."""
@@ -119,7 +134,17 @@ class CodeDictListMap(CodeDictMap):
     @classmethod
     def code_to_value(cls, code: str) -> Tuple[str, list]:
         value_list = super().code_to_value(code)
-        return value_list[0], value_list[1:]
+        return value_list[0]
+
+    @classmethod
+    def values(cls) -> list[Any]:
+        """Return list of first element of list items for code map."""
+        return [value_list[0] for value_list in cls.code_map.values()]
+
+    @classmethod
+    def items(cls) -> list[tuple[str, Any]]:
+        """Return list of first element of list items for code map."""
+        return [(key, value_list[0]) for key, value_list in cls.code_map.items()]
 
 
 class CodeFloatMap(CodeMapBase):
