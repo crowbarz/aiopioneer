@@ -49,7 +49,8 @@ from .settings import (
     StandbyPassthrough,
 )
 from .system import (
-    SystemParsers,
+    InputSource,
+    Power,
     SpeakerMode,
     HdmiOut,
     Hdmi3Out,
@@ -58,6 +59,13 @@ from .system import (
     Dimmer,
     AmpMode,
     PanelLock,
+    SpeakerSystem,
+    InputName,
+    SystemMacAddress,
+    SystemAvrModel,
+    SystemSoftwareVesion,
+    AudioParameterProhibition,
+    AudioParameterWorking,
 )
 from .tuner import TunerParsers
 from .video import (
@@ -76,14 +84,14 @@ _LOGGER = logging.getLogger(__name__)
 
 RESPONSE_DATA = [
     ## system
-    ["PWR", SystemParsers.power, Zone.Z1],
-    ["APR", SystemParsers.power, Zone.Z2],
-    ["BPR", SystemParsers.power, Zone.Z3],
-    ["ZEP", SystemParsers.power, Zone.HDZ],
-    ["FN", SystemParsers.input_source, Zone.Z1],
-    ["Z2F", SystemParsers.input_source, Zone.Z2],
-    ["Z3F", SystemParsers.input_source, Zone.Z3],
-    ["ZEA", SystemParsers.input_source, Zone.HDZ],
+    ["PWR", Power, Zone.Z1, "power"],
+    ["APR", Power, Zone.Z2, "power"],
+    ["BPR", Power, Zone.Z3, "power"],
+    ["ZEP", Power, Zone.HDZ, "power"],
+    ["FN", InputSource, Zone.Z1, "source_id"],
+    ["Z2F", InputSource, Zone.Z2, "source_id"],
+    ["Z3F", InputSource, Zone.Z3, "source_id"],
+    ["ZEA", InputSource, Zone.HDZ, "source_id"],
     ["VOL", CodeIntMap, Zone.Z1, "volume"],
     ["ZV", CodeIntMap, Zone.Z2, "volume"],
     ["YV", CodeIntMap, Zone.Z3, "volume"],
@@ -102,13 +110,13 @@ RESPONSE_DATA = [
     ["SAC", AmpMode, Zone.ALL, "amp", "mode"],
     ["PKL", PanelLock, Zone.ALL, "amp", "panel_lock"],
     ["RML", CodeBoolMap, Zone.ALL, "amp", "remote_lock"],
-    ["SSF", SystemParsers.speaker_system, Zone.ALL],
-    ["RGB", SystemParsers.input_name, Zone.ALL],
-    ["SVB", SystemParsers.mac_address, Zone.ALL],
-    ["RGD", SystemParsers.avr_model, Zone.ALL],
-    ["SSI", SystemParsers.software_version, Zone.ALL],
-    ["AUA", SystemParsers.audio_parameter_prohibitation, Zone.Z1],
-    ["AUB", SystemParsers.audio_parameter_working, Zone.Z1],
+    ["SSF", SpeakerSystem, Zone.ALL, "system", "speaker_system"],
+    ["RGB", InputName, Zone.ALL],
+    ["SVB", SystemMacAddress, Zone.ALL, "mac_addr"],
+    ["RGD", SystemAvrModel, Zone.ALL, "model"],
+    ["SSI", SystemSoftwareVesion, Zone.ALL, "software_version"],
+    ["AUA", AudioParameterProhibition, Zone.Z1],
+    ["AUB", AudioParameterWorking, Zone.Z1],
     ## settings
     ["SSL", CodeBoolMap, Zone.ALL, "system", "home_menu_status"],
     ["SSJ", SettingsParsers.mcacc_diagnostic_status, Zone.ALL],
@@ -233,12 +241,9 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
     if response.base_property.startswith("_"):
         match response.base_property:
             case "_clear_source_id":
+                _LOGGER.debug("clearing source %s", response.value)
                 properties.clear_source_id(response.value)
                 return
-            case "_get_source_name":
-                response.base_property = "source_name"
-                response.value = properties.get_source_name(response.value)
-
     current_base = current_value = getattr(properties, response.base_property)
     is_global = response.zone in [Zone.ALL, None]
     if response.property_name is None and not is_global:

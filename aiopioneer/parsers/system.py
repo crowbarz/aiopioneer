@@ -13,8 +13,76 @@ from ..params import (
     PARAM_MHL_SOURCE,
     PARAM_SPEAKER_SYSTEM_MODES,
 )
-from .code_map import CodeBoolMap, CodeDictStrMap, CodeIntMap
+from ..properties import PioneerAVRProperties
+from .code_map import (
+    CodeMapBase,
+    CodeBoolMap,
+    CodeInverseBoolMap,
+    CodeDictStrMap,
+    CodeIntMap,
+)
 from .response import Response
+
+
+class Power(CodeInverseBoolMap):
+    """Zone power status."""
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
+    ) -> list[Response]:
+        """Response parser for zone power status."""
+        super().parse_response(response, params, properties)
+        queue_commands = []
+        if response.value:
+            queue_commands.append(["_oob", "_power_on", response.zone])
+        else:
+            queue_commands.append(["_oob", "_delayed_query_basic", 2])
+
+        response.update(update_zones={Zone.ALL}, queue_commands=queue_commands)
+        return [response]
+
+
+class InputSource(CodeMapBase):
+    """Zone input source."""
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
+    ) -> list[Response]:
+        """Response parser for zone input source."""
+        super().parse_response(response, params, properties)
+        source = response.value
+        queue_commands = []
+        if source == SOURCE_TUNER:
+            queue_commands.extend(["query_tuner_frequency", "query_tuner_preset"])
+        queue_commands.append(["_oob", "_delayed_query_basic", 2])
+        if source in MEDIA_CONTROL_SOURCES:
+            media_control_mode = MEDIA_CONTROL_SOURCES.get(source)
+        elif source == params.get_param(PARAM_MHL_SOURCE):
+            media_control_mode = "MHL"
+        else:
+            media_control_mode = None
+
+        return [
+            response.clone(
+                base_property="source_name",
+                value=properties.get_source_name(response.value),
+                update_zones={Zone.ALL},
+            ),
+            response,
+            response.clone(
+                base_property="media_control_mode",
+                clear_value=True,
+                value=media_control_mode,
+            ),
+        ]
 
 
 class SpeakerMode(CodeDictStrMap):
@@ -85,329 +153,121 @@ class PanelLock(CodeDictStrMap):
     code_map = {"0": "off", "1": "panel only", "2": "panel + volume"}
 
 
-class SystemParsers:
-    """Core system parsers."""
+class SpeakerSystem(CodeDictStrMap):
+    """Speaker system."""
 
-    @staticmethod
-    def power(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="PWR"
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
     ) -> list[Response]:
-        """Response parser for zone power status."""
-        parsed = []
-        command_queue = []
-        if power_state := raw == "0":
-            command_queue.append(["_oob", "_power_on", zone])
-        else:
-            command_queue.append(["_oob", "_delayed_query_basic", 2])
+        """Response parser for speaker system."""
+        cls.code_map = params.get_param(PARAM_SPEAKER_SYSTEM_MODES, {})
+        super().parse_response(response, params, properties)
+        return [
+            response,
+            response.clone(property_name="speaker_system_raw", value=response.raw),
+        ]
 
-        parsed.extend(
-            [
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="power",
-                    property_name=None,
-                    zone=zone,
-                    value=power_state,
-                    queue_commands=command_queue,
-                ),
-                Response(  # also trigger global update
-                    raw=raw,
-                    response_command=command,
-                    base_property=None,
-                    property_name=None,
-                    zone=Zone.ALL,
-                    value=power_state,
-                    queue_commands=None,
-                ),
-            ]
-        )
-        return parsed
 
-    @staticmethod
-    def input_source(
-        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="FN"
+class InputName(CodeMapBase):
+    """Input name."""
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
     ) -> list[Response]:
-        """Response parser for current zone source input."""
-        raw = "".join(filter(str.isnumeric, raw))  # select only numeric values from raw
-        parsed = []
-        command_queue = []
-        if raw == SOURCE_TUNER:
-            command_queue.extend(["query_tuner_frequency", "query_tuner_preset"])
-        command_queue.append(["_oob", "_delayed_query_basic", 2])
+        """Response parser for input name."""
 
-        parsed.extend(
-            [
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="_get_source_name",
-                    property_name=None,
-                    zone=zone,
-                    value=raw,
-                    queue_commands=command_queue,
-                ),
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="source_id",
-                    property_name=None,
-                    zone=zone,
-                    value=raw,
-                    queue_commands=command_queue,
-                ),
-                Response(  # also trigger global update
-                    raw=raw,
-                    response_command=command,
-                    base_property=None,
-                    property_name=None,
-                    zone=Zone.ALL,
-                    value=raw,
-                    queue_commands=None,
-                ),
-            ]
-        )
-
-        ## Add a response for media_control_mode
-        if raw in MEDIA_CONTROL_SOURCES:
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="media_control_mode",
-                    property_name=None,
-                    zone=zone,
-                    value=MEDIA_CONTROL_SOURCES.get(raw),
-                    queue_commands=None,
-                )
-            )
-        elif raw is params.get_param(PARAM_MHL_SOURCE):
-            ## This source is a MHL source
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="media_control_mode",
-                    property_name=None,
-                    zone=zone,
-                    value="MHL",
-                    queue_commands=None,
-                )
-            )
-        else:
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="media_control_mode",
-                    property_name=None,
-                    zone=zone,
-                    value=None,
-                    queue_commands=None,
-                )
-            )
-        return parsed
-
-    @staticmethod
-    def speaker_system(
-        raw: str, params: PioneerAVRParams, zone=None, command="SSF"
-    ) -> list[Response]:
-        """Response parser for speaker system mode. (Zone 1 only)"""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="speaker_system",
-                zone=zone,
-                value=params.get_param(PARAM_SPEAKER_SYSTEM_MODES).get(raw),
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="speaker_system_raw",
-                zone=zone,
-                value=raw,
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def mac_address(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SVB"
-    ) -> list[Response]:
-        """Response parser for system MAC address."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="mac_addr",
-                property_name=None,
-                zone=zone,
-                value=":".join([raw[i : i + 2] for i in range(0, len(raw), 2)]),
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def software_version(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SSI"
-    ) -> list[Response]:
-        """Response parser for system software version."""
-        parsed = []
-        matches = re.search(r'"([^)]*)"', raw)
-        if matches:
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="software_version",
-                    property_name=None,
-                    zone=zone,
-                    value=matches.group(1),
-                    queue_commands=None,
-                )
-            )
-        else:
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="software_version",
-                    property_name=None,
-                    zone=zone,
-                    value="unknown",
-                    queue_commands=None,
-                )
-            )
-        return parsed
-
-    @staticmethod
-    def avr_model(
-        raw: str, _params: PioneerAVRParams, zone=None, command="RGD"
-    ) -> list[Response]:
-        """Response parser for AVR model."""
-        parsed = []
-        matches = re.search(r"<([^>/]{5,})(/.[^>]*)?>", raw)
-        if matches:
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="model",
-                    property_name=None,
-                    zone=zone,
-                    value=matches.group(1),
-                    queue_commands=None,
-                )
-            )
-        else:
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="model",
-                    property_name=None,
-                    zone=zone,
-                    value="unknown",
-                    queue_commands=None,
-                )
-            )
-        return parsed
-
-    @staticmethod
-    def input_name(
-        raw: str, params: PioneerAVRParams, zone=None, command="RGB"
-    ) -> list[Response]:
-        """Response parser for input friendly names."""
-        source_number = raw[:2]
-        source_name = raw[3:]
-
-        parsed = []
         if not params.get_param(PARAM_QUERY_SOURCES):
             ## Only update AVR source mappings if AVR sources are being queried
-            return parsed
-        ## Clear current source ID from source mappings via PioneerAVR.clear_source_id
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="_clear_source_id",
-                property_name=None,
-                zone=zone,
-                value=source_number,
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
+            return []
+
+        source_id = response.raw[:2]
+        source_name = response.raw[3:]
+        properties.clear_source_id(source_id)
+        return [
+            ## Clear source ID when Response is applied to avoid race condition
+            response.clone(base_property="_clear_source_id", value=source_id),
+            response.clone(
                 base_property="source_name_to_id",
                 property_name=source_name,
-                zone=zone,
-                value=source_number,
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
+                value=source_id,
+            ),
+            response.clone(
                 base_property="source_id_to_name",
-                property_name=source_number,
-                zone=zone,
+                property_name=source_id,
                 value=source_name,
-                queue_commands=None,
-            )
-        )
-        return parsed
+            ),
+        ]
 
-    ## The below responses are yet to be decoded properly due to little Pioneer documentation
-    @staticmethod
-    def audio_parameter_prohibitation(
-        raw: str, _params: PioneerAVRParams, zone=None, command="AUA"
-    ) -> list[Response]:
-        """Response parser for audio param prohibitation. (Zone 1 only)"""
-        parsed = []
-        command_queue = [["_delayed_query_basic", 2]]
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property=None,
-                property_name=None,
-                zone=zone,
-                value=None,
-                queue_commands=command_queue,
-            )
-        )
-        return parsed
 
-    @staticmethod
-    def audio_parameter_working(
-        raw: str, _params: PioneerAVRParams, zone=None, command="AUB"
+class SystemMacAddress(CodeMapBase):
+    """System MAC address."""
+
+    ## NOTE: value_to_code not implemented
+
+    @classmethod
+    def code_to_value(cls, code: str) -> str:
+        return ":".join([code[i : i + 2] for i in range(0, len(code), 2)])
+
+
+class SystemAvrModel(CodeMapBase):
+    """System AVR model."""
+
+    ## NOTE: value_to_code not implemented
+
+    @classmethod
+    def code_to_value(cls, code: str) -> str:
+        value = "unknown"
+        if matches := re.search(r"<([^>/]{5,})(/.[^>]*)?>", code):
+            value = matches.group(1)
+        return value
+
+
+class SystemSoftwareVesion(CodeMapBase):
+    """System software version."""
+
+    ## NOTE: value_to_code not implemented
+
+    @classmethod
+    def code_to_value(cls, code: str) -> str:
+        value = "unknown"
+        if matches := re.search(r'"([^)]*)"', code):
+            value = matches.group(1)
+        return value
+
+
+class AudioParameterProhibition(CodeMapBase):
+    """Audio parameter prohibition."""
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
     ) -> list[Response]:
-        """Response parser for audio param working. (Zone 1 only)"""
-        parsed = []
-        command_queue = [["_delayed_query_basic", 2]]
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property=None,
-                property_name=None,
-                zone=zone,
-                value=None,
-                queue_commands=command_queue,
-            )
-        )
-        return parsed
+        """Response parser for audio parameter prohibition."""
+        response.update(queue_commands=[["_delayed_query_basic", 2]])
+        return [response]
+
+
+class AudioParameterWorking(CodeMapBase):
+    """Audio parameter working."""
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
+    ) -> list[Response]:
+        """Response parser for audio parameter working."""
+        response.update(queue_commands=[["_delayed_query_basic", 2]])
+        return [response]
