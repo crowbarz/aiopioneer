@@ -1,9 +1,59 @@
 """aiopioneer response parsers for audio parameters."""
 
-from ..const import Zone
-from ..params import PioneerAVRParams, PARAM_ALL_LISTENING_MODES
-from .code_map import CodeDictStrMap, CodeIntMap
+from ..params import PioneerAVRParams
+from ..properties import PioneerAVRProperties
+from .code_map import CodeDictStrMap, CodeDictListMap, CodeIntMap, CodeFloatMap
 from .response import Response
+
+
+class ChannelLevel(CodeFloatMap):
+    """Channel level."""
+
+    value_min = -12
+    value_max = 12
+    value_divider = 0.5
+    value_offset = 25
+    code_zfill = 2
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
+    ) -> list[Response]:
+        """Response parser for channel level."""
+        code = response.raw[3:]
+        speaker = response.raw[:3].strip("_").upper()
+        response.update(raw=code, property_name=speaker)
+        super().parse_response(response, params, properties)
+        return [response]
+
+
+class ListeningMode(CodeDictListMap):
+    """Listening mode."""
+
+    ## code_map updated in _execute_local_command
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
+    ) -> list[Response]:
+        """Response parser for listening mode."""
+        super().parse_response(response, params, properties)
+        return [
+            response,
+            response.clone(base_property="listening_mode_raw", value=response.raw),
+        ]
+
+
+class AvailableListeningMode(CodeDictStrMap):
+    """Available listening mode."""
+
+    ## code_map updated in PioneerAVR.update_listening_modes
 
 
 class ToneMode(CodeDictStrMap):
@@ -20,62 +70,3 @@ class ToneDb(CodeIntMap):
     value_divider = -1
     value_offset = -6
     code_zfill = 2
-
-
-class AudioParsers:
-    """Audio response parsers."""
-
-    @staticmethod
-    def listening_mode(
-        raw: str, params: PioneerAVRParams, zone=Zone.Z1, command="SR"
-    ) -> list[Response]:
-        """Response parser for listening_mode. (Zone 1 only)"""
-        listening_mode = params.get_param(PARAM_ALL_LISTENING_MODES, {}).get(raw)
-        mode_name = listening_mode[0] if isinstance(listening_mode, list) else raw
-
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="listening_mode",
-                property_name=None,
-                zone=zone,
-                value=mode_name,
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="listening_mode_raw",
-                property_name=None,
-                zone=zone,
-                value=raw,
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def channel_levels(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="CLV"
-    ) -> list[Response]:
-        """Response parser for channel levels."""
-        value = float(int(raw[3:]) - 50) / 2
-        speaker = str(raw[:3]).strip("_").upper()
-
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="channel_levels",
-                property_name=speaker,
-                zone=zone,
-                value=value,
-                queue_commands=None,
-            )
-        )
-        return parsed

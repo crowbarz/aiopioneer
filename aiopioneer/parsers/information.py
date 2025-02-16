@@ -228,7 +228,9 @@ class InformationParsers:
     ) -> list[Response]:
         """Response parser for audio information."""
 
-        def audio_response(property_name: str, value: str) -> Response:
+        def audio_response(
+            property_name: str, value: str, queue_commands: list = None
+        ) -> Response:
             return Response(
                 raw=raw,
                 response_command=command,
@@ -236,7 +238,7 @@ class InformationParsers:
                 property_name=property_name,
                 zone=zone,
                 value=value,
-                queue_commands=None,
+                queue_commands=queue_commands,
             )
 
         def input_channel(channel: str, raw: str) -> Response:
@@ -307,9 +309,13 @@ class InformationParsers:
                 audio_response(property_name, value)
 
         ## Set multichannel value
+        input_multichannel = all([CodeBoolMap[r] for r in raw[4:7]])
+        ## TODO: update only if multichannel has changed from current value
         parsed.append(
             audio_response(
-                "input_multichannel", all([CodeBoolMap[r] for r in raw[4:7]])
+                "input_multichannel",
+                input_multichannel,
+                queue_commands=["_update_listening_modes"],
             )
         )
         return parsed

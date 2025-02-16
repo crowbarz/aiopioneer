@@ -175,6 +175,7 @@ LocalCommandErrorFormatText = {
     "freq_step_max_exceeded": "maximum tuner frequency step count exceeded",
     "freq_set_failed": "unable to set tuner frequency to {frequency}",
     "channel_levels_unavailable": "channel levels not supported for {zone.full_name}",
+    "channel_unavailable": "channel {channel} unavailable for {zone.full_name}",
     "video_settings_unavailable": "video settings not supported for {zone.full_name}",
     "dsp_settings_unavailable": "DSP settings not supported for {zone.full_name}",
     "speaker_mode_unavailable": "speaker configuration not supported",

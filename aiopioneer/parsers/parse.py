@@ -7,7 +7,7 @@ from ..const import Zone
 from ..exceptions import AVRResponseParseError
 from ..params import PioneerAVRParams
 from ..properties import PioneerAVRProperties
-from .audio import AudioParsers, ToneMode, ToneDb
+from .audio import ChannelLevel, ListeningMode, ToneMode, ToneDb
 from .code_map import (
     CodeMapBase,
     CodeBoolMap,
@@ -153,10 +153,10 @@ RESPONSE_DATA = [
     ["ADS", CodeBoolMap, Zone.ALL, "system", "additional_service"],
     ["SUT", CodeBoolMap, Zone.ALL, "system", "user_lock"],
     ## audio
-    ["CLV", AudioParsers.channel_levels, Zone.Z1],
-    ["ZGE", AudioParsers.channel_levels, Zone.Z2],
-    ["ZHE", AudioParsers.channel_levels, Zone.Z3],
-    ["SR", AudioParsers.listening_mode, Zone.ALL],
+    ["CLV", ChannelLevel, Zone.Z1, "channel_levels"],
+    ["ZGE", ChannelLevel, Zone.Z2, "channel_levels"],
+    ["ZHE", ChannelLevel, Zone.Z3, "channel_levels"],
+    ["SR", ListeningMode, Zone.ALL, "listening_mode"],
     ["TO", ToneMode, Zone.Z1, "tone", "status"],
     ["BA", ToneDb, Zone.Z1, "tone", "bass"],
     ["TR", ToneDb, Zone.Z1, "tone", "treble"],
@@ -242,8 +242,7 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
         match response.base_property:
             case "_clear_source_id":
                 _LOGGER.debug("clearing source %s", response.value)
-                properties.clear_source_id(response.value)
-                return
+                return properties.clear_source_id(response.value)
     current_base = current_value = getattr(properties, response.base_property)
     is_global = response.zone in [Zone.ALL, None]
     if response.property_name is None and not is_global:
@@ -255,8 +254,8 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
                 del current_base[response.zone]
             setattr(properties, response.base_property, current_base)
             _LOGGER.info(
-                "Zone %s: %s: %s -> %s (%s)",
-                response.zone,
+                "%s: %s: %s -> %s (%s)",
+                response.zone.full_name,
                 response.base_property,
                 current_value,
                 response.value,
@@ -274,8 +273,8 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
                 del current_base[response.zone][response.property_name]
             setattr(properties, response.base_property, current_base)
             _LOGGER.info(
-                "Zone %s: %s.%s: %s -> %s (%s)",
-                response.zone,
+                "%s: %s.%s: %s -> %s (%s)",
+                response.zone.full_name,
                 response.base_property,
                 response.property_name,
                 current_value,

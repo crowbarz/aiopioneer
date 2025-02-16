@@ -1,17 +1,23 @@
 """Pioneer AVR properties."""
 
 import copy
+import logging
 
 from typing import Any
 from types import MappingProxyType
 
-from .const import Zone, MEDIA_CONTROL_COMMANDS
+from .const import Zone, MEDIA_CONTROL_COMMANDS, LISTENING_MODES
 from .params import (
     PioneerAVRParams,
     PARAM_MODEL,
     PARAM_ZONE_SOURCES,
     PARAM_QUERY_SOURCES,
+    PARAM_DISABLED_LISTENING_MODES,
+    PARAM_ENABLED_LISTENING_MODES,
+    PARAM_EXTRA_LISTENING_MODES,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class PioneerAVRProperties:
@@ -31,8 +37,10 @@ class PioneerAVRProperties:
         self.mute: dict[Zone, bool] = {}
         self.source_id: dict[Zone, str] = {}
         self.source_name: dict[Zone, str] = {}
-        self.listening_mode = ""
-        self.listening_mode_raw = ""
+        self.listening_mode = None
+        self.listening_mode_raw = None
+        self.listening_modes_all: dict[str, list] = {}
+        self.available_listening_modes: dict[str, str] = {}
         self.media_control_mode: dict[Zone, str] = {}
         self.tone: dict[Zone, dict] = {}
         self.amp: dict[str | Zone, Any] = {}
@@ -125,3 +133,28 @@ class PioneerAVRProperties:
             )
         else:
             return None
+
+    def update_listening_modes(self) -> None:
+        """Update list of valid listening modes for current input source."""
+        self.listening_modes_all = LISTENING_MODES | self.params.get_param(
+            PARAM_EXTRA_LISTENING_MODES, {}
+        )
+        self.available_listening_modes = {}
+        disabled_modes = self.params.get_param(PARAM_DISABLED_LISTENING_MODES, [])
+        enabled_modes = self.params.get_param(PARAM_ENABLED_LISTENING_MODES, [])
+        available_mode_names = []
+        multichannel = self.audio.get("input_multichannel")
+
+        _LOGGER.debug("determining available listening modes")
+        for mode_id, mode_details in self.listening_modes_all.items():
+            if mode_id in disabled_modes or (
+                enabled_modes and mode_id not in enabled_modes
+            ):
+                continue
+            mode_name, mode_2ch, mode_multich = mode_details
+            if mode_name in available_mode_names:
+                _LOGGER.warning("ignored duplicate listening mode name: %s", mode_name)
+                continue
+            if (multichannel and mode_multich) or (not multichannel and mode_2ch):
+                self.available_listening_modes |= {mode_id: mode_name}
+            available_mode_names.append(mode_name)

@@ -7,9 +7,9 @@ import logging
 import re
 
 from collections import OrderedDict
-from typing import Any
+from typing import Any, Callable
 
-from .const import Zone, LISTENING_MODES
+from .const import Zone
 from .util import merge
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,12 +75,8 @@ PARAM_TUNER_AM_FREQ_STEP = "am_frequency_step"
 
 ## System params
 
-## List of all possible listening modes
 PARAM_QUERY_SOURCES = "query_sources"
 
-## List of listening modes available for selection on AVR
-PARAM_ALL_LISTENING_MODES = "all_listening_modes"
-PARAM_AVAILABLE_LISTENING_MODES = "available_listening_modes"
 
 ## Set of Zones that have completed initial refresh
 PARAM_ZONES_INITIAL_REFRESH = "zones_initial_refresh"
@@ -112,7 +108,6 @@ PARAM_ENABLED_FUNCTIONS_NO_VIDEO = [
 
 PARAM_DEFAULTS_SYSTEM = {
     PARAM_QUERY_SOURCES: None,
-    PARAM_AVAILABLE_LISTENING_MODES: None,
 }
 
 PARAM_DEFAULTS = {
@@ -686,6 +681,7 @@ class PioneerAVRParams:
         self._system_params = PARAM_DEFAULTS_SYSTEM
         self._user_params: dict[str, Any] = {}
         self._params: dict[str, Any] = {}
+        self._update_callbacks: list[Callable[[], None]] = []
         if model := params.get(PARAM_MODEL):
             self.set_default_params_model(model)
         self.set_user_params(params)
@@ -697,6 +693,10 @@ class PioneerAVRParams:
         return self.get_runtime_param(PARAM_ZONES_INITIAL_REFRESH, set())
 
     ## Parameter management functions
+    def register_update_callback(self, callback: Callable[[], None]) -> None:
+        """Set parameter update callback."""
+        self._update_callbacks.append(callback)
+
     def _update_params(self) -> None:
         """Set current parameters."""
         self._params = {}
@@ -709,6 +709,8 @@ class PioneerAVRParams:
             ## defer PARAM_TUNER_AM_FREQ_STEP to _user_params if specified
             del self._system_params[PARAM_TUNER_AM_FREQ_STEP]
         merge(self._params, self._system_params)
+        for callback in self._update_callbacks:
+            callback()
 
     def set_default_params_model(self, model: str) -> None:
         """Set default parameters based on device model."""
@@ -729,13 +731,11 @@ class PioneerAVRParams:
         _LOGGER.debug(">> PioneerAVR.set_user_params(%s)", params)
         self._user_params = copy.deepcopy(params) if params is not None else {}
         self._update_params()
-        self.update_listening_modes()
 
     def set_user_param(self, param: str, value: Any) -> None:
         """Set a user parameter."""
         self._user_params[param] = value
         self._update_params()
-        self.update_listening_modes()
 
     def set_runtime_param(self, param: str, value: Any) -> None:
         """Set a run-time parameter."""
@@ -765,31 +765,3 @@ class PioneerAVRParams:
     def get_runtime_param(self, param_name: str, default: Any = None) -> Any:
         """Get the value of the specified system parameter."""
         return self._system_params.get(param_name, default)
-
-    def update_listening_modes(self) -> None:
-        """Update list of valid listening modes for AVR."""
-        all_listening_modes = LISTENING_MODES | self._params.get(
-            PARAM_EXTRA_LISTENING_MODES, {}
-        )
-        disabled_listening_modes = self._params.get(PARAM_DISABLED_LISTENING_MODES)
-        enabled_listening_modes = self._params.get(PARAM_ENABLED_LISTENING_MODES)
-        available_listening_modes = {}
-        available_listening_mode_names = []
-
-        for mode_id, mode_details in all_listening_modes.items():
-            if mode_id in disabled_listening_modes or (
-                enabled_listening_modes and mode_id not in enabled_listening_modes
-            ):
-                pass
-            elif mode_details[0] in available_listening_mode_names:
-                _LOGGER.error(
-                    "ignored duplicate listening mode name: %s", mode_details[0]
-                )
-            else:
-                available_listening_modes |= {mode_id: mode_details}
-                available_listening_mode_names.append(mode_details[0])
-
-        _LOGGER.debug("determining available listening modes")
-        self._system_params[PARAM_ALL_LISTENING_MODES] = all_listening_modes
-        self._system_params[PARAM_AVAILABLE_LISTENING_MODES] = available_listening_modes
-        self._update_params()

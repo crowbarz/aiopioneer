@@ -22,7 +22,7 @@ from .const import (
     MIN_RESCAN_INTERVAL,
     SOURCE_TUNER,
     MEDIA_CONTROL_COMMANDS,
-    CHANNEL_LEVELS_OBJ,
+    CHANNELS_ALL,
 )
 from .exceptions import (
     PioneerError,
@@ -47,14 +47,19 @@ from .params import (
     PARAM_DEBUG_UPDATER,
     PARAM_DEBUG_COMMAND_QUEUE,
     PARAM_VIDEO_RESOLUTION_MODES,
-    PARAM_AVAILABLE_LISTENING_MODES,
     PARAM_ENABLED_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY,
     PARAM_TUNER_AM_FREQ_STEP,
     PARAM_QUERY_SOURCES,
     PARAM_ZONES_INITIAL_REFRESH,
 )
-from .parsers.audio import ToneDb, ToneMode
+from .parsers.audio import (
+    ChannelLevel,
+    ListeningMode,
+    AvailableListeningMode,
+    ToneDb,
+    ToneMode,
+)
 from .parsers.code_map import CodeMapBase
 from .parsers.parse import process_raw_response
 from .properties import PioneerAVRProperties
@@ -94,12 +99,16 @@ class PioneerAVR(PioneerAVRConnection):
         self._command_queue: list = []  # queue of commands to execute
         self._zone_callback = {}
 
+        # Register params update callbacks
+        self.params.register_update_callback(self.update_listening_modes)
+
     ## Connection/disconnection
     async def on_connect(self) -> None:
         """Start AVR tasks on connection."""
         await super().on_connect()
         if await self.query_device_model() is None:
             raise AVRConnectProtocolError
+        self.update_listening_modes()
         await self._updater_schedule()
         await asyncio.sleep(0)  # yield to updater task
 
@@ -181,28 +190,14 @@ class PioneerAVR(PioneerAVRConnection):
         if not self.properties.source_name_to_id:
             _LOGGER.warning("no input sources found on AVR")
 
-    def get_listening_modes(self) -> dict[str, str] | None:
-        """Return dict of valid listening modes and names for Zone 1."""
-        multichannel = self.properties.audio.get("input_multichannel")
-        listening_modes = self.params.get_param(PARAM_AVAILABLE_LISTENING_MODES, {})
-        zone_listening_modes = {}
-        for mode_id, mode_details in listening_modes.items():
-            if (multichannel and mode_details[2]) or (
-                not multichannel and mode_details[1]
-            ):
-                zone_listening_modes |= {mode_id: mode_details[0]}
-        return zone_listening_modes
-
     async def query_device_model(self) -> bool | None:
         """Query device model from Pioneer AVR."""
         if self.properties.model is not None:
-            return True
+            return self.properties.model
         _LOGGER.info("querying device model")
         if res := await self.send_command("query_model", ignore_error=True):
-            self.params.set_default_params_model(
-                self.properties.model
-            )  # Update default params for this model
-            self.params.update_listening_modes()  # Update valid listening modes
+            ## Update default params for this model
+            self.params.set_default_params_model(self.properties.model)
             return True
         elif res is False:
             _LOGGER.warning("AVR device model unavailable, no model parameters set")
@@ -351,11 +346,11 @@ class PioneerAVR(PioneerAVRConnection):
                     ## Channel level updates are handled differently as it
                     ## requires more complex logic to send the commands we use
                     ## the set_channel_levels command and prefix the query to it
-                    for k in CHANNEL_LEVELS_OBJ:
+                    for channel in CHANNELS_ALL:
                         await self.send_command(
                             comm,
                             zone,
-                            prefix="?" + k.ljust(3, "_"),
+                            prefix="?" + channel.ljust(3, "_"),
                             ignore_error=True,
                         )
 
@@ -450,6 +445,8 @@ class PioneerAVR(PioneerAVRConnection):
                         "query_basic_video_information",
                     ]:
                         await self.send_command(cmd, ignore_error=True)
+            case "_update_listening_modes":
+                self.update_listening_modes()
             case "_calculate_am_frequency_step":
                 await self._calculate_am_frequency_step()
             case "_sleep":
@@ -682,20 +679,25 @@ class PioneerAVR(PioneerAVRConnection):
         zone = self._check_zone(zone)
         await self.send_command("mute_off", zone)
 
+    def update_listening_modes(self) -> None:
+        """Update list of valid listening modes for current input source."""
+        self.properties.update_listening_modes()
+        ListeningMode.code_map = self.properties.listening_modes_all
+        AvailableListeningMode.code_map = self.properties.available_listening_modes
+
+    def get_listening_modes(self) -> dict[str, str] | None:
+        """Return dict of valid listening modes and names for Zone 1."""
+        return AvailableListeningMode.values()
+
     async def select_listening_mode(
         self, mode_name: str = None, mode_id: str = None
     ) -> None:
         """Set the listening mode using the predefined list of options in params."""
 
         if mode_name and mode_id is None:
-            listening_modes = self.get_listening_modes()
-            if listening_modes:
-                for mode_id_item, mode_name_item in listening_modes.items():
-                    if mode_name == mode_name_item:
-                        mode_id = mode_id_item
-                        break
-        if mode_id is None:
-            raise ValueError(f"listening mode {mode_name} not available")
+            mode_id = AvailableListeningMode(mode_name)
+        if mode_id not in self.properties.available_listening_modes:
+            raise ValueError(f"listening mode {mode_id} is not available")
         await self.send_command("set_listening_mode", prefix=mode_id)
 
     async def set_tone_settings(
@@ -912,18 +914,20 @@ class PioneerAVR(PioneerAVRConnection):
     ) -> None:
         """Set the level (gain) for amplifier channel in zone."""
         zone = self._check_zone(zone)
-        if self.properties.channel_levels.get(zone.value) is None:
+        if channel_levels := self.properties.channel_levels.get(zone) is None:
             raise AVRLocalCommandError(
                 command="set_channel_levels",
                 err_key="channel_levels_unavailable",
                 zone=zone,
             )
-
-        ## Check the channel exists
-        if self.properties.channel_levels[zone.value].get(channel.upper()) is None:
-            raise ValueError(f"invalid channel {channel} for {zone.full_name}")
-
-        prefix = channel.ljust(3, "_") + str(int((level * 2) + 50))
+        if channel_levels.get(channel) is None:
+            raise AVRLocalCommandError(
+                command="set_channel_levels",
+                err_key="channel_unavailable",
+                zone=zone,
+                channel=channel,
+            )
+        prefix = channel.ljust(3, "_") + ChannelLevel(level)
         await self.send_command("set_channel_levels", zone=zone, prefix=prefix)
 
     async def set_video_settings(self, zone: Zone, **arguments) -> None:
