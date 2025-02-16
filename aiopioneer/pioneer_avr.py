@@ -342,11 +342,13 @@ class PioneerAVR(PioneerAVRConnection):
                 if comm.startswith("query_") and comm.split("_")[
                     1
                 ] in self.params.get_param(PARAM_ENABLED_FUNCTIONS):
-                    await self.send_command(comm, zone, ignore_error=True)
+                    await self.send_command(
+                        comm, zone, ignore_error=True, rate_limit=False
+                    )
                 elif (
                     comm == "set_channel_levels"
                     and "channels" in self.params.get_param(PARAM_ENABLED_FUNCTIONS)
-                    and bool(self.properties.power.get(Zone.Z1))
+                    and self.properties.power.get(Zone.Z1)
                 ):
                     ## Channel level updates are handled differently as it
                     ## requires more complex logic to send the commands we use
@@ -357,6 +359,7 @@ class PioneerAVR(PioneerAVRConnection):
                             zone,
                             prefix="?" + k.ljust(3, "_"),
                             ignore_error=True,
+                            rate_limit=False,
                         )
 
     async def _refresh_zones(self, zones: set[Zone]) -> None:
