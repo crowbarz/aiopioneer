@@ -244,7 +244,10 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
     if response.property_name is None and not is_global:
         current_value = current_base.get(response.zone)
         if current_value != response.value:
-            current_base[response.zone] = response.value
+            if response.value is not None:
+                current_base[response.zone] = response.value
+            else:
+                del current_base[response.zone]
             setattr(properties, response.base_property, current_base)
             _LOGGER.info(
                 "Zone %s: %s: %s -> %s (%s)",
@@ -260,7 +263,10 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
         current_prop = current_base.get(response.zone)
         current_value = current_prop.get(response.property_name)
         if current_value != response.value:
-            current_base[response.zone][response.property_name] = response.value
+            if response.value is not None:
+                current_base[response.zone][response.property_name] = response.value
+            else:
+                del current_base[response.zone][response.property_name]
             setattr(properties, response.base_property, current_base)
             _LOGGER.info(
                 "Zone %s: %s.%s: %s -> %s (%s)",
@@ -284,7 +290,10 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
     else:  # response.property_name is not None and is_global:
         current_value = current_base.get(response.property_name)
         if current_value != response.value:
-            current_base[response.property_name] = response.value
+            if response.value is not None:
+                current_base[response.property_name] = response.value
+            else:
+                del current_base[response.property_name]
             setattr(properties, response.base_property, current_base)
             _LOGGER.info(
                 "Global: %s.%s: %s -> %s (%s)",
