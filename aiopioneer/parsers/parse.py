@@ -339,6 +339,8 @@ def process_raw_response(
         _process_response(properties, response)
         if response.zone is not None:
             updated_zones.add(response.zone)
+        if response.update_zones:
+            updated_zones |= response.update_zones
         if response.command_queue:
             command_queue.extend(response.command_queue)
 
