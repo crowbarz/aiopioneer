@@ -5,7 +5,6 @@ import copy
 from typing import Any
 from types import MappingProxyType
 
-from .commands import PIONEER_COMMANDS
 from .const import Zone, MEDIA_CONTROL_COMMANDS
 from .params import (
     PioneerAVRParams,
@@ -110,28 +109,6 @@ class PioneerAVRProperties:
             self.source_id_to_name.pop(source_id)
         if source_name in self.source_name_to_id:
             self.source_name_to_id.pop(source_name)
-
-    @property
-    def ipod_control_commands(self) -> list[str]:
-        """Return a list of all valid iPod control modes."""
-        return list(
-            [
-                k.replace("operation_ipod_", "")
-                for k in PIONEER_COMMANDS
-                if k.startswith("operation_ipod")
-            ]
-        )
-
-    @property
-    def tuner_control_commands(self) -> list[str]:
-        """Return a list of all valid tuner control commands."""
-        return list(
-            [
-                k.replace("operation_tuner_", "")
-                for k in PIONEER_COMMANDS
-                if k.startswith("operation_tuner")
-            ]
-        )
 
     def get_supported_media_controls(self, zone: Zone) -> list[str] | None:
         """Return a list of all valid media control actions for a given zone.
