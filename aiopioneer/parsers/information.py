@@ -3,7 +3,7 @@
 from ..const import Zone
 from ..params import PioneerAVRParams
 from .code_map import (
-    CodeMapBase,
+    CodeStrMap,
     CodeDefault,
     CodeBoolMap,
     CodeDictStrMap,
@@ -204,7 +204,7 @@ class VideoSignal3DMode(CodeDictStrMap):
     }
 
 
-class DisplayText(CodeMapBase):
+class DisplayText(CodeStrMap):
     """Display information."""
 
     ## NOTE: value_to_code not implemented

@@ -55,6 +55,18 @@ class CodeMapBase:
         return [response]
 
 
+class CodeStrMap(CodeMapBase):
+    """Map AVR codes to str values of fixed length."""
+
+    code_len = 0
+    code_fillchar = "_"
+
+    @classmethod
+    def value_to_code(cls, value: str) -> str:
+        if cls.code_len:
+            return value.ljust(cls.code_len, cls.code_fillchar)
+
+
 class CodeBoolMap(CodeMapBase):
     """Map AVR codes to bool values."""
 
@@ -148,9 +160,15 @@ class CodeDictListMap(CodeDictMap):
 
 
 class CodeFloatMap(CodeMapBase):
-    """Map AVR codes to float values."""
+    """
+    Map AVR codes to float values.
+
+    code = str(((value + value_offset) / value_divider) - code_offset)
+    value = ((int(code) + code_offset) * value_divider) - value_offset
+    """
 
     code_zfill: int = None
+    code_offset: float | int = 0
     value_min: float | int = None
     value_max: float | int = None  ## NOTE: value_min must be set if value_max is set
     value_step: float | int = 1
@@ -184,7 +202,12 @@ class CodeFloatMap(CodeMapBase):
     def value_to_code(cls, value) -> str:
         """Convert value to code."""
         return str(
-            int(round((value + cls.value_offset) / cls.value_divider, CODE_MAP_NDIGITS))
+            int(
+                round(
+                    (value + cls.value_offset) / cls.value_divider - cls.code_offset,
+                    CODE_MAP_NDIGITS,
+                )
+            )
         )
 
     ## NOTE: codes are not validated to value_min/value_max
@@ -192,7 +215,8 @@ class CodeFloatMap(CodeMapBase):
     @classmethod
     def code_to_value(cls, code: str) -> float:
         return round(
-            float(code) * cls.value_divider - cls.value_offset, CODE_MAP_NDIGITS
+            (int(code) + cls.code_offset) * cls.value_divider - cls.value_offset,
+            CODE_MAP_NDIGITS,
         )
 
 
