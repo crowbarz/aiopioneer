@@ -17,6 +17,7 @@ from ..properties import PioneerAVRProperties
 from .code_map import (
     CodeMapBase,
     CodeBoolMap,
+    CodeStrMap,
     CodeInverseBoolMap,
     CodeDictStrMap,
     CodeIntMap,
@@ -207,7 +208,7 @@ class InputName(CodeMapBase):
         ]
 
 
-class SystemMacAddress(CodeMapBase):
+class SystemMacAddress(CodeStrMap):
     """System MAC address."""
 
     ## NOTE: value_to_code not implemented
@@ -217,7 +218,7 @@ class SystemMacAddress(CodeMapBase):
         return ":".join([code[i : i + 2] for i in range(0, len(code), 2)])
 
 
-class SystemAvrModel(CodeMapBase):
+class SystemAvrModel(CodeStrMap):
     """System AVR model."""
 
     ## NOTE: value_to_code not implemented
@@ -230,7 +231,7 @@ class SystemAvrModel(CodeMapBase):
         return value
 
 
-class SystemSoftwareVesion(CodeMapBase):
+class SystemSoftwareVesion(CodeStrMap):
     """System software version."""
 
     ## NOTE: value_to_code not implemented
