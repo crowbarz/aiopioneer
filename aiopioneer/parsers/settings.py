@@ -1,131 +1,168 @@
 """aiopioneer response parsers for AVR settings."""
 
-from typing import Tuple
-
+from ..const import Zone
 from ..params import PioneerAVRParams
-from .code_map import CodeDefault, CodeDictMap, CodeDictStrMap, CodeFloatMap
+from ..properties import PioneerAVRProperties
+from .code_map import (
+    CodeDefault,
+    CodeMapBase,
+    CodeStrMap,
+    CodeDictMap,
+    CodeDictStrMap,
+    CodeIntMap,
+    CodeFloatMap,
+)
 from .response import Response
 
 
-class SurroundPosition(CodeDictStrMap):
-    """Surround position."""
+class McaccDiagnosticStatus(CodeMapBase):
+    """MCACC diagnostic status."""
 
-    code_map = {"0": "side", "1": "rear"}
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
+    ) -> list[Response]:
+        """Response parser for MCACC diagnostic status."""
+
+        def parse_sub(property_name: str, code: str, code_map: CodeMapBase) -> Response:
+            """Parse a sub response."""
+            sub_response = response.clone(property_name=property_name, raw=code)
+            code_map.parse_response(sub_response, params, properties)
+            return sub_response
+
+        super().parse_response(response, params, properties)
+        return [
+            parse_sub(
+                property_name="mcacc_diagnostic_current_measurement",
+                code=response.raw[:2],
+                code_map=McaccDiagnosticCurrentMeasurement,
+            ),
+            parse_sub(
+                property_name="mcacc_diagnostic_total_measurement",
+                code=response.raw[2:4],
+                code_map=McaccDiagnosticTotalMeasurement,
+            ),
+            parse_sub(
+                property_name="mcacc_diagnostic_status",
+                code=response.raw[5],
+                code_map=McaccMeasurementStatus,
+            ),
+            parse_sub(
+                property_name="mcacc_diagnostic_error",
+                code=response.raw[-1],
+                code_map=McaccMeasurementError,
+            ),
+        ]
 
 
-class XOver(CodeDictStrMap):
-    """X over."""
-
-    code_map = {"0": "50Hz", "1": "80Hz", "2": "100Hz", "3": "150Hz", "4": "200Hz"}
-
-
-class XCurve(CodeFloatMap):
-    """X curve (1step=0.5)"""
+class McaccDiagnosticCurrentMeasurement(CodeIntMap):
+    """MCACC diagnostic current measurement."""
 
     code_zfill = 2
 
-    @classmethod
-    def value_to_code(cls, value: float) -> str:
-        if value % 0.5:
-            raise ValueError(
-                f"Value {value} is not a multiple of 0.5 for {cls.__name__}"
-            )
-        return str(abs(int(value * 2)))
 
-    @classmethod
-    def code_to_value(cls, code: str) -> float:
-        return -(int(code) / 2)
+class McaccDiagnosticTotalMeasurement(CodeIntMap):
+    """MCACC diagnostic total measurement."""
+
+    code_zfill = 2
 
 
-class SbchProcessing(CodeDictStrMap):
-    """SBch processing (THX Audio)."""
+class McaccMeasurementStatus(CodeDictStrMap):
+    """MCACC measurement status."""
 
-    code_map = {"0": "auto", "1": "manual"}
-
-
-class OsdLanguage(CodeDictStrMap):
-    """OSD language."""
-
-    code_map = {
-        "00": "English",
-        "01": "French",
-        "03": "German",
-        "04": "Italian",
-        "05": "Spanish",
-        "06": "Dutch",
-        "07": "Russian",
-        "08": "Chinese (簡体)",
-        "09": "Chinese (繁体)",
-        "10": "Japanese",
-    }
-
-
-class StandbyPassthrough(CodeDictStrMap):
-    """Standby Passthrough."""
-
-    code_map = {
-        "00": "OFF",
-        "01": "LAST",
-        "02": "BD",
-        "03": "HDMI1",
-        "04": "HDMI2",
-        "05": "HDMI3",
-        "06": "HDMI4",
-        "07": "HDMI5",
-        "08": "HDMI6",
-        "09": "HDMI7",
-        "10": "HDMI8",
-    }
-
-
-class SpeakerSettings(CodeDictMap):
-    """Speaker settings."""
-
-    code_map = {
-        "05": {
-            "0": "small*2",
-            "1": "large*1",
-            "2": "large*2",
-            "3": "no",
-            "4": "small*1",
-        },
-        "06": {"0": "yes", "1": "plus", "2": "no"},
-        CodeDefault(): {"0": "small", "1": "large", "2": "off"},
-    }
-
-    ## NOTE: value_to_code unimplemented
-
-    @classmethod
-    def code_to_value(cls, code: str) -> Tuple[str, str]:
-        """Convert code to value."""
-        speaker = code[:2]
-        speaker_type = code[2]
-        value_map: dict[str, str] = super().code_to_value(speaker)
-        return speaker, value_map.get(speaker_type, speaker_type)
+    code_map = {"0": "inactive", "1": "measuring"}
 
 
 class McaccMeasurementError(CodeDictStrMap):
     """MCACC measurement error."""
 
     code_map = {
-        "0": "No error",
-        "1": "No microphone",
-        "2": "Ambient noise",
-        "3": "Microphone",
-        "4": "Unsupported connection",
-        "5": "Reverse phase",
-        "6": "Subwoofer level",
+        "0": "no error",
+        "1": "no microphone",
+        "2": "ambient noise",
+        "3": "microphone",
+        "4": "unsupported connection",
+        "5": "reverse phase",
+        "6": "subwoofer level",
     }
 
 
-class McaccMeasurementStatus(CodeDictStrMap):
-    """MCACC measurement status."""
+class StandingWaveStatus(CodeMapBase):
+    """Standing wave status."""
 
-    code_map = {"0": "Inactive", "1": "Measuring"}
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
+    ) -> list[Response]:
+        """Response parser for standing wave status."""
+
+        def parse_sub(property_name: str, code: str, code_map: CodeMapBase) -> Response:
+            """Parse a sub response."""
+            sub_response = response.clone(property_name=property_name, raw=code)
+            code_map.parse_response(sub_response, params, properties)
+            return sub_response
+
+        super().parse_response(response, params, properties)
+        return [
+            parse_sub(
+                property_name="standing_wave_memory",
+                code=response.raw[:2],
+                code_map=StandingWaveMemory,
+            ),
+            parse_sub(
+                property_name="standing_wave_filter_channel",
+                code=response.raw[2],
+                code_map=StandingWaveFilterChannel,
+            ),
+            parse_sub(
+                property_name="standing_wave_filter_number",
+                code=response.raw[3],
+                code_map=StandingWaveFilterNumber,
+            ),
+            parse_sub(
+                property_name="standing_wave_frequency",
+                code=response.raw[4:6],
+                code_map=StandingWaveFrequency,
+            ),
+            parse_sub(
+                property_name="standing_wave_q",
+                code=response.raw[6:8],
+                code_map=StandingWaveQ,
+            ),
+            parse_sub(
+                property_name="standing_wave_attenuator",
+                code=response.raw[8:10],  ## NOTE: assumed
+                code_map=StandingWaveAttenuator,
+            ),
+        ]
 
 
-class StandingWaveFrequencies(CodeDictStrMap):
-    """Standing wave frequencies."""
+class StandingWaveMemory(CodeStrMap):
+    """Standing wave memory."""
+
+    code_len = 2
+
+
+class StandingWaveFilterChannel(CodeStrMap):
+    """Standing wave filter channel."""
+
+    code_len = 1
+
+
+class StandingWaveFilterNumber(CodeStrMap):
+    """Standing wave filter number."""
+
+    code_len = 1
+
+
+class StandingWaveFrequency(CodeDictStrMap):
+    """Standing wave frequency."""
 
     code_map = {
         "00": "63Hz",
@@ -164,337 +201,268 @@ class StandingWaveFrequencies(CodeDictStrMap):
     }
 
 
-class ExternalHdmiTriggerOptions(CodeDictStrMap):
-    """External HDMI trigger options."""
+class StandingWaveQ(CodeFloatMap):
+    """Standing wave Q."""
+
+    code_zfill = 2
+    value_offset = -2
+    value_divider = 0.2
+    value_step = 0.2
+
+
+class StandingWaveAttenuator(CodeFloatMap):
+    """Standing wave attenuator."""
+
+    code_zfill = 2
+    value_divider = 0.5
+    value_step = 0.5
+
+
+class StandingWaveSwTrim(CodeFloatMap):
+    """Standing wave SW trim."""
+
+    code_zfill = 2
+    code_offset = -50
+    value_divider = 0.5
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
+    ) -> list[Response]:
+        """Response parser for Standing wave SW trim."""
+        mcacc_memory = response.raw[:2]
+        response.raw = response.raw[2:4]
+        response.property_name = f"standing_wave_sw_trim.{mcacc_memory}"
+        return super().parse_response(response, params, properties)
+
+    ## NOTE: value_to_code not implemented
+
+
+class SurroundPosition(CodeDictStrMap):
+    """Surround position."""
+
+    code_map = {"0": "side", "1": "rear"}
+
+
+class XOver(CodeDictStrMap):
+    """X over."""
+
+    code_map = {"0": "50Hz", "1": "80Hz", "2": "100Hz", "3": "150Hz", "4": "200Hz"}
+
+
+class XCurve(CodeFloatMap):
+    """X curve (1step=0.5)"""
+
+    code_zfill = 2
+    value_min = -49.5
+    value_max = 0
+    value_step = 0.5
+    value_divider = -0.5
+
+
+class SbchProcessing(CodeDictStrMap):
+    """SBch processing (THX Audio)."""
+
+    code_map = {"0": "auto", "1": "manual"}
+
+
+class SpeakerSettings(CodeDictMap):
+    """Speaker setting."""
 
     code_map = {
-        "0": "OFF",
-        "1": "HDMIOUT1",
-        "2": "HDMIOUT2",
-        "3": "HDMIOUT3",
-        "4": "HDMIOUT4/HDBaseT",
+        "05": {
+            "0": "small*2",
+            "1": "large*1",
+            "2": "large*2",
+            "3": "no",
+            "4": "small*1",
+        },
+        "06": {"0": "yes", "1": "plus", "2": "no"},
+        CodeDefault(): {"0": "small", "1": "large", "2": "off"},
+    }
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        properties: PioneerAVRProperties,  # pylint: disable=unused-argument
+    ) -> list[Response]:
+        """Response parser for speaker setting."""
+        speaker = response.raw[:2]
+        speaker_sub = response.raw[2]
+        response.value = cls.code_to_value(speaker).get(speaker_sub, speaker_sub)
+        response.property_name = f"speaker_setting.{speaker}"
+        return [response]
+
+    ## NOTE: value_to_code unimplemented
+
+
+class McaccChannelLevel(CodeFloatMap):
+    """MCACC channel level."""
+
+    code_offset = -50
+    value_divider = 0.5
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
+    ) -> list[Response]:
+        """Response parser for MCACC channel level."""
+        memory = response.raw[0:2]
+        speaker = response.raw[2:5].replace("_", "")
+        response.raw = response.raw[5:7]
+        response.property_name = f"mcacc_channel_level.{memory}.{speaker}"
+        return super().parse_response(response, params, properties)
+
+    ## NOTE: value_to_code unimplemented
+
+
+class McaccSpeakerDistance(CodeFloatMap):
+    """MCACC speaker distance."""
+
+    value_divider = 0.01
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        properties: PioneerAVRProperties,  # pylint: disable=unused-argument
+    ) -> list[Response]:
+        """Response parser for MCACC speaker distance."""
+        memory = response.raw[0:2]
+        speaker = response.raw[2:5].replace("_", "")
+        response.raw = response.raw[5:]
+        response.property_name = f"mcacc_speaker_distance.{memory}.{speaker}"
+        super().parse_response(response, params, properties)
+        unit = "m" if isinstance(response.value, float) else "ft"
+        return [
+            response,
+            response.clone(property_name=response.property_name + ".unit", value=unit),
+        ]
+
+    ## NOTE: value_to_code unimplemented
+
+    @classmethod
+    def code_to_value(cls, code: str) -> str | float:
+        unit_metric = code[0] == "1"
+        if unit_metric:
+            return super().code_to_value(code[1:])
+        value_ft = int(code[1:3])
+        value_in = int(code[3:5])
+        value_half_in = " 1/2" if code[5:7] == "12" else ""
+        return f"{value_ft}'.{value_in}{value_half_in}\""
+
+
+class InputLevelAdjust(CodeFloatMap):
+    """Input level adjust."""
+
+    code_offset = -50
+    value_divider = 0.5
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
+    ) -> list[Response]:
+        """Response parser for input level adjust."""
+        source = response.raw[0:2]
+        response.raw = response.raw[2:4]
+        response.property_name = f"input_level.{source}"
+        return super().parse_response(response, params, properties)
+
+    ## NOTE: value_to_code unimplemented
+
+
+class OsdLanguage(CodeDictStrMap):
+    """OSD language."""
+
+    code_map = {
+        "00": "English",
+        "01": "French",
+        "03": "German",
+        "04": "Italian",
+        "05": "Spanish",
+        "06": "Dutch",
+        "07": "Russian",
+        "08": "Chinese (簡体)",
+        "09": "Chinese (繁体)",
+        "10": "Japanese",
     }
 
 
-class SettingsParsers:
-    """AVR Setting related parsers."""
+class PortNumbers(CodeMapBase):
+    """Enabled TCP port numbers."""
 
-    @staticmethod
-    def mcacc_diagnostic_status(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SSJ"
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        properties: PioneerAVRProperties,  # pylint: disable=unused-argument
     ) -> list[Response]:
-        """Response parser for diagnostic information for MCACC."""
-        parsed = []
+        """Response parser for enabled TCP port numbers."""
 
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="mcacc_diagnostic_current_measurement",
-                zone=zone,
-                value=int(raw[:2]),
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="mcacc_diagnostic_total_measurement",
-                zone=zone,
-                value=int(raw[2:4]),
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="mcacc_diagnostic_status",
-                zone=zone,
-                value=McaccMeasurementStatus[raw[5]],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="mcacc_diagnostic_error",
-                zone=zone,
-                value=McaccMeasurementError[raw[len(raw) - 1]],
-                queue_commands=None,
-            )
-        )
-        return parsed
+        ports = [int(response.raw[i : i + 5]) for i in range(0, len(response.raw), 5)]
 
-    @staticmethod
-    def standing_wave_setting(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SUU"
+        def port_response(index: int) -> Response:
+            port = ports[index]
+            return response.clone(
+                property_name=f"ip_control_port_{index}",
+                value="disabled" if port == 99999 else port,
+            )
+
+        return [port_response(i) for i in range(len(ports))]
+
+    ## NOTE: value_to_code unimplemented
+
+
+class StandbyPassthrough(CodeDictStrMap):
+    """Standby Passthrough."""
+
+    code_map = {
+        "00": "off",
+        "01": "last",
+        "02": "BD",
+        "03": "HDMI1",
+        "04": "HDMI2",
+        "05": "HDMI3",
+        "06": "HDMI4",
+        "07": "HDMI5",
+        "08": "HDMI6",
+        "09": "HDMI7",
+        "10": "HDMI8",
+    }
+
+
+class ExternalHdmiTrigger(CodeDictStrMap):
+    """External HDMI trigger."""
+
+    code_map = {
+        "0": "off",
+        "1": "HDMI OUT 1",
+        "2": "HDMI OUT 2",
+        "3": "HDMI OUT 3",
+        "4": "HDMI OUT 4/HDBaseT",
+    }
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        properties: PioneerAVRProperties,  # pylint: disable=unused-argument
     ) -> list[Response]:
-        """Response parser for standing wave status."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="standing_wave_memory",
-                zone=zone,
-                value=raw[:2],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="standing_wave_filter_channel",
-                zone=zone,
-                value=raw[2],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="standing_wave_filter_number",
-                zone=zone,
-                value=raw[3],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="standing_wave_frequency",
-                zone=zone,
-                value=StandingWaveFrequencies[raw[4:6]],
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="standing_wave_q",
-                zone=zone,
-                value=2.0 + (int(raw[6:8]) * 0.2),
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="standing_wave_att",
-                zone=zone,
-                value=int(raw[6:8]) / 2,
-                queue_commands=None,
-            )
-        )
-        return parsed
+        """Response parser for 12V Trigger 1 (HDMI Setup)."""
 
-    @staticmethod
-    def standing_wave_sw_trim(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SUV"
-    ) -> list[Response]:
-        """Response parser for standing wave SW trim status."""
-        mcacc_memory = raw[:2]
-        value = (int(raw[2:4]) - 50) / 2
-
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name=f"standing_wave_sw_trim.{mcacc_memory}",
-                zone=zone,
-                value=value,
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def surround_position(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SSP"
-    ) -> list[Response]:
-        """Response parser for surround position setting."""
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name="surround_position",
-                zone=zone,
-                value="side" if (raw == "0") else "rear",
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def speaker_setting(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SSG"
-    ) -> list[Response]:
-        """Response parser for speaker setting."""
-        speaker, speaker_type = SpeakerSettings[raw]
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name=f"speaker_setting.{speaker}",
-                zone=zone,
-                value=speaker_type,
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def input_level_adjust(
-        raw: str, _params: PioneerAVRParams, zone=None, command="ILA"
-    ) -> list[Response]:
-        """Response parser for input level adjust setting."""
-        source = raw[0:2]
-        value = (int(raw[2:4]) - 50) / 2
-
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name=f"input_level.{source}",
-                zone=zone,
-                value=value,
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def channel_level_mcacc(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SSR"
-    ) -> list[Response]:
-        """Response parser for channel level for MCACC MEMORY setting."""
-        memory = raw[0:2]
-        speaker = raw[2:5].replace("_", "")
-        value = (int(raw[5:7]) - 50) / 2
-
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name=f"mcacc_channel_level.{memory}.{speaker}",
-                zone=zone,
-                value=value,
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def speaker_distance_mcacc(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SSS"
-    ) -> list[Response]:
-        """Response parser for speaker distance for MCACC MEMORY setting."""
-        memory = raw[0:2]
-        speaker = raw[2:5].replace("_", "")
-        unit = "m" if raw[5] == "1" else "ft"
-        value = float(raw[6 : len(raw)])
-
-        if unit == "m":
-            value = value / 100
-        else:
-            is_half = raw[10:12] == "12"
-            value = raw[6:8] + "’." + raw[8:10] + '"' + (" 1/2" if is_half else "")
-
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name=f"mcacc_speaker_distance.{memory}.{speaker}",
-                zone=zone,
-                value=value,
-                queue_commands=None,
-            )
-        )
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name=f"mcacc_speaker_distance.{memory}.{unit}",
-                zone=zone,
-                value=unit,
-                queue_commands=None,
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def port_numbers(
-        raw: str, _params: PioneerAVRParams, zone=None, command="SUM"
-    ) -> list[Response]:
-        """Response parser for TCP port numbers set for the AVR."""
-        ports = [raw[i : i + 2] for i in range(0, len(raw), 2)]
-        parsed = []
-        index = 1
-
-        for port in ports:
-            parsed.append(
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="system",
-                    property_name=f"ip_control_port_{index}",
-                    zone=zone,
-                    value="disabled" if port == "99999" else port,
-                    queue_commands=None,
-                )
-            )
-            index += 1
-
-        return parsed
-
-    @staticmethod
-    def external_hdmi_trigger(
-        raw: str, _params: PioneerAVRParams, zone=None, command="STV"
-    ) -> list[Response]:
-        """Response parser for 12V Trigger 1 (HDMI Setup) setting."""
-        trigger = "1" if command == "STV" else "2"
-
-        parsed = []
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="system",
-                property_name=f"external_hdmi_trigger_{trigger}",
-                zone=zone,
-                value=ExternalHdmiTriggerOptions[raw],
-                queue_commands=None,
-            )
-        )
-        return parsed
+        response.update_zones = {Zone.ALL}
+        return super().parse_response(response, params, properties)
