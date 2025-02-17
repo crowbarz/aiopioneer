@@ -7,10 +7,11 @@ from .response import Response
 
 
 class ChannelLevel(CodeFloatMap):
-    """Channel level."""
+    """Channel level. (1step=0.5dB)"""
 
     value_min = -12
     value_max = 12
+    value_step = 0.5
     value_divider = 0.5
     value_offset = 25
     code_zfill = 2
@@ -26,8 +27,7 @@ class ChannelLevel(CodeFloatMap):
         code = response.raw[3:]
         speaker = response.raw[:3].strip("_").upper()
         response.update(raw=code, property_name=speaker)
-        super().parse_response(response, params, properties)
-        return [response]
+        return super().parse_response(response, params, properties)
 
 
 class ListeningMode(CodeDictListMap):
