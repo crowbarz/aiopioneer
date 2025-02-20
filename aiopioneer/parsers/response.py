@@ -1,7 +1,9 @@
 """aiopioneer parsed response model."""
 
+from collections.abc import Callable
 from typing import Any, Self
 from ..const import Zone
+from ..properties import PioneerAVRProperties
 
 
 class Response:
@@ -11,12 +13,13 @@ class Response:
         self,
         raw: str,
         response_command: str,
-        base_property: str,
+        base_property: str = None,
         property_name: str = None,
         zone: Zone = None,
         update_zones: set[Zone] = None,
         value: Any = None,
         queue_commands: list = None,
+        callback: Callable[[PioneerAVRProperties, Self], list[Self]] = None,
     ):
         self.raw = raw
         self.response_command = response_command
@@ -26,6 +29,7 @@ class Response:
         self.update_zones = set() if update_zones is None else update_zones
         self.value = value
         self.command_queue = queue_commands
+        self.callback = callback
 
     def update(
         self,
@@ -37,6 +41,8 @@ class Response:
         update_zones: set[Zone] = None,
         value: Any = None,
         queue_commands: list = None,
+        callback: Callable[[PioneerAVRProperties, Self], list[Self]] = None,
+        clear_property: bool = False,
         clear_value: bool = False,
     ):
         """Update a Response with changed attributes."""
@@ -44,6 +50,9 @@ class Response:
             self.raw = raw
         if response_command is not None:
             self.response_command = response_command
+        if clear_property:
+            self.base_property = None
+            self.property_name = None
         if base_property is not None:
             self.base_property = base_property
         if property_name is not None:
@@ -54,8 +63,10 @@ class Response:
             self.update_zones = set() if update_zones is None else update_zones
         if clear_value:
             self.value = None
-        elif value is not None:
+        if value is not None:
             self.value = value
+        if callback is not None:
+            self.callback = callback
         if queue_commands is not None:
             self.command_queue = queue_commands
 
@@ -69,25 +80,26 @@ class Response:
         update_zones: set[Zone] = None,  ## NOTE: merged with existing
         value: Any = None,
         queue_commands: list = None,
-        clear_value: bool = False,
+        callback: Callable[[Any, Self], list[Self]] = None,
+        inherit_property: bool = True,
+        inherit_value: bool = True,
     ) -> Self:
         """Clone a Response with modified attributes."""
         if raw is None:
             raw = self.raw
         if response_command is None:
             response_command = self.response_command
-        if base_property is None:
+        if inherit_property and base_property is None:
             base_property = self.base_property
-        if property_name is None:
+        if inherit_property and property_name is None:
             property_name = self.property_name
         if zone is None:
             zone = self.zone
         if update_zones is None:
             update_zones = self.update_zones
-        if not clear_value and value is None:
+        if inherit_value and value is None:
             value = self.value
-        if queue_commands is None:
-            queue_commands = self.command_queue
+        ## NOTE: queue_commands and callback are not inherited by clone
         return Response(
             raw=raw,
             response_command=response_command,
@@ -96,4 +108,5 @@ class Response:
             zone=zone,
             value=value,
             queue_commands=queue_commands,
+            callback=callback,
         )

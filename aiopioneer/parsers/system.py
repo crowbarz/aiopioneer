@@ -80,7 +80,7 @@ class InputSource(CodeMapBase):
             response,
             response.clone(
                 base_property="media_control_mode",
-                clear_value=True,
+                inherit_value=False,
                 value=media_control_mode,
             ),
         ]
