@@ -702,12 +702,6 @@ class PioneerAVRParams:
         self._params = {}
         merge(self._params, self._default_params)
         merge(self._params, self._user_params, force_overwrite=True)
-        if (
-            self._params.get(PARAM_TUNER_AM_FREQ_STEP)
-            and PARAM_TUNER_AM_FREQ_STEP in self._system_params
-        ):
-            ## defer PARAM_TUNER_AM_FREQ_STEP to _user_params if specified
-            del self._system_params[PARAM_TUNER_AM_FREQ_STEP]
         merge(self._params, self._system_params)
         for callback in self._update_callbacks:
             callback()

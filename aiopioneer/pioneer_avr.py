@@ -4,7 +4,6 @@
 
 import asyncio
 import logging
-import math
 import time
 
 from collections.abc import Callable
@@ -49,7 +48,6 @@ from .params import (
     PARAM_VIDEO_RESOLUTION_MODES,
     PARAM_ENABLED_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY,
-    PARAM_TUNER_AM_FREQ_STEP,
     PARAM_QUERY_SOURCES,
     PARAM_ZONES_INITIAL_REFRESH,
 )
@@ -62,6 +60,7 @@ from .parsers.audio import (
 )
 from .parsers.code_map import CodeMapBase
 from .parsers.parse import process_raw_response
+from .parsers.tuner import FrequencyAM, FrequencyFM, Preset
 from .properties import PioneerAVRProperties
 from .util import cancel_task
 
@@ -792,66 +791,50 @@ class PioneerAVR(PioneerAVRConnection):
         if self.params.get_param(PARAM_DEBUG_COMMAND_QUEUE):
             _LOGGER.debug(">> PioneerAVR._calculate_am_frequency_step() ")
 
-        if self.params.get_param(PARAM_TUNER_AM_FREQ_STEP):
+        ## Skip if step was provided in params or has already been calculated
+        if self.properties.tuner.get("am_frequency_step"):
             return
 
-        ## Check that tuner is active and band is set to AM
-        if not (
-            SOURCE_TUNER in self.properties.source_id.values()
-            and self.properties.tuner.get("band") == "AM"
-        ):
-            raise AVRTunerUnavailableError(command="calculate_am_frequency_step")
-
-        ## Try sending the query_tuner_am_step command first.
-        await self.send_command(command="query_tuner_am_step", ignore_error=True)
-        if self.params.get_param(PARAM_TUNER_AM_FREQ_STEP):
+        ## Try sending the query_tuner_am_step command first
+        if await self.send_command(command="query_tuner_am_step", ignore_error=True):
             return
 
-        ## Step frequency once and calculate difference
-        current_freq = self.properties.tuner.get("frequency")
-        new_freq = current_freq
-        count = 3
-        while new_freq == current_freq and count > 0:
-            if not await self.send_command(
-                "increase_tuner_frequency", ignore_error=True
-            ):
-                break
-            new_freq = self.properties.tuner.get("frequency")
-            count -= 1
-        if new_freq == current_freq:
-            raise AVRLocalCommandError(
-                command="calculate_am_frequency_step", err_key="freq_step_calc_error"
-            )
+        ## Step frequency once and check whether difference was calculated
+        if await self.send_command("increase_tuner_frequency", ignore_error=True):
+            await self.send_command("decrease_tuner_frequency")
+            if self.properties.tuner.get("am_frequency_step"):
+                return
 
-        self.params.set_runtime_param(PARAM_TUNER_AM_FREQ_STEP, new_freq - current_freq)
-        await self.send_command("decrease_tuner_frequency")
+        raise AVRLocalCommandError(
+            command="calculate_am_frequency_step", err_key="freq_step_error"
+        )
 
     async def _step_tuner_frequency(self, band: str, frequency: float) -> None:
         """Step the tuner frequency until requested frequency is reached."""
         zone = Zone.Z1
         current_freq = self.properties.tuner.get("frequency")
         if band == "AM":
-            if (freq_step := self.params.get_param(PARAM_TUNER_AM_FREQ_STEP)) is None:
+            if not (
+                am_frequency_step := self.properties.tuner.get("am_frequency_step")
+            ):
                 raise AVRLocalCommandError(
                     command="step_tuner_frequency", err_key="freq_step_unknown"
                 )
-
-            # Divide frequency by freq_step using modf so that the remainder is
-            # split out, then select the whole number response and times by
-            # freq_step
-            # pylint: disable=unsubscriptable-object
-            target_freq = (math.modf(frequency / freq_step)[1]) * freq_step
+            target_freq = frequency // am_frequency_step * am_frequency_step
+            count = abs(frequency - current_freq) // am_frequency_step + 1
         else:
-            # Round the frequency to nearest 0.05
-            target_freq = 0.05 * round(frequency / 0.05)
+            target_freq = frequency * 1000 // 50 * 50 / 1000
+            count = abs(int(frequency * 1000) - int(current_freq * 1000)) // 50 + 1
 
-        # Continue adjusting until frequency is set
+        ## Continue adjusting until frequency is set
         rc = True
-        count = 100  ## Stop stepping after maximum steps
         if target_freq > current_freq:
             while current_freq < target_freq and count > 0 and rc:
                 rc = await self.send_command(
-                    "increase_tuner_frequency", zone, ignore_error=False
+                    "increase_tuner_frequency",
+                    zone,
+                    ignore_error=False,
+                    rate_limit=False,
                 )
                 if rc is None:  ## ignore timeouts
                     rc = True
@@ -860,7 +843,10 @@ class PioneerAVR(PioneerAVRConnection):
         elif target_freq < current_freq:
             while current_freq > target_freq and count > 0 and rc:
                 rc = await self.send_command(
-                    "decrease_tuner_frequency", zone, ignore_error=False
+                    "decrease_tuner_frequency",
+                    zone,
+                    ignore_error=False,
+                    rate_limit=False,
                 )
                 if rc is None:  ## ignore timeouts
                     rc = True
@@ -872,24 +858,25 @@ class PioneerAVR(PioneerAVRConnection):
                 command="step_tuner_frequency", err_key="freq_step_max_exceeded"
             )
 
-    async def set_tuner_frequency(self, band: TunerBand, frequency: float) -> None:
+    async def set_tuner_frequency(
+        self, band: TunerBand, frequency: float | int
+    ) -> None:
         """Set the tuner frequency and band."""
-        if not isinstance(frequency, float):
-            raise ValueError(f"invalid frequency {frequency}")
-        elif (band == TunerBand.AM and not 530 <= frequency <= 1700) or (
-            band == TunerBand.FM and not 87.5 <= frequency <= 108.0
-        ):
-            raise ValueError(f"frequency {frequency} out of range for band {band}")
-
         await self.select_tuner_band(band)
-        await self._command_queue_wait()  ## wait for AM step to be calculated
+        if band is TunerBand.AM and not self.properties.tuner.get("am_frequency_step"):
+            await self._command_queue_wait()  ## wait for AM step to be calculated
+
+        code = (
+            FrequencyAM(frequency) if band is TunerBand.AM else FrequencyFM(frequency)
+        )
 
         if await self.send_command("operation_direct_access", ignore_error=True):
             ## Set tuner frequency directly if command is supported
-            freq_str = str(int(frequency * (100 if band == TunerBand.FM else 1)))
             try:
-                for digit in freq_str:
-                    await self.send_command("operation_tuner_digit", prefix=digit)
+                for digit in code:
+                    await self.send_command(
+                        "operation_tuner_digit", prefix=digit, rate_limit=False
+                    )
             except AVRCommandError as exc:
                 raise AVRLocalCommandError(
                     command="set_tuner_frequency", err_key="freq_set_failed", exc=exc
@@ -897,11 +884,10 @@ class PioneerAVR(PioneerAVRConnection):
         else:
             await self._step_tuner_frequency(band=band, frequency=frequency)
 
-    async def select_tuner_preset(self, tuner_class: str, preset: int) -> None:
+    async def select_tuner_preset(self, tuner_class: str, tuner_preset: int) -> None:
         """Select the tuner preset."""
         await self.send_command(
-            "select_tuner_preset",
-            prefix=str(tuner_class).upper() + str(preset).upper().zfill(2),
+            "select_tuner_preset", prefix=Preset((tuner_class, tuner_preset))
         )
 
     async def tuner_previous_preset(self) -> None:

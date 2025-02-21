@@ -75,7 +75,7 @@ from .system import (
     AudioParameterProhibition,
     AudioParameterWorking,
 )
-from .tuner import TunerParsers
+from .tuner import FrequencyFM, FrequencyAM, Preset, FrequencyAMStep
 from .video import (
     VideoInt08Map,
     VideoProgMotion,
@@ -173,10 +173,10 @@ RESPONSE_DATA = [
     ["ZGB", ToneDb, Zone.Z2, "tone", "bass"],
     ["ZGC", ToneDb, Zone.Z2, "tone", "treble"],
     ## tuner
-    ["FRF", TunerParsers.frequency_fm, Zone.ALL],
-    ["FRA", TunerParsers.frequency_am, Zone.ALL],
-    ["PR", TunerParsers.preset, Zone.ALL],
-    ["SUQ", TunerParsers.am_frequency_step, Zone.ALL],
+    ["FRF", FrequencyFM, Zone.ALL, "tuner", "frequency"],
+    ["FRA", FrequencyAM, Zone.ALL, "tuner", "frequency"],
+    ["PR", Preset, Zone.ALL, "tuner", "preset"],
+    ["SUQ", FrequencyAMStep, Zone.ALL, "tuner", "am_frequency_step"],
     ## dsp
     ["MC", DspMcaccMemorySet, Zone.ALL, "dsp", "mcacc_memory_set"],
     ["IS", DspPhaseControl, Zone.ALL, "dsp", "phase_control"],

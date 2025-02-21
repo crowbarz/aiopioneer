@@ -170,7 +170,7 @@ ErrorFormatText = {
 LocalCommandErrorFormatText = {
     "tuner_unavailable": "AVR tuner is unavailable",
     "tone_unavailable": "tone controls not supported for {zone.full_name}",
-    "freq_step_calc_error": "unable to calculate AM frequency step",
+    "freq_step_error": "unable to calculate AM frequency step, parameter 'am_frequency_step' required",
     "freq_step_unknown": "unknown AM tuner frequency step, parameter 'am_frequency_step' required",
     "freq_step_max_exceeded": "maximum tuner frequency step count exceeded",
     "freq_set_failed": "unable to set tuner frequency to {frequency}",

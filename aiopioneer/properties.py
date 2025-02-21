@@ -15,6 +15,7 @@ from .params import (
     PARAM_DISABLED_LISTENING_MODES,
     PARAM_ENABLED_LISTENING_MODES,
     PARAM_EXTRA_LISTENING_MODES,
+    PARAM_TUNER_AM_FREQ_STEP,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,6 +46,8 @@ class PioneerAVRProperties:
         self.tone: dict[Zone, dict] = {}
         self.amp: dict[str | Zone, Any] = {}
         self.tuner: dict[str | Zone, Any] = {}
+        if am_frequency_step := self.params.get_param(PARAM_TUNER_AM_FREQ_STEP):
+            self.tuner["am_frequency_step"] = am_frequency_step
         self.dsp: dict[str | Zone, Any] = {}
         self.video: dict[str | Zone, Any] = {}
         self.system: dict[str | Zone, Any] = {}
@@ -65,7 +68,10 @@ class PioneerAVRProperties:
         self.listening_mode = ""
         self.listening_mode_raw = ""
         self.amp = {}
+        am_frequency_step = self.tuner.get("am_frequency_step")
         self.tuner = {}
+        if am_frequency_step:
+            self.tuner["am_frequency_step"] = am_frequency_step
         self.dsp = {}
         self.video = {}
         self.system = {}

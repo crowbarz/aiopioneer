@@ -1,214 +1,212 @@
 """aiopioneer response parsers for tuner parameters."""
 
-from ..const import Zone, TunerBand
-from ..params import PioneerAVRParams, PARAM_TUNER_AM_FREQ_STEP
+from ..const import TunerBand
+from ..params import PioneerAVRParams
+from ..properties import PioneerAVRProperties
+from .code_map import CodeMapBase, CodeIntMap, CodeFloatMap
 from .response import Response
 
 
-class TunerParsers:
-    """Tuner response parsers."""
+class FrequencyFM(CodeFloatMap):
+    """Tuner FM frequency."""
 
-    _ignore_preset = True  # ignore first preset response
-    _current_preset_raw: str = None  # current value of preset
-    _cached_preset_raw: str = None  # cached preset, update after tuner frequency update
-    _current_freq: float = None  # current frequency, clear preset when changed
+    value_min = 87.5
+    value_max = 108.0
+    value_step = 0.05
+    value_divider = 0.01
 
-    @staticmethod
-    def frequency_fm(
-        raw: str, params: PioneerAVRParams, zone=Zone.ALL, command="FR"
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
     ) -> list[Response]:
-        """Response parser for FM tuner frequency."""
-        new_freq = float(raw) / 100
-        current_freq = TunerParsers._current_freq
-        parsed = []
-        parsed.extend(
-            [
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="tuner",
-                    property_name="band",
-                    zone=zone,
-                    value=TunerBand.FM,
-                    queue_commands=None,
-                ),
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="tuner",
-                    property_name="frequency",
-                    zone=zone,
-                    value=new_freq,
-                    queue_commands=None,
-                ),
-            ]
-        )
-        if TunerParsers._cached_preset_raw:
-            parsed.extend(TunerParsers._update_preset(params, zone))
-        elif current_freq != new_freq:
-            parsed.extend(TunerParsers._clear_preset(params, zone))
-        TunerParsers._current_freq = new_freq
-        return parsed
+        """Response parser for tuner FM frequency."""
+        super().parse_response(response, params, properties)
+        return [
+            response.clone(property_name="band", value=TunerBand.FM),
+            *Preset.update_preset(response),
+            response,
+        ]
 
-    @staticmethod
-    def frequency_am(
-        raw: str, params: PioneerAVRParams, zone=Zone.ALL, command="FR"
+
+class FrequencyAM(CodeIntMap):
+    """Tuner AM frequency."""
+
+    value_min = 530
+    value_max = 1701
+    value_step = 1  # default/unknown AM frequency step
+
+    VALUE_MIN_STEP = {9: 531, 10: 530}
+    VALUE_MAX_STEP = {9: 1701, 10: 1700}
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
     ) -> list[Response]:
-        """Response parser AM tuner frequency."""
-        new_freq = float(raw)
-        current_freq = TunerParsers._current_freq
-        parsed = []
-        command_queue = None
-        if params.get_param(PARAM_TUNER_AM_FREQ_STEP) is None:
-            command_queue = [["_sleep", 2], "_calculate_am_frequency_step"]
+        """Response parser for tuner AM frequency."""
+        super().parse_response(response, params, properties)
 
-        parsed.extend(
-            [
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="tuner",
-                    property_name="band",
-                    zone=zone,
-                    value=TunerBand.AM,
-                    queue_commands=command_queue,
-                ),
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="tuner",
-                    property_name="frequency",
-                    zone=zone,
-                    value=new_freq,
-                    queue_commands=None,
-                ),
-            ]
-        )
-        if TunerParsers._cached_preset_raw:
-            parsed.extend(TunerParsers._update_preset(params, zone))
-        elif current_freq != new_freq:
-            parsed.extend(TunerParsers._clear_preset(params, zone))
-            TunerParsers._current_freq = new_freq
-        return parsed
+        def glean_frequency_step(
+            properties: PioneerAVRProperties, response: Response
+        ) -> list[Response]:
+            frequency_step = properties.tuner.get("am_frequency_step")
 
-    @staticmethod
-    def preset(
-        raw: str, _params: PioneerAVRParams, zone=Zone.ALL, command="PR"
+            ## Check whether new frequency is divisible by 9 or 10
+            if frequency_step is None:
+                freq_div9 = response.value % 9 == 0
+                freq_div10 = response.value % 10 == 0
+                if freq_div9 and not freq_div10:
+                    frequency_step = 9
+                elif not freq_div9 and freq_div10:
+                    frequency_step = 10
+                if frequency_step:
+                    return cls.update_frequency_step(
+                        response=response, frequency_step=frequency_step
+                    )
+            return []
+
+        queue_commands = []
+        current_tuner_band = properties.tuner.get("band")
+        frequency_step = properties.tuner.get("am_frequency_step")
+        if current_tuner_band is not TunerBand.AM and not frequency_step:
+            queue_commands = [["_sleep", 2], "_calculate_am_frequency_step"]
+        return [
+            response.clone(
+                property_name="band", value=TunerBand.AM, queue_commands=queue_commands
+            ),
+            *Preset.update_preset(response),
+            response.clone(callback=glean_frequency_step),
+            response,
+        ]
+
+    @classmethod
+    def update_frequency_step(
+        cls, response: Response, frequency_step: int
     ) -> list[Response]:
-        """Response parser for tuner preset. Cache until next frequency update."""
-        parsed = []
-        command_queue = [["_oob", "query_tuner_frequency"]]
-        TunerParsers._cached_preset_raw = raw
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property=None,
-                property_name=None,
-                zone=zone,
-                value=raw,
-                queue_commands=command_queue,
-            )
-        )
-        return parsed
+        """Generate response to update AM frequency step."""
 
-    @staticmethod
-    def _update_preset(
-        _params: PioneerAVRParams, zone=Zone.ALL, command="PR"
-    ) -> list[Response]:
-        """Parse and update tuner preset from cached values."""
-        parsed = []
-        current_preset_raw = TunerParsers._current_preset_raw
-        cached_preset_raw = TunerParsers._cached_preset_raw
-        ignore_preset = TunerParsers._ignore_preset
+        def set_frequency_step(
+            properties: PioneerAVRProperties,  # pylint: disable=unused-argument
+            response: Response,
+        ) -> list[Response]:
+            """Set AM frequency step."""
+            if (frequency_step := response.value) not in [9, 10]:
+                raise ValueError(
+                    f"invalid frequency step {frequency_step}, must be 9 or 10"
+                )
+            FrequencyAM.value_step = frequency_step
+            FrequencyAM.value_min = cls.VALUE_MIN_STEP[frequency_step]
+            FrequencyAM.value_max = cls.VALUE_MAX_STEP[frequency_step]
+            return [response]
 
-        TunerParsers._current_preset_raw = cached_preset_raw
-        if cached_preset_raw is None or current_preset_raw == cached_preset_raw:
-            return parsed
-        if ignore_preset:
-            ## Ignore first preset response
-            TunerParsers._cached_preset_raw = None
-            TunerParsers._ignore_preset = False
-            return parsed
-
-        # pylint: disable=unsubscriptable-object
-        tuner_class = cached_preset_raw[:1]
-        tuner_preset = int(cached_preset_raw[1:])
-        TunerParsers._cached_preset_raw = None
-        parsed.extend(
-            [
-                Response(
-                    raw=cached_preset_raw,
-                    response_command=command,
-                    base_property="tuner",
-                    property_name="class",
-                    zone=zone,
-                    value=tuner_class,
-                    queue_commands=None,
-                ),
-                Response(
-                    raw=cached_preset_raw,
-                    response_command=command,
-                    base_property="tuner",
-                    property_name="preset",
-                    zone=zone,
-                    value=tuner_preset,
-                    queue_commands=None,
-                ),
-            ]
-        )
-        return parsed
-
-    @staticmethod
-    def _clear_preset(
-        _params: PioneerAVRParams, zone=Zone.ALL, command="PR"
-    ) -> list[Response]:
-        """Clear tuner presets."""
-        raw = ""
-        parsed = []
-        parsed.extend(
-            [
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="tuner",
-                    property_name="class",
-                    zone=zone,
-                    value=None,
-                    queue_commands=None,
-                ),
-                Response(
-                    raw=raw,
-                    response_command=command,
-                    base_property="tuner",
-                    property_name="preset",
-                    zone=zone,
-                    value=None,
-                    queue_commands=None,
-                ),
-            ]
-        )
-        TunerParsers._current_preset_raw = None
-        TunerParsers._cached_preset_raw = None
-        return parsed
-
-    @staticmethod
-    def am_frequency_step(
-        raw: str, params: PioneerAVRParams, zone=None, command="SUQ"
-    ) -> list[Response]:
-        """Response parser for AM frequency step. (Supported on very few AVRs)"""
-        frequency_step = 9 if raw == "0" else 10
-        parsed = []
-        params.set_runtime_param(PARAM_TUNER_AM_FREQ_STEP, frequency_step)
-        parsed.append(
-            Response(
-                raw=raw,
-                response_command=command,
-                base_property="tuner",
+        return [
+            response.clone(
                 property_name="am_frequency_step",
-                zone=zone,
                 value=frequency_step,
-                queue_commands=None,
+                callback=set_frequency_step,
             )
+        ]
+
+
+class Preset(CodeMapBase):
+    """Tuner preset."""
+
+    cached_preset: tuple[str, int] = []
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        properties: PioneerAVRProperties,  # pylint: disable=unused-argument
+    ) -> list[Response]:
+        """Response parser for tuner preset."""
+
+        def cache_preset(
+            properties: PioneerAVRProperties,  # pylint: disable=unused-argument
+            response: Response,
+        ) -> list[Response]:
+            cls.cached_preset = response.value
+            return [response]
+
+        super().parse_response(response, params, properties)
+        response.update(
+            clear_property=True,
+            queue_commands=[["_oob", "query_tuner_frequency"]],
+            callback=cache_preset,
         )
-        return parsed
+        return [response]
+
+    @classmethod
+    def update_preset(cls, response: Response) -> list[Response]:
+        """Update tuner preset from cached preset and frequency update."""
+
+        def check_cached_preset(
+            properties: PioneerAVRProperties,  # pylint: disable=unused-argument
+            response: Response,
+        ) -> list[Response]:
+            if cls.cached_preset is not None:
+                # pylint: disable=unbalanced-tuple-unpacking
+                (tuner_class, tuner_preset) = cls.cached_preset
+                cls.cached_preset = None
+                return [
+                    response.clone(property_name="class", value=tuner_class),
+                    response.clone(property_name="preset", value=tuner_preset),
+                ]
+            if response.value != properties.tuner.get("frequency"):
+                return [
+                    response.clone(property_name="class", inherit_value=False),
+                    response.clone(property_name="preset", inherit_value=False),
+                ]
+            return []
+
+        ## NOTE: response.value = updated frequency
+        return [response.clone(callback=check_cached_preset)]
+
+    @classmethod
+    def value_to_code(cls, value: tuple[str, int]) -> str:
+        """Convert tuner class and preset to code."""
+        tuner_class, tuner_preset = value
+        if not (
+            isinstance(tuner_class, str)
+            and len(tuner_class) == 1
+            and "A" <= tuner_class <= "G"
+        ):
+            raise ValueError(f"class {tuner_class} outside of range A to G")
+        if not (isinstance(tuner_preset, int) and 0 <= tuner_preset <= 9):
+            raise ValueError(f"preset {tuner_preset} outside of range 0 -- 9")
+        return f"{tuner_class.upper()}{str(tuner_preset).zfill(2)}"
+
+    @classmethod
+    def code_to_value(cls, code: str) -> tuple[str, int]:
+        """Convert code to value."""
+        return code[0], int(code[1:])
+
+
+class FrequencyAMStep(CodeIntMap):
+    """AM frequency step. (Supported on very few AVRs)"""
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        properties: PioneerAVRProperties,  # pylint: disable=unused-argument
+    ) -> list[Response]:
+        """Response parser for AM frequency step."""
+
+        super().parse_response(response, params, properties)
+        return FrequencyAM.update_frequency_step(
+            response=response, frequency_step=response.value
+        )
+
+    @classmethod
+    def code_to_value(cls, code: str) -> int:
+        return 9 if code == "0" else 10
+
+    ## NOTE: value_to_code unimplemented
