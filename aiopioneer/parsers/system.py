@@ -76,6 +76,7 @@ class InputSource(CodeMapBase):
                 base_property="source_name",
                 value=properties.get_source_name(response.value),
                 update_zones={Zone.ALL},
+                queue_commands=queue_commands,
             ),
             response,
             response.clone(
