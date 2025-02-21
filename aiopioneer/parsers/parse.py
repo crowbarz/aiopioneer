@@ -250,9 +250,9 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
                 "Zone %s: %s: %s -> %s (%s)",
                 response.zone,
                 response.base_property,
-                current_value,
-                response.value,
-                response.raw,
+                repr(current_value),
+                repr(response.value),
+                repr(response.raw),
             )
     elif response.property_name is not None and not is_global:
         ## Default zone dict first, otherwise we hit an exception
@@ -267,9 +267,9 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
                 response.zone,
                 response.base_property,
                 response.property_name,
-                current_value,
-                response.value,
-                response.raw,
+                repr(current_value),
+                repr(response.value),
+                repr(response.raw),
             )
     elif response.property_name is None and is_global:
         if current_base != response.value:
@@ -277,9 +277,9 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
             _LOGGER.info(
                 "Global: %s: %s -> %s (%s)",
                 response.base_property,
-                current_base,
-                response.value,
-                response.raw,
+                repr(current_base),
+                repr(response.value),
+                repr(response.raw),
             )
     else:  # response.property_name is not None and is_global:
         current_value = current_base.get(response.property_name)
@@ -290,9 +290,9 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
                 "Global: %s.%s: %s -> %s (%s)",
                 response.base_property,
                 response.property_name,
-                current_value,
-                response.value,
-                response.raw,
+                repr(current_value),
+                repr(response.value),
+                repr(response.raw),
             )
 
 

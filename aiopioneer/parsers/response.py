@@ -27,6 +27,19 @@ class Response:
         self.value = value
         self.command_queue = queue_commands
 
+    def __repr__(self):
+        return (
+            f"Response(raw={repr(self.raw)}, "
+            f"response_command={repr(self.response_command)}, "
+            f"base_property={repr(self.base_property)}, "
+            f"property_name={repr(self.property_name)}, "
+            f"zone={self.zone}, "
+            f"update_zones={self.update_zones}, "
+            f"value={repr(self.value)}, "
+            f"queue_commands={self.command_queue}, "
+            f"callback={self.callback})"
+        )
+
     def update(
         self,
         raw: str = None,
