@@ -230,7 +230,9 @@ class CodeIntMap(CodeFloatMap):
     value_offset: int = 0
 
     def __new__(cls, value: int) -> str:
-        if not isinstance(value, int):
+        if isinstance(value, float) and value.is_integer():
+            value = int(value)
+        elif not isinstance(value, int):
             raise ValueError(f"Value {value} is not an int for {cls.__name__}")
         return super().__new__(cls, value)
 
