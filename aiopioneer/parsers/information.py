@@ -232,6 +232,7 @@ class InformationParsers:
             property_name: str, value: str, queue_commands: list = None
         ) -> Response:
             return Response(
+                properties=None,
                 raw=raw,
                 response_command=command,
                 base_property="audio",
@@ -328,6 +329,7 @@ class InformationParsers:
 
         def video_response(property_name: str, value: str) -> Response:
             return Response(
+                properties=None,
                 raw=raw,
                 response_command=command,
                 base_property="video",

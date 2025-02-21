@@ -11,6 +11,7 @@ class Response:
 
     def __init__(
         self,
+        properties: PioneerAVRProperties,
         raw: str,
         response_command: str,
         base_property: str = None,
@@ -21,6 +22,7 @@ class Response:
         queue_commands: list = None,
         callback: Callable[[PioneerAVRProperties, Self], list[Self]] = None,
     ):
+        self.properties = properties
         self.raw = raw
         self.response_command = response_command
         self.base_property = base_property
@@ -30,6 +32,19 @@ class Response:
         self.value = value
         self.command_queue = queue_commands
         self.callback = callback
+
+    def __repr__(self):
+        return (
+            f"Response(raw={repr(self.raw)}, "
+            f"response_command={repr(self.response_command)}, "
+            f"base_property={repr(self.base_property)}, "
+            f"property_name={repr(self.property_name)}, "
+            f"zone={self.zone}, "
+            f"update_zones={self.update_zones}, "
+            f"value={repr(self.value)}, "
+            f"queue_commands={self.command_queue}, "
+            f"callback={self.callback})"
+        )
 
     def update(
         self,
@@ -44,7 +59,7 @@ class Response:
         callback: Callable[[PioneerAVRProperties, Self], list[Self]] = None,
         clear_property: bool = False,
         clear_value: bool = False,
-    ):
+    ) -> None:
         """Update a Response with changed attributes."""
         if raw is not None:
             self.raw = raw
@@ -101,6 +116,7 @@ class Response:
             value = self.value
         ## NOTE: queue_commands and callback are not inherited by clone
         return Response(
+            properties=self.properties,
             raw=raw,
             response_command=response_command,
             base_property=base_property,

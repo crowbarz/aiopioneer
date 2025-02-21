@@ -55,11 +55,11 @@ class PioneerAVRConnection:
     ):
         """Initialise the Pioneer AVR connection."""
         _LOGGER.debug(
-            '>> PioneerAVRConnection.__init__(host="%s", port=%s, timeout=%s, scan_interval=%d)',
-            host,
-            port,
-            timeout,
-            scan_interval,
+            ">> AVRConnection.__init__(host=%s, port=%s, timeout=%s, scan_interval=%s)",
+            repr(host),
+            repr(port),
+            repr(timeout),
+            repr(scan_interval),
         )
         self.params = params
         self._host = host
@@ -427,14 +427,14 @@ class PioneerAVRConnection:
         debug_command = self.params.get_param(PARAM_DEBUG_COMMAND)
         if debug_command:
             _LOGGER.debug(
-                '>> PioneerAVR.send_command("%s", zone="%s", prefix="%s", '
-                + "suffix=%s, ignore_error=%s, rate_limit=%s)",
-                command,
+                ">> send_command(%s, zone=%s, prefix=%s, "
+                "suffix=%s, ignore_error=%s, rate_limit=%s)",
+                repr(command),
                 zone,
-                prefix,
-                ignore_error,
-                rate_limit,
-                suffix,
+                repr(prefix),
+                repr(suffix),
+                repr(ignore_error),
+                repr(rate_limit),
             )
 
         async def _send_command():
