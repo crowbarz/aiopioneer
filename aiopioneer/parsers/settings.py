@@ -459,8 +459,8 @@ class ExternalHdmiTrigger(CodeDictStrMap):
     def parse_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,  # pylint: disable=unused-argument
-        properties: PioneerAVRProperties,  # pylint: disable=unused-argument
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for 12V Trigger 1 (HDMI Setup)."""
 
