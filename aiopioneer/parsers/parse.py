@@ -352,19 +352,36 @@ def process_raw_response(
             )
         else:
             raise RuntimeError(f"invalid parser {parse_func} for response: {code}")
+        if responses is None:
+            raise RuntimeError(f"parser {parse_func} returned null response: {code}")
+
+        ## Process responses and update properties
+        updated_zones: set[Zone] = set()
+        command_queue: list[str] = []
+        # _LOGGER.critical("parse %s -> %s", parse_cmd, responses)
+        while responses:
+            response = responses.pop(0)
+            if response is None:
+                raise RuntimeError("parser returned null response")
+            if response.callback:
+                callback = response.callback
+                response.callback = None
+                callback_responses = callback(properties, response)
+                _LOGGER.debug(
+                    "response callback: %s -> %s", callback.__name__, callback_responses
+                )
+                callback_responses.extend(responses)  # prepend callback_responses
+                responses = callback_responses
+                continue  ## don't process original callback response
+            _process_response(properties, response)
+            if response.zone is not None:
+                updated_zones.add(response.zone)
+            if response.update_zones:
+                updated_zones |= response.update_zones
+            if response.command_queue:
+                command_queue.extend(response.command_queue)
+
     except Exception as exc:  # pylint: disable=broad-except
         raise AVRResponseParseError(response=raw_resp, exc=exc) from exc
-
-    ## Parse responses and update properties
-    updated_zones: set[Zone] = set()
-    command_queue: list[str] = []
-    for response in responses:
-        _process_response(properties, response)
-        if response.zone is not None:
-            updated_zones.add(response.zone)
-        if response.update_zones:
-            updated_zones |= response.update_zones
-        if response.command_queue:
-            command_queue.extend(response.command_queue)
 
     return updated_zones, command_queue
