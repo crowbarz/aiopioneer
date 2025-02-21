@@ -318,6 +318,7 @@ def process_raw_response(
         elif issubclass(parse_func, CodeMapBase):
             responses = parse_func.parse_response(
                 response=Response(
+                    properties=properties,
                     raw=code,
                     response_command=parse_cmd,
                     base_property=match_resp[3] if len(match_resp) >= 4 else None,

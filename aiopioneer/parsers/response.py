@@ -9,6 +9,7 @@ class Response:
 
     def __init__(
         self,
+        properties: PioneerAVRProperties,
         raw: str,
         response_command: str,
         base_property: str,
@@ -18,6 +19,7 @@ class Response:
         value: Any = None,
         queue_commands: list = None,
     ):
+        self.properties = properties
         self.raw = raw
         self.response_command = response_command
         self.base_property = base_property
@@ -51,7 +53,7 @@ class Response:
         value: Any = None,
         queue_commands: list = None,
         clear_value: bool = False,
-    ):
+    ) -> None:
         """Update a Response with changed attributes."""
         if raw is not None:
             self.raw = raw
@@ -102,6 +104,7 @@ class Response:
         if queue_commands is None:
             queue_commands = self.command_queue
         return Response(
+            properties=self.properties,
             raw=raw,
             response_command=response_command,
             base_property=base_property,
