@@ -27,30 +27,30 @@ class McaccDiagnosticStatus(CodeMapBase):
     ) -> list[Response]:
         """Response parser for MCACC diagnostic status."""
 
-        def parse_sub(property_name: str, code: str, code_map: CodeMapBase) -> Response:
+        def parse_sub(
+            property_name: str, code: str, code_map: CodeMapBase
+        ) -> list[Response]:
             """Parse a sub response."""
             sub_response = response.clone(property_name=property_name, raw=code)
-            code_map.parse_response(sub_response, params, properties)
-            return sub_response
+            return code_map.parse_response(sub_response, params, properties)
 
-        super().parse_response(response, params, properties)
         return [
-            parse_sub(
+            *parse_sub(
                 property_name="mcacc_diagnostic_current_measurement",
                 code=response.raw[:2],
                 code_map=McaccDiagnosticCurrentMeasurement,
             ),
-            parse_sub(
+            *parse_sub(
                 property_name="mcacc_diagnostic_total_measurement",
                 code=response.raw[2:4],
                 code_map=McaccDiagnosticTotalMeasurement,
             ),
-            parse_sub(
+            *parse_sub(
                 property_name="mcacc_diagnostic_status",
                 code=response.raw[5],
                 code_map=McaccMeasurementStatus,
             ),
-            parse_sub(
+            *parse_sub(
                 property_name="mcacc_diagnostic_error",
                 code=response.raw[-1],
                 code_map=McaccMeasurementError,
@@ -102,40 +102,40 @@ class StandingWaveStatus(CodeMapBase):
     ) -> list[Response]:
         """Response parser for standing wave status."""
 
-        def parse_sub(property_name: str, code: str, code_map: CodeMapBase) -> Response:
+        def parse_sub(
+            property_name: str, code: str, code_map: CodeMapBase
+        ) -> list[Response]:
             """Parse a sub response."""
             sub_response = response.clone(property_name=property_name, raw=code)
-            code_map.parse_response(sub_response, params, properties)
-            return sub_response
+            return code_map.parse_response(sub_response, params, properties)
 
-        super().parse_response(response, params, properties)
         return [
-            parse_sub(
+            *parse_sub(
                 property_name="standing_wave_memory",
                 code=response.raw[:2],
                 code_map=StandingWaveMemory,
             ),
-            parse_sub(
+            *parse_sub(
                 property_name="standing_wave_filter_channel",
                 code=response.raw[2],
                 code_map=StandingWaveFilterChannel,
             ),
-            parse_sub(
+            *parse_sub(
                 property_name="standing_wave_filter_number",
                 code=response.raw[3],
                 code_map=StandingWaveFilterNumber,
             ),
-            parse_sub(
+            *parse_sub(
                 property_name="standing_wave_frequency",
                 code=response.raw[4:6],
                 code_map=StandingWaveFrequency,
             ),
-            parse_sub(
+            *parse_sub(
                 property_name="standing_wave_q",
                 code=response.raw[6:8],
                 code_map=StandingWaveQ,
             ),
-            parse_sub(
+            *parse_sub(
                 property_name="standing_wave_attenuator",
                 code=response.raw[8:10],  ## NOTE: assumed
                 code_map=StandingWaveAttenuator,
