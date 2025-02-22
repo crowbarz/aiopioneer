@@ -1,8 +1,9 @@
 """aiopioneer response parsers for informational responses."""
 
-from ..const import Zone
 from ..params import PioneerAVRParams
+from ..properties import PioneerAVRProperties
 from .code_map import (
+    CodeMapBase,
     CodeStrMap,
     CodeDefault,
     CodeBoolMap,
@@ -10,6 +11,163 @@ from .code_map import (
     CodeIntMap,
 )
 from .response import Response
+
+
+class AudioInformation(CodeMapBase):
+    """Audio information."""
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
+    ) -> list[Response]:
+        """Response parser for audio information."""
+
+        def parse_sub(
+            property_name: str, code: str, code_map: CodeMapBase
+        ) -> list[Response]:
+            """Parse a sub response."""
+            sub_response = response.clone(property_name=property_name, raw=code)
+            return code_map.parse_response(sub_response, params, properties)
+
+        def parse_input_channel(channel: str, code: str) -> list[Response]:
+            return parse_sub(
+                property_name=f"input_channels.{channel}",
+                code=code,
+                code_map=AudioChannelActive,
+            )
+
+        def parse_output_channel(channel: str, code: str) -> list[Response]:
+            return parse_sub(
+                property_name=f"output_channels.{channel}",
+                code=code,
+                code_map=AudioChannelActive,
+            )
+
+        responses = [
+            *parse_sub(
+                property_name="input_signal",
+                code=response.raw[:2],
+                code_map=AudioSignalInputInfo,
+            ),
+            *parse_sub(
+                property_name="input_frequency",
+                code=response.raw[2:4],
+                code_map=AudioSignalInputFreq,
+            ),
+            *parse_sub(
+                property_name="input_multichannel",
+                code=response.raw[4:7],
+                code_map=InputMultichannel,
+            ),
+            *parse_input_channel(channel="L", code=response.raw[4]),
+            *parse_input_channel(channel="C", code=response.raw[5]),
+            *parse_input_channel(channel="R", code=response.raw[6]),
+            *parse_input_channel(channel="SL", code=response.raw[7]),
+            *parse_input_channel(channel="SR", code=response.raw[8]),
+            *parse_input_channel(channel="SBL", code=response.raw[9]),
+            *parse_input_channel(channel="SBC", code=response.raw[10]),
+            *parse_input_channel(channel="SBR", code=response.raw[11]),
+            *parse_input_channel(channel="LFE", code=response.raw[12]),
+            *parse_input_channel(channel="FHL", code=response.raw[13]),
+            *parse_input_channel(channel="FHR", code=response.raw[14]),
+            *parse_input_channel(channel="FWL", code=response.raw[15]),
+            *parse_input_channel(channel="FWR", code=response.raw[16]),
+            *parse_input_channel(channel="XL", code=response.raw[17]),
+            *parse_input_channel(channel="XC", code=response.raw[18]),
+            *parse_input_channel(channel="XR", code=response.raw[19]),
+        ]
+
+        ## (data21) to (data25) are reserved according to FY16AVRs
+        ## Decode output signal data
+        responses.extend(
+            [
+                *parse_output_channel(channel="L", code=response.raw[25]),
+                *parse_output_channel(channel="C", code=response.raw[26]),
+                *parse_output_channel(channel="R", code=response.raw[27]),
+                *parse_output_channel(channel="SL", code=response.raw[28]),
+                *parse_output_channel(channel="SR", code=response.raw[29]),
+                *parse_output_channel(channel="SBL", code=response.raw[30]),
+                *parse_output_channel(channel="SB", code=response.raw[31]),
+                *parse_output_channel(channel="SBR", code=response.raw[32]),
+            ]
+        )
+
+        ## FY11 AVRs do not have more than data 43 data bits (VSX-1021)
+        if len(response.raw) > 43:
+            responses.extend(
+                [
+                    *parse_sub(
+                        property_name="output_frequency",
+                        code=response.raw[43:45],
+                        code_map=AudioSignalInputFreq,
+                    ),
+                    *parse_sub(
+                        property_name="output_bits",
+                        code=response.raw[45:47],
+                        code_map=CodeIntMap,
+                    ),
+                    *parse_sub(
+                        property_name="output_pqls",
+                        code=response.raw[51],
+                        code_map=AudioWorkingPqls,
+                    ),
+                    *parse_sub(
+                        property_name="output_auto_phase_control_plus",
+                        code=response.raw[52:54],
+                        code_map=CodeIntMap,
+                    ),
+                    *parse_sub(
+                        property_name="output_reverse_phase",
+                        code=response.raw[54],
+                        code_map=CodeBoolMap,
+                    ),
+                ]
+            )
+
+        return responses
+
+
+class AudioChannelActive(CodeDictStrMap):
+    """Audio active."""
+
+    code_map = {
+        "0": "inactive",
+        "1": "active",
+    }
+
+
+class InputMultichannel(CodeBoolMap):
+    """Input multichannel."""
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
+    ) -> list[Response]:
+        """Response parser for input multichannel."""
+
+        def check_input_multichannel(
+            properties: PioneerAVRProperties,
+            response: Response,
+        ) -> list[Response]:
+            """Trigger listening mode update if input multichannel has changed."""
+            if properties.audio.get("input_multichannel") == response.value:
+                return []
+            response.update(queue_commands=["_update_listening_modes"])
+            return [response]
+
+        super().parse_response(response, params, properties)
+        response.update(callback=check_input_multichannel)
+        return [response]
+
+    @classmethod
+    def code_to_value(cls, code: str) -> bool:
+        return all([CodeBoolMap[c] for c in code])
 
 
 class AudioSignalInputInfo(CodeDictStrMap):
@@ -78,15 +236,6 @@ class AudioSignalInputFreq(CodeDictStrMap):
     }
 
 
-class AudioChannelActive(CodeDictStrMap):
-    """Audio active."""
-
-    code_map = {
-        "0": "inactive",
-        "1": "active",
-    }
-
-
 class AudioWorkingPqls(CodeDictStrMap):
     """Audio working PQLS."""
 
@@ -105,6 +254,143 @@ class VideoSignalInputTerminal(CodeDictStrMap):
         "4": "HDMI",
         "5": "Self OSD/JPEG",
     }
+
+
+class VideoInformation(CodeMapBase):
+    """Video information."""
+
+    @classmethod
+    def parse_response(
+        cls,
+        response: Response,
+        params: PioneerAVRParams,
+        properties: PioneerAVRProperties,
+    ) -> list[Response]:
+        """Response parser for video information."""
+
+        def parse_sub(
+            property_name: str, code: str, code_map: CodeMapBase
+        ) -> list[Response]:
+            """Parse a sub response."""
+            sub_response = response.clone(property_name=property_name, raw=code)
+            return code_map.parse_response(sub_response, params, properties)
+
+        responses = [
+            *parse_sub(
+                property_name="signal_input_terminal",
+                code=response.raw[0],
+                code_map=VideoSignalInputTerminal,
+            ),
+            *parse_sub(
+                property_name="signal_input_resolution",
+                code=response.raw[1:3],
+                code_map=VideoSignalFormat,
+            ),
+            *parse_sub(
+                property_name="signal_input_aspect",
+                code=response.raw[3],
+                code_map=VideoSignalAspect,
+            ),
+            *parse_sub(
+                property_name="signal_input_color_format",
+                code=response.raw[4],
+                code_map=VideoSignalColorspace,
+            ),
+            *parse_sub(
+                property_name="signal_input_bit",
+                code=response.raw[5],
+                code_map=VideoSignalBits,
+            ),
+            *parse_sub(
+                property_name="signal_input_extended_colorspace",
+                code=response.raw[6],
+                code_map=VideoSignalExtColorspace,
+            ),
+            *parse_sub(
+                property_name="signal_output_resolution",
+                code=response.raw[7:9],
+                code_map=VideoSignalFormat,
+            ),
+            *parse_sub(
+                property_name="signal_output_aspect",
+                code=response.raw[9],
+                code_map=VideoSignalAspect,
+            ),
+            *parse_sub(
+                property_name="signal_output_color_format",
+                code=response.raw[10],
+                code_map=VideoSignalColorspace,
+            ),
+            *parse_sub(
+                property_name="signal_output_bit",
+                code=response.raw[11],
+                code_map=VideoSignalBits,
+            ),
+            *parse_sub(
+                property_name="signal_output_extended_colorspace",
+                code=response.raw[12],
+                code_map=VideoSignalExtColorspace,
+            ),
+            *parse_sub(
+                property_name="signal_hdmi1_recommended_resolution",
+                code=response.raw[13:15],
+                code_map=VideoSignalFormat,
+            ),
+            *parse_sub(
+                property_name="signal_hdmi1_deepcolor",
+                code=response.raw[15],
+                code_map=VideoSignalBits,
+            ),
+            *parse_sub(
+                property_name="signal_hdmi2_recommended_resolution",
+                code=response.raw[21:23],
+                code_map=VideoSignalFormat,
+            ),
+            *parse_sub(
+                property_name="signal_hdmi2_deepcolor",
+                code=response.raw[23],
+                code_map=VideoSignalBits,
+            ),
+        ]
+
+        ## FY11 AVRs only return 25 data values
+        if len(response.raw) > 40:
+            responses.extend(
+                [
+                    *parse_sub(
+                        property_name="signal_hdmi3_recommended_resolution",
+                        code=response.raw[29:31],
+                        code_map=VideoSignalFormat,
+                    ),
+                    *parse_sub(
+                        property_name="signal_hdmi3_deepcolor",
+                        code=response.raw[31],
+                        code_map=VideoSignalBits,
+                    ),
+                    *parse_sub(
+                        property_name="input_3d_format",
+                        code=response.raw[37:39],
+                        code_map=VideoSignal3DMode,
+                    ),
+                    *parse_sub(
+                        property_name="output_3d_format",
+                        code=response.raw[39:41],
+                        code_map=VideoSignal3DMode,
+                    ),
+                    *parse_sub(
+                        property_name="signal_hdmi4_recommended_resolution",
+                        code=response.raw[41:43],
+                        code_map=VideoSignalFormat,
+                    ),
+                    *parse_sub(
+                        property_name="signal_hdmi4_deepcolor",
+                        code=response.raw[44],
+                        code_map=VideoSignalBits,
+                    ),
+                ]
+            )
+
+        return responses
 
 
 class VideoSignalFormat(CodeDictStrMap):
@@ -217,157 +503,3 @@ class DisplayText(CodeStrMap):
             .expandtabs(1)
             .strip()
         )
-
-
-class InformationParsers:
-    """AVR operation information parsers."""
-
-    @staticmethod
-    def audio_information(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="AST"
-    ) -> list[Response]:
-        """Response parser for audio information."""
-
-        def audio_response(
-            property_name: str, value: str, queue_commands: list = None
-        ) -> Response:
-            return Response(
-                properties=None,
-                raw=raw,
-                response_command=command,
-                base_property="audio",
-                property_name=property_name,
-                zone=zone,
-                value=value,
-                queue_commands=queue_commands,
-            )
-
-        def input_channel(channel: str, raw: str) -> Response:
-            return audio_response(f"input_channels.{channel}", AudioChannelActive[raw])
-
-        def output_channel(channel: str, raw: str) -> Response:
-            return audio_response(f"output_channels.{channel}", AudioChannelActive[raw])
-
-        parsed = []
-        parsed += [
-            audio_response("input_signal", AudioSignalInputInfo[raw[:2]]),
-            audio_response("input_frequency", AudioSignalInputFreq[raw[2:4]]),
-            input_channel("L", raw[4]),
-            input_channel("C", raw[5]),
-            input_channel("R", raw[6]),
-            input_channel("SL", raw[7]),
-            input_channel("SR", raw[8]),
-            input_channel("SBL", raw[9]),
-            input_channel("SBC", raw[10]),
-            input_channel("SBR", raw[11]),
-            input_channel("LFE", raw[12]),
-            input_channel("FHL", raw[13]),
-            input_channel("FHR", raw[14]),
-            input_channel("FWL", raw[15]),
-            input_channel("FWR", raw[16]),
-            input_channel("XL", raw[17]),
-            input_channel("XC", raw[18]),
-            input_channel("XR", raw[19]),
-        ]
-
-        ## (data21) to (data25) are reserved according to FY16AVRs
-        ## Decode output signal data
-        parsed += [
-            output_channel("L", raw[25]),
-            output_channel("C", raw[26]),
-            output_channel("R", raw[27]),
-            output_channel("SL", raw[28]),
-            output_channel("SR", raw[29]),
-            output_channel("SBL", raw[30]),
-            output_channel("SB", raw[31]),
-            output_channel("SBR", raw[32]),
-        ]
-
-        ## Some older AVRs do not have more than 33 data bits
-        if len(raw) > 33:
-            parsed += [
-                output_channel("SW", raw[33]),
-                output_channel("FHL", raw[34]),
-                output_channel("FHR", raw[35]),
-                output_channel("FWL", raw[36]),
-                output_channel("FWR", raw[37]),
-                output_channel("TML", raw[38]),
-                output_channel("TMR", raw[39]),
-                output_channel("TRL", raw[40]),
-                output_channel("TRR", raw[41]),
-                output_channel("SW2", raw[42]),
-            ]
-
-        ## FY11 AVRs do not have more than data 43 data bits (VSX-1021)
-        if len(raw) > 43:
-            for property_name, value in {
-                "output_frequency": AudioSignalInputFreq[raw[43:45]],
-                "output_bits": CodeIntMap[raw[45:47]],
-                "output_pqls": AudioWorkingPqls[raw[51]],
-                "output_auto_phase_control_plus": CodeIntMap[raw[52:54]],
-                "output_reverse_phase": CodeBoolMap[raw[54]],
-            }.items():
-                audio_response(property_name, value)
-
-        ## Set multichannel value
-        input_multichannel = all([CodeBoolMap[r] for r in raw[4:7]])
-        ## TODO: update only if multichannel has changed from current value
-        parsed.append(
-            audio_response(
-                "input_multichannel",
-                input_multichannel,
-                queue_commands=["_update_listening_modes"],
-            )
-        )
-        return parsed
-
-    @staticmethod
-    def video_information(
-        raw: str, _params: PioneerAVRParams, zone=Zone.Z1, command="VST"
-    ) -> list[Response]:
-        """Response parser for video information."""
-
-        def video_response(property_name: str, value: str) -> Response:
-            return Response(
-                properties=None,
-                raw=raw,
-                response_command=command,
-                base_property="video",
-                property_name=property_name,
-                zone=zone,
-                value=value,
-                queue_commands=None,
-            )
-
-        parsed = []
-        for property_name, value in {
-            "signal_input_terminal": VideoSignalInputTerminal[raw[0]],
-            "signal_input_resolution": VideoSignalFormat[raw[1:3]],
-            "signal_input_aspect": VideoSignalAspect[raw[3]],
-            "signal_input_color_format": VideoSignalColorspace[raw[4]],
-            "signal_input_bit": VideoSignalBits[raw[5]],
-            "signal_input_extended_colorspace": VideoSignalExtColorspace[raw[6]],
-            "signal_output_resolution": VideoSignalFormat[raw[7:9]],
-            "signal_output_aspect": VideoSignalAspect[raw[9]],
-            "signal_output_color_format": VideoSignalColorspace[raw[10]],
-            "signal_output_bit": VideoSignalBits[raw[11]],
-            "signal_output_extended_colorspace": VideoSignalExtColorspace[raw[12]],
-            "signal_hdmi1_recommended_resolution": VideoSignalFormat[raw[13:15]],
-            "signal_hdmi1_deepcolor": VideoSignalBits[raw[15]],
-            "signal_hdmi2_recommended_resolution": VideoSignalFormat[raw[21:23]],
-            "signal_hdmi2_deepcolor": VideoSignalBits[raw[23]],
-        }.items():
-            parsed.append(video_response(property_name, value))
-
-        ## FY11 AVRs only return 25 data values
-        if len(raw) > 40:
-            for property_name, value in {
-                "signal_hdmi3_recommended_resolution": VideoSignalFormat[raw[29:31]],
-                "signal_hdmi3_deepcolor": VideoSignalBits[raw[31]],
-                "input_3d_format": VideoSignal3DMode[raw[37:39]],
-                "output_3d_format": VideoSignal3DMode[raw[39:41]],
-                "signal_hdmi4_recommended_resolution": VideoSignalFormat[raw[41:43]],
-                "signal_hdmi4_deepcolor": VideoSignalBits[raw[44]],
-            }.items():
-                parsed.append(video_response(property_name, value))
-        return parsed

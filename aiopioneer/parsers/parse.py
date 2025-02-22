@@ -37,7 +37,7 @@ from .dsp import (
     DspVirtualDepth,
     DspRenderingMode,
 )
-from .information import InformationParsers, DisplayText
+from .information import AudioInformation, VideoInformation, DisplayText
 from .response import Response
 from .settings import (
     McaccDiagnosticStatus,
@@ -214,8 +214,8 @@ RESPONSE_DATA = [
     ["ARA", CodeBoolMap, Zone.ALL, "dsp", "center_spread"],
     ["ARB", DspRenderingMode, Zone.ALL, "dsp", "rendering_mode"],
     ## information
-    ["AST", InformationParsers.audio_information, Zone.ALL],
-    ["VST", InformationParsers.video_information, Zone.ALL],
+    ["AST", AudioInformation, Zone.ALL, "audio"],
+    ["VST", VideoInformation, Zone.ALL, "video"],
     ["FL", DisplayText, Zone.ALL, "amp", "display"],
     ## video
     ["VTC", VideoResolution, Zone.Z1, "video", "resolution"],
