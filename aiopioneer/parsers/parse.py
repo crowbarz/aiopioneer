@@ -362,7 +362,7 @@ def process_raw_response(
             if response.callback:
                 callback = response.callback
                 response.callback = None
-                callback_responses = callback(properties, response)
+                callback_responses = callback(response)
                 _LOGGER.debug(
                     "response callback: %s -> %s", callback.__name__, callback_responses
                 )

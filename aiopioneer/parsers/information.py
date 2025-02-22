@@ -151,12 +151,9 @@ class InputMultichannel(CodeBoolMap):
     ) -> list[Response]:
         """Response parser for input multichannel."""
 
-        def check_input_multichannel(
-            properties: PioneerAVRProperties,
-            response: Response,
-        ) -> list[Response]:
+        def check_input_multichannel(response: Response) -> list[Response]:
             """Trigger listening mode update if input multichannel has changed."""
-            if properties.audio.get("input_multichannel") == response.value:
+            if response.properties.audio.get("input_multichannel") == response.value:
                 return []
             response.update(queue_commands=["_update_listening_modes"])
             return [response]

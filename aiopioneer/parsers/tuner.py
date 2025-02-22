@@ -51,10 +51,9 @@ class FrequencyAM(CodeIntMap):
         """Response parser for tuner AM frequency."""
         super().parse_response(response, params, properties)
 
-        def glean_frequency_step(
-            properties: PioneerAVRProperties, response: Response
-        ) -> list[Response]:
-            frequency_step = properties.tuner.get("am_frequency_step")
+        def glean_frequency_step(response: Response) -> list[Response]:
+            """Determine frequency step from current frequency."""
+            frequency_step = response.properties.tuner.get("am_frequency_step")
 
             ## Check whether new frequency is divisible by 9 or 10
             if frequency_step is None:
@@ -90,10 +89,7 @@ class FrequencyAM(CodeIntMap):
     ) -> list[Response]:
         """Generate response to update AM frequency step."""
 
-        def set_frequency_step(
-            properties: PioneerAVRProperties,  # pylint: disable=unused-argument
-            response: Response,
-        ) -> list[Response]:
+        def set_frequency_step(response: Response) -> list[Response]:
             """Set AM frequency step."""
             if (frequency_step := response.value) not in [9, 10]:
                 raise ValueError(
@@ -127,10 +123,8 @@ class Preset(CodeMapBase):
     ) -> list[Response]:
         """Response parser for tuner preset."""
 
-        def cache_preset(
-            properties: PioneerAVRProperties,  # pylint: disable=unused-argument
-            response: Response,
-        ) -> list[Response]:
+        def cache_preset(response: Response) -> list[Response]:
+            """Cache preset for later update."""
             cls.cached_preset = response.value
             return [response]
 
@@ -146,10 +140,8 @@ class Preset(CodeMapBase):
     def update_preset(cls, response: Response) -> list[Response]:
         """Update tuner preset from cached preset and frequency update."""
 
-        def check_cached_preset(
-            properties: PioneerAVRProperties,  # pylint: disable=unused-argument
-            response: Response,
-        ) -> list[Response]:
+        def check_cached_preset(response: Response) -> list[Response]:
+            """Update preset based on cached preset."""
             if cls.cached_preset is not None:
                 # pylint: disable=unbalanced-tuple-unpacking
                 (tuner_class, tuner_preset) = cls.cached_preset
@@ -158,7 +150,7 @@ class Preset(CodeMapBase):
                     response.clone(property_name="class", value=tuner_class),
                     response.clone(property_name="preset", value=tuner_preset),
                 ]
-            if response.value != properties.tuner.get("frequency"):
+            if response.value != response.properties.tuner.get("frequency"):
                 return [
                     response.clone(property_name="class", inherit_value=False),
                     response.clone(property_name="preset", inherit_value=False),

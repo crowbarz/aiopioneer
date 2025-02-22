@@ -20,7 +20,7 @@ class Response:
         update_zones: set[Zone] = None,
         value: Any = None,
         queue_commands: list = None,
-        callback: Callable[[PioneerAVRProperties, Self], list[Self]] = None,
+        callback: Callable[[Self], list[Self]] = None,
     ):
         self.properties = properties
         self.code = code
@@ -56,7 +56,7 @@ class Response:
         update_zones: set[Zone] = None,
         value: Any = None,
         queue_commands: list = None,
-        callback: Callable[[PioneerAVRProperties, Self], list[Self]] = None,
+        callback: Callable[[Self], list[Self]] = None,
         clear_property: bool = False,
         clear_value: bool = False,
     ) -> None:
@@ -95,7 +95,7 @@ class Response:
         update_zones: set[Zone] = None,  ## NOTE: merged with existing
         value: Any = None,
         queue_commands: list = None,
-        callback: Callable[[Any, Self], list[Self]] = None,
+        callback: Callable[[Self], list[Self]] = None,
         inherit_property: bool = True,
         inherit_value: bool = True,
     ) -> Self:
