@@ -24,9 +24,9 @@ class ChannelLevel(CodeFloatMap):
         properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for channel level."""
-        code = response.raw[3:]
-        speaker = response.raw[:3].strip("_").upper()
-        response.update(raw=code, property_name=speaker)
+        code = response.code[3:]
+        speaker = response.code[:3].strip("_").upper()
+        response.update(code=code, property_name=speaker)
         return super().parse_response(response, params, properties)
 
 
@@ -46,7 +46,7 @@ class ListeningMode(CodeDictListMap):
         super().parse_response(response, params, properties)
         return [
             response,
-            response.clone(base_property="listening_mode_raw", value=response.raw),
+            response.clone(base_property="listening_mode_raw", value=response.code),
         ]
 
 

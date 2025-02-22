@@ -31,28 +31,28 @@ class McaccDiagnosticStatus(CodeMapBase):
             property_name: str, code: str, code_map: CodeMapBase
         ) -> list[Response]:
             """Parse a sub response."""
-            sub_response = response.clone(property_name=property_name, raw=code)
+            sub_response = response.clone(property_name=property_name, code=code)
             return code_map.parse_response(sub_response, params, properties)
 
         return [
             *parse_sub(
                 property_name="mcacc_diagnostic_current_measurement",
-                code=response.raw[:2],
+                code=response.code[:2],
                 code_map=McaccDiagnosticCurrentMeasurement,
             ),
             *parse_sub(
                 property_name="mcacc_diagnostic_total_measurement",
-                code=response.raw[2:4],
+                code=response.code[2:4],
                 code_map=McaccDiagnosticTotalMeasurement,
             ),
             *parse_sub(
                 property_name="mcacc_diagnostic_status",
-                code=response.raw[5],
+                code=response.code[5],
                 code_map=McaccMeasurementStatus,
             ),
             *parse_sub(
                 property_name="mcacc_diagnostic_error",
-                code=response.raw[-1],
+                code=response.code[-1],
                 code_map=McaccMeasurementError,
             ),
         ]
@@ -106,38 +106,38 @@ class StandingWaveStatus(CodeMapBase):
             property_name: str, code: str, code_map: CodeMapBase
         ) -> list[Response]:
             """Parse a sub response."""
-            sub_response = response.clone(property_name=property_name, raw=code)
+            sub_response = response.clone(property_name=property_name, code=code)
             return code_map.parse_response(sub_response, params, properties)
 
         return [
             *parse_sub(
                 property_name="standing_wave_memory",
-                code=response.raw[:2],
+                code=response.code[:2],
                 code_map=StandingWaveMemory,
             ),
             *parse_sub(
                 property_name="standing_wave_filter_channel",
-                code=response.raw[2],
+                code=response.code[2],
                 code_map=StandingWaveFilterChannel,
             ),
             *parse_sub(
                 property_name="standing_wave_filter_number",
-                code=response.raw[3],
+                code=response.code[3],
                 code_map=StandingWaveFilterNumber,
             ),
             *parse_sub(
                 property_name="standing_wave_frequency",
-                code=response.raw[4:6],
+                code=response.code[4:6],
                 code_map=StandingWaveFrequency,
             ),
             *parse_sub(
                 property_name="standing_wave_q",
-                code=response.raw[6:8],
+                code=response.code[6:8],
                 code_map=StandingWaveQ,
             ),
             *parse_sub(
                 property_name="standing_wave_attenuator",
-                code=response.raw[8:10],  ## NOTE: assumed
+                code=response.code[8:10],  ## NOTE: assumed
                 code_map=StandingWaveAttenuator,
             ),
         ]
@@ -233,8 +233,8 @@ class StandingWaveSwTrim(CodeFloatMap):
         properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for Standing wave SW trim."""
-        mcacc_memory = response.raw[:2]
-        response.raw = response.raw[2:4]
+        mcacc_memory = response.code[:2]
+        response.code = response.code[2:4]
         response.property_name = f"standing_wave_sw_trim.{mcacc_memory}"
         return super().parse_response(response, params, properties)
 
@@ -292,8 +292,8 @@ class SpeakerSettings(CodeDictMap):
         properties: PioneerAVRProperties,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response parser for speaker setting."""
-        speaker = response.raw[:2]
-        speaker_sub = response.raw[2]
+        speaker = response.code[:2]
+        speaker_sub = response.code[2]
         response.value = cls.code_to_value(speaker).get(speaker_sub, speaker_sub)
         response.property_name = f"speaker_setting.{speaker}"
         return [response]
@@ -315,9 +315,9 @@ class McaccChannelLevel(CodeFloatMap):
         properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for MCACC channel level."""
-        memory = response.raw[0:2]
-        speaker = response.raw[2:5].replace("_", "")
-        response.raw = response.raw[5:7]
+        memory = response.code[0:2]
+        speaker = response.code[2:5].replace("_", "")
+        response.code = response.code[5:7]
         response.property_name = f"mcacc_channel_level.{memory}.{speaker}"
         return super().parse_response(response, params, properties)
 
@@ -337,9 +337,9 @@ class McaccSpeakerDistance(CodeFloatMap):
         properties: PioneerAVRProperties,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response parser for MCACC speaker distance."""
-        memory = response.raw[0:2]
-        speaker = response.raw[2:5].replace("_", "")
-        response.raw = response.raw[5:]
+        memory = response.code[0:2]
+        speaker = response.code[2:5].replace("_", "")
+        response.code = response.code[5:]
         response.property_name = f"mcacc_speaker_distance.{memory}.{speaker}"
         super().parse_response(response, params, properties)
         unit = "m" if isinstance(response.value, float) else "ft"
@@ -375,8 +375,8 @@ class InputLevelAdjust(CodeFloatMap):
         properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for input level adjust."""
-        source = response.raw[0:2]
-        response.raw = response.raw[2:4]
+        source = response.code[0:2]
+        response.code = response.code[2:4]
         response.property_name = f"input_level.{source}"
         return super().parse_response(response, params, properties)
 
@@ -412,7 +412,7 @@ class PortNumbers(CodeMapBase):
     ) -> list[Response]:
         """Response parser for enabled TCP port numbers."""
 
-        ports = [int(response.raw[i : i + 5]) for i in range(0, len(response.raw), 5)]
+        ports = [int(response.code[i : i + 5]) for i in range(0, len(response.code), 5)]
 
         def port_response(index: int) -> Response:
             port = ports[index]

@@ -1,6 +1,5 @@
 """aiopioneer parse response."""
 
-from types import FunctionType
 import logging
 
 from ..const import Zone
@@ -268,7 +267,7 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
                 response.base_property,
                 repr(current_value),
                 repr(response.value),
-                repr(response.raw),
+                repr(response.code),
             )
     elif response.property_name is not None and not is_global:
         ## Default zone dict first, otherwise we hit an exception
@@ -288,7 +287,7 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
                 response.property_name,
                 repr(current_value),
                 repr(response.value),
-                repr(response.raw),
+                repr(response.code),
             )
     elif response.property_name is None and is_global:
         if current_base != response.value:
@@ -298,7 +297,7 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
                 response.base_property,
                 repr(current_base),
                 repr(response.value),
-                repr(response.raw),
+                repr(response.code),
             )
     else:  # response.property_name is not None and is_global:
         current_value = current_base.get(response.property_name)
@@ -314,7 +313,7 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
                 response.property_name,
                 repr(current_value),
                 repr(response.value),
-                repr(response.raw),
+                repr(response.code),
             )
 
 
@@ -340,7 +339,7 @@ def process_raw_response(
         responses = parse_func.parse_response(
             response=Response(
                 properties=properties,
-                raw=code,
+                code=code,
                 response_command=parse_cmd,
                 base_property=match_resp[3] if len(match_resp) >= 4 else None,
                 property_name=match_resp[4] if len(match_resp) >= 5 else None,
@@ -375,8 +374,8 @@ def process_raw_response(
                 updated_zones.add(response.zone)
             if response.update_zones:
                 updated_zones |= response.update_zones
-            if response.command_queue:
-                command_queue.extend(response.command_queue)
+            if response.queue_commands:
+                command_queue.extend(response.queue_commands)
 
     except Exception as exc:  # pylint: disable=broad-except
         raise AVRResponseParseError(response=raw_resp, exc=exc) from exc

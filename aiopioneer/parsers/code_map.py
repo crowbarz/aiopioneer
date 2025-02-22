@@ -51,7 +51,7 @@ class CodeMapBase:
         properties: PioneerAVRProperties,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Parse a response."""
-        response.update(value=cls.code_to_value(response.raw))
+        response.update(value=cls.code_to_value(response.code))
         return [response]
 
 

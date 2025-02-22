@@ -169,7 +169,7 @@ class SpeakerSystem(CodeDictStrMap):
         super().parse_response(response, params, properties)
         return [
             response,
-            response.clone(property_name="speaker_system_raw", value=response.raw),
+            response.clone(property_name="speaker_system_raw", value=response.code),
         ]
 
 
@@ -189,8 +189,8 @@ class InputName(CodeMapBase):
             ## Only update AVR source mappings if AVR sources are being queried
             return []
 
-        source_id = response.raw[:2]
-        source_name = response.raw[3:]
+        source_id = response.code[:2]
+        source_name = response.code[3:]
         properties.clear_source_id(source_id)
         return [
             ## Clear source ID when Response is applied to avoid race condition

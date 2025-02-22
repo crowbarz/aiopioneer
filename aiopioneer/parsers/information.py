@@ -29,7 +29,7 @@ class AudioInformation(CodeMapBase):
             property_name: str, code: str, code_map: CodeMapBase
         ) -> list[Response]:
             """Parse a sub response."""
-            sub_response = response.clone(property_name=property_name, raw=code)
+            sub_response = response.clone(property_name=property_name, code=code)
             return code_map.parse_response(sub_response, params, properties)
 
         def parse_input_channel(channel: str, code: str) -> list[Response]:
@@ -49,79 +49,79 @@ class AudioInformation(CodeMapBase):
         responses = [
             *parse_sub(
                 property_name="input_signal",
-                code=response.raw[:2],
+                code=response.code[:2],
                 code_map=AudioSignalInputInfo,
             ),
             *parse_sub(
                 property_name="input_frequency",
-                code=response.raw[2:4],
+                code=response.code[2:4],
                 code_map=AudioSignalInputFreq,
             ),
             *parse_sub(
                 property_name="input_multichannel",
-                code=response.raw[4:7],
+                code=response.code[4:7],
                 code_map=InputMultichannel,
             ),
-            *parse_input_channel(channel="L", code=response.raw[4]),
-            *parse_input_channel(channel="C", code=response.raw[5]),
-            *parse_input_channel(channel="R", code=response.raw[6]),
-            *parse_input_channel(channel="SL", code=response.raw[7]),
-            *parse_input_channel(channel="SR", code=response.raw[8]),
-            *parse_input_channel(channel="SBL", code=response.raw[9]),
-            *parse_input_channel(channel="SBC", code=response.raw[10]),
-            *parse_input_channel(channel="SBR", code=response.raw[11]),
-            *parse_input_channel(channel="LFE", code=response.raw[12]),
-            *parse_input_channel(channel="FHL", code=response.raw[13]),
-            *parse_input_channel(channel="FHR", code=response.raw[14]),
-            *parse_input_channel(channel="FWL", code=response.raw[15]),
-            *parse_input_channel(channel="FWR", code=response.raw[16]),
-            *parse_input_channel(channel="XL", code=response.raw[17]),
-            *parse_input_channel(channel="XC", code=response.raw[18]),
-            *parse_input_channel(channel="XR", code=response.raw[19]),
+            *parse_input_channel(channel="L", code=response.code[4]),
+            *parse_input_channel(channel="C", code=response.code[5]),
+            *parse_input_channel(channel="R", code=response.code[6]),
+            *parse_input_channel(channel="SL", code=response.code[7]),
+            *parse_input_channel(channel="SR", code=response.code[8]),
+            *parse_input_channel(channel="SBL", code=response.code[9]),
+            *parse_input_channel(channel="SBC", code=response.code[10]),
+            *parse_input_channel(channel="SBR", code=response.code[11]),
+            *parse_input_channel(channel="LFE", code=response.code[12]),
+            *parse_input_channel(channel="FHL", code=response.code[13]),
+            *parse_input_channel(channel="FHR", code=response.code[14]),
+            *parse_input_channel(channel="FWL", code=response.code[15]),
+            *parse_input_channel(channel="FWR", code=response.code[16]),
+            *parse_input_channel(channel="XL", code=response.code[17]),
+            *parse_input_channel(channel="XC", code=response.code[18]),
+            *parse_input_channel(channel="XR", code=response.code[19]),
         ]
 
         ## (data21) to (data25) are reserved according to FY16AVRs
         ## Decode output signal data
         responses.extend(
             [
-                *parse_output_channel(channel="L", code=response.raw[25]),
-                *parse_output_channel(channel="C", code=response.raw[26]),
-                *parse_output_channel(channel="R", code=response.raw[27]),
-                *parse_output_channel(channel="SL", code=response.raw[28]),
-                *parse_output_channel(channel="SR", code=response.raw[29]),
-                *parse_output_channel(channel="SBL", code=response.raw[30]),
-                *parse_output_channel(channel="SB", code=response.raw[31]),
-                *parse_output_channel(channel="SBR", code=response.raw[32]),
+                *parse_output_channel(channel="L", code=response.code[25]),
+                *parse_output_channel(channel="C", code=response.code[26]),
+                *parse_output_channel(channel="R", code=response.code[27]),
+                *parse_output_channel(channel="SL", code=response.code[28]),
+                *parse_output_channel(channel="SR", code=response.code[29]),
+                *parse_output_channel(channel="SBL", code=response.code[30]),
+                *parse_output_channel(channel="SB", code=response.code[31]),
+                *parse_output_channel(channel="SBR", code=response.code[32]),
             ]
         )
 
         ## FY11 AVRs do not have more than data 43 data bits (VSX-1021)
-        if len(response.raw) > 43:
+        if len(response.code) > 43:
             responses.extend(
                 [
                     *parse_sub(
                         property_name="output_frequency",
-                        code=response.raw[43:45],
+                        code=response.code[43:45],
                         code_map=AudioSignalInputFreq,
                     ),
                     *parse_sub(
                         property_name="output_bits",
-                        code=response.raw[45:47],
+                        code=response.code[45:47],
                         code_map=CodeIntMap,
                     ),
                     *parse_sub(
                         property_name="output_pqls",
-                        code=response.raw[51],
+                        code=response.code[51],
                         code_map=AudioWorkingPqls,
                     ),
                     *parse_sub(
                         property_name="output_auto_phase_control_plus",
-                        code=response.raw[52:54],
+                        code=response.code[52:54],
                         code_map=CodeIntMap,
                     ),
                     *parse_sub(
                         property_name="output_reverse_phase",
-                        code=response.raw[54],
+                        code=response.code[54],
                         code_map=CodeBoolMap,
                     ),
                 ]
@@ -272,119 +272,119 @@ class VideoInformation(CodeMapBase):
             property_name: str, code: str, code_map: CodeMapBase
         ) -> list[Response]:
             """Parse a sub response."""
-            sub_response = response.clone(property_name=property_name, raw=code)
+            sub_response = response.clone(property_name=property_name, code=code)
             return code_map.parse_response(sub_response, params, properties)
 
         responses = [
             *parse_sub(
                 property_name="signal_input_terminal",
-                code=response.raw[0],
+                code=response.code[0],
                 code_map=VideoSignalInputTerminal,
             ),
             *parse_sub(
                 property_name="signal_input_resolution",
-                code=response.raw[1:3],
+                code=response.code[1:3],
                 code_map=VideoSignalFormat,
             ),
             *parse_sub(
                 property_name="signal_input_aspect",
-                code=response.raw[3],
+                code=response.code[3],
                 code_map=VideoSignalAspect,
             ),
             *parse_sub(
                 property_name="signal_input_color_format",
-                code=response.raw[4],
+                code=response.code[4],
                 code_map=VideoSignalColorspace,
             ),
             *parse_sub(
                 property_name="signal_input_bit",
-                code=response.raw[5],
+                code=response.code[5],
                 code_map=VideoSignalBits,
             ),
             *parse_sub(
                 property_name="signal_input_extended_colorspace",
-                code=response.raw[6],
+                code=response.code[6],
                 code_map=VideoSignalExtColorspace,
             ),
             *parse_sub(
                 property_name="signal_output_resolution",
-                code=response.raw[7:9],
+                code=response.code[7:9],
                 code_map=VideoSignalFormat,
             ),
             *parse_sub(
                 property_name="signal_output_aspect",
-                code=response.raw[9],
+                code=response.code[9],
                 code_map=VideoSignalAspect,
             ),
             *parse_sub(
                 property_name="signal_output_color_format",
-                code=response.raw[10],
+                code=response.code[10],
                 code_map=VideoSignalColorspace,
             ),
             *parse_sub(
                 property_name="signal_output_bit",
-                code=response.raw[11],
+                code=response.code[11],
                 code_map=VideoSignalBits,
             ),
             *parse_sub(
                 property_name="signal_output_extended_colorspace",
-                code=response.raw[12],
+                code=response.code[12],
                 code_map=VideoSignalExtColorspace,
             ),
             *parse_sub(
                 property_name="signal_hdmi1_recommended_resolution",
-                code=response.raw[13:15],
+                code=response.code[13:15],
                 code_map=VideoSignalFormat,
             ),
             *parse_sub(
                 property_name="signal_hdmi1_deepcolor",
-                code=response.raw[15],
+                code=response.code[15],
                 code_map=VideoSignalBits,
             ),
             *parse_sub(
                 property_name="signal_hdmi2_recommended_resolution",
-                code=response.raw[21:23],
+                code=response.code[21:23],
                 code_map=VideoSignalFormat,
             ),
             *parse_sub(
                 property_name="signal_hdmi2_deepcolor",
-                code=response.raw[23],
+                code=response.code[23],
                 code_map=VideoSignalBits,
             ),
         ]
 
         ## FY11 AVRs only return 25 data values
-        if len(response.raw) > 40:
+        if len(response.code) > 40:
             responses.extend(
                 [
                     *parse_sub(
                         property_name="signal_hdmi3_recommended_resolution",
-                        code=response.raw[29:31],
+                        code=response.code[29:31],
                         code_map=VideoSignalFormat,
                     ),
                     *parse_sub(
                         property_name="signal_hdmi3_deepcolor",
-                        code=response.raw[31],
+                        code=response.code[31],
                         code_map=VideoSignalBits,
                     ),
                     *parse_sub(
                         property_name="input_3d_format",
-                        code=response.raw[37:39],
+                        code=response.code[37:39],
                         code_map=VideoSignal3DMode,
                     ),
                     *parse_sub(
                         property_name="output_3d_format",
-                        code=response.raw[39:41],
+                        code=response.code[39:41],
                         code_map=VideoSignal3DMode,
                     ),
                     *parse_sub(
                         property_name="signal_hdmi4_recommended_resolution",
-                        code=response.raw[41:43],
+                        code=response.code[41:43],
                         code_map=VideoSignalFormat,
                     ),
                     *parse_sub(
                         property_name="signal_hdmi4_deepcolor",
-                        code=response.raw[44],
+                        code=response.code[44],
                         code_map=VideoSignalBits,
                     ),
                 ]
