@@ -47,6 +47,7 @@ from .params import (
     PARAM_DEBUG_COMMAND_QUEUE,
     PARAM_VIDEO_RESOLUTION_MODES,
     PARAM_ENABLED_FUNCTIONS,
+    PARAM_INITIAL_REFRESH_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY,
 )
 from .parsers.audio import (
@@ -331,9 +332,13 @@ class PioneerAVR(PioneerAVRConnection):
         ## without needing to add it here
         for comm, supported_zones in PIONEER_COMMANDS.items():
             if zone in supported_zones:
-                if comm.startswith("query_") and comm.split("_")[
-                    1
-                ] in self.params.get_param(PARAM_ENABLED_FUNCTIONS):
+                comm_parts = comm.split("_")
+                enabled_functions = set(self.params.get_param(PARAM_ENABLED_FUNCTIONS))
+                if zone in self.properties.zones_initial_refresh:
+                    enabled_functions -= set(
+                        self.params.get_param(PARAM_INITIAL_REFRESH_FUNCTIONS)
+                    )
+                if comm_parts[0] == "query_" and comm_parts[1] in enabled_functions:
                     await self.send_command(
                         comm, zone, ignore_error=True, rate_limit=False
                     )
