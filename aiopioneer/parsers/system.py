@@ -12,7 +12,6 @@ from ..params import (
     PARAM_MHL_SOURCE,
     PARAM_SPEAKER_SYSTEM_MODES,
 )
-from ..properties import PioneerAVRProperties
 from .code_map import (
     CodeMapBase,
     CodeBoolMap,
@@ -32,10 +31,9 @@ class Power(CodeInverseBoolMap):
         cls,
         response: Response,
         params: PioneerAVRParams,
-        properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for zone power status."""
-        super().parse_response(response, params, properties)
+        super().parse_response(response, params)
         queue_commands = []
         if response.value:
             queue_commands.append(["_oob", "_power_on", response.zone])
@@ -54,10 +52,9 @@ class InputSource(CodeMapBase):
         cls,
         response: Response,
         params: PioneerAVRParams,
-        properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for zone input source."""
-        super().parse_response(response, params, properties)
+        super().parse_response(response, params)
         source = response.value
         queue_commands = []
         if source == SOURCE_TUNER:
@@ -73,7 +70,7 @@ class InputSource(CodeMapBase):
         return [
             response.clone(
                 base_property="source_name",
-                value=properties.get_source_name(response.value),
+                value=response.properties.get_source_name(response.value),
                 update_zones={Zone.ALL},
                 queue_commands=queue_commands,
             ),
@@ -162,11 +159,10 @@ class SpeakerSystem(CodeDictStrMap):
         cls,
         response: Response,
         params: PioneerAVRParams,
-        properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for speaker system."""
         cls.code_map = params.get_param(PARAM_SPEAKER_SYSTEM_MODES, {})
-        super().parse_response(response, params, properties)
+        super().parse_response(response, params)
         return [
             response,
             response.clone(property_name="speaker_system_raw", value=response.code),
@@ -181,17 +177,16 @@ class InputName(CodeMapBase):
         cls,
         response: Response,
         params: PioneerAVRParams,  # pylint: disable=unused-argument
-        properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for input name."""
 
-        if not properties.query_sources:
+        if not response.properties.query_sources:
             ## Only update AVR source mappings if AVR sources are being queried
             return []
 
         source_id = response.code[:2]
         source_name = response.code[3:]
-        properties.clear_source_id(source_id)
+        response.properties.clear_source_id(source_id)
         return [
             ## Clear source ID when Response is applied to avoid race condition
             response.clone(base_property="_clear_source_id", value=source_id),
@@ -252,7 +247,6 @@ class AudioParameterProhibition(CodeMapBase):
         cls,
         response: Response,
         params: PioneerAVRParams,  # pylint: disable=unused-argument
-        properties: PioneerAVRProperties,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response parser for audio parameter prohibition."""
         response.update(queue_commands=[["_delayed_query_basic", 2]])
@@ -267,7 +261,6 @@ class AudioParameterWorking(CodeMapBase):
         cls,
         response: Response,
         params: PioneerAVRParams,  # pylint: disable=unused-argument
-        properties: PioneerAVRProperties,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response parser for audio parameter working."""
         response.update(queue_commands=[["_delayed_query_basic", 2]])

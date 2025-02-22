@@ -1,7 +1,6 @@
 """aiopioneer response parsers for audio parameters."""
 
 from ..params import PioneerAVRParams
-from ..properties import PioneerAVRProperties
 from .code_map import CodeDictStrMap, CodeDictListMap, CodeIntMap, CodeFloatMap
 from .response import Response
 
@@ -21,13 +20,12 @@ class ChannelLevel(CodeFloatMap):
         cls,
         response: Response,
         params: PioneerAVRParams,
-        properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for channel level."""
         code = response.code[3:]
         speaker = response.code[:3].strip("_").upper()
         response.update(code=code, property_name=speaker)
-        return super().parse_response(response, params, properties)
+        return super().parse_response(response, params)
 
 
 class ListeningMode(CodeDictListMap):
@@ -40,10 +38,9 @@ class ListeningMode(CodeDictListMap):
         cls,
         response: Response,
         params: PioneerAVRParams,
-        properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for listening mode."""
-        super().parse_response(response, params, properties)
+        super().parse_response(response, params)
         return [
             response,
             response.clone(base_property="listening_mode_raw", value=response.code),

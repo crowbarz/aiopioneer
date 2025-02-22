@@ -3,7 +3,6 @@
 from typing import Any, Tuple
 from .response import Response
 from ..params import PioneerAVRParams
-from ..properties import PioneerAVRProperties
 
 CODE_MAP_NDIGITS = 3
 CODE_MAP_EXP = pow(10, CODE_MAP_NDIGITS)
@@ -48,7 +47,6 @@ class CodeMapBase:
         cls,
         response: Response,
         params: PioneerAVRParams,  # pylint: disable=unused-argument
-        properties: PioneerAVRProperties,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Parse a response."""
         response.update(value=cls.code_to_value(response.code))

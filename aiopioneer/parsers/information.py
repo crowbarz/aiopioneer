@@ -1,7 +1,6 @@
 """aiopioneer response parsers for informational responses."""
 
 from ..params import PioneerAVRParams
-from ..properties import PioneerAVRProperties
 from .code_map import (
     CodeMapBase,
     CodeStrMap,
@@ -21,7 +20,6 @@ class AudioInformation(CodeMapBase):
         cls,
         response: Response,
         params: PioneerAVRParams,
-        properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for audio information."""
 
@@ -30,7 +28,7 @@ class AudioInformation(CodeMapBase):
         ) -> list[Response]:
             """Parse a sub response."""
             sub_response = response.clone(property_name=property_name, code=code)
-            return code_map.parse_response(sub_response, params, properties)
+            return code_map.parse_response(sub_response, params)
 
         def parse_input_channel(channel: str, code: str) -> list[Response]:
             return parse_sub(
@@ -147,7 +145,6 @@ class InputMultichannel(CodeBoolMap):
         cls,
         response: Response,
         params: PioneerAVRParams,
-        properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for input multichannel."""
 
@@ -158,7 +155,7 @@ class InputMultichannel(CodeBoolMap):
             response.update(queue_commands=["_update_listening_modes"])
             return [response]
 
-        super().parse_response(response, params, properties)
+        super().parse_response(response, params)
         response.update(callback=check_input_multichannel)
         return [response]
 
@@ -261,7 +258,6 @@ class VideoInformation(CodeMapBase):
         cls,
         response: Response,
         params: PioneerAVRParams,
-        properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for video information."""
 
@@ -270,7 +266,7 @@ class VideoInformation(CodeMapBase):
         ) -> list[Response]:
             """Parse a sub response."""
             sub_response = response.clone(property_name=property_name, code=code)
-            return code_map.parse_response(sub_response, params, properties)
+            return code_map.parse_response(sub_response, params)
 
         responses = [
             *parse_sub(

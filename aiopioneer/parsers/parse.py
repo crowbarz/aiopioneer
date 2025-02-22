@@ -346,7 +346,6 @@ def process_raw_response(
                 zone=parse_zone,
             ),
             params=params,
-            properties=properties,
         )
         if responses is None:
             raise RuntimeError(f"parser {parse_func} returned null response: {code}")

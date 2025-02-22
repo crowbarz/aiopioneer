@@ -2,7 +2,6 @@
 
 from ..const import Zone
 from ..params import PioneerAVRParams
-from ..properties import PioneerAVRProperties
 from .code_map import (
     CodeDefault,
     CodeMapBase,
@@ -23,7 +22,6 @@ class McaccDiagnosticStatus(CodeMapBase):
         cls,
         response: Response,
         params: PioneerAVRParams,
-        properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for MCACC diagnostic status."""
 
@@ -32,7 +30,7 @@ class McaccDiagnosticStatus(CodeMapBase):
         ) -> list[Response]:
             """Parse a sub response."""
             sub_response = response.clone(property_name=property_name, code=code)
-            return code_map.parse_response(sub_response, params, properties)
+            return code_map.parse_response(sub_response, params)
 
         return [
             *parse_sub(
@@ -98,7 +96,6 @@ class StandingWaveStatus(CodeMapBase):
         cls,
         response: Response,
         params: PioneerAVRParams,
-        properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for standing wave status."""
 
@@ -107,7 +104,7 @@ class StandingWaveStatus(CodeMapBase):
         ) -> list[Response]:
             """Parse a sub response."""
             sub_response = response.clone(property_name=property_name, code=code)
-            return code_map.parse_response(sub_response, params, properties)
+            return code_map.parse_response(sub_response, params)
 
         return [
             *parse_sub(
@@ -230,13 +227,12 @@ class StandingWaveSwTrim(CodeFloatMap):
         cls,
         response: Response,
         params: PioneerAVRParams,
-        properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for Standing wave SW trim."""
         mcacc_memory = response.code[:2]
         response.code = response.code[2:4]
         response.property_name = f"standing_wave_sw_trim.{mcacc_memory}"
-        return super().parse_response(response, params, properties)
+        return super().parse_response(response, params)
 
     ## NOTE: value_to_code not implemented
 
@@ -289,7 +285,6 @@ class SpeakerSettings(CodeDictMap):
         cls,
         response: Response,
         params: PioneerAVRParams,  # pylint: disable=unused-argument
-        properties: PioneerAVRProperties,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response parser for speaker setting."""
         speaker = response.code[:2]
@@ -312,14 +307,13 @@ class McaccChannelLevel(CodeFloatMap):
         cls,
         response: Response,
         params: PioneerAVRParams,
-        properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for MCACC channel level."""
         memory = response.code[0:2]
         speaker = response.code[2:5].replace("_", "")
         response.code = response.code[5:7]
         response.property_name = f"mcacc_channel_level.{memory}.{speaker}"
-        return super().parse_response(response, params, properties)
+        return super().parse_response(response, params)
 
     ## NOTE: value_to_code unimplemented
 
@@ -334,14 +328,13 @@ class McaccSpeakerDistance(CodeFloatMap):
         cls,
         response: Response,
         params: PioneerAVRParams,  # pylint: disable=unused-argument
-        properties: PioneerAVRProperties,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response parser for MCACC speaker distance."""
         memory = response.code[0:2]
         speaker = response.code[2:5].replace("_", "")
         response.code = response.code[5:]
         response.property_name = f"mcacc_speaker_distance.{memory}.{speaker}"
-        super().parse_response(response, params, properties)
+        super().parse_response(response, params)
         unit = "m" if isinstance(response.value, float) else "ft"
         return [
             response,
@@ -372,13 +365,12 @@ class InputLevelAdjust(CodeFloatMap):
         cls,
         response: Response,
         params: PioneerAVRParams,
-        properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for input level adjust."""
         source = response.code[0:2]
         response.code = response.code[2:4]
         response.property_name = f"input_level.{source}"
-        return super().parse_response(response, params, properties)
+        return super().parse_response(response, params)
 
     ## NOTE: value_to_code unimplemented
 
@@ -408,7 +400,6 @@ class PortNumbers(CodeMapBase):
         cls,
         response: Response,
         params: PioneerAVRParams,  # pylint: disable=unused-argument
-        properties: PioneerAVRProperties,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response parser for enabled TCP port numbers."""
 
@@ -460,9 +451,8 @@ class ExternalHdmiTrigger(CodeDictStrMap):
         cls,
         response: Response,
         params: PioneerAVRParams,
-        properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for 12V Trigger 1 (HDMI Setup)."""
 
         response.update_zones = {Zone.ALL}
-        return super().parse_response(response, params, properties)
+        return super().parse_response(response, params)
