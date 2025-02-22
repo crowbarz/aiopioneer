@@ -8,7 +8,7 @@ import sys
 import getopt
 
 from aiopioneer import PioneerAVR
-from aiopioneer.const import Zone, TunerBand
+from aiopioneer.const import Zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,9 +40,9 @@ async def main(argv):
 
     await pioneer.query_device_info()
     print(
-        f"AVR device info: model={pioneer.properties.model}, "
-        + f"mac_addr={pioneer.properties.mac_addr}, "
-        + f"software_version={pioneer.properties.software_version}"
+        f"AVR device info: model={pioneer.properties.amp.get("model")}, "
+        + f"mac_addr={pioneer.properties.amp.get("mac_addr")}, "
+        + f"software_version={pioneer.properties.amp.get("software_version")}"
     )
     await pioneer.query_zones()
     print(f"AVR zones discovered: {pioneer.properties.zones}")

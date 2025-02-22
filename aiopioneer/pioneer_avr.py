@@ -48,8 +48,6 @@ from .params import (
     PARAM_VIDEO_RESOLUTION_MODES,
     PARAM_ENABLED_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY,
-    PARAM_QUERY_SOURCES,
-    PARAM_ZONES_INITIAL_REFRESH,
 )
 from .parsers.audio import (
     ChannelLevel,
@@ -164,7 +162,7 @@ class PioneerAVR(PioneerAVRConnection):
     async def build_source_dict(self) -> None:
         """Generate source id<->name translation tables."""
         timeouts = 0
-        self.params.set_runtime_param(PARAM_QUERY_SOURCES, True)
+        self.properties.query_sources = True
         self.properties.source_name_to_id = {}
         self.properties.source_id_to_name = {}
         await self._command_queue_wait()  ## wait for command queue to complete
@@ -191,12 +189,12 @@ class PioneerAVR(PioneerAVRConnection):
 
     async def query_device_model(self) -> bool | None:
         """Query device model from Pioneer AVR."""
-        if self.properties.model is not None:
-            return self.properties.model
+        if (device_model := self.properties.amp.get("model")) is not None:
+            return device_model
         _LOGGER.info("querying device model")
         if res := await self.send_command("query_model", ignore_error=True):
             ## Update default params for this model
-            self.params.set_default_params_model(self.properties.model)
+            self.params.set_default_params_model(self.properties.amp.get("model"))
             return True
         elif res is False:
             _LOGGER.warning("AVR device model unavailable, no model parameters set")
@@ -374,15 +372,12 @@ class PioneerAVR(PioneerAVRConnection):
         self.last_updated = time.time()
         for zone in zones:
             await self._refresh_zone(zone)
-            zones_initial_refresh = self.params.zones_initial_refresh
+            zones_initial_refresh = self.properties.zones_initial_refresh
             if self.properties.power[zone] and zone not in zones_initial_refresh:
                 if zone is Zone.Z1:
                     await self.query_device_info()
                 _LOGGER.info("completed initial refresh for %s", zone.full_name)
-                zones_initial_refresh.add(zone)
-                self.params.set_runtime_param(
-                    PARAM_ZONES_INITIAL_REFRESH, zones_initial_refresh
-                )
+                self.properties.zones_initial_refresh.add(zone)
                 self._call_zone_callbacks(zones=set([zone]))
 
         ## Trigger callbacks to all zones on refresh
@@ -414,7 +409,7 @@ class PioneerAVR(PioneerAVRConnection):
             case "_power_on":
                 check_args(command, args, 1)
                 zone = Zone(args[0])
-                if zone not in self.params.zones_initial_refresh:
+                if zone not in self.properties.zones_initial_refresh:
                     _LOGGER.info("scheduling initial refresh")
                     self.queue_command(["_sleep", 2], insert_at=1)
                     self.queue_command(["_refresh_zone", zone], insert_at=2)

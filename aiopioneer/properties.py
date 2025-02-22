@@ -11,7 +11,6 @@ from .params import (
     PioneerAVRParams,
     PARAM_MODEL,
     PARAM_ZONE_SOURCES,
-    PARAM_QUERY_SOURCES,
     PARAM_DISABLED_LISTENING_MODES,
     PARAM_ENABLED_LISTENING_MODES,
     PARAM_EXTRA_LISTENING_MODES,
@@ -28,10 +27,8 @@ class PioneerAVRProperties:
         self.params = params
 
         ## AVR base properties
-        self.model = params.get_param(PARAM_MODEL)
-        self.software_version = None
-        self.mac_addr: str = None
         self.zones: set[Zone] = set()
+        self.zones_initial_refresh: set[Zone] = set()
         self.power: dict[Zone, bool] = {}
         self.volume: dict[Zone, int] = {}
         self.max_volume: dict[Zone, int] = {}
@@ -44,10 +41,14 @@ class PioneerAVRProperties:
         self.available_listening_modes: dict[str, str] = {}
         self.media_control_mode: dict[Zone, str] = {}
         self.tone: dict[Zone, dict] = {}
-        self.amp: dict[str | Zone, Any] = {}
-        self.tuner: dict[str | Zone, Any] = {}
-        if am_frequency_step := self.params.get_param(PARAM_TUNER_AM_FREQ_STEP):
-            self.tuner["am_frequency_step"] = am_frequency_step
+        self.amp: dict[str | Zone, Any] = {
+            "model": params.get_param(PARAM_MODEL),
+            "software_version": None,
+            "mac_addr": None,
+        }
+        self.tuner: dict[str | Zone, Any] = {
+            "am_frequency_step": self.params.get_param(PARAM_TUNER_AM_FREQ_STEP),
+        }
         self.dsp: dict[str | Zone, Any] = {}
         self.video: dict[str | Zone, Any] = {}
         self.system: dict[str | Zone, Any] = {}
@@ -57,6 +58,7 @@ class PioneerAVRProperties:
         self.channel_levels: dict[str, Any] = {}
 
         ## Source name mappings
+        self.query_sources = None
         self.source_name_to_id: dict[str, str] = {}
         self.source_id_to_name: dict[str, str] = {}
 
@@ -67,11 +69,12 @@ class PioneerAVRProperties:
         self.mute = {}
         self.listening_mode = ""
         self.listening_mode_raw = ""
-        self.amp = {}
-        am_frequency_step = self.tuner.get("am_frequency_step")
-        self.tuner = {}
-        if am_frequency_step:
-            self.tuner["am_frequency_step"] = am_frequency_step
+        self.amp = {
+            "model": self.amp.get("model"),
+            "software_version": self.amp.get("software_version"),
+            "mac_addr": self.amp.get("mac_addr"),
+        }
+        self.tuner = {"am_frequency_step": self.tuner.get("am_frequency_step")}
         self.dsp = {}
         self.video = {}
         self.system = {}
@@ -79,7 +82,7 @@ class PioneerAVRProperties:
 
     def set_source_dict(self, sources: dict[str, str]) -> None:
         """Manually set source id<->name translation tables."""
-        self.params.set_runtime_param(PARAM_QUERY_SOURCES, False)
+        self.query_sources = False
         self.source_name_to_id = copy.deepcopy(sources)
         self.source_id_to_name = {v: k for k, v in sources.items()}
 

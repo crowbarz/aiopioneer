@@ -69,19 +69,11 @@ PARAM_ENABLED_LISTENING_MODES = "enabled_amp_listening_modes"
 ## PARAM_EXTRA_LISTENING_MODES
 PARAM_DISABLED_LISTENING_MODES = "disabled_amp_listening_modes"
 
-## Tuner step for AM frequencies. If None, calculate automatically when tuner
-## is first used (stored as system param)
+## Tuner step for AM frequencies. If None, calculate automatically when AM
+## tuner input source is used
 PARAM_TUNER_AM_FREQ_STEP = "am_frequency_step"
 
-## System params
-
-PARAM_QUERY_SOURCES = "query_sources"
-
-
-## Set of Zones that have completed initial refresh
-PARAM_ZONES_INITIAL_REFRESH = "zones_initial_refresh"
-
-DEFAULT_PARAM_ENABLED_FUNCTIONS = [
+DEFAULT_ENABLED_FUNCTIONS = [
     "basic",
     "audio",
     "amp",
@@ -94,7 +86,7 @@ DEFAULT_PARAM_ENABLED_FUNCTIONS = [
     "display",
 ]
 
-PARAM_ENABLED_FUNCTIONS_NO_VIDEO = [
+DEFAULT_ENABLED_FUNCTIONS_NO_VIDEO = [
     "basic",
     "audio",
     "amp",
@@ -105,10 +97,6 @@ PARAM_ENABLED_FUNCTIONS_NO_VIDEO = [
     "system",
     "display",
 ]
-
-PARAM_DEFAULTS_SYSTEM = {
-    PARAM_QUERY_SOURCES: None,
-}
 
 PARAM_DEFAULTS = {
     PARAM_MODEL: None,
@@ -125,7 +113,7 @@ PARAM_DEFAULTS = {
     PARAM_DEBUG_UPDATER: False,
     PARAM_DEBUG_COMMAND: False,
     PARAM_DEBUG_COMMAND_QUEUE: False,
-    PARAM_ENABLED_FUNCTIONS: DEFAULT_PARAM_ENABLED_FUNCTIONS,
+    PARAM_ENABLED_FUNCTIONS: DEFAULT_ENABLED_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY: False,
     PARAM_ZONE_1_SOURCES: [],
     PARAM_ZONE_2_SOURCES: [
@@ -381,7 +369,7 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
                     "0151",
                     "0212",
                 ],
-                PARAM_ENABLED_FUNCTIONS: PARAM_ENABLED_FUNCTIONS_NO_VIDEO,
+                PARAM_ENABLED_FUNCTIONS: DEFAULT_ENABLED_FUNCTIONS_NO_VIDEO,
             },
         ),
         (
@@ -678,19 +666,12 @@ class PioneerAVRParams:
         """Initialise the Pioneer AVR params."""
 
         self._default_params = PARAM_DEFAULTS
-        self._system_params = PARAM_DEFAULTS_SYSTEM
         self._user_params: dict[str, Any] = {}
         self._params: dict[str, Any] = {}
         self._update_callbacks: list[Callable[[], None]] = []
         if model := params.get(PARAM_MODEL):
             self.set_default_params_model(model)
         self.set_user_params(params)
-
-    ## Public parameters
-    @property
-    def zones_initial_refresh(self) -> set[Zone]:
-        """Return set of zones that have completed initial refresh."""
-        return self.get_runtime_param(PARAM_ZONES_INITIAL_REFRESH, set())
 
     ## Parameter management functions
     def register_update_callback(self, callback: Callable[[], None]) -> None:
@@ -702,7 +683,6 @@ class PioneerAVRParams:
         self._params = {}
         merge(self._params, self._default_params)
         merge(self._params, self._user_params, force_overwrite=True)
-        merge(self._params, self._system_params)
         for callback in self._update_callbacks:
             callback()
 
@@ -731,11 +711,6 @@ class PioneerAVRParams:
         self._user_params[param] = value
         self._update_params()
 
-    def set_runtime_param(self, param: str, value: Any) -> None:
-        """Set a run-time parameter."""
-        self._system_params[param] = value
-        self._update_params()
-
     @property
     def default_params(self) -> dict[str, Any]:
         """Get a copy of current default parameters."""
@@ -755,7 +730,3 @@ class PioneerAVRParams:
     def get_param(self, param_name: str, default: Any = None) -> Any:
         """Get the value of the specified parameter."""
         return self._params.get(param_name, default)
-
-    def get_runtime_param(self, param_name: str, default: Any = None) -> Any:
-        """Get the value of the specified system parameter."""
-        return self._system_params.get(param_name, default)

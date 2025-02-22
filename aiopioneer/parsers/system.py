@@ -9,7 +9,6 @@ from ..const import (
 )
 from ..params import (
     PioneerAVRParams,
-    PARAM_QUERY_SOURCES,
     PARAM_MHL_SOURCE,
     PARAM_SPEAKER_SYSTEM_MODES,
 )
@@ -181,12 +180,12 @@ class InputName(CodeMapBase):
     def parse_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
+        params: PioneerAVRParams,  # pylint: disable=unused-argument
         properties: PioneerAVRProperties,
     ) -> list[Response]:
         """Response parser for input name."""
 
-        if not params.get_param(PARAM_QUERY_SOURCES):
+        if not properties.query_sources:
             ## Only update AVR source mappings if AVR sources are being queried
             return []
 
@@ -252,8 +251,8 @@ class AudioParameterProhibition(CodeMapBase):
     def parse_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
-        properties: PioneerAVRProperties,
+        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        properties: PioneerAVRProperties,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response parser for audio parameter prohibition."""
         response.update(queue_commands=[["_delayed_query_basic", 2]])
@@ -267,8 +266,8 @@ class AudioParameterWorking(CodeMapBase):
     def parse_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
-        properties: PioneerAVRProperties,
+        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        properties: PioneerAVRProperties,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response parser for audio parameter working."""
         response.update(queue_commands=[["_delayed_query_basic", 2]])
