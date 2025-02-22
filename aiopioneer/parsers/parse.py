@@ -334,24 +334,21 @@ def process_raw_response(
         parse_func = match_resp[1]
         parse_zone: Zone = match_resp[2]
         code = raw_resp[len(parse_cmd) :]
-        responses: list[Response] = []
-        if isinstance(parse_func, FunctionType):
-            responses = parse_func(code, params, zone=parse_zone, command=parse_cmd)
-        elif issubclass(parse_func, CodeMapBase):
-            responses = parse_func.parse_response(
-                response=Response(
-                    properties=properties,
-                    raw=code,
-                    response_command=parse_cmd,
-                    base_property=match_resp[3] if len(match_resp) >= 4 else None,
-                    property_name=match_resp[4] if len(match_resp) >= 5 else None,
-                    zone=parse_zone,
-                ),
-                params=params,
-                properties=properties,
-            )
-        else:
+
+        if not issubclass(parse_func, CodeMapBase):
             raise RuntimeError(f"invalid parser {parse_func} for response: {code}")
+        responses = parse_func.parse_response(
+            response=Response(
+                properties=properties,
+                raw=code,
+                response_command=parse_cmd,
+                base_property=match_resp[3] if len(match_resp) >= 4 else None,
+                property_name=match_resp[4] if len(match_resp) >= 5 else None,
+                zone=parse_zone,
+            ),
+            params=params,
+            properties=properties,
+        )
         if responses is None:
             raise RuntimeError(f"parser {parse_func} returned null response: {code}")
 
