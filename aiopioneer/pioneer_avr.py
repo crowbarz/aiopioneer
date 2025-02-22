@@ -338,13 +338,13 @@ class PioneerAVR(PioneerAVRConnection):
                     enabled_functions -= set(
                         self.params.get_param(PARAM_INITIAL_REFRESH_FUNCTIONS)
                     )
-                if comm_parts[0] == "query_" and comm_parts[1] in enabled_functions:
+                if comm_parts[0] == "query" and comm_parts[1] in enabled_functions:
                     await self.send_command(
                         comm, zone, ignore_error=True, rate_limit=False
                     )
                 elif (
                     comm == "set_channel_levels"
-                    and "channels" in self.params.get_param(PARAM_ENABLED_FUNCTIONS)
+                    and "channels" in enabled_functions
                     and self.properties.power.get(Zone.Z1)
                 ):
                     ## Channel level updates are handled differently as it
