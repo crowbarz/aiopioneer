@@ -24,7 +24,7 @@ class PioneerAVRProperties:
     """Pioneer AVR properties class."""
 
     def __init__(self, params: PioneerAVRParams):
-        self.params = params
+        self._params = params
 
         ## AVR base properties
         self.zones: set[Zone] = set()
@@ -47,7 +47,7 @@ class PioneerAVRProperties:
             "mac_addr": None,
         }
         self.tuner: dict[str | Zone, Any] = {
-            "am_frequency_step": self.params.get_param(PARAM_TUNER_AM_FREQ_STEP),
+            "am_frequency_step": self._params.get_param(PARAM_TUNER_AM_FREQ_STEP),
         }
         self.dsp: dict[str | Zone, Any] = {}
         self.video: dict[str | Zone, Any] = {}
@@ -88,7 +88,7 @@ class PioneerAVRProperties:
 
     def get_source_list(self, zone: Zone = Zone.Z1) -> list[str]:
         """Return list of available input sources."""
-        source_ids = self.params.get_param(PARAM_ZONE_SOURCES[zone], [])
+        source_ids = self._params.get_param(PARAM_ZONE_SOURCES[zone], [])
         return list(
             self.source_name_to_id.keys()
             if not source_ids
@@ -103,7 +103,7 @@ class PioneerAVRProperties:
         """Return source id<->name translation tables."""
         if zone is None:
             return MappingProxyType(self.source_name_to_id)
-        source_ids = self.params.get_param(PARAM_ZONE_SOURCES[zone], [])
+        source_ids = self._params.get_param(PARAM_ZONE_SOURCES[zone], [])
         return (
             self.source_name_to_id
             if not source_ids
@@ -145,12 +145,12 @@ class PioneerAVRProperties:
 
     def update_listening_modes(self) -> None:
         """Update list of valid listening modes for current input source."""
-        self.listening_modes_all = LISTENING_MODES | self.params.get_param(
+        self.listening_modes_all = LISTENING_MODES | self._params.get_param(
             PARAM_EXTRA_LISTENING_MODES, {}
         )
         self.available_listening_modes = {}
-        disabled_modes = self.params.get_param(PARAM_DISABLED_LISTENING_MODES, [])
-        enabled_modes = self.params.get_param(PARAM_ENABLED_LISTENING_MODES, [])
+        disabled_modes = self._params.get_param(PARAM_DISABLED_LISTENING_MODES, [])
+        enabled_modes = self._params.get_param(PARAM_ENABLED_LISTENING_MODES, [])
         available_mode_names = []
         multichannel = self.audio.get("input_multichannel")
 
