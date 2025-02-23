@@ -1,4 +1,4 @@
-"""Pioneer AVR response parsers for video parameters."""
+"""aiopioneer response decoders for video parameters."""
 
 from .code_map import CodeIntMap, CodeDictStrMap
 

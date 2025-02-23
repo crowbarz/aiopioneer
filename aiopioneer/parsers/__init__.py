@@ -1,1 +1,1 @@
-"""aiopioneer parsing classes."""
+"""aiopioneer decode classes."""

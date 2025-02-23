@@ -1,4 +1,4 @@
-"""aiopioneer response parsers for tuner parameters."""
+"""aiopioneer response decoders for tuner parameters."""
 
 from ..const import TunerBand
 from ..params import PioneerAVRParams
@@ -15,13 +15,13 @@ class FrequencyFM(CodeFloatMap):
     value_divider = 0.01
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,
     ) -> list[Response]:
-        """Response parser for tuner FM frequency."""
-        super().parse_response(response, params)
+        """Response decoder for tuner FM frequency."""
+        super().decode_response(response, params)
         return [
             response.clone(property_name="band", value=TunerBand.FM),
             *Preset.update_preset(response),
@@ -40,13 +40,13 @@ class FrequencyAM(CodeIntMap):
     VALUE_MAX_STEP = {9: 1701, 10: 1700}
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,
     ) -> list[Response]:
-        """Response parser for tuner AM frequency."""
-        super().parse_response(response, params)
+        """Response decoder for tuner AM frequency."""
+        super().decode_response(response, params)
 
         def glean_frequency_step(response: Response) -> list[Response]:
             """Determine frequency step from current frequency."""
@@ -112,19 +112,19 @@ class Preset(CodeMapBase):
     cached_preset: tuple[str, int] = []
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
-        """Response parser for tuner preset."""
+        """Response decoder for tuner preset."""
 
         def cache_preset(response: Response) -> list[Response]:
             """Cache preset for later update."""
             cls.cached_preset = response.value
             return [response]
 
-        super().parse_response(response, params)
+        super().decode_response(response, params)
         response.update(
             clear_property=True,
             queue_commands=[["_oob", "query_tuner_frequency"]],
@@ -180,14 +180,14 @@ class FrequencyAMStep(CodeIntMap):
     """AM frequency step. (Supported on very few AVRs)"""
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
-        """Response parser for AM frequency step."""
+        """Response decoder for AM frequency step."""
 
-        super().parse_response(response, params)
+        super().decode_response(response, params)
         return FrequencyAM.update_frequency_step(
             response=response, frequency_step=response.value
         )

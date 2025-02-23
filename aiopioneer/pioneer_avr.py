@@ -245,8 +245,8 @@ class PioneerAVR(PioneerAVRConnection):
                     callback()
 
     ## Response handling callbacks
-    def parse_response(self, response_raw: str) -> None:
-        """Parse response and update cached parameters."""
+    def decode_response(self, response_raw: str) -> None:
+        """Decode response and commit to properties."""
         updated_zones, command_queue = process_raw_response(
             response_raw, self.params, self.properties
         )

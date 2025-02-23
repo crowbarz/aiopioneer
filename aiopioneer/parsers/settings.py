@@ -1,4 +1,4 @@
-"""aiopioneer response parsers for AVR settings."""
+"""aiopioneer response decoders for AVR settings."""
 
 from ..const import Zone
 from ..params import PioneerAVRParams
@@ -18,37 +18,37 @@ class McaccDiagnosticStatus(CodeMapBase):
     """MCACC diagnostic status."""
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,
     ) -> list[Response]:
-        """Response parser for MCACC diagnostic status."""
+        """Response decoder for MCACC diagnostic status."""
 
-        def parse_sub(
+        def decode_child_response(
             property_name: str, code: str, code_map: CodeMapBase
         ) -> list[Response]:
-            """Parse a sub response."""
-            sub_response = response.clone(property_name=property_name, code=code)
-            return code_map.parse_response(sub_response, params)
+            """Decode a child response."""
+            child_response = response.clone(property_name=property_name, code=code)
+            return code_map.decode_response(child_response, params)
 
         return [
-            *parse_sub(
+            *decode_child_response(
                 property_name="mcacc_diagnostic_current_measurement",
                 code=response.code[:2],
                 code_map=McaccDiagnosticCurrentMeasurement,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="mcacc_diagnostic_total_measurement",
                 code=response.code[2:4],
                 code_map=McaccDiagnosticTotalMeasurement,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="mcacc_diagnostic_status",
                 code=response.code[5],
                 code_map=McaccMeasurementStatus,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="mcacc_diagnostic_error",
                 code=response.code[-1],
                 code_map=McaccMeasurementError,
@@ -92,47 +92,47 @@ class StandingWaveStatus(CodeMapBase):
     """Standing wave status."""
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,
     ) -> list[Response]:
-        """Response parser for standing wave status."""
+        """Response decoder for standing wave status."""
 
-        def parse_sub(
+        def decode_child_response(
             property_name: str, code: str, code_map: CodeMapBase
         ) -> list[Response]:
-            """Parse a sub response."""
-            sub_response = response.clone(property_name=property_name, code=code)
-            return code_map.parse_response(sub_response, params)
+            """Decode a child response."""
+            child_response = response.clone(property_name=property_name, code=code)
+            return code_map.decode_response(child_response, params)
 
         return [
-            *parse_sub(
+            *decode_child_response(
                 property_name="standing_wave_memory",
                 code=response.code[:2],
                 code_map=StandingWaveMemory,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="standing_wave_filter_channel",
                 code=response.code[2],
                 code_map=StandingWaveFilterChannel,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="standing_wave_filter_number",
                 code=response.code[3],
                 code_map=StandingWaveFilterNumber,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="standing_wave_frequency",
                 code=response.code[4:6],
                 code_map=StandingWaveFrequency,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="standing_wave_q",
                 code=response.code[6:8],
                 code_map=StandingWaveQ,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="standing_wave_attenuator",
                 code=response.code[8:10],  ## NOTE: assumed
                 code_map=StandingWaveAttenuator,
@@ -223,16 +223,16 @@ class StandingWaveSwTrim(CodeFloatMap):
     value_divider = 0.5
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,
     ) -> list[Response]:
-        """Response parser for Standing wave SW trim."""
+        """Response decoder for Standing wave SW trim."""
         mcacc_memory = response.code[:2]
         response.code = response.code[2:4]
         response.property_name = f"standing_wave_sw_trim.{mcacc_memory}"
-        return super().parse_response(response, params)
+        return super().decode_response(response, params)
 
     ## NOTE: value_to_code not implemented
 
@@ -281,12 +281,12 @@ class SpeakerSettings(CodeDictMap):
     }
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
-        """Response parser for speaker setting."""
+        """Response decoder for speaker setting."""
         speaker = response.code[:2]
         speaker_sub = response.code[2]
         response.value = cls.code_to_value(speaker).get(speaker_sub, speaker_sub)
@@ -303,17 +303,17 @@ class McaccChannelLevel(CodeFloatMap):
     value_divider = 0.5
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,
     ) -> list[Response]:
-        """Response parser for MCACC channel level."""
+        """Response decoder for MCACC channel level."""
         memory = response.code[0:2]
         speaker = response.code[2:5].replace("_", "")
         response.code = response.code[5:7]
         response.property_name = f"mcacc_channel_level.{memory}.{speaker}"
-        return super().parse_response(response, params)
+        return super().decode_response(response, params)
 
     ## NOTE: value_to_code unimplemented
 
@@ -324,17 +324,17 @@ class McaccSpeakerDistance(CodeFloatMap):
     value_divider = 0.01
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
-        """Response parser for MCACC speaker distance."""
+        """Response decoder for MCACC speaker distance."""
         memory = response.code[0:2]
         speaker = response.code[2:5].replace("_", "")
         response.code = response.code[5:]
         response.property_name = f"mcacc_speaker_distance.{memory}.{speaker}"
-        super().parse_response(response, params)
+        super().decode_response(response, params)
         unit = "m" if isinstance(response.value, float) else "ft"
         return [
             response,
@@ -361,16 +361,16 @@ class InputLevelAdjust(CodeFloatMap):
     value_divider = 0.5
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,
     ) -> list[Response]:
-        """Response parser for input level adjust."""
+        """Response decoder for input level adjust."""
         source = response.code[0:2]
         response.code = response.code[2:4]
         response.property_name = f"input_level.{source}"
-        return super().parse_response(response, params)
+        return super().decode_response(response, params)
 
     ## NOTE: value_to_code unimplemented
 
@@ -396,12 +396,12 @@ class PortNumbers(CodeMapBase):
     """Enabled TCP port numbers."""
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
-        """Response parser for enabled TCP port numbers."""
+        """Response decoder for enabled TCP port numbers."""
 
         ports = [int(response.code[i : i + 5]) for i in range(0, len(response.code), 5)]
 
@@ -447,12 +447,12 @@ class ExternalHdmiTrigger(CodeDictStrMap):
     }
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,
     ) -> list[Response]:
-        """Response parser for 12V Trigger 1 (HDMI Setup)."""
+        """Response decoder for 12V Trigger 1 (HDMI Setup)."""
 
         response.update_zones = {Zone.ALL}
-        return super().parse_response(response, params)
+        return super().decode_response(response, params)

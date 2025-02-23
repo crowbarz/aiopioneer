@@ -1,4 +1,4 @@
-"""aiopioneer response parsers for audio parameters."""
+"""aiopioneer response decoders for audio parameters."""
 
 from ..params import PioneerAVRParams
 from .code_map import CodeDictStrMap, CodeDictListMap, CodeIntMap, CodeFloatMap
@@ -16,16 +16,16 @@ class ChannelLevel(CodeFloatMap):
     code_zfill = 2
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,
     ) -> list[Response]:
-        """Response parser for channel level."""
+        """Response decoder for channel level."""
         code = response.code[3:]
         speaker = response.code[:3].strip("_").upper()
         response.update(code=code, property_name=speaker)
-        return super().parse_response(response, params)
+        return super().decode_response(response, params)
 
 
 class ListeningMode(CodeDictListMap):
@@ -34,13 +34,13 @@ class ListeningMode(CodeDictListMap):
     ## code_map updated in _execute_local_command
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,
     ) -> list[Response]:
-        """Response parser for listening mode."""
-        super().parse_response(response, params)
+        """Response decoder for listening mode."""
+        super().decode_response(response, params)
         return [
             response,
             response.clone(base_property="listening_mode_raw", value=response.code),

@@ -43,12 +43,12 @@ class CodeMapBase:
         return v == value
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
-        """Parse a response."""
+        """Decode a response."""
         response.update(value=cls.code_to_value(response.code))
         return [response]
 

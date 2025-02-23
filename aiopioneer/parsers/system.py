@@ -1,4 +1,4 @@
-"""aiopioneer response parsers for core system responses."""
+"""aiopioneer response decoders for core system responses."""
 
 import re
 
@@ -27,13 +27,13 @@ class Power(CodeInverseBoolMap):
     """Zone power status."""
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,
     ) -> list[Response]:
-        """Response parser for zone power status."""
-        super().parse_response(response, params)
+        """Response decoder for zone power status."""
+        super().decode_response(response, params)
         queue_commands = []
         if response.value:
             queue_commands.append(["_oob", "_power_on", response.zone])
@@ -48,13 +48,13 @@ class InputSource(CodeMapBase):
     """Zone input source."""
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,
     ) -> list[Response]:
-        """Response parser for zone input source."""
-        super().parse_response(response, params)
+        """Response decoder for zone input source."""
+        super().decode_response(response, params)
         source = response.value
         queue_commands = []
         if source == SOURCE_TUNER:
@@ -155,14 +155,14 @@ class SpeakerSystem(CodeDictStrMap):
     """Speaker system."""
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,
     ) -> list[Response]:
-        """Response parser for speaker system."""
+        """Response decoder for speaker system."""
         cls.code_map = params.get_param(PARAM_SPEAKER_SYSTEM_MODES, {})
-        super().parse_response(response, params)
+        super().decode_response(response, params)
         return [
             response,
             response.clone(property_name="speaker_system_raw", value=response.code),
@@ -173,12 +173,12 @@ class InputName(CodeMapBase):
     """Input name."""
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
-        """Response parser for input name."""
+        """Response decoder for input name."""
 
         if not response.properties.query_sources:
             ## Only update AVR source mappings if AVR sources are being queried
@@ -243,12 +243,12 @@ class AudioParameterProhibition(CodeMapBase):
     """Audio parameter prohibition."""
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
-        """Response parser for audio parameter prohibition."""
+        """Response decoder for audio parameter prohibition."""
         response.update(queue_commands=[["_delayed_query_basic", 2]])
         return [response]
 
@@ -257,11 +257,11 @@ class AudioParameterWorking(CodeMapBase):
     """Audio parameter working."""
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
-        """Response parser for audio parameter working."""
+        """Response decoder for audio parameter working."""
         response.update(queue_commands=[["_delayed_query_basic", 2]])
         return [response]

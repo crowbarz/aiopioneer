@@ -202,7 +202,7 @@ Clear the name mapping for _source_id_.
 
 Add _command_ to the command queue, to to be sent in the background to the AVR or executed as a local command. Starts the command queue task if not already running. <br/>
 _command_ may be specified as a **str**, or a **list** whose first element is a **str** that is used as the command to execute. The list form is used for local commands that support arguments of arbitrary type.
-The following local commands are supported, these are mainly used by the command parsers for more complex actions:
+The following local commands are supported, these are mainly used by the command decoders for more complex actions:
 
 - `_power_on`: execute initial refresh on zone power on
 - `_full_refresh`: perform a full refresh on all AVR Zones

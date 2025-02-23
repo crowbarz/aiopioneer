@@ -1,4 +1,4 @@
-"""aiopioneer parsed response model."""
+"""aiopioneer response decode model."""
 
 from collections.abc import Callable
 from typing import Any, Self
@@ -7,7 +7,7 @@ from ..properties import PioneerAVRProperties
 
 
 class Response:
-    """Structured response for dynamic parsing into aiopioneer properties."""
+    """Structured response for dynamic decoding into aiopioneer properties."""
 
     def __init__(
         self,

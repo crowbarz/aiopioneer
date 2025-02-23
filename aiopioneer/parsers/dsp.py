@@ -1,4 +1,4 @@
-"""aiopioneer response parsers for DSP functions. Most responses are only valid for Zone 1."""
+"""aiopioneer response decoders for DSP functions. Most responses are only valid for Zone 1."""
 
 from .code_map import (
     CodeIntMap,

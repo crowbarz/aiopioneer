@@ -1,4 +1,4 @@
-"""aiopioneer response parsers for informational responses."""
+"""aiopioneer response decoders for informational responses."""
 
 from ..params import PioneerAVRParams
 from .code_map import (
@@ -16,80 +16,80 @@ class AudioInformation(CodeMapBase):
     """Audio information."""
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,
     ) -> list[Response]:
-        """Response parser for audio information."""
+        """Response decoder for audio information."""
 
-        def parse_sub(
+        def decode_child_response(
             property_name: str, code: str, code_map: CodeMapBase
         ) -> list[Response]:
-            """Parse a sub response."""
-            sub_response = response.clone(property_name=property_name, code=code)
-            return code_map.parse_response(sub_response, params)
+            """Decode a child response."""
+            child_response = response.clone(property_name=property_name, code=code)
+            return code_map.decode_response(child_response, params)
 
-        def parse_input_channel(channel: str, code: str) -> list[Response]:
-            return parse_sub(
+        def decode_input_channel(channel: str, code: str) -> list[Response]:
+            return decode_child_response(
                 property_name=f"input_channels.{channel}",
                 code=code,
                 code_map=AudioChannelActive,
             )
 
-        def parse_output_channel(channel: str, code: str) -> list[Response]:
-            return parse_sub(
+        def decode_output_channel(channel: str, code: str) -> list[Response]:
+            return decode_child_response(
                 property_name=f"output_channels.{channel}",
                 code=code,
                 code_map=AudioChannelActive,
             )
 
         responses = [
-            *parse_sub(
+            *decode_child_response(
                 property_name="input_signal",
                 code=response.code[:2],
                 code_map=AudioSignalInputInfo,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="input_frequency",
                 code=response.code[2:4],
                 code_map=AudioSignalInputFreq,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="input_multichannel",
                 code=response.code[4:7],
                 code_map=InputMultichannel,
             ),
-            *parse_input_channel(channel="L", code=response.code[4]),
-            *parse_input_channel(channel="C", code=response.code[5]),
-            *parse_input_channel(channel="R", code=response.code[6]),
-            *parse_input_channel(channel="SL", code=response.code[7]),
-            *parse_input_channel(channel="SR", code=response.code[8]),
-            *parse_input_channel(channel="SBL", code=response.code[9]),
-            *parse_input_channel(channel="SBC", code=response.code[10]),
-            *parse_input_channel(channel="SBR", code=response.code[11]),
-            *parse_input_channel(channel="LFE", code=response.code[12]),
-            *parse_input_channel(channel="FHL", code=response.code[13]),
-            *parse_input_channel(channel="FHR", code=response.code[14]),
-            *parse_input_channel(channel="FWL", code=response.code[15]),
-            *parse_input_channel(channel="FWR", code=response.code[16]),
-            *parse_input_channel(channel="XL", code=response.code[17]),
-            *parse_input_channel(channel="XC", code=response.code[18]),
-            *parse_input_channel(channel="XR", code=response.code[19]),
+            *decode_input_channel(channel="L", code=response.code[4]),
+            *decode_input_channel(channel="C", code=response.code[5]),
+            *decode_input_channel(channel="R", code=response.code[6]),
+            *decode_input_channel(channel="SL", code=response.code[7]),
+            *decode_input_channel(channel="SR", code=response.code[8]),
+            *decode_input_channel(channel="SBL", code=response.code[9]),
+            *decode_input_channel(channel="SBC", code=response.code[10]),
+            *decode_input_channel(channel="SBR", code=response.code[11]),
+            *decode_input_channel(channel="LFE", code=response.code[12]),
+            *decode_input_channel(channel="FHL", code=response.code[13]),
+            *decode_input_channel(channel="FHR", code=response.code[14]),
+            *decode_input_channel(channel="FWL", code=response.code[15]),
+            *decode_input_channel(channel="FWR", code=response.code[16]),
+            *decode_input_channel(channel="XL", code=response.code[17]),
+            *decode_input_channel(channel="XC", code=response.code[18]),
+            *decode_input_channel(channel="XR", code=response.code[19]),
         ]
 
         ## (data21) to (data25) are reserved according to FY16AVRs
         ## Decode output signal data
         responses.extend(
             [
-                *parse_output_channel(channel="L", code=response.code[25]),
-                *parse_output_channel(channel="C", code=response.code[26]),
-                *parse_output_channel(channel="R", code=response.code[27]),
-                *parse_output_channel(channel="SL", code=response.code[28]),
-                *parse_output_channel(channel="SR", code=response.code[29]),
-                *parse_output_channel(channel="SBL", code=response.code[30]),
-                *parse_output_channel(channel="SB", code=response.code[31]),
-                *parse_output_channel(channel="SBR", code=response.code[32]),
+                *decode_output_channel(channel="L", code=response.code[25]),
+                *decode_output_channel(channel="C", code=response.code[26]),
+                *decode_output_channel(channel="R", code=response.code[27]),
+                *decode_output_channel(channel="SL", code=response.code[28]),
+                *decode_output_channel(channel="SR", code=response.code[29]),
+                *decode_output_channel(channel="SBL", code=response.code[30]),
+                *decode_output_channel(channel="SB", code=response.code[31]),
+                *decode_output_channel(channel="SBR", code=response.code[32]),
             ]
         )
 
@@ -97,27 +97,27 @@ class AudioInformation(CodeMapBase):
         if len(response.code) > 43:
             responses.extend(
                 [
-                    *parse_sub(
+                    *decode_child_response(
                         property_name="output_frequency",
                         code=response.code[43:45],
                         code_map=AudioSignalInputFreq,
                     ),
-                    *parse_sub(
+                    *decode_child_response(
                         property_name="output_bits",
                         code=response.code[45:47],
                         code_map=CodeIntMap,
                     ),
-                    *parse_sub(
+                    *decode_child_response(
                         property_name="output_pqls",
                         code=response.code[51],
                         code_map=AudioWorkingPqls,
                     ),
-                    *parse_sub(
+                    *decode_child_response(
                         property_name="output_auto_phase_control_plus",
                         code=response.code[52:54],
                         code_map=CodeIntMap,
                     ),
-                    *parse_sub(
+                    *decode_child_response(
                         property_name="output_reverse_phase",
                         code=response.code[54],
                         code_map=CodeBoolMap,
@@ -141,12 +141,12 @@ class InputMultichannel(CodeBoolMap):
     """Input multichannel."""
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,
     ) -> list[Response]:
-        """Response parser for input multichannel."""
+        """Response decoder for input multichannel."""
 
         def check_input_multichannel(response: Response) -> list[Response]:
             """Trigger listening mode update if input multichannel has changed."""
@@ -155,7 +155,7 @@ class InputMultichannel(CodeBoolMap):
             response.update(queue_commands=["_update_listening_modes"])
             return [response]
 
-        super().parse_response(response, params)
+        super().decode_response(response, params)
         response.update(callback=check_input_multichannel)
         return [response]
 
@@ -254,92 +254,92 @@ class VideoInformation(CodeMapBase):
     """Video information."""
 
     @classmethod
-    def parse_response(
+    def decode_response(
         cls,
         response: Response,
         params: PioneerAVRParams,
     ) -> list[Response]:
-        """Response parser for video information."""
+        """Response decoder for video information."""
 
-        def parse_sub(
+        def decode_child_response(
             property_name: str, code: str, code_map: CodeMapBase
         ) -> list[Response]:
-            """Parse a sub response."""
-            sub_response = response.clone(property_name=property_name, code=code)
-            return code_map.parse_response(sub_response, params)
+            """Decode a child response."""
+            child_response = response.clone(property_name=property_name, code=code)
+            return code_map.decode_response(child_response, params)
 
         responses = [
-            *parse_sub(
+            *decode_child_response(
                 property_name="signal_input_terminal",
                 code=response.code[0],
                 code_map=VideoSignalInputTerminal,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="signal_input_resolution",
                 code=response.code[1:3],
                 code_map=VideoSignalFormat,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="signal_input_aspect",
                 code=response.code[3],
                 code_map=VideoSignalAspect,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="signal_input_color_format",
                 code=response.code[4],
                 code_map=VideoSignalColorspace,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="signal_input_bit",
                 code=response.code[5],
                 code_map=VideoSignalBits,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="signal_input_extended_colorspace",
                 code=response.code[6],
                 code_map=VideoSignalExtColorspace,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="signal_output_resolution",
                 code=response.code[7:9],
                 code_map=VideoSignalFormat,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="signal_output_aspect",
                 code=response.code[9],
                 code_map=VideoSignalAspect,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="signal_output_color_format",
                 code=response.code[10],
                 code_map=VideoSignalColorspace,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="signal_output_bit",
                 code=response.code[11],
                 code_map=VideoSignalBits,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="signal_output_extended_colorspace",
                 code=response.code[12],
                 code_map=VideoSignalExtColorspace,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="signal_hdmi1_recommended_resolution",
                 code=response.code[13:15],
                 code_map=VideoSignalFormat,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="signal_hdmi1_deepcolor",
                 code=response.code[15],
                 code_map=VideoSignalBits,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="signal_hdmi2_recommended_resolution",
                 code=response.code[21:23],
                 code_map=VideoSignalFormat,
             ),
-            *parse_sub(
+            *decode_child_response(
                 property_name="signal_hdmi2_deepcolor",
                 code=response.code[23],
                 code_map=VideoSignalBits,
@@ -350,32 +350,32 @@ class VideoInformation(CodeMapBase):
         if len(response.code) > 40:
             responses.extend(
                 [
-                    *parse_sub(
+                    *decode_child_response(
                         property_name="signal_hdmi3_recommended_resolution",
                         code=response.code[29:31],
                         code_map=VideoSignalFormat,
                     ),
-                    *parse_sub(
+                    *decode_child_response(
                         property_name="signal_hdmi3_deepcolor",
                         code=response.code[31],
                         code_map=VideoSignalBits,
                     ),
-                    *parse_sub(
+                    *decode_child_response(
                         property_name="input_3d_format",
                         code=response.code[37:39],
                         code_map=VideoSignal3DMode,
                     ),
-                    *parse_sub(
+                    *decode_child_response(
                         property_name="output_3d_format",
                         code=response.code[39:41],
                         code_map=VideoSignal3DMode,
                     ),
-                    *parse_sub(
+                    *decode_child_response(
                         property_name="signal_hdmi4_recommended_resolution",
                         code=response.code[41:43],
                         code_map=VideoSignalFormat,
                     ),
-                    *parse_sub(
+                    *decode_child_response(
                         property_name="signal_hdmi4_deepcolor",
                         code=response.code[44],
                         code_map=VideoSignalBits,

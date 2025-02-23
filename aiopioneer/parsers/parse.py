@@ -1,9 +1,9 @@
-"""aiopioneer parse response."""
+"""aiopioneer response decoder."""
 
 import logging
 
 from ..const import Zone
-from ..exceptions import AVRResponseParseError
+from ..exceptions import AVRResponseDecodeError
 from ..params import PioneerAVRParams
 from ..properties import PioneerAVRProperties
 from .audio import ChannelLevel, ListeningMode, ToneMode, ToneDb
@@ -239,8 +239,8 @@ RESPONSE_DATA = [
 ]
 
 
-def _process_response(properties: PioneerAVRProperties, response: Response) -> None:
-    """Process a parsed response."""
+def _commit_response(properties: PioneerAVRProperties, response: Response) -> None:
+    """Commit a decoded response to properties."""
     current_base = current_value = None
 
     if response.base_property is None:
@@ -320,44 +320,43 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
 def process_raw_response(
     raw_resp: str, params: PioneerAVRParams, properties: PioneerAVRProperties
 ) -> tuple[set[Zone], list[str]]:
-    """Processes a raw response and looks up required functions from RESPONSE_DATA."""
+    """Processes a raw response, decode and apply to properties."""
     try:
         match_resp = next((r for r in RESPONSE_DATA if raw_resp.startswith(r[0])), None)
         if not match_resp:
             ## No error handling as not all responses have been captured by aiopioneer.
             if not raw_resp.startswith("E"):
-                _LOGGER.debug("unparsed raw response: %s", raw_resp)
+                _LOGGER.debug("undecoded response: %s", raw_resp)
             return [], []
 
-        parse_cmd: str = match_resp[0]
-        parse_func = match_resp[1]
-        parse_zone: Zone = match_resp[2]
-        code = raw_resp[len(parse_cmd) :]
+        response_cmd: str = match_resp[0]
+        code_map = match_resp[1]
+        response_zone: Zone = match_resp[2]
+        code = raw_resp[len(response_cmd) :]
 
-        if not issubclass(parse_func, CodeMapBase):
-            raise RuntimeError(f"invalid parser {parse_func} for response: {code}")
-        responses = parse_func.parse_response(
+        if not issubclass(code_map, CodeMapBase):
+            raise RuntimeError(f"invalid decoder {code_map} for response: {code}")
+        responses = code_map.decode_response(
             response=Response(
                 properties=properties,
                 code=code,
-                response_command=parse_cmd,
+                response_command=response_cmd,
                 base_property=match_resp[3] if len(match_resp) >= 4 else None,
                 property_name=match_resp[4] if len(match_resp) >= 5 else None,
-                zone=parse_zone,
+                zone=response_zone,
             ),
             params=params,
         )
         if responses is None:
-            raise RuntimeError(f"parser {parse_func} returned null response: {code}")
+            raise RuntimeError(f"decoder {code_map} returned null response: {code}")
 
         ## Process responses and update properties
         updated_zones: set[Zone] = set()
         command_queue: list[str] = []
-        # _LOGGER.critical("parse %s -> %s", parse_cmd, responses)
         while responses:
             response = responses.pop(0)
             if response is None:
-                raise RuntimeError("parser returned null response")
+                raise RuntimeError("decoder returned null response")
             if response.callback:
                 callback = response.callback
                 response.callback = None
@@ -368,7 +367,7 @@ def process_raw_response(
                 callback_responses.extend(responses)  # prepend callback_responses
                 responses = callback_responses
                 continue  ## don't process original callback response
-            _process_response(properties, response)
+            _commit_response(properties, response)
             if response.zone is not None:
                 updated_zones.add(response.zone)
             if response.update_zones:
@@ -377,6 +376,6 @@ def process_raw_response(
                 command_queue.extend(response.queue_commands)
 
     except Exception as exc:  # pylint: disable=broad-except
-        raise AVRResponseParseError(response=raw_resp, exc=exc) from exc
+        raise AVRResponseDecodeError(response=raw_resp, exc=exc) from exc
 
     return updated_zones, command_queue
