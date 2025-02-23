@@ -1,8 +1,8 @@
 """Pioneer AVR commands."""
 
 from .const import Zone
-from .parsers.code_map import CodeBoolMap
-from .parsers.dsp import (
+from .decoders.code_map import CodeBoolMap
+from .decoders.dsp import (
     DspMcaccMemorySet,
     DspPhaseControl,
     DspSignalSelect,
@@ -25,7 +25,7 @@ from .parsers.dsp import (
     DspVirtualDepth,
     DspRenderingMode,
 )
-from .parsers.system import (
+from .decoders.system import (
     SpeakerMode,
     HdmiOut,
     Hdmi3Out,
@@ -36,7 +36,7 @@ from .parsers.system import (
     AmpMode,
     PanelLock,
 )
-from .parsers.video import (
+from .decoders.video import (
     AdvancedVideoAdjust,
     VideoAspect,
     VideoInt08Map,

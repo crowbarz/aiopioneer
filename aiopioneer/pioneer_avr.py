@@ -50,16 +50,16 @@ from .params import (
     PARAM_INITIAL_REFRESH_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY,
 )
-from .parsers.audio import (
+from .decoders.audio import (
     ChannelLevel,
     ListeningMode,
     AvailableListeningMode,
     ToneDb,
     ToneMode,
 )
-from .parsers.code_map import CodeMapBase
-from .parsers.parse import process_raw_response
-from .parsers.tuner import FrequencyAM, FrequencyFM, Preset
+from .decoders.code_map import CodeMapBase
+from .decoders.decode import process_raw_response
+from .decoders.tuner import FrequencyAM, FrequencyFM, Preset
 from .properties import PioneerAVRProperties
 from .util import cancel_task
 
