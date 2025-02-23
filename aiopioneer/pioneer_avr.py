@@ -561,20 +561,6 @@ class PioneerAVR(AVRConnection):
         self._command_queue_schedule()
 
     ## AVR methods
-    def _get_parameter_key_from_value(
-        self, val: str, parameters: dict, loose_match: bool = False
-    ) -> str:
-        items = None
-        if loose_match:
-            items = [k for k, v in parameters.items() if val in v]
-        else:
-            items = [k for k, v in parameters.items() if v == val]
-
-        if len(items) == 0:
-            raise ValueError(f"Parameter {val} does not exist for this option")
-        else:
-            return str(items[0])
-
     def _check_zone(self, zone: Zone) -> Zone:
         """Check that specified zone is valid."""
         if not isinstance(zone, Zone):
