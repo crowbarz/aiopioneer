@@ -239,9 +239,10 @@ RESPONSE_DATA = [
 ]
 
 
-def _commit_response(properties: PioneerAVRProperties, response: Response) -> None:
+def _commit_response(response: Response) -> None:
     """Commit a decoded response to properties."""
-    current_base = current_value = None
+    current_base = current_value = None  #
+    properties = response.properties
 
     if response.base_property is None:
         return
@@ -367,7 +368,7 @@ def process_raw_response(
                 callback_responses.extend(responses)  # prepend callback_responses
                 responses = callback_responses
                 continue  ## don't process original callback response
-            _commit_response(properties, response)
+            _commit_response(response)
             if response.zone is not None:
                 updated_zones.add(response.zone)
             if response.update_zones:
