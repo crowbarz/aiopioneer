@@ -1,13 +1,12 @@
-"""aiopioneer parse response."""
+"""aiopioneer response decoder."""
 
-from types import FunctionType
 import logging
 
 from ..const import Zone
-from ..exceptions import AVRResponseParseError
+from ..exceptions import AVRResponseDecodeError
 from ..params import PioneerAVRParams
 from ..properties import PioneerAVRProperties
-from .audio import AudioParsers, ToneMode, ToneDb
+from .audio import ChannelLevel, ListeningMode, ToneMode, ToneDb
 from .code_map import (
     CodeMapBase,
     CodeBoolMap,
@@ -37,19 +36,28 @@ from .dsp import (
     DspVirtualDepth,
     DspRenderingMode,
 )
-from .information import InformationParsers, DisplayText
+from .information import AudioInformation, VideoInformation, DisplayText
 from .response import Response
 from .settings import (
-    SettingsParsers,
+    McaccDiagnosticStatus,
+    StandingWaveStatus,
+    StandingWaveSwTrim,
     SurroundPosition,
     XOver,
     XCurve,
     SbchProcessing,
+    SpeakerSettings,
+    McaccChannelLevel,
+    McaccSpeakerDistance,
+    InputLevelAdjust,
     OsdLanguage,
+    PortNumbers,
     StandbyPassthrough,
+    ExternalHdmiTrigger,
 )
 from .system import (
-    SystemParsers,
+    InputSource,
+    Power,
     SpeakerMode,
     HdmiOut,
     Hdmi3Out,
@@ -58,8 +66,15 @@ from .system import (
     Dimmer,
     AmpMode,
     PanelLock,
+    SpeakerSystem,
+    InputName,
+    SystemMacAddress,
+    SystemAvrModel,
+    SystemSoftwareVesion,
+    AudioParameterProhibition,
+    AudioParameterWorking,
 )
-from .tuner import TunerParsers
+from .tuner import FrequencyFM, FrequencyAM, Preset, FrequencyAMStep
 from .video import (
     VideoInt08Map,
     VideoProgMotion,
@@ -76,14 +91,14 @@ _LOGGER = logging.getLogger(__name__)
 
 RESPONSE_DATA = [
     ## system
-    ["PWR", SystemParsers.power, Zone.Z1],
-    ["APR", SystemParsers.power, Zone.Z2],
-    ["BPR", SystemParsers.power, Zone.Z3],
-    ["ZEP", SystemParsers.power, Zone.HDZ],
-    ["FN", SystemParsers.input_source, Zone.Z1],
-    ["Z2F", SystemParsers.input_source, Zone.Z2],
-    ["Z3F", SystemParsers.input_source, Zone.Z3],
-    ["ZEA", SystemParsers.input_source, Zone.HDZ],
+    ["PWR", Power, Zone.Z1, "power"],
+    ["APR", Power, Zone.Z2, "power"],
+    ["BPR", Power, Zone.Z3, "power"],
+    ["ZEP", Power, Zone.HDZ, "power"],
+    ["FN", InputSource, Zone.Z1, "source_id"],
+    ["Z2F", InputSource, Zone.Z2, "source_id"],
+    ["Z3F", InputSource, Zone.Z3, "source_id"],
+    ["ZEA", InputSource, Zone.HDZ, "source_id"],
     ["VOL", CodeIntMap, Zone.Z1, "volume"],
     ["ZV", CodeIntMap, Zone.Z2, "volume"],
     ["YV", CodeIntMap, Zone.Z3, "volume"],
@@ -102,26 +117,27 @@ RESPONSE_DATA = [
     ["SAC", AmpMode, Zone.ALL, "amp", "mode"],
     ["PKL", PanelLock, Zone.ALL, "amp", "panel_lock"],
     ["RML", CodeBoolMap, Zone.ALL, "amp", "remote_lock"],
-    ["SSF", SystemParsers.speaker_system, Zone.ALL],
-    ["RGB", SystemParsers.input_name, Zone.ALL],
-    ["SVB", SystemParsers.mac_address, Zone.ALL],
-    ["RGD", SystemParsers.avr_model, Zone.ALL],
-    ["SSI", SystemParsers.software_version, Zone.ALL],
-    ["AUA", SystemParsers.audio_parameter_prohibitation, Zone.Z1],
-    ["AUB", SystemParsers.audio_parameter_working, Zone.Z1],
+    ["SSF", SpeakerSystem, Zone.ALL, "system", "speaker_system"],
+    ["RGB", InputName, Zone.ALL],
+    ["SVB", SystemMacAddress, Zone.ALL, "amp", "mac_addr"],
+    ["RGD", SystemAvrModel, Zone.ALL, "amp", "model"],
+    ["SSI", SystemSoftwareVesion, Zone.ALL, "amp", "software_version"],
+    ["AUA", AudioParameterProhibition, Zone.Z1],
+    ["AUB", AudioParameterWorking, Zone.Z1],
     ## settings
     ["SSL", CodeBoolMap, Zone.ALL, "system", "home_menu_status"],
-    ["SSJ", SettingsParsers.mcacc_diagnostic_status, Zone.ALL],
-    ["SUU", SettingsParsers.standing_wave_setting, Zone.ALL],
-    ["SUV", SettingsParsers.standing_wave_sw_trim, Zone.ALL],
+    ["SSJ", McaccDiagnosticStatus, Zone.ALL, "system"],
+    ["SUU", StandingWaveStatus, Zone.ALL, "system"],
+    ["SUV", StandingWaveSwTrim, Zone.ALL],
     ["SSP", SurroundPosition, Zone.ALL, "system", "surround_position"],
     ["SSQ", XOver, Zone.ALL, "system", "x_over"],
     ["SST", XCurve, Zone.ALL, "system", "x_curve"],
     ["SSU", CodeBoolMap, Zone.ALL, "system", "loudness_plus"],
     ["SSV", SbchProcessing, Zone.ALL, "system", "sbch_processing"],
-    ["SSG", SettingsParsers.speaker_setting, Zone.ALL],
-    ["ILA", SettingsParsers.input_level_adjust, Zone.ALL],
-    ["SSS", SettingsParsers.speaker_distance_mcacc, Zone.ALL],
+    ["SSG", SpeakerSettings, Zone.ALL, "system", "speaker_setting"],
+    ["SSR", McaccChannelLevel, Zone.ALL, "system", "mcacc_channel_level"],
+    ["SSS", McaccSpeakerDistance, Zone.ALL, "system", "mcacc_speaker_distance"],
+    ["ILA", InputLevelAdjust, Zone.ALL, "system", "input_level"],
     ["SSW", CodeBoolMap, Zone.ALL, "system", "thx_ultraselect2"],
     ["SSX", CodeBoolMap, Zone.ALL, "system", "boundary_gain_compression"],
     ["SSB", CodeBoolMap, Zone.ALL, "system", "re_equalization"],
@@ -132,23 +148,23 @@ RESPONSE_DATA = [
     ["SSO", CodeMapBase, Zone.ALL, "system", "friendly_name"],
     ["STK", CodeBoolMap, Zone.ALL, "system", "parental_lock"],
     ["STL", CodeMapBase, Zone.ALL, "system", "parental_lock_password"],
-    ["SUM", SettingsParsers.port_numbers, Zone.ALL],
+    ["SUM", PortNumbers, Zone.ALL, "system", "ip_control_port"],
     ["STQ", CodeBoolMap, Zone.ALL, "system", "hdmi_control"],
     ["STR", CodeBoolMap, Zone.ALL, "system", "hdmi_control_mode"],
     ["STT", CodeBoolMap, Zone.ALL, "system", "hdmi_arc"],
     ["SVL", CodeBoolMap, Zone.ALL, "system", "pqls_for_backup"],
     ["STU", StandbyPassthrough, Zone.ALL, "system", "standby_passthrough"],
-    ["STV", SettingsParsers.external_hdmi_trigger, Zone.ALL],
-    ["STW", SettingsParsers.external_hdmi_trigger, Zone.ALL],
+    ["STV", ExternalHdmiTrigger, Zone.Z1, "system", "external_hdmi_trigger_1"],
+    ["STW", ExternalHdmiTrigger, Zone.Z2, "system", "external_hdmi_trigger_2"],
     ["STX", CodeBoolMap, Zone.ALL, "system", "speaker_b_link"],
     ["SVA", CodeBoolMap, Zone.ALL, "system", "osd_overlay"],
     ["ADS", CodeBoolMap, Zone.ALL, "system", "additional_service"],
     ["SUT", CodeBoolMap, Zone.ALL, "system", "user_lock"],
     ## audio
-    ["CLV", AudioParsers.channel_levels, Zone.Z1],
-    ["ZGE", AudioParsers.channel_levels, Zone.Z2],
-    ["ZHE", AudioParsers.channel_levels, Zone.Z3],
-    ["SR", AudioParsers.listening_mode, Zone.ALL],
+    ["CLV", ChannelLevel, Zone.Z1, "channel_levels"],
+    ["ZGE", ChannelLevel, Zone.Z2, "channel_levels"],
+    ["ZHE", ChannelLevel, Zone.Z3, "channel_levels"],
+    ["SR", ListeningMode, Zone.ALL, "listening_mode"],
     ["TO", ToneMode, Zone.Z1, "tone", "status"],
     ["BA", ToneDb, Zone.Z1, "tone", "bass"],
     ["TR", ToneDb, Zone.Z1, "tone", "treble"],
@@ -156,10 +172,10 @@ RESPONSE_DATA = [
     ["ZGB", ToneDb, Zone.Z2, "tone", "bass"],
     ["ZGC", ToneDb, Zone.Z2, "tone", "treble"],
     ## tuner
-    ["FRF", TunerParsers.frequency_fm, Zone.ALL],
-    ["FRA", TunerParsers.frequency_am, Zone.ALL],
-    ["PR", TunerParsers.preset, Zone.ALL],
-    ["SUQ", TunerParsers.am_frequency_step, Zone.ALL],
+    ["FRF", FrequencyFM, Zone.ALL, "tuner", "frequency"],
+    ["FRA", FrequencyAM, Zone.ALL, "tuner", "frequency"],
+    ["PR", Preset, Zone.ALL, "tuner", "preset"],
+    ["SUQ", FrequencyAMStep, Zone.ALL, "tuner", "am_frequency_step"],
     ## dsp
     ["MC", DspMcaccMemorySet, Zone.ALL, "dsp", "mcacc_memory_set"],
     ["IS", DspPhaseControl, Zone.ALL, "dsp", "phase_control"],
@@ -197,8 +213,8 @@ RESPONSE_DATA = [
     ["ARA", CodeBoolMap, Zone.ALL, "dsp", "center_spread"],
     ["ARB", DspRenderingMode, Zone.ALL, "dsp", "rendering_mode"],
     ## information
-    ["AST", InformationParsers.audio_information, Zone.ALL],
-    ["VST", InformationParsers.video_information, Zone.ALL],
+    ["AST", AudioInformation, Zone.ALL, "audio"],
+    ["VST", VideoInformation, Zone.ALL, "video"],
     ["FL", DisplayText, Zone.ALL, "amp", "display"],
     ## video
     ["VTC", VideoResolution, Zone.Z1, "video", "resolution"],
@@ -223,9 +239,10 @@ RESPONSE_DATA = [
 ]
 
 
-def _process_response(properties: PioneerAVRProperties, response: Response) -> None:
-    """Process a parsed response."""
-    current_base = current_value = None
+def _commit_response(response: Response) -> None:
+    """Commit a decoded response to properties."""
+    current_base = current_value = None  #
+    properties = response.properties
 
     if response.base_property is None:
         return
@@ -233,26 +250,25 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
     if response.base_property.startswith("_"):
         match response.base_property:
             case "_clear_source_id":
-                properties.clear_source_id(response.value)
-                return
-            case "_get_source_name":
-                response.base_property = "source_name"
-                response.value = properties.get_source_name(response.value)
-
+                _LOGGER.debug("clearing source %s", response.value)
+                return properties.clear_source_id(response.value)
     current_base = current_value = getattr(properties, response.base_property)
     is_global = response.zone in [Zone.ALL, None]
     if response.property_name is None and not is_global:
         current_value = current_base.get(response.zone)
         if current_value != response.value:
-            current_base[response.zone] = response.value
+            if response.value is not None:
+                current_base[response.zone] = response.value
+            else:
+                del current_base[response.zone]
             setattr(properties, response.base_property, current_base)
             _LOGGER.info(
-                "Zone %s: %s: %s -> %s (%s)",
-                response.zone,
+                "%s: %s: %s -> %s (%s)",
+                response.zone.full_name,
                 response.base_property,
                 repr(current_value),
                 repr(response.value),
-                repr(response.raw),
+                repr(response.code),
             )
     elif response.property_name is not None and not is_global:
         ## Default zone dict first, otherwise we hit an exception
@@ -260,16 +276,19 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
         current_prop = current_base.get(response.zone)
         current_value = current_prop.get(response.property_name)
         if current_value != response.value:
-            current_base[response.zone][response.property_name] = response.value
+            if response.value is not None:
+                current_base[response.zone][response.property_name] = response.value
+            else:
+                del current_base[response.zone][response.property_name]
             setattr(properties, response.base_property, current_base)
             _LOGGER.info(
-                "Zone %s: %s.%s: %s -> %s (%s)",
-                response.zone,
+                "%s: %s.%s: %s -> %s (%s)",
+                response.zone.full_name,
                 response.base_property,
                 response.property_name,
                 repr(current_value),
                 repr(response.value),
-                repr(response.raw),
+                repr(response.code),
             )
     elif response.property_name is None and is_global:
         if current_base != response.value:
@@ -279,12 +298,15 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
                 response.base_property,
                 repr(current_base),
                 repr(response.value),
-                repr(response.raw),
+                repr(response.code),
             )
     else:  # response.property_name is not None and is_global:
         current_value = current_base.get(response.property_name)
         if current_value != response.value:
-            current_base[response.property_name] = response.value
+            if response.value is not None:
+                current_base[response.property_name] = response.value
+            else:
+                del current_base[response.property_name]
             setattr(properties, response.base_property, current_base)
             _LOGGER.info(
                 "Global: %s.%s: %s -> %s (%s)",
@@ -292,57 +314,69 @@ def _process_response(properties: PioneerAVRProperties, response: Response) -> N
                 response.property_name,
                 repr(current_value),
                 repr(response.value),
-                repr(response.raw),
+                repr(response.code),
             )
 
 
 def process_raw_response(
     raw_resp: str, params: PioneerAVRParams, properties: PioneerAVRProperties
 ) -> tuple[set[Zone], list[str]]:
-    """Processes a raw response and looks up required functions from RESPONSE_DATA."""
+    """Processes a raw response, decode and apply to properties."""
     try:
         match_resp = next((r for r in RESPONSE_DATA if raw_resp.startswith(r[0])), None)
         if not match_resp:
             ## No error handling as not all responses have been captured by aiopioneer.
             if not raw_resp.startswith("E"):
-                _LOGGER.debug("unparsed raw response: %s", raw_resp)
+                _LOGGER.debug("undecoded response: %s", raw_resp)
             return [], []
 
-        parse_cmd: str = match_resp[0]
-        parse_func = match_resp[1]
-        parse_zone: Zone = match_resp[2]
-        code = raw_resp[len(parse_cmd) :]
-        responses: list[Response] = []
-        if isinstance(parse_func, FunctionType):
-            responses = parse_func(code, params, zone=parse_zone, command=parse_cmd)
-        elif issubclass(parse_func, CodeMapBase):
-            responses = parse_func.parse_response(
-                response=Response(
-                    properties=properties,
-                    raw=code,
-                    response_command=parse_cmd,
-                    base_property=match_resp[3] if len(match_resp) >= 4 else None,
-                    property_name=match_resp[4] if len(match_resp) >= 5 else None,
-                    zone=parse_zone,
-                ),
-                params=params,
-                properties=properties,
-            )
-        else:
-            raise RuntimeError(f"invalid parser {parse_func} for response: {code}")
-    except Exception as exc:  # pylint: disable=broad-except
-        raise AVRResponseParseError(response=raw_resp, exc=exc) from exc
+        response_cmd: str = match_resp[0]
+        code_map = match_resp[1]
+        response_zone: Zone = match_resp[2]
+        code = raw_resp[len(response_cmd) :]
 
-    ## Parse responses and update properties
-    updated_zones: set[Zone] = set()
-    command_queue: list[str] = []
-    for response in responses:
-        _process_response(properties, response)
-        if response.zone is not None:
-            updated_zones.add(response.zone)
-        if response.update_zones:
-            updated_zones |= response.update_zones
-        if response.command_queue:
-            command_queue.extend(response.command_queue)
+        if not issubclass(code_map, CodeMapBase):
+            raise RuntimeError(f"invalid decoder {code_map} for response: {code}")
+        responses = code_map.decode_response(
+            response=Response(
+                properties=properties,
+                code=code,
+                response_command=response_cmd,
+                base_property=match_resp[3] if len(match_resp) >= 4 else None,
+                property_name=match_resp[4] if len(match_resp) >= 5 else None,
+                zone=response_zone,
+            ),
+            params=params,
+        )
+        if responses is None:
+            raise RuntimeError(f"decoder {code_map} returned null response: {code}")
+
+        ## Process responses and update properties
+        updated_zones: set[Zone] = set()
+        command_queue: list[str] = []
+        while responses:
+            response = responses.pop(0)
+            if response is None:
+                raise RuntimeError("decoder returned null response")
+            if response.callback:
+                callback = response.callback
+                response.callback = None
+                callback_responses = callback(response)
+                _LOGGER.debug(
+                    "response callback: %s -> %s", callback.__name__, callback_responses
+                )
+                callback_responses.extend(responses)  # prepend callback_responses
+                responses = callback_responses
+                continue  ## don't process original callback response
+            _commit_response(response)
+            if response.zone is not None:
+                updated_zones.add(response.zone)
+            if response.update_zones:
+                updated_zones |= response.update_zones
+            if response.queue_commands:
+                command_queue.extend(response.queue_commands)
+
+    except Exception as exc:  # pylint: disable=broad-except
+        raise AVRResponseDecodeError(response=raw_resp, exc=exc) from exc
 
     return updated_zones, command_queue

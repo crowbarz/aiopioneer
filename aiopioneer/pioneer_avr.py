@@ -4,7 +4,6 @@
 
 import asyncio
 import logging
-import math
 import time
 
 from collections.abc import Callable
@@ -22,7 +21,7 @@ from .const import (
     MIN_RESCAN_INTERVAL,
     SOURCE_TUNER,
     MEDIA_CONTROL_COMMANDS,
-    CHANNEL_LEVELS_OBJ,
+    CHANNELS_ALL,
 )
 from .exceptions import (
     PioneerError,
@@ -47,16 +46,20 @@ from .params import (
     PARAM_DEBUG_UPDATER,
     PARAM_DEBUG_COMMAND_QUEUE,
     PARAM_VIDEO_RESOLUTION_MODES,
-    PARAM_AVAILABLE_LISTENING_MODES,
     PARAM_ENABLED_FUNCTIONS,
+    PARAM_INITIAL_REFRESH_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY,
-    PARAM_TUNER_AM_FREQ_STEP,
-    PARAM_QUERY_SOURCES,
-    PARAM_ZONES_INITIAL_REFRESH,
 )
-from .parsers.audio import ToneDb, ToneMode
-from .parsers.code_map import CodeMapBase
-from .parsers.parse import process_raw_response
+from .decoders.audio import (
+    ChannelLevel,
+    ListeningMode,
+    AvailableListeningMode,
+    ToneDb,
+    ToneMode,
+)
+from .decoders.code_map import CodeMapBase
+from .decoders.decode import process_raw_response
+from .decoders.tuner import FrequencyAM, FrequencyFM, Preset
 from .properties import PioneerAVRProperties
 from .util import cancel_task
 
@@ -94,12 +97,16 @@ class PioneerAVR(PioneerAVRConnection):
         self._command_queue: list = []  # queue of commands to execute
         self._zone_callback = {}
 
+        # Register params update callbacks
+        self.params.register_update_callback(self.update_listening_modes)
+
     ## Connection/disconnection
     async def on_connect(self) -> None:
         """Start AVR tasks on connection."""
         await super().on_connect()
         if await self.query_device_model() is None:
             raise AVRConnectProtocolError
+        self.update_listening_modes()
         await self._updater_schedule()
         await asyncio.sleep(0)  # yield to updater task
 
@@ -156,7 +163,7 @@ class PioneerAVR(PioneerAVRConnection):
     async def build_source_dict(self) -> None:
         """Generate source id<->name translation tables."""
         timeouts = 0
-        self.params.set_runtime_param(PARAM_QUERY_SOURCES, True)
+        self.properties.query_sources = True
         self.properties.source_name_to_id = {}
         self.properties.source_id_to_name = {}
         await self._command_queue_wait()  ## wait for command queue to complete
@@ -181,28 +188,14 @@ class PioneerAVR(PioneerAVRConnection):
         if not self.properties.source_name_to_id:
             _LOGGER.warning("no input sources found on AVR")
 
-    def get_listening_modes(self) -> dict[str, str] | None:
-        """Return dict of valid listening modes and names for Zone 1."""
-        multichannel = self.properties.audio.get("input_multichannel")
-        listening_modes = self.params.get_param(PARAM_AVAILABLE_LISTENING_MODES, {})
-        zone_listening_modes = {}
-        for mode_id, mode_details in listening_modes.items():
-            if (multichannel and mode_details[2]) or (
-                not multichannel and mode_details[1]
-            ):
-                zone_listening_modes |= {mode_id: mode_details[0]}
-        return zone_listening_modes
-
     async def query_device_model(self) -> bool | None:
         """Query device model from Pioneer AVR."""
-        if self.properties.model is not None:
-            return True
+        if (device_model := self.properties.amp.get("model")) is not None:
+            return device_model
         _LOGGER.info("querying device model")
         if res := await self.send_command("query_model", ignore_error=True):
-            self.params.set_default_params_model(
-                self.properties.model
-            )  # Update default params for this model
-            self.params.update_listening_modes()  # Update valid listening modes
+            ## Update default params for this model
+            self.params.set_default_params_model(self.properties.amp.get("model"))
             return True
         elif res is False:
             _LOGGER.warning("AVR device model unavailable, no model parameters set")
@@ -252,8 +245,8 @@ class PioneerAVR(PioneerAVRConnection):
                     callback()
 
     ## Response handling callbacks
-    def parse_response(self, response_raw: str) -> None:
-        """Parse response and update cached parameters."""
+    def decode_response(self, response_raw: str) -> None:
+        """Decode response and commit to properties."""
         updated_zones, command_queue = process_raw_response(
             response_raw, self.params, self.properties
         )
@@ -339,25 +332,29 @@ class PioneerAVR(PioneerAVRConnection):
         ## without needing to add it here
         for comm, supported_zones in PIONEER_COMMANDS.items():
             if zone in supported_zones:
-                if comm.startswith("query_") and comm.split("_")[
-                    1
-                ] in self.params.get_param(PARAM_ENABLED_FUNCTIONS):
+                comm_parts = comm.split("_")
+                enabled_functions = set(self.params.get_param(PARAM_ENABLED_FUNCTIONS))
+                if zone in self.properties.zones_initial_refresh:
+                    enabled_functions -= set(
+                        self.params.get_param(PARAM_INITIAL_REFRESH_FUNCTIONS)
+                    )
+                if comm_parts[0] == "query" and comm_parts[1] in enabled_functions:
                     await self.send_command(
                         comm, zone, ignore_error=True, rate_limit=False
                     )
                 elif (
                     comm == "set_channel_levels"
-                    and "channels" in self.params.get_param(PARAM_ENABLED_FUNCTIONS)
+                    and "channels" in enabled_functions
                     and self.properties.power.get(Zone.Z1)
                 ):
                     ## Channel level updates are handled differently as it
                     ## requires more complex logic to send the commands we use
                     ## the set_channel_levels command and prefix the query to it
-                    for k in CHANNEL_LEVELS_OBJ:
+                    for channel in CHANNELS_ALL:
                         await self.send_command(
                             comm,
                             zone,
-                            prefix="?" + k.ljust(3, "_"),
+                            prefix="?" + channel.ljust(3, "_"),
                             ignore_error=True,
                             rate_limit=False,
                         )
@@ -380,15 +377,12 @@ class PioneerAVR(PioneerAVRConnection):
         self.last_updated = time.time()
         for zone in zones:
             await self._refresh_zone(zone)
-            zones_initial_refresh = self.params.zones_initial_refresh
+            zones_initial_refresh = self.properties.zones_initial_refresh
             if self.properties.power[zone] and zone not in zones_initial_refresh:
                 if zone is Zone.Z1:
                     await self.query_device_info()
                 _LOGGER.info("completed initial refresh for %s", zone.full_name)
-                zones_initial_refresh.add(zone)
-                self.params.set_runtime_param(
-                    PARAM_ZONES_INITIAL_REFRESH, zones_initial_refresh
-                )
+                self.properties.zones_initial_refresh.add(zone)
                 self._call_zone_callbacks(zones=set([zone]))
 
         ## Trigger callbacks to all zones on refresh
@@ -420,7 +414,7 @@ class PioneerAVR(PioneerAVRConnection):
             case "_power_on":
                 check_args(command, args, 1)
                 zone = Zone(args[0])
-                if zone not in self.params.zones_initial_refresh:
+                if zone not in self.properties.zones_initial_refresh:
                     _LOGGER.info("scheduling initial refresh")
                     self.queue_command(["_sleep", 2], insert_at=1)
                     self.queue_command(["_refresh_zone", zone], insert_at=2)
@@ -453,6 +447,8 @@ class PioneerAVR(PioneerAVRConnection):
                         "query_basic_video_information",
                     ]:
                         await self.send_command(cmd, ignore_error=True)
+            case "_update_listening_modes":
+                self.update_listening_modes()
             case "_calculate_am_frequency_step":
                 await self._calculate_am_frequency_step()
             case "_sleep":
@@ -685,20 +681,25 @@ class PioneerAVR(PioneerAVRConnection):
         zone = self._check_zone(zone)
         await self.send_command("mute_off", zone)
 
+    def update_listening_modes(self) -> None:
+        """Update list of valid listening modes for current input source."""
+        self.properties.update_listening_modes()
+        ListeningMode.code_map = self.properties.listening_modes_all
+        AvailableListeningMode.code_map = self.properties.available_listening_modes
+
+    def get_listening_modes(self) -> dict[str, str] | None:
+        """Return dict of valid listening modes and names for Zone 1."""
+        return AvailableListeningMode.values()
+
     async def select_listening_mode(
         self, mode_name: str = None, mode_id: str = None
     ) -> None:
         """Set the listening mode using the predefined list of options in params."""
 
         if mode_name and mode_id is None:
-            listening_modes = self.get_listening_modes()
-            if listening_modes:
-                for mode_id_item, mode_name_item in listening_modes.items():
-                    if mode_name == mode_name_item:
-                        mode_id = mode_id_item
-                        break
-        if mode_id is None:
-            raise ValueError(f"listening mode {mode_name} not available")
+            mode_id = AvailableListeningMode(mode_name)
+        if mode_id not in self.properties.available_listening_modes:
+            raise ValueError(f"listening mode {mode_id} is not available")
         await self.send_command("set_listening_mode", prefix=mode_id)
 
     async def set_tone_settings(
@@ -790,66 +791,50 @@ class PioneerAVR(PioneerAVRConnection):
         if self.params.get_param(PARAM_DEBUG_COMMAND_QUEUE):
             _LOGGER.debug(">> PioneerAVR._calculate_am_frequency_step() ")
 
-        if self.params.get_param(PARAM_TUNER_AM_FREQ_STEP):
+        ## Skip if step was provided in params or has already been calculated
+        if self.properties.tuner.get("am_frequency_step"):
             return
 
-        ## Check that tuner is active and band is set to AM
-        if not (
-            SOURCE_TUNER in self.properties.source_id.values()
-            and self.properties.tuner.get("band") == "AM"
-        ):
-            raise AVRTunerUnavailableError(command="calculate_am_frequency_step")
-
-        ## Try sending the query_tuner_am_step command first.
-        await self.send_command(command="query_tuner_am_step", ignore_error=True)
-        if self.params.get_param(PARAM_TUNER_AM_FREQ_STEP):
+        ## Try sending the query_tuner_am_step command first
+        if await self.send_command(command="query_tuner_am_step", ignore_error=True):
             return
 
-        ## Step frequency once and calculate difference
-        current_freq = self.properties.tuner.get("frequency")
-        new_freq = current_freq
-        count = 3
-        while new_freq == current_freq and count > 0:
-            if not await self.send_command(
-                "increase_tuner_frequency", ignore_error=True
-            ):
-                break
-            new_freq = self.properties.tuner.get("frequency")
-            count -= 1
-        if new_freq == current_freq:
-            raise AVRLocalCommandError(
-                command="calculate_am_frequency_step", err_key="freq_step_calc_error"
-            )
+        ## Step frequency once and check whether difference was calculated
+        if await self.send_command("increase_tuner_frequency", ignore_error=True):
+            await self.send_command("decrease_tuner_frequency")
+            if self.properties.tuner.get("am_frequency_step"):
+                return
 
-        self.params.set_runtime_param(PARAM_TUNER_AM_FREQ_STEP, new_freq - current_freq)
-        await self.send_command("decrease_tuner_frequency")
+        raise AVRLocalCommandError(
+            command="calculate_am_frequency_step", err_key="freq_step_error"
+        )
 
     async def _step_tuner_frequency(self, band: str, frequency: float) -> None:
         """Step the tuner frequency until requested frequency is reached."""
         zone = Zone.Z1
         current_freq = self.properties.tuner.get("frequency")
         if band == "AM":
-            if (freq_step := self.params.get_param(PARAM_TUNER_AM_FREQ_STEP)) is None:
+            if not (
+                am_frequency_step := self.properties.tuner.get("am_frequency_step")
+            ):
                 raise AVRLocalCommandError(
                     command="step_tuner_frequency", err_key="freq_step_unknown"
                 )
-
-            # Divide frequency by freq_step using modf so that the remainder is
-            # split out, then select the whole number response and times by
-            # freq_step
-            # pylint: disable=unsubscriptable-object
-            target_freq = (math.modf(frequency / freq_step)[1]) * freq_step
+            target_freq = frequency // am_frequency_step * am_frequency_step
+            count = abs(frequency - current_freq) // am_frequency_step + 1
         else:
-            # Round the frequency to nearest 0.05
-            target_freq = 0.05 * round(frequency / 0.05)
+            target_freq = frequency * 1000 // 50 * 50 / 1000
+            count = abs(int(frequency * 1000) - int(current_freq * 1000)) // 50 + 1
 
-        # Continue adjusting until frequency is set
+        ## Continue adjusting until frequency is set
         rc = True
-        count = 100  ## Stop stepping after maximum steps
         if target_freq > current_freq:
             while current_freq < target_freq and count > 0 and rc:
                 rc = await self.send_command(
-                    "increase_tuner_frequency", zone, ignore_error=False
+                    "increase_tuner_frequency",
+                    zone,
+                    ignore_error=False,
+                    rate_limit=False,
                 )
                 if rc is None:  ## ignore timeouts
                     rc = True
@@ -858,7 +843,10 @@ class PioneerAVR(PioneerAVRConnection):
         elif target_freq < current_freq:
             while current_freq > target_freq and count > 0 and rc:
                 rc = await self.send_command(
-                    "decrease_tuner_frequency", zone, ignore_error=False
+                    "decrease_tuner_frequency",
+                    zone,
+                    ignore_error=False,
+                    rate_limit=False,
                 )
                 if rc is None:  ## ignore timeouts
                     rc = True
@@ -870,24 +858,25 @@ class PioneerAVR(PioneerAVRConnection):
                 command="step_tuner_frequency", err_key="freq_step_max_exceeded"
             )
 
-    async def set_tuner_frequency(self, band: TunerBand, frequency: float) -> None:
+    async def set_tuner_frequency(
+        self, band: TunerBand, frequency: float | int
+    ) -> None:
         """Set the tuner frequency and band."""
-        if not isinstance(frequency, float):
-            raise ValueError(f"invalid frequency {frequency}")
-        elif (band == TunerBand.AM and not 530 <= frequency <= 1700) or (
-            band == TunerBand.FM and not 87.5 <= frequency <= 108.0
-        ):
-            raise ValueError(f"frequency {frequency} out of range for band {band}")
-
         await self.select_tuner_band(band)
-        await self._command_queue_wait()  ## wait for AM step to be calculated
+        if band is TunerBand.AM and not self.properties.tuner.get("am_frequency_step"):
+            await self._command_queue_wait()  ## wait for AM step to be calculated
+
+        code = (
+            FrequencyAM(frequency) if band is TunerBand.AM else FrequencyFM(frequency)
+        )
 
         if await self.send_command("operation_direct_access", ignore_error=True):
             ## Set tuner frequency directly if command is supported
-            freq_str = str(int(frequency * (100 if band == TunerBand.FM else 1)))
             try:
-                for digit in freq_str:
-                    await self.send_command("operation_tuner_digit", prefix=digit)
+                for digit in code:
+                    await self.send_command(
+                        "operation_tuner_digit", prefix=digit, rate_limit=False
+                    )
             except AVRCommandError as exc:
                 raise AVRLocalCommandError(
                     command="set_tuner_frequency", err_key="freq_set_failed", exc=exc
@@ -895,11 +884,10 @@ class PioneerAVR(PioneerAVRConnection):
         else:
             await self._step_tuner_frequency(band=band, frequency=frequency)
 
-    async def select_tuner_preset(self, tuner_class: str, preset: int) -> None:
+    async def select_tuner_preset(self, tuner_class: str, tuner_preset: int) -> None:
         """Select the tuner preset."""
         await self.send_command(
-            "select_tuner_preset",
-            prefix=str(tuner_class).upper() + str(preset).upper().zfill(2),
+            "select_tuner_preset", prefix=Preset((tuner_class, tuner_preset))
         )
 
     async def tuner_previous_preset(self) -> None:
@@ -915,18 +903,20 @@ class PioneerAVR(PioneerAVRConnection):
     ) -> None:
         """Set the level (gain) for amplifier channel in zone."""
         zone = self._check_zone(zone)
-        if self.properties.channel_levels.get(zone.value) is None:
+        if channel_levels := self.properties.channel_levels.get(zone) is None:
             raise AVRLocalCommandError(
                 command="set_channel_levels",
                 err_key="channel_levels_unavailable",
                 zone=zone,
             )
-
-        ## Check the channel exists
-        if self.properties.channel_levels[zone.value].get(channel.upper()) is None:
-            raise ValueError(f"invalid channel {channel} for {zone.full_name}")
-
-        prefix = channel.ljust(3, "_") + str(int((level * 2) + 50))
+        if channel_levels.get(channel) is None:
+            raise AVRLocalCommandError(
+                command="set_channel_levels",
+                err_key="channel_unavailable",
+                zone=zone,
+                channel=channel,
+            )
+        prefix = channel.ljust(3, "_") + ChannelLevel(level)
         await self.send_command("set_channel_levels", zone=zone, prefix=prefix)
 
     async def set_video_settings(self, zone: Zone, **arguments) -> None:

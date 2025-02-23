@@ -116,10 +116,10 @@ class AVRCommandResponseError(AVRCommandError):
         super().__init__(command=command, err=err, **kwargs)
 
 
-class AVRResponseParseError(PioneerError):
-    """AVR response could not be parsed."""
+class AVRResponseDecodeError(PioneerError):
+    """AVR response could not be decoded."""
 
-    base_err_key = "response_parse_error"
+    base_err_key = "response_decode_error"
 
     def __init__(self, response: str, exc: Exception, **kwargs):
         super().__init__(response=response, err=repr(exc), exc=exc, **kwargs)
@@ -163,18 +163,19 @@ ErrorFormatText = {
     "unknown_local_command": "unknown command {command}",
     "response_timeout": "AVR command {command} timed out",
     "command_error": "AVR command {command} returned error: {err}",
-    "response_parse_error": "exception parsing response: {response}: {err}",
+    "response_decode_error": "exception decoding response: {response}: {err}",
     "local_command_error": "command {command} error: {err}",
 }
 
 LocalCommandErrorFormatText = {
     "tuner_unavailable": "AVR tuner is unavailable",
     "tone_unavailable": "tone controls not supported for {zone.full_name}",
-    "freq_step_calc_error": "unable to calculate AM frequency step",
+    "freq_step_error": "unable to calculate AM frequency step, parameter 'am_frequency_step' required",
     "freq_step_unknown": "unknown AM tuner frequency step, parameter 'am_frequency_step' required",
     "freq_step_max_exceeded": "maximum tuner frequency step count exceeded",
     "freq_set_failed": "unable to set tuner frequency to {frequency}",
     "channel_levels_unavailable": "channel levels not supported for {zone.full_name}",
+    "channel_unavailable": "channel {channel} unavailable for {zone.full_name}",
     "video_settings_unavailable": "video settings not supported for {zone.full_name}",
     "dsp_settings_unavailable": "DSP settings not supported for {zone.full_name}",
     "speaker_mode_unavailable": "speaker configuration not supported",

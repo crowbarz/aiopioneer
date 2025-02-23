@@ -1,7 +1,6 @@
-"""aiopioneer response parsers for DSP functions. Most responses are only valid for Zone 1."""
+"""aiopioneer response decoders for DSP functions. Most responses are only valid for Zone 1."""
 
 from .code_map import (
-    CodeMapBase,
     CodeIntMap,
     CodeFloatMap,
     CodeDictStrMap,
@@ -106,7 +105,7 @@ class DspLfeAttenuator(CodeIntMap):
         return super().code_to_value(code)
 
 
-class DspSacdGain(CodeMapBase):
+class DspSacdGain(CodeIntMap):
     """DSP SACD gain."""
 
     @classmethod

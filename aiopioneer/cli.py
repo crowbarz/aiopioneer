@@ -106,9 +106,9 @@ async def cli_main(args: argparse.Namespace):
         elif cmd == "query_device_info":
             await pioneer.query_device_info()
             print(
-                f"Device info: model={pioneer.properties.model}, "
-                f"mac_addr={pioneer.properties.mac_addr}, "
-                f"software_version={pioneer.properties.software_version}"
+                f"Device info: model={repr(pioneer.properties.amp.get("model"))}, "
+                f"mac_addr={repr(pioneer.properties.amp.get("mac_addr"))}, "
+                f"software_version={repr(pioneer.properties.amp.get("software_version"))}"
             )
         elif cmd == "query_zones":
             await pioneer.query_zones()

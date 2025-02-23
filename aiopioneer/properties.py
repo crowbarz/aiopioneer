@@ -1,17 +1,23 @@
 """Pioneer AVR properties."""
 
 import copy
+import logging
 
 from typing import Any
 from types import MappingProxyType
 
-from .const import Zone, MEDIA_CONTROL_COMMANDS
+from .const import Zone, MEDIA_CONTROL_COMMANDS, LISTENING_MODES
 from .params import (
     PioneerAVRParams,
     PARAM_MODEL,
     PARAM_ZONE_SOURCES,
-    PARAM_QUERY_SOURCES,
+    PARAM_DISABLED_LISTENING_MODES,
+    PARAM_ENABLED_LISTENING_MODES,
+    PARAM_EXTRA_LISTENING_MODES,
+    PARAM_TUNER_AM_FREQ_STEP,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class PioneerAVRProperties:
@@ -21,22 +27,28 @@ class PioneerAVRProperties:
         self.params = params
 
         ## AVR base properties
-        self.model = params.get_param(PARAM_MODEL)
-        self.software_version = None
-        self.mac_addr: str = None
         self.zones: set[Zone] = set()
+        self.zones_initial_refresh: set[Zone] = set()
         self.power: dict[Zone, bool] = {}
         self.volume: dict[Zone, int] = {}
         self.max_volume: dict[Zone, int] = {}
         self.mute: dict[Zone, bool] = {}
         self.source_id: dict[Zone, str] = {}
         self.source_name: dict[Zone, str] = {}
-        self.listening_mode = ""
-        self.listening_mode_raw = ""
+        self.listening_mode = None
+        self.listening_mode_raw = None
+        self.listening_modes_all: dict[str, list] = {}
+        self.available_listening_modes: dict[str, str] = {}
         self.media_control_mode: dict[Zone, str] = {}
         self.tone: dict[Zone, dict] = {}
-        self.amp: dict[str | Zone, Any] = {}
-        self.tuner: dict[str | Zone, Any] = {}
+        self.amp: dict[str | Zone, Any] = {
+            "model": params.get_param(PARAM_MODEL),
+            "software_version": None,
+            "mac_addr": None,
+        }
+        self.tuner: dict[str | Zone, Any] = {
+            "am_frequency_step": self.params.get_param(PARAM_TUNER_AM_FREQ_STEP),
+        }
         self.dsp: dict[str | Zone, Any] = {}
         self.video: dict[str | Zone, Any] = {}
         self.system: dict[str | Zone, Any] = {}
@@ -46,6 +58,7 @@ class PioneerAVRProperties:
         self.channel_levels: dict[str, Any] = {}
 
         ## Source name mappings
+        self.query_sources = None
         self.source_name_to_id: dict[str, str] = {}
         self.source_id_to_name: dict[str, str] = {}
 
@@ -56,8 +69,12 @@ class PioneerAVRProperties:
         self.mute = {}
         self.listening_mode = ""
         self.listening_mode_raw = ""
-        self.amp = {}
-        self.tuner = {}
+        self.amp = {
+            "model": self.amp.get("model"),
+            "software_version": self.amp.get("software_version"),
+            "mac_addr": self.amp.get("mac_addr"),
+        }
+        self.tuner = {"am_frequency_step": self.tuner.get("am_frequency_step")}
         self.dsp = {}
         self.video = {}
         self.system = {}
@@ -65,7 +82,7 @@ class PioneerAVRProperties:
 
     def set_source_dict(self, sources: dict[str, str]) -> None:
         """Manually set source id<->name translation tables."""
-        self.params.set_runtime_param(PARAM_QUERY_SOURCES, False)
+        self.query_sources = False
         self.source_name_to_id = copy.deepcopy(sources)
         self.source_id_to_name = {v: k for k, v in sources.items()}
 
@@ -125,3 +142,28 @@ class PioneerAVRProperties:
             )
         else:
             return None
+
+    def update_listening_modes(self) -> None:
+        """Update list of valid listening modes for current input source."""
+        self.listening_modes_all = LISTENING_MODES | self.params.get_param(
+            PARAM_EXTRA_LISTENING_MODES, {}
+        )
+        self.available_listening_modes = {}
+        disabled_modes = self.params.get_param(PARAM_DISABLED_LISTENING_MODES, [])
+        enabled_modes = self.params.get_param(PARAM_ENABLED_LISTENING_MODES, [])
+        available_mode_names = []
+        multichannel = self.audio.get("input_multichannel")
+
+        _LOGGER.debug("determining available listening modes")
+        for mode_id, mode_details in self.listening_modes_all.items():
+            if mode_id in disabled_modes or (
+                enabled_modes and mode_id not in enabled_modes
+            ):
+                continue
+            mode_name, mode_2ch, mode_multich = mode_details
+            if mode_name in available_mode_names:
+                _LOGGER.warning("ignored duplicate listening mode name: %s", mode_name)
+                continue
+            if (multichannel and mode_multich) or (not multichannel and mode_2ch):
+                self.available_listening_modes |= {mode_id: mode_name}
+            available_mode_names.append(mode_name)

@@ -25,7 +25,7 @@ from .exceptions import (
     AVRConnectError,
     AVRDisconnectError,
     AVRConnectTimeoutError,
-    AVRResponseParseError,
+    AVRResponseDecodeError,
 )
 from .util import (
     sock_set_keepalive,
@@ -247,7 +247,7 @@ class PioneerAVRConnection:
         self._reconnect_task = None
 
     async def _connection_listener(self) -> None:
-        """AVR connection listener. Parse responses and update state."""
+        """AVR connection listener. Decode responses and update state."""
         if self.params.get_param(PARAM_DEBUG_LISTENER):
             _LOGGER.debug(">> listener started")
         while self.available:
@@ -276,13 +276,13 @@ class PioneerAVRConnection:
                 if debug_listener:
                     _LOGGER.debug("received AVR response: %s", response)
 
-                ## Parse response, update cached properties
+                ## Decode response, update cached properties
                 try:
-                    action = "parsing response " + response
-                    self.parse_response(response)
-                except AVRResponseParseError as exc:
+                    action = "decoding response " + response
+                    self.decode_response(response)
+                except AVRResponseDecodeError as exc:
                     _LOGGER.error(str(exc))
-                    # continue on AVRResponseParseError
+                    # continue on AVRResponseDecodeError
 
                 ## Queue raw response and signal response handler
                 if self._queue_responses:
@@ -316,9 +316,9 @@ class PioneerAVRConnection:
 
         _LOGGER.debug(">> listener completed")
 
-    def parse_response(self, response_raw: str) -> None:
-        """Callback function for response parser."""
-        raise RuntimeError("parse_response not implemented")
+    def decode_response(self, response_raw: str) -> None:
+        """Callback function for response decoder."""
+        raise RuntimeError("decode_response not implemented")
 
     async def _listener_schedule(self) -> None:
         """Schedule the listener task."""
