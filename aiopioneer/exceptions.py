@@ -3,7 +3,7 @@
 from .const import Zone
 
 
-class PioneerError(RuntimeError):
+class AVRError(RuntimeError):
     """Generic Pioneer AVR exception."""
 
     base_err_key = None
@@ -23,7 +23,7 @@ class PioneerError(RuntimeError):
             return f"exception generating error {err_key}: {repr(err_exc)}"
 
 
-class AVRConnectionError(PioneerError):
+class AVRConnectionError(AVRError):
     """Base class for AVR connection errors."""
 
     base_err_key = "avr_connection_error"
@@ -71,7 +71,7 @@ class AVRUnavailableError(AVRConnectionError):
     base_err_key = "avr_unavailable"
 
 
-class AVRUnknownCommandError(PioneerError):
+class AVRUnknownCommandError(AVRError):
     """Invalid AVR command requested."""
 
     base_err_key = "unknown_command"
@@ -80,7 +80,7 @@ class AVRUnknownCommandError(PioneerError):
         super().__init__(command=command, zone=zone, **kwargs)
 
 
-class AVRUnknownLocalCommandError(PioneerError):
+class AVRUnknownLocalCommandError(AVRError):
     """Invalid local command requested."""
 
     base_err_key = "unknown_local_command"
@@ -89,7 +89,7 @@ class AVRUnknownLocalCommandError(PioneerError):
         super().__init__(command=command, **kwargs)
 
 
-class AVRResponseTimeoutError(PioneerError):
+class AVRResponseTimeoutError(AVRError):
     """Expected AVR response was not received."""
 
     base_err_key = "response_timeout"
@@ -98,7 +98,7 @@ class AVRResponseTimeoutError(PioneerError):
         super().__init__(command=command, **kwargs)
 
 
-class AVRCommandError(PioneerError):
+class AVRCommandError(AVRError):
     """AVR command resulted in an error."""
 
     base_err_key = "command_error"
@@ -116,7 +116,7 @@ class AVRCommandResponseError(AVRCommandError):
         super().__init__(command=command, err=err, **kwargs)
 
 
-class AVRResponseDecodeError(PioneerError):
+class AVRResponseDecodeError(AVRError):
     """AVR response could not be decoded."""
 
     base_err_key = "response_decode_error"

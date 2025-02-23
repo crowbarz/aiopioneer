@@ -1,6 +1,6 @@
 """aiopioneer response decoders for informational responses."""
 
-from ..params import PioneerAVRParams
+from ..params import AVRParams
 from .code_map import (
     CodeMapBase,
     CodeStrMap,
@@ -19,7 +19,7 @@ class AudioInformation(CodeMapBase):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
+        params: AVRParams,
     ) -> list[Response]:
         """Response decoder for audio information."""
 
@@ -144,7 +144,7 @@ class InputMultichannel(CodeBoolMap):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
+        params: AVRParams,
     ) -> list[Response]:
         """Response decoder for input multichannel."""
 
@@ -257,7 +257,7 @@ class VideoInformation(CodeMapBase):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
+        params: AVRParams,
     ) -> list[Response]:
         """Response decoder for video information."""
 

@@ -1,6 +1,6 @@
 """aiopioneer response decoders for audio parameters."""
 
-from ..params import PioneerAVRParams
+from ..params import AVRParams
 from .code_map import CodeDictStrMap, CodeDictListMap, CodeIntMap, CodeFloatMap
 from .response import Response
 
@@ -19,7 +19,7 @@ class ChannelLevel(CodeFloatMap):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
+        params: AVRParams,
     ) -> list[Response]:
         """Response decoder for channel level."""
         code = response.code[3:]
@@ -37,7 +37,7 @@ class ListeningMode(CodeDictListMap):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
+        params: AVRParams,
     ) -> list[Response]:
         """Response decoder for listening mode."""
         super().decode_response(response, params)

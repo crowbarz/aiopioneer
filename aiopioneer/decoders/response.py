@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from typing import Any, Self
 from ..const import Zone
-from ..properties import PioneerAVRProperties
+from ..properties import AVRProperties
 
 
 class Response:
@@ -11,7 +11,7 @@ class Response:
 
     def __init__(
         self,
-        properties: PioneerAVRProperties,
+        properties: AVRProperties,
         code: str,
         response_command: str,
         base_property: str = None,

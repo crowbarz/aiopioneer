@@ -1,7 +1,7 @@
 """aiopioneer response decoders for tuner parameters."""
 
 from ..const import TunerBand
-from ..params import PioneerAVRParams
+from ..params import AVRParams
 from .code_map import CodeMapBase, CodeIntMap, CodeFloatMap
 from .response import Response
 
@@ -18,7 +18,7 @@ class FrequencyFM(CodeFloatMap):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
+        params: AVRParams,
     ) -> list[Response]:
         """Response decoder for tuner FM frequency."""
         super().decode_response(response, params)
@@ -43,7 +43,7 @@ class FrequencyAM(CodeIntMap):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
+        params: AVRParams,
     ) -> list[Response]:
         """Response decoder for tuner AM frequency."""
         super().decode_response(response, params)
@@ -115,7 +115,7 @@ class Preset(CodeMapBase):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        params: AVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response decoder for tuner preset."""
 
@@ -183,7 +183,7 @@ class FrequencyAMStep(CodeIntMap):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        params: AVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response decoder for AM frequency step."""
 

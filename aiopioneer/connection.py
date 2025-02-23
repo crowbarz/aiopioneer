@@ -8,7 +8,7 @@ import time
 import traceback
 
 from .params import (
-    PioneerAVRParams,
+    AVRParams,
     PARAM_COMMAND_DELAY,
     PARAM_ALWAYS_POLL,
     PARAM_DEBUG_LISTENER,
@@ -16,7 +16,7 @@ from .params import (
 )
 from .commands import PIONEER_COMMANDS
 from .exceptions import (
-    PioneerError,
+    AVRError,
     AVRUnavailableError,
     AVRUnknownCommandError,
     AVRResponseTimeoutError,
@@ -42,12 +42,12 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class PioneerAVRConnection:
+class AVRConnection:
     """Pioneer AVR connection class."""
 
     def __init__(  # pylint: disable=super-init-not-called
         self,
-        params: PioneerAVRParams,
+        params: AVRParams,
         host: str,
         port: int = DEFAULT_PORT,
         timeout: float = DEFAULT_TIMEOUT,
@@ -296,7 +296,7 @@ class PioneerAVRConnection:
             except (EOFError, OSError, AVRUnavailableError):
                 _LOGGER.debug(">> listener detected connection error")
                 break
-            except PioneerError as exc:
+            except AVRError as exc:
                 _LOGGER.error(str(exc))
                 # continue listening on PioneerError
             except Exception as exc:  # pylint: disable=broad-except
@@ -464,7 +464,7 @@ class PioneerAVRConnection:
             return await _send_command()
         except AVRUnavailableError:  ## always raise even if ignoring errors
             raise
-        except PioneerError as exc:
+        except AVRError as exc:
             if ignore_error is None:
                 _LOGGER.debug("send_command raised exception: %s", str(exc))
                 raise exc

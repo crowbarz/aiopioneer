@@ -10,7 +10,7 @@ from collections.abc import Callable
 from typing import Any
 
 from .commands import PIONEER_COMMANDS
-from .connection import PioneerAVRConnection
+from .connection import AVRConnection
 from .const import (
     Zone,
     TunerBand,
@@ -24,7 +24,7 @@ from .const import (
     CHANNELS_ALL,
 )
 from .exceptions import (
-    PioneerError,
+    AVRError,
     AVRUnavailableError,
     AVRResponseTimeoutError,
     AVRCommandError,
@@ -35,7 +35,7 @@ from .exceptions import (
     AVRLocalCommandError,
 )
 from .params import (
-    PioneerAVRParams,
+    AVRParams,
     PARAM_IGNORED_ZONES,
     PARAM_MAX_SOURCE_ID,
     PARAM_MAX_VOLUME,
@@ -60,13 +60,13 @@ from .decoders.audio import (
 from .decoders.code_map import CodeMapBase
 from .decoders.decode import process_raw_response
 from .decoders.tuner import FrequencyAM, FrequencyFM, Preset
-from .properties import PioneerAVRProperties
+from .properties import AVRProperties
 from .util import cancel_task
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class PioneerAVR(PioneerAVRConnection):
+class PioneerAVR(AVRConnection):
     """Pioneer AVR interface."""
 
     def __init__(
@@ -79,8 +79,8 @@ class PioneerAVR(PioneerAVRConnection):
     ):
         """Initialise the Pioneer AVR interface."""
         _LOGGER.info("Starting aiopioneer %s", VERSION)
-        self.params = PioneerAVRParams(params)
-        self.properties = PioneerAVRProperties(self.params)
+        self.params = AVRParams(params)
+        self.properties = AVRProperties(self.params)
         super().__init__(
             params=self.params,
             host=host,
@@ -759,7 +759,7 @@ class PioneerAVR(PioneerAVRConnection):
                 )
             try:
                 await set_amp_setting(command, arg, value, arg_code_map)
-            except PioneerError:
+            except AVRError:
                 raise
             except Exception as exc:  # pylint: disable=broad-except
                 raise AVRLocalCommandError(command=command, exc=exc) from exc
@@ -960,7 +960,7 @@ class PioneerAVR(PioneerAVRConnection):
                 )
             try:
                 await set_video_setting(command, arg, value, arg_code_map)
-            except PioneerError:
+            except AVRError:
                 raise
             except Exception as exc:  # pylint: disable=broad-except
                 raise AVRLocalCommandError(command=command, exc=exc) from exc
@@ -994,7 +994,7 @@ class PioneerAVR(PioneerAVRConnection):
                 )
             try:
                 await set_dsp_setting(command, arg, value, arg_code_map)
-            except PioneerError:
+            except AVRError:
                 raise
             except Exception as exc:  # pylint: disable=broad-except
                 raise AVRLocalCommandError(command=command, exc=exc) from exc

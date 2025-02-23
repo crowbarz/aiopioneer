@@ -1,7 +1,7 @@
 """aiopioneer response decoders for AVR settings."""
 
 from ..const import Zone
-from ..params import PioneerAVRParams
+from ..params import AVRParams
 from .code_map import (
     CodeDefault,
     CodeMapBase,
@@ -21,7 +21,7 @@ class McaccDiagnosticStatus(CodeMapBase):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
+        params: AVRParams,
     ) -> list[Response]:
         """Response decoder for MCACC diagnostic status."""
 
@@ -95,7 +95,7 @@ class StandingWaveStatus(CodeMapBase):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
+        params: AVRParams,
     ) -> list[Response]:
         """Response decoder for standing wave status."""
 
@@ -226,7 +226,7 @@ class StandingWaveSwTrim(CodeFloatMap):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
+        params: AVRParams,
     ) -> list[Response]:
         """Response decoder for Standing wave SW trim."""
         mcacc_memory = response.code[:2]
@@ -284,7 +284,7 @@ class SpeakerSettings(CodeDictMap):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        params: AVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response decoder for speaker setting."""
         speaker = response.code[:2]
@@ -306,7 +306,7 @@ class McaccChannelLevel(CodeFloatMap):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
+        params: AVRParams,
     ) -> list[Response]:
         """Response decoder for MCACC channel level."""
         memory = response.code[0:2]
@@ -327,7 +327,7 @@ class McaccSpeakerDistance(CodeFloatMap):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        params: AVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response decoder for MCACC speaker distance."""
         memory = response.code[0:2]
@@ -364,7 +364,7 @@ class InputLevelAdjust(CodeFloatMap):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
+        params: AVRParams,
     ) -> list[Response]:
         """Response decoder for input level adjust."""
         source = response.code[0:2]
@@ -399,7 +399,7 @@ class PortNumbers(CodeMapBase):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        params: AVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response decoder for enabled TCP port numbers."""
 
@@ -450,7 +450,7 @@ class ExternalHdmiTrigger(CodeDictStrMap):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
+        params: AVRParams,
     ) -> list[Response]:
         """Response decoder for 12V Trigger 1 (HDMI Setup)."""
 

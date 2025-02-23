@@ -8,7 +8,7 @@ from types import MappingProxyType
 
 from .const import Zone, MEDIA_CONTROL_COMMANDS, LISTENING_MODES
 from .params import (
-    PioneerAVRParams,
+    AVRParams,
     PARAM_MODEL,
     PARAM_ZONE_SOURCES,
     PARAM_DISABLED_LISTENING_MODES,
@@ -20,10 +20,10 @@ from .params import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class PioneerAVRProperties:
+class AVRProperties:
     """Pioneer AVR properties class."""
 
-    def __init__(self, params: PioneerAVRParams):
+    def __init__(self, params: AVRParams):
         self._params = params
 
         ## AVR base properties

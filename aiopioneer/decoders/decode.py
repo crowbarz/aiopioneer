@@ -4,8 +4,8 @@ import logging
 
 from ..const import Zone
 from ..exceptions import AVRResponseDecodeError
-from ..params import PioneerAVRParams
-from ..properties import PioneerAVRProperties
+from ..params import AVRParams
+from ..properties import AVRProperties
 from .audio import ChannelLevel, ListeningMode, ToneMode, ToneDb
 from .code_map import (
     CodeMapBase,
@@ -319,7 +319,7 @@ def _commit_response(response: Response) -> None:
 
 
 def process_raw_response(
-    raw_resp: str, params: PioneerAVRParams, properties: PioneerAVRProperties
+    raw_resp: str, params: AVRParams, properties: AVRProperties
 ) -> tuple[set[Zone], list[str]]:
     """Processes a raw response, decode and apply to properties."""
     try:

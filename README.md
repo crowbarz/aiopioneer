@@ -89,21 +89,21 @@ Constructor for the **PioneerAVR** class. The connection parameters are used whe
 
 ### Connection methods (inherited by `PioneerAVR`)
 
-_awaitable_ `PioneerAVRConnection.connect(`_reconnect_: **bool** = True`)`
+_awaitable_ `AVRConnection.connect(`_reconnect_: **bool** = True`)`
 
 Establish a connection to the AVR, and query the AVR device model if parameter `model` is not set. Set _reconnect_ to **True** to re-establish the connection if it is disconnected.
 
 Raises `AVRConnectionError` on connection errors, with `err` indicating the connection error.
 
-_awaitable_ `PioneerAVRConnection.disconnect(`_reconnect_: **bool**`)`
+_awaitable_ `AVRConnection.disconnect(`_reconnect_: **bool**`)`
 
 Disconnect from the AVR. Attempt to re-establish the connection if enabled at connect, or overridden by specifying _reconnect_.
 
-_awaitable_ `PioneerAVRConnection.shutdown()`
+_awaitable_ `AVRConnection.shutdown()`
 
 Permanently disconnect from the AVR. Does not attempt reconnection.
 
-_awaitable_ `PioneerAVRConnection.set_timeout(`_timeout_: **float**`)`
+_awaitable_ `AVRConnection.set_timeout(`_timeout_: **float**`)`
 
 Set command and socket keepalive timeouts.
 
@@ -170,20 +170,20 @@ _awaitable_ `PioneerAVR.build_source_dict()`
 Query the available sources names from the AVR. <br/>
 Parameter `max_source_id` determines the highest source ID that is queried.
 
-`PioneerAVRProperties.set_source_dict(`_sources_: **dict**[**str**, **str**]`)`
+`AVRProperties.set_source_dict(`_sources_: **dict**[**str**, **str**]`)`
 
 Manually set the available sources to the dict _sources_, where the keys are source IDs (padded to 2 chars) and the values are the corresponding source names.
 
-`PioneerAVRProperties.get_source_list(`_zone_: Zone = Zone.Z1`)` -> **list**[**str**]
+`AVRProperties.get_source_list(`_zone_: Zone = Zone.Z1`)` -> **list**[**str**]
 
 Return the set of currently available source names for _zone_. The source names can be used with the `select_source` method.
 
-`PioneerAVRProperties.get_source_dict(`_zone_: Zone = **None**`)` -> **dict**[**str**, **str**]
+`AVRProperties.get_source_dict(`_zone_: Zone = **None**`)` -> **dict**[**str**, **str**]
 
 Return a dict of currently available source names to source ID mappings for _zone_. <br/>
 If _zone_ is **None**, then return the dict of all available source names to source ID mappings.
 
-`PioneerAVRProperties.get_source_name(`_source_id_: **str**`)` -> **str**
+`AVRProperties.get_source_name(`_source_id_: **str**`)` -> **str**
 
 Return the source name for _source_id_.
 
@@ -192,7 +192,7 @@ _awaitable_ `PioneerAVR.set_source_name(`_source_id_: **str**, _source_name_: **
 Renames _source_id_ to _source_name_ on the AVR. <br/>
 If _default_ is **True**, reset _source_id_ to the default source name.
 
-`PioneerAVRProperties.clear_source_id(`_source_id_: **str**`)`
+`AVRProperties.clear_source_id(`_source_id_: **str**`)`
 
 Clear the name mapping for _source_id_.
 
@@ -217,7 +217,7 @@ Insert the command at queue position _insert_at_ if specified. Inserts by defaul
 
 ### Low level AVR command methods (inherited by `PioneerAVR`)
 
-_awaitable_ `PioneerAVRConnection.send_command(`_command_: **str**, _zone_: Zone = Zone.Z1, _prefix_: **str** = "", _suffix_: **str** = "", _ignore_erro* = **None**, _rate_limit_: **bool** = **True**`)` -> **bool** | **None**
+_awaitable_ `AVRConnection.send_command(`_command_: **str**, _zone_: Zone = Zone.Z1, _prefix_: **str** = "", _suffix_: **str** = "", _ignore_erro* = **None**, _rate_limit_: **bool** = **True**`)` -> **bool** | **None**
 
 Send command _command_ for zone _zone_ to the AVR, prefixed with _prefix_ and/or suffixed with _suffix_ if specified. <br/>
 If _command_ does not generate a response, then returns **True** if the command was successfully sent.
@@ -226,13 +226,13 @@ If _ignore_error_ is **None** (default), then raise an exception on error. If _i
 Raises `AVRUnavailable` if the AVR is disconnected, `AVRResponseTimeoutError` on timeout, and `AVRCommandError` if the request returned an error.<br/>
 If _rate_limit_ is **True**, then rate limit the commands sent to the AVR in accordance with the `command_delay` parameter.
 
-_awaitable_ `PioneerAVRConnection.send_raw_command(`_command_: **str**, _rate_limit_: **bool** = True`)`
+_awaitable_ `AVRConnection.send_raw_command(`_command_: **str**, _rate_limit_: **bool** = True`)`
 
 Send a raw command _command_ to the AVR.
 If _rate_limit_ is **True**, then rate limit the commands sent to the AVR in accordance with the `command_delay` parameter. <br/>
 Raises `AVRUnavailable` if the AVR is disconnected.
 
-_awaitable_ `PioneerAVRConnection.send_raw_request(`_command_: **str**, _response_prefix_: **str**, _rate_limit_: **bool** = **True**`)` -> **str** | **bool** | **None**
+_awaitable_ `AVRConnection.send_raw_request(`_command_: **str**, _response_prefix_: **str**, _rate_limit_: **bool** = **True**`)` -> **str** | **bool** | **None**
 
 Send a raw command _command_ to the AVR and wait for a response with prefix _response_prefix_.
 Returns the response received from the AVR.<br/>
@@ -290,15 +290,15 @@ _awaitable_ `PioneerAVR.set_tone_settings(`_tone_: **str** = **None**, _treble_:
 
 Set the tone settings for zone _zone_ to _tone_. When _tone_ is set to `On`, _treble_ specifies the treble and _bass_ specifies the bass.
 
-`PioneerAVRProperties.get_supported_media_controls(`_zone_: Zone`)` -> **list**[**str**]
+`AVRProperties.get_supported_media_controls(`_zone_: Zone`)` -> **list**[**str**]
 
 Return a list of all valid media control actions for a given zone. If the provided zone source is not currently compatible with media controls, **None** will be returned.
 
-_property_ `PioneerAVRProperties.ipod_control_commands`: **list**[**str**]
+_property_ `AVRProperties.ipod_control_commands`: **list**[**str**]
 
 Return a list of all valid iPod control modes.
 
-_property_ `PioneerAVRProperties.tuner_control_commands`: **list**[**str**]
+_property_ `AVRProperties.tuner_control_commands`: **list**[**str**]
 
 Return a list of all valid tuner control commands.
 
@@ -330,49 +330,49 @@ Clear callbacks for all zones.
 
 ### Parameter methods
 
-`PioneerAVRParams.set_default_params_model(`_model_: **str**`)` -> **None**
+`AVRParams.set_default_params_model(`_model_: **str**`)` -> **None**
 
 Set default parameters based on device model.
 
-`PioneerAVRParams.set_user_params(`_params_: **dict**[**str**, **Any**] = **None**`)` -> **None**
+`AVRParams.set_user_params(`_params_: **dict**[**str**, **Any**] = **None**`)` -> **None**
 
 Set user parameters and update current parameters.
 
-`PioneerAVRParams.set_user_param(`_param_: **str**, _value_: **Any**`)` -> **None**
+`AVRParams.set_user_param(`_param_: **str**, _value_: **Any**`)` -> **None**
 
 Set a user parameter.
 
-`PioneerAVRParams.set_runtime_param(`_param_: **str**, _value_: **Any**`)` -> **None**
+`AVRParams.set_runtime_param(`_param_: **str**, _value_: **Any**`)` -> **None**
 
 Set a run-time parameter.
 
-_property_ `PioneerAVRParams.zones_initial_refresh`: **set**[Zone]
+_property_ `AVRParams.zones_initial_refresh`: **set**[Zone]
 
 Return set of zones that have completed an initial refresh.
 
-_property_ `PioneerAVRParams.default_params`: **dict**[**str**, **Any**]
+_property_ `AVRParams.default_params`: **dict**[**str**, **Any**]
 
 Get a copy of current default parameters.
 
-_property_ `PioneerAVRParams.user_params`: **dict**[**str**, **Any**]
+_property_ `AVRParams.user_params`: **dict**[**str**, **Any**]
 
 Get a copy of user parameters.
 
-_property `PioneerAVRParams.params_all` -> **dict**[**str**, **Any**]
+_property `AVRParams.params_all` -> **dict**[**str**, **Any**]
 
 Get a copy of all current parameters.
 
-`PioneerAVRParams.get_param(`_param_name_: **str**`)` -> **Any**
+`AVRParams.get_param(`_param_name_: **str**`)` -> **Any**
 
 Get the value of the specified parameter.
 
-`PioneerAVRParams.get_runtime_param(`_param_name_: **str**`)` -> **Any**
+`AVRParams.get_runtime_param(`_param_name_: **str**`)` -> **Any**
 
 Get the value of the specified run-time parameter.
 
 ### AVR Properties
 
-Listed below are the public attributes of a `PioneerAVRProperties` object that contains the current state of the AVR. Use a `Zone` enum to access zone specific attributes for those that are indexed by zone.
+Listed below are the public attributes of a `AVRProperties` object that contains the current state of the AVR. Use a `Zone` enum to access zone specific attributes for those that are indexed by zone.
 
 | Attribute | Type | Description
 | --- | --- | ---
@@ -497,9 +497,9 @@ The list below shows the source ID that corresponds to each AVR source:
 ### 0.8
 
 - To enable params to be accessible from AVR response parsers and also to reduce the size of the main class, the `PioneerAVR` class has been split out to the classes listed below. References to parameter and properties methods and attributes will need to be updated to be accessed via the `params` and `properties` attributes of the `PioneerAVR` object. All other public attributes have moved to the new classes.
-  - `PioneerAVRParams` contains the user and run-time parameter get/set methods. Some method names have changed, please consult the updated documentation for details
-  - `PioneerAVRProperties` contains the cache of AVR properties collected from its responses
-  - `PioneerAVRConnection` contains the connection related methods, although `PioneerAVR` inherits from the new class so the connection methods are still accessible via the `PioneerAVR` class
+  - `AVRParams` contains the user and run-time parameter get/set methods. Some method names have changed, please consult the updated documentation for details
+  - `AVRProperties` contains the cache of AVR properties collected from its responses
+  - `AVRConnection` contains the connection related methods, although `PioneerAVR` inherits from the new class so the connection methods are still accessible via the `PioneerAVR` class
 - Commands that are sent to the AVR to perform full updates are now executed via the command queue. This eliminates the previous interaction between the updater and command queue threads, as the updater now simply schedules updates via the command queue
 - The order of queries during a full update has been modified so that amp, DSP and tone queries are executed before video queries
 - The `Zones` enum has been renamed `Zone` for improved consistency
@@ -511,11 +511,11 @@ The list below shows the source ID that corresponds to each AVR source:
 - If Zone 1 is not powered on at integration startup, queries for AVR device info is deferred until Zone 1 is first powered on.
 - The `query_audio_information` and `query_video_information` commands have been renamed `query_basic_audio_information` and `query_basic_video_information`. These basic query commands, in addition to `query_listening_mode`, are executed with a delay after all zone power and source operations whenever any zone is powered on
 - The `system_query_source_name` has been renamed to `query_source_name` to avoid being sent during AVR device info queries
-- The `query_sources` method has been removed. `PioneerAVRParams.get_runtime_param(PARAM_QUERY_SOURCES)` should be used instead
+- The `query_sources` method has been removed. `AVRParams.get_runtime_param(PARAM_QUERY_SOURCES)` should be used instead
 - The `update_zones` method has been removed. Change the AVR zones by recreating the `PioneerAVR` object with the new zones
-- The `PioneerAVR.initial_update` property has moved to run-time param `PARAM_ZONES_INITIAL_REFRESH` and is now a set of `Zone`. The `PioneerAVRParams.zones_initial_refresh` property is provided as a convenience to access this run-time parameter
+- The `PioneerAVR.initial_update` property has moved to run-time param `PARAM_ZONES_INITIAL_REFRESH` and is now a set of `Zone`. The `AVRParams.zones_initial_refresh` property is provided as a convenience to access this run-time parameter
 - System parameters have been re-termed as run-time parameters to better reflect their function
-- The `PioneerAVRProperties.zones` property now has typing `set[Zone]`
+- The `AVRProperties.zones` property now has typing `set[Zone]`
 
 ### 0.7
 

@@ -2,7 +2,7 @@
 
 from typing import Any, Tuple
 from .response import Response
-from ..params import PioneerAVRParams
+from ..params import AVRParams
 
 CODE_MAP_NDIGITS = 3
 CODE_MAP_EXP = pow(10, CODE_MAP_NDIGITS)
@@ -46,7 +46,7 @@ class CodeMapBase:
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        params: AVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Decode a response."""
         response.update(value=cls.code_to_value(response.code))

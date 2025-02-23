@@ -8,7 +8,7 @@ from ..const import (
     Zone,
 )
 from ..params import (
-    PioneerAVRParams,
+    AVRParams,
     PARAM_MHL_SOURCE,
     PARAM_SPEAKER_SYSTEM_MODES,
 )
@@ -30,7 +30,7 @@ class Power(CodeInverseBoolMap):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
+        params: AVRParams,
     ) -> list[Response]:
         """Response decoder for zone power status."""
         super().decode_response(response, params)
@@ -51,7 +51,7 @@ class InputSource(CodeMapBase):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
+        params: AVRParams,
     ) -> list[Response]:
         """Response decoder for zone input source."""
         super().decode_response(response, params)
@@ -158,7 +158,7 @@ class SpeakerSystem(CodeDictStrMap):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,
+        params: AVRParams,
     ) -> list[Response]:
         """Response decoder for speaker system."""
         cls.code_map = params.get_param(PARAM_SPEAKER_SYSTEM_MODES, {})
@@ -176,7 +176,7 @@ class InputName(CodeMapBase):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        params: AVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response decoder for input name."""
 
@@ -246,7 +246,7 @@ class AudioParameterProhibition(CodeMapBase):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        params: AVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response decoder for audio parameter prohibition."""
         response.update(queue_commands=[["_delayed_query_basic", 2]])
@@ -260,7 +260,7 @@ class AudioParameterWorking(CodeMapBase):
     def decode_response(
         cls,
         response: Response,
-        params: PioneerAVRParams,  # pylint: disable=unused-argument
+        params: AVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response decoder for audio parameter working."""
         response.update(queue_commands=[["_delayed_query_basic", 2]])

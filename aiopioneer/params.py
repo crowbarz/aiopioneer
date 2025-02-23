@@ -667,7 +667,7 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
 )
 
 
-class PioneerAVRParams:
+class AVRParams:
     """Pioneer AVR params class."""
 
     def __init__(self, params: dict[str, str] = None):
