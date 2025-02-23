@@ -566,7 +566,7 @@ class PioneerAVR(AVRConnection):
         if not isinstance(zone, Zone):
             raise ValueError(f"{zone} is not a zone identifier")
         if zone not in self.properties.zones:
-            raise ValueError(f"{zone.full_name} does not exist on AVR")
+            raise ValueError(f"{zone.full_name} is not available on AVR")
         return zone
 
     async def turn_on(self, zone: Zone = Zone.Z1) -> None:
@@ -616,7 +616,6 @@ class PioneerAVR(AVRConnection):
             volume_step_count = 0
             if target_volume > start_volume:  # step up
                 while current_volume < target_volume:
-                    _LOGGER.debug("current volume: %d", current_volume)
                     await self.volume_up(zone)
                     volume_step_count += 1
                     new_volume = self.properties.volume.get(zone.value)
@@ -629,7 +628,7 @@ class PioneerAVR(AVRConnection):
                     if volume_step_count > (target_volume - start_volume):
                         raise AVRCommandError(
                             command="set_volume_level",
-                            err="Exceeded max volume steps",
+                            err="maximum volume steps exceeded",
                             zone=zone,
                         )
                     current_volume = new_volume
@@ -648,7 +647,7 @@ class PioneerAVR(AVRConnection):
                     if volume_step_count > (start_volume - target_volume):
                         raise AVRCommandError(
                             command="set_volume_level",
-                            err="Exceeded max volume steps",
+                            err="maximum volume steps exceeded",
                             zone=zone,
                         )
                     current_volume = self.properties.volume.get(zone.value)
@@ -738,10 +737,10 @@ class PioneerAVR(AVRConnection):
                 raise AVRUnknownCommandError(command=command, zone=zone)
             arg_format = PIONEER_COMMANDS[command].get("args")
             if not isinstance(arg_format, list):
-                raise RuntimeError(f"No arguments defined for amp setting {arg}")
+                raise RuntimeError(f"no arguments defined for amp setting {arg}")
             if not issubclass(arg_code_map := arg_format[0], CodeMapBase):
                 raise RuntimeError(
-                    f"Invalid code map {arg_code_map} for amp setting {arg}"
+                    f"invalid code map {arg_code_map} for amp setting {arg}"
                 )
             try:
                 await set_amp_setting(command, arg, value, arg_code_map)
@@ -939,10 +938,10 @@ class PioneerAVR(AVRConnection):
                 raise AVRUnknownCommandError(command=command, zone=zone)
             arg_format = PIONEER_COMMANDS[command].get("args")
             if not isinstance(arg_format, list):
-                raise RuntimeError(f"No arguments defined for command {command}")
+                raise RuntimeError(f"no arguments defined for command {command}")
             if not issubclass(arg_code_map := arg_format[0], CodeMapBase):
                 raise RuntimeError(
-                    f"Invalid code map {arg_code_map} for command {command}"
+                    f"invalid code map {arg_code_map} for command {command}"
                 )
             try:
                 await set_video_setting(command, arg, value, arg_code_map)
@@ -973,10 +972,10 @@ class PioneerAVR(AVRConnection):
                 raise AVRUnknownCommandError(command=command, zone=zone)
             arg_format = PIONEER_COMMANDS[command].get("args")
             if not isinstance(arg_format, list):
-                raise RuntimeError(f"No arguments defined for DSP setting {arg}")
+                raise RuntimeError(f"no arguments defined for DSP setting {arg}")
             if not issubclass(arg_code_map := arg_format[0], CodeMapBase):
                 raise RuntimeError(
-                    f"Invalid code map {arg_code_map} for DSP setting {arg}"
+                    f"invalid code map {arg_code_map} for DSP setting {arg}"
                 )
             try:
                 await set_dsp_setting(command, arg, value, arg_code_map)
@@ -1023,9 +1022,7 @@ class PioneerAVR(AVRConnection):
             return
 
         if len(source_name) > 14:
-            raise ValueError(
-                f"new source name {source_name} is longer than 14 characters"
-            )
+            raise ValueError(f"source name {source_name} is longer than 14 characters")
         if self.properties.source_id_to_name.get(source_id) == source_name:
             return
 
