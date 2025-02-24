@@ -571,13 +571,11 @@ class PioneerAVR(AVRConnection):
 
     async def turn_on(self, zone: Zone = Zone.Z1) -> None:
         """Turn on the Pioneer AVR zone."""
-        zone = self._check_zone(zone)
-        await self.send_command("turn_on", zone)
+        await self.send_command("turn_on", self._check_zone(zone))
 
     async def turn_off(self, zone: Zone = Zone.Z1) -> None:
         """Turn off the Pioneer AVR zone."""
-        zone = self._check_zone(zone)
-        await self.send_command("turn_off", zone)
+        await self.send_command("turn_off", self._check_zone(zone))
 
     async def select_source(
         self, source: str = None, source_id: str = None, zone: Zone = Zone.Z1
@@ -593,13 +591,11 @@ class PioneerAVR(AVRConnection):
 
     async def volume_up(self, zone: Zone = Zone.Z1) -> None:
         """Volume up media player."""
-        zone = self._check_zone(zone)
-        await self.send_command("volume_up", zone)
+        await self.send_command("volume_up", self._check_zone(zone))
 
     async def volume_down(self, zone: Zone = Zone.Z1) -> None:
         """Volume down media player."""
-        zone = self._check_zone(zone)
-        await self.send_command("volume_down", zone)
+        await self.send_command("volume_down", self._check_zone(zone))
 
     async def set_volume_level(self, target_volume: int, zone: Zone = Zone.Z1) -> None:
         """Set volume level (0..185 for Zone 1, 0..81 for other Zones)."""
@@ -658,13 +654,11 @@ class PioneerAVR(AVRConnection):
 
     async def mute_on(self, zone: Zone = Zone.Z1) -> None:
         """Mute AVR."""
-        zone = self._check_zone(zone)
-        await self.send_command("mute_on", zone)
+        await self.send_command("mute_on", self._check_zone(zone))
 
     async def mute_off(self, zone: Zone = Zone.Z1) -> None:
         """Unmute AVR."""
-        zone = self._check_zone(zone)
-        await self.send_command("mute_off", zone)
+        await self.send_command("mute_off", self._check_zone(zone))
 
     def update_listening_modes(self) -> None:
         """Update list of valid listening modes for current input source."""
