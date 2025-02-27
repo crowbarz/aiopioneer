@@ -89,7 +89,7 @@ class InputSource(CodeMapBase):
         super().decode_response(response, params)
         source = response.value
         queue_commands = []
-        if source == SOURCE_TUNER:
+        if response.properties.is_source_tuner(source):
             queue_commands.extend(["query_tuner_frequency", "query_tuner_preset"])
         queue_commands.append(["_oob", "_delayed_query_basic", 2])
         if source in MEDIA_CONTROL_SOURCES:

@@ -6,7 +6,7 @@ import logging
 from typing import Any
 from types import MappingProxyType
 
-from .const import Zone, MEDIA_CONTROL_COMMANDS, LISTENING_MODES
+from .const import Zone, MEDIA_CONTROL_COMMANDS, LISTENING_MODES, SOURCE_TUNER
 from .params import (
     AVRParams,
     PARAM_MODEL,
@@ -117,6 +117,13 @@ class AVRProperties:
             if self.source_name_to_id
             else source_id
         )
+
+    def is_source_tuner(self, source: str = None) -> bool:
+        """Return whether current source is tuner."""
+        if source is not None:
+            return source == SOURCE_TUNER
+        sources = [s for z, s in self.source_id.items() if self.power.get(z)]
+        return SOURCE_TUNER in sources
 
     def get_supported_media_controls(self, zone: Zone) -> list[str] | None:
         """Return a list of all valid media control actions for a given zone.
