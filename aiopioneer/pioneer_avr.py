@@ -94,7 +94,7 @@ class PioneerAVR(AVRConnection):
         self._command_queue_task = None
         self._command_queue_excs: list[Exception] = []
         self._command_queue: list = []  # queue of commands to execute
-        self._zone_callback = {}
+        self._zone_callback: dict[Zone, Callable[[None], None]] = {}
 
         # Register params update callbacks
         self.params.register_update_callback(self.update_listening_modes)
@@ -219,7 +219,7 @@ class PioneerAVR(AVRConnection):
 
     ## Client callback functions
     def set_zone_callback(
-        self, zone: Zone, callback: Callable[..., None] | None = None
+        self, zone: Zone, callback: Callable[[None], None] | None = None
     ) -> None:
         """Register a callback for a zone."""
         if zone in self.properties.zones or zone is Zone.ALL:
@@ -239,8 +239,7 @@ class PioneerAVR(AVRConnection):
             zones.add(Zone.ALL)
         for zone in zones:
             if zone in self._zone_callback:
-                callback = self._zone_callback[zone]
-                if callback:
+                if callback := self._zone_callback[zone]:
                     callback()
 
     ## Response handling callbacks
