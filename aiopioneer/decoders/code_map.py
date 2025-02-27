@@ -21,11 +21,18 @@ class CodeDefault:
 class CodeMapBase:
     """Map AVR codes to values."""
 
+    friendly_name = None
+
     def __new__(cls, value):
         return cls.value_to_code(value)
 
     def __class_getitem__(cls, code: str):
         return cls.code_to_value(code)
+
+    @classmethod
+    def get_name(cls) -> str:
+        """Get class name, using friendly name if defined."""
+        return cls.friendly_name if cls.friendly_name else cls.__name__
 
     @classmethod
     def value_to_code(cls, value) -> str:
@@ -74,7 +81,7 @@ class CodeBoolMap(CodeMapBase):
     @classmethod
     def value_to_code(cls, value: bool) -> str:
         if not isinstance(value, bool):
-            raise ValueError(f"Boolean value expected for {cls.__name__}")
+            raise ValueError(f"boolean value expected for {cls.get_name()}")
         return cls.code_true if value else cls.code_false
 
     @classmethod
@@ -99,7 +106,7 @@ class CodeDictMap(CodeMapBase):
         for k, v in cls.code_map.items():
             if cls.match(v, value):
                 return k
-        raise ValueError(f"Value {value} not found in {cls.__name__}")
+        raise ValueError(f"value {value} not found for {cls.get_name()}")
 
     @classmethod
     def code_to_value(cls, code: str) -> Any:
@@ -107,7 +114,7 @@ class CodeDictMap(CodeMapBase):
             return cls.code_map[code]
         if CodeDefault() in cls.code_map:
             return cls.code_map[CodeDefault()]
-        raise ValueError(f"Key {code} not found in {cls.__name__}")
+        raise ValueError(f"key {code} not found for {cls.get_name()}")
 
     @classmethod
     def keys(cls) -> list[str]:
@@ -175,23 +182,23 @@ class CodeFloatMap(CodeMapBase):
 
     def __new__(cls, value: float | int) -> str:
         if not isinstance(value, (float, int)):
-            raise ValueError(f"Value {value} is not a float or int for {cls.__name__}")
+            raise ValueError(f"{value} is not a float or int for {cls.get_name()}")
         if cls.value_min is not None:
             if cls.value_max is None:
                 if cls.value_min >= value:
                     raise ValueError(
-                        f"Value {value} below minimum {cls.value_min} for {cls.__name__}"
+                        f"{value} below minimum {cls.value_min} for {cls.get_name()}"
                     )
             elif not cls.value_min <= value <= cls.value_max:
                 raise ValueError(
-                    f"Value {value} outside of range "
-                    f"{cls.value_min} -- {cls.value_max} for {cls.__name__}"
+                    f"{value} outside of range "
+                    f"{cls.value_min} -- {cls.value_max} for {cls.get_name()}"
                 )
         if cls.value_step != 1 and int(value * CODE_MAP_EXP) % int(
             cls.value_step * CODE_MAP_EXP
         ):
             raise ValueError(
-                f"Value {value} is not a multiple of {cls.value_step} for {cls.__name__}"
+                f"{value} is not a multiple of {cls.value_step} for {cls.get_name()}"
             )
         code = cls.value_to_code(value)
         return code.zfill(cls.code_zfill) if cls.code_zfill else code
@@ -231,7 +238,7 @@ class CodeIntMap(CodeFloatMap):
         if isinstance(value, float) and value.is_integer():
             value = int(value)
         elif not isinstance(value, int):
-            raise ValueError(f"Value {value} is not an int for {cls.__name__}")
+            raise ValueError(f"{value} is not an int for {cls.get_name()}")
         return super().__new__(cls, value)
 
     ## NOTE: codes are not validated to value_min/value_max
