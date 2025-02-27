@@ -19,7 +19,7 @@ class Response:
         zone: Zone = None,
         update_zones: set[Zone] = None,
         value: Any = None,
-        queue_commands: list = None,
+        queue_commands: list[str | list] = None,
         callback: Callable[[Self], list[Self]] = None,
     ):
         self.properties = properties
@@ -30,7 +30,7 @@ class Response:
         self.zone = zone
         self.update_zones = set() if update_zones is None else update_zones
         self.value = value
-        self.queue_commands = queue_commands
+        self.queue_commands = queue_commands if queue_commands is not None else []
         self.callback = callback
 
     def __repr__(self):
@@ -55,7 +55,8 @@ class Response:
         zone: Zone = None,
         update_zones: set[Zone] = None,
         value: Any = None,
-        queue_commands: list = None,
+        queue_commands: list[str | list] = None,
+        append_queue_commands: list[str | list] = None,
         callback: Callable[[Self], list[Self]] = None,
         clear_property: bool = False,
         clear_value: bool = False,
@@ -84,6 +85,8 @@ class Response:
             self.callback = callback
         if queue_commands is not None:
             self.queue_commands = queue_commands
+        if append_queue_commands is not None:
+            self.queue_commands.extend(append_queue_commands)
 
     def clone(
         self,
@@ -94,7 +97,7 @@ class Response:
         zone: Zone = None,
         update_zones: set[Zone] = None,  ## NOTE: merged with existing
         value: Any = None,
-        queue_commands: list = None,
+        queue_commands: list[str | list] = None,
         callback: Callable[[Self], list[Self]] = None,
         inherit_property: bool = True,
         inherit_value: bool = True,
