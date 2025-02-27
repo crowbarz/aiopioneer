@@ -315,7 +315,7 @@ def _commit_response(response: Response) -> None:
 
 def process_raw_response(
     raw_resp: str, params: AVRParams, properties: AVRProperties
-) -> tuple[set[Zone], list[str]]:
+) -> tuple[set[Zone], list[str | list]]:
     """Processes a raw response, decode and apply to properties."""
     try:
         match_resp = next((r for r in RESPONSE_DATA if raw_resp.startswith(r[0])), None)
@@ -348,7 +348,7 @@ def process_raw_response(
 
         ## Process responses and update properties
         updated_zones: set[Zone] = set()
-        command_queue: list[str] = []
+        queue_commands: list[str | list] = []
         while responses:
             response = responses.pop(0)
             if response is None:
@@ -369,9 +369,9 @@ def process_raw_response(
             if response.update_zones:
                 updated_zones |= response.update_zones
             if response.queue_commands:
-                command_queue.extend(response.queue_commands)
+                queue_commands.extend(response.queue_commands)
 
     except Exception as exc:  # pylint: disable=broad-except
         raise AVRResponseDecodeError(response=raw_resp, exc=exc) from exc
 
-    return updated_zones, command_queue
+    return updated_zones, queue_commands
