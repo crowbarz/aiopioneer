@@ -247,11 +247,6 @@ def _commit_response(response: Response) -> None:
     if response.base_property is None:
         return
 
-    if response.base_property.startswith("_"):
-        match response.base_property:
-            case "_clear_source_id":
-                _LOGGER.debug("clearing source %s", response.value)
-                return properties.clear_source_id(response.value)
     current_base = current_value = getattr(properties, response.base_property)
     is_global = response.zone in [Zone.ALL, None]
     if response.property_name is None and not is_global:

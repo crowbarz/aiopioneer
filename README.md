@@ -204,7 +204,6 @@ Add _command_ to the command queue, to to be sent in the background to the AVR o
 _command_ may be specified as a **str**, or a **list** whose first element is a **str** that is used as the command to execute. The list form is used for local commands that support arguments of arbitrary type.
 The following local commands are supported, these are mainly used by the command decoders for more complex actions:
 
-- `_power_on`: execute initial refresh on zone power on
 - `_full_refresh`: perform a full refresh on all AVR Zones
 - \[ `_refresh_zone`, _zone_: **Zone** \]: perform a refresh on the specified zone
 - \[ `_delayed_query_basic`, _delay_: **float** \]: schedule a basic AVR query if parameter `disable_auto_query` is not enabled

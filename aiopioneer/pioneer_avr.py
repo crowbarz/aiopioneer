@@ -40,7 +40,6 @@ from .params import (
     PARAM_MAX_SOURCE_ID,
     PARAM_MAX_VOLUME,
     PARAM_MAX_VOLUME_ZONEX,
-    PARAM_POWER_ON_VOLUME_BOUNCE,
     PARAM_VOLUME_STEP_ONLY,
     PARAM_IGNORE_VOLUME_CHECK,
     PARAM_DEBUG_UPDATER,
@@ -377,15 +376,7 @@ class PioneerAVR(AVRConnection):
         self.last_updated = time.time()
         for zone in zones:
             await self._refresh_zone(zone)
-            zones_initial_refresh = self.properties.zones_initial_refresh
-            if self.properties.power[zone] and zone not in zones_initial_refresh:
-                if zone is Zone.Z1:
-                    await self.query_device_info()
-                _LOGGER.info("completed initial refresh for %s", zone.full_name)
-                self.properties.zones_initial_refresh.add(zone)
-                self._call_zone_callbacks(zones=set([zone]))
 
-        ## Trigger callbacks to all zones on refresh
         self._call_zone_callbacks(zones=set([Zone.ALL]))
 
         _LOGGER.debug(">> refresh completed")
@@ -411,22 +402,6 @@ class PioneerAVR(AVRConnection):
                 raise ValueError(f"{command} requires {num_args} {args_desc}")
 
         match command:
-            case "_power_on":
-                check_args(command, args, 1)
-                zone = Zone(args[0])
-                if zone not in self.properties.zones_initial_refresh:
-                    _LOGGER.info("scheduling initial refresh")
-                    self.queue_command(["_sleep", 2], insert_at=1)
-                    self.queue_command(["_refresh_zone", zone], insert_at=2)
-                else:
-                    self.queue_command(["_delayed_query_basic", 4], insert_at=1)
-                if zone is Zone.Z1 and self.params.get_param(
-                    PARAM_POWER_ON_VOLUME_BOUNCE
-                ):
-                    ## NOTE: volume workaround scheduled ahead of initial refresh
-                    _LOGGER.info("scheduling Zone 1 volume workaround")
-                    self.queue_command("volume_up", skip_if_queued=False, insert_at=1)
-                    self.queue_command("volume_down", skip_if_queued=False, insert_at=2)
             case "_full_refresh":
                 await self._refresh_zones(zones=self.properties.zones)
             case "_refresh_zone":

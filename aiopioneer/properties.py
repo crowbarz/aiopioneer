@@ -118,15 +118,6 @@ class AVRProperties:
             else source_id
         )
 
-    def clear_source_id(self, source_id: str) -> None:
-        """Clear name mapping for given source ID."""
-        source_name = None
-        if source_id in self.source_id_to_name:
-            source_name = self.source_id_to_name[source_id]
-            self.source_id_to_name.pop(source_id)
-        if source_name in self.source_name_to_id:
-            self.source_name_to_id.pop(source_name)
-
     def get_supported_media_controls(self, zone: Zone) -> list[str] | None:
         """Return a list of all valid media control actions for a given zone.
         If the provided zone source is not currently compatible with media controls,
