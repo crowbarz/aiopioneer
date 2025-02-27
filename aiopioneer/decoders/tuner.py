@@ -50,35 +50,44 @@ class FrequencyAM(CodeIntMap):
 
         def glean_frequency_step(response: Response) -> list[Response]:
             """Determine frequency step from current frequency."""
-            frequency_step = response.properties.tuner.get("am_frequency_step")
+            properties = response.properties
+            frequency_step = properties.tuner.get("am_frequency_step")
+
+            if frequency_step or not properties.is_source_tuner():
+                return []
 
             ## Check whether new frequency is divisible by 9 or 10
-            if frequency_step is None:
-                freq_div9 = response.value % 9 == 0
-                freq_div10 = response.value % 10 == 0
-                if freq_div9 and not freq_div10:
-                    frequency_step = 9
-                elif not freq_div9 and freq_div10:
-                    frequency_step = 10
-                if frequency_step:
-                    return cls.update_frequency_step(
+            freq_div9 = response.value % 9 == 0
+            freq_div10 = response.value % 10 == 0
+            if freq_div9 and not freq_div10:
+                frequency_step = 9
+            elif not freq_div9 and freq_div10:
+                frequency_step = 10
+            if frequency_step:
+                return [
+                    *cls.update_frequency_step(
                         response=response, frequency_step=frequency_step
-                    )
-            return []
+                    ),
+                ]
+            response.update(
+                clear_property=True,
+                queue_commands=[["_sleep", 2], "_calculate_am_frequency_step"],
+            )
+            return [response]
 
-        queue_commands = []
-        current_tuner_band = response.properties.tuner.get("band")
-        frequency_step = response.properties.tuner.get("am_frequency_step")
-        if current_tuner_band is not TunerBand.AM and not frequency_step:
-            queue_commands = [["_sleep", 2], "_calculate_am_frequency_step"]
-        return [
-            response.clone(
-                property_name="band", value=TunerBand.AM, queue_commands=queue_commands
-            ),
-            *Preset.update_preset(response),
-            response.clone(callback=glean_frequency_step),
-            response,
-        ]
+        responses = []
+        if response.properties.tuner.get("band") is not TunerBand.AM:
+            responses = [
+                response.clone(inherit_property=False, callback=glean_frequency_step)
+            ]
+        responses.extend(
+            [
+                response.clone(property_name="band", value=TunerBand.AM),
+                *Preset.update_preset(response),
+                response,
+            ]
+        )
+        return responses
 
     @classmethod
     def update_frequency_step(
@@ -138,6 +147,7 @@ class Preset(CodeMapBase):
 
         def check_cached_preset(response: Response) -> list[Response]:
             """Update preset based on cached preset."""
+            response.update(base_property="tuner")
             if cls.cached_preset is not None:
                 # pylint: disable=unbalanced-tuple-unpacking
                 (tuner_class, tuner_preset) = cls.cached_preset
@@ -154,7 +164,7 @@ class Preset(CodeMapBase):
             return []
 
         ## NOTE: response.value = updated frequency
-        return [response.clone(callback=check_cached_preset)]
+        return [response.clone(inherit_property=False, callback=check_cached_preset)]
 
     @classmethod
     def value_to_code(cls, value: tuple[str, int]) -> str:
