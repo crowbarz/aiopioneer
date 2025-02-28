@@ -1,5 +1,6 @@
 """aiopioneer response decoders for tuner parameters."""
 
+from ..command_queue import CommandItem
 from ..const import TunerBand
 from ..params import AVRParams
 from .code_map import CodeMapBase, CodeIntMap, CodeFloatMap
@@ -71,7 +72,10 @@ class FrequencyAM(CodeIntMap):
                 ]
             response.update(
                 clear_property=True,
-                queue_commands=[["_sleep", 2], "_calculate_am_frequency_step"],
+                queue_commands=[
+                    CommandItem("_sleep", 2, queue_id=0),
+                    CommandItem("_calculate_am_frequency_step", queue_id=0),
+                ],
             )
             return [response]
 
@@ -136,7 +140,9 @@ class Preset(CodeMapBase):
         super().decode_response(response, params)
         response.update(
             clear_property=True,
-            queue_commands=[["_oob", "query_tuner_frequency"]],
+            queue_commands=[
+                CommandItem("query_tuner_frequency", skip_if_executing=True)
+            ],
             callback=cache_preset,
         )
         return [response]

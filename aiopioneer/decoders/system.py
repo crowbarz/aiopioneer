@@ -3,6 +3,7 @@
 import logging
 import re
 
+from ..command_queue import CommandItem
 from ..const import MEDIA_CONTROL_SOURCES, Zone
 from ..params import (
     AVRParams,
@@ -44,22 +45,24 @@ class Power(CodeInverseBoolMap):
                 return []
 
             queue_commands = [
-                ["_oob", "_sleep", 2],
-                ["_oob", "_delayed_query_basic", 2],
+                CommandItem("_delayed_query_basic", queue_id=3),
             ]
             if zone not in properties.zones_initial_refresh:
-                ## TODO: skip if updating to replace _oob
-                _LOGGER.info("queueing initial refresh for %s", zone.full_name)
-                queue_commands = [
-                    [False, 0, "_oob", "_sleep", 2],
-                    [False, 1, "_oob", "_refresh_zone", zone],
-                ]
+                if not properties.command_queue.is_executing():
+                    _LOGGER.info("queueing initial refresh for %s", zone.full_name)
+                    queue_commands = [
+                        CommandItem("_sleep", 2, queue_id=2),
+                        CommandItem("_refresh_zone", zone, queue_id=2),
+                    ]
 
             if zone is Zone.Z1 and params.get_param(PARAM_POWER_ON_VOLUME_BOUNCE):
                 _LOGGER.info("queueing volume workaround for Main Zone")
                 ## NOTE: volume bounce queues before refresh
                 queue_commands.extend(
-                    [[False, 0, "volume_up"], [False, 1, "volume_down"]]
+                    [
+                        CommandItem("volume_up", queue_id=0, skip_if_queued=False),
+                        CommandItem("volume_down", queue_id=0, skip_if_queued=False),
+                    ]
                 )
 
             response.update(queue_commands=queue_commands)
@@ -69,7 +72,9 @@ class Power(CodeInverseBoolMap):
         if response.value:
             response.update(callback=check_power_on)
         else:
-            response.update(queue_commands=[["_oob", "_delayed_query_basic", 2]])
+            response.update(
+                queue_commands=[CommandItem("_delayed_query_basic", queue_id=3)]
+            )
         response.update(update_zones={Zone.ALL})
         return [response]
 
@@ -90,8 +95,13 @@ class InputSource(CodeMapBase):
         source = response.value
         queue_commands = []
         if response.properties.is_source_tuner(source):
-            queue_commands.extend(["query_tuner_frequency", "query_tuner_preset"])
-        queue_commands.append(["_oob", "_delayed_query_basic", 2])
+            queue_commands.extend(
+                [
+                    CommandItem("query_tuner_frequency"),
+                    CommandItem("query_tuner_preset"),
+                ]
+            )
+        queue_commands.append(CommandItem("_delayed_query_basic", queue_id=3))
         if source in MEDIA_CONTROL_SOURCES:
             media_control_mode = MEDIA_CONTROL_SOURCES.get(source)
         elif source == params.get_param(PARAM_MHL_SOURCE):
@@ -315,7 +325,9 @@ class AudioParameterProhibition(CodeMapBase):
         params: AVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response decoder for audio parameter prohibition."""
-        response.update(queue_commands=[["_delayed_query_basic", 2]])
+        response.update(
+            queue_commands=[CommandItem("_delayed_query_basic", queue_id=3)]
+        )
         return [response]
 
 
@@ -329,5 +341,7 @@ class AudioParameterWorking(CodeMapBase):
         params: AVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response decoder for audio parameter working."""
-        response.update(queue_commands=[["_delayed_query_basic", 2]])
+        response.update(
+            queue_commands=[CommandItem("_delayed_query_basic", queue_id=3)]
+        )
         return [response]

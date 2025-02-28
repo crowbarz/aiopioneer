@@ -10,7 +10,7 @@ from collections.abc import Callable
 from typing import Any
 
 from .commands import PIONEER_COMMANDS
-from .command_queue import CommandQueueItem
+from .command_queue import CommandItem
 from .connection import AVRConnection
 from .const import (
     Zone,
@@ -25,7 +25,6 @@ from .const import (
 )
 from .exceptions import (
     AVRError,
-    AVRUnavailableError,
     AVRResponseTimeoutError,
     AVRCommandError,
     AVRUnknownCommandError,
@@ -80,6 +79,7 @@ class PioneerAVR(AVRConnection):
         _LOGGER.info("Starting aiopioneer %s", VERSION)
         self.params = AVRParams(params)
         self.properties = AVRProperties(self.params)
+        self.properties.command_queue.register_execute_callback(self._execute_command)
         super().__init__(
             params=self.params,
             host=host,
@@ -91,8 +91,6 @@ class PioneerAVR(AVRConnection):
         ## Internal state
         self._update_lock = asyncio.Lock()
         self._updater_task = None
-        self._command_queue_task = None
-        self._command_queue_excs: list[Exception] = []
         self._zone_callback: dict[Zone, Callable[[None], None]] = {}
 
         # Register params update callbacks
@@ -117,7 +115,7 @@ class PioneerAVR(AVRConnection):
         """Stop AVR tasks on disconnection."""
         self.properties.reset()
         self._call_zone_callbacks()
-        await self._command_queue_cancel(ignore_exception=True)
+        await self.properties.command_queue.cancel(ignore_exceptions=True)
         await self._updater_cancel(ignore_exception=True)
         await asyncio.sleep(0)  # yield to command queue and updater tasks
         await super().on_disconnect()
@@ -164,7 +162,7 @@ class PioneerAVR(AVRConnection):
         self.properties.query_sources = True
         self.properties.source_name_to_id = {}
         self.properties.source_id_to_name = {}
-        await self._command_queue_wait()  ## wait for command queue to complete
+        await self.properties.command_queue.wait()  ## wait for command queue to complete
         _LOGGER.info("querying AVR source names")
         async with self.properties.command_queue:
             for src_id in range(self.params.get_param(PARAM_MAX_SOURCE_ID) + 1):
@@ -222,7 +220,7 @@ class PioneerAVR(AVRConnection):
     ) -> None:
         """Register a callback for a zone."""
         if zone in self.properties.zones or zone is Zone.ALL:
-            if callback:
+            if callback is not None:
                 self._zone_callback[zone] = callback
             else:
                 self._zone_callback.pop(zone)
@@ -244,31 +242,7 @@ class PioneerAVR(AVRConnection):
     ## Response handling callbacks
     def decode_response(self, response_raw: str) -> None:
         """Decode response and commit to properties."""
-        updated_zones, queue_commands = process_raw_response(
-            response_raw, self.params, self.properties
-        )
-        if queue_commands:  ## Add any requested extra commands to run
-            for command in queue_commands:
-                skip_if_queued = None
-                insert_at = None
-                if isinstance(command, list):  ## complex command
-                    cmd = command[0]
-                    if isinstance(cmd, bool):  ## skip_if_queued
-                        skip_if_queued = cmd
-                        command.pop(0)
-                        cmd = command[0]
-                    if isinstance(cmd, int):  ## insert_at
-                        insert_at = cmd
-                        command.pop(0)
-                        cmd = command[0]
-                    if cmd == "_oob":
-                        if not self.properties.command_queue.is_executing():
-                            command.pop(0)
-                            self.queue_command(command)
-                        continue
-                self.queue_command(
-                    command, skip_if_queued=skip_if_queued, insert_at=insert_at
-                )
+        updated_zones = process_raw_response(response_raw, self.params, self.properties)
         if updated_zones:  ## Call zone callbacks for updated zones
             self._call_zone_callbacks(updated_zones)
 
@@ -291,7 +265,9 @@ class PioneerAVR(AVRConnection):
                 if self.last_updated == last_updated:
                     if debug_updater:
                         _LOGGER.debug("updater triggered full refresh")
-                    self.queue_command("_full_refresh")
+                    self.properties.command_queue.enqueue(
+                        CommandItem("_full_refresh", queue_id=2)
+                    )
             except asyncio.CancelledError:
                 if debug_updater:
                     _LOGGER.debug("updater cancelled")
@@ -417,13 +393,14 @@ class PioneerAVR(AVRConnection):
             zones = {zones}
         if isinstance(zones, list):
             zones = set(zones)
+        command_queue = self.properties.command_queue
         if not zones or Zone.ALL in zones:
-            self.queue_command("_full_refresh")
+            command_queue.enqueue(CommandItem("_full_refresh"), queue_id=2)
         else:
             for zone in zones:
-                self.queue_command(["_refresh_zone", zone])
+                command_queue.enqueue(CommandItem("_refresh_zone", zone), queue_id=2)
         if wait:
-            await self._command_queue_wait()
+            await command_queue.wait()
 
     ## Command queue
     async def _execute_local_command(self, command: str, args: list) -> None:
@@ -442,20 +419,18 @@ class PioneerAVR(AVRConnection):
                 check_args(command, args, 1)
                 await self._refresh_zone(zone=Zone(args[0]))
             case "_delayed_query_basic":
-                check_args(command, args, 1)
-                if not self.params.get_param(PARAM_DISABLE_AUTO_QUERY):
-                    await asyncio.sleep(args[0])
-                    self.queue_command("_query_basic", insert_at=1)
-            case "_query_basic":
-                if any(self.properties.power.values()) and not self.params.get_param(
-                    PARAM_DISABLE_AUTO_QUERY
+                if not (
+                    any(self.properties.power.values())
+                    and not self.params.get_param(PARAM_DISABLE_AUTO_QUERY)
                 ):
-                    for cmd in [
-                        "query_listening_mode",
-                        "query_basic_audio_information",
-                        "query_basic_video_information",
-                    ]:
-                        await self.send_command(cmd, ignore_error=True)
+                    return
+                await asyncio.sleep(2.5)  ## TODO: parameterise
+                for cmd in [
+                    "query_listening_mode",
+                    "query_basic_audio_information",
+                    "query_basic_video_information",
+                ]:
+                    await self.send_command(cmd, ignore_error=True)
             case "_update_listening_modes":
                 self.update_listening_modes()
             case "_calculate_am_frequency_step":
@@ -466,109 +441,14 @@ class PioneerAVR(AVRConnection):
             case _:
                 raise AVRUnknownLocalCommandError(command=command)
 
-    async def _execute_command_queue(self) -> None:
-        """Execute commands from a queue."""
-        _LOGGER.debug(">> command queue started")
-        command_queue = self.properties.command_queue
-        async with command_queue:
-            while (command_item := command_queue.peek()) is not None:
-                command = command_item.command
-                ## Keep command in queue until it has finished executing
-                _LOGGER.debug("command queue executing %s", command)
-                try:
-                    args = command_item.args
-                    if command.startswith("_"):
-                        await self._execute_local_command(command, args)
-                    else:
-                        await self.send_command(command, ignore_error=False)
-                except AVRUnavailableError:
-                    _LOGGER.debug(">> command queue detected AVR unavailable")
-                    break
-                except asyncio.CancelledError:
-                    _LOGGER.debug(">> command queue task cancelled")
-                    break
-                except Exception as exc:  # pylint: disable=broad-except
-                    _LOGGER.error(
-                        "exception executing command %s: %s", command, repr(exc)
-                    )
-                    self._command_queue_excs.append(exc)
-
-                command_queue.pop()
-
-        _LOGGER.debug(">> command queue completed")
-
-    async def _command_queue_wait(self) -> None:
-        """Wait for command queue to be flushed."""
-        await asyncio.sleep(0)  # yield to command queue task
-        debug_command_queue = self.params.get_param(PARAM_DEBUG_COMMAND_QUEUE)
-        if self._command_queue_task is None:
-            return
-
-        if debug_command_queue:
-            _LOGGER.debug("waiting for command queue to be flushed")
-        await asyncio.wait([self._command_queue_task])
-        if self._command_queue_task is None:
-            raise AVRUnavailableError
-        if exc := self._command_queue_task.exception():
-            _LOGGER.error("command queue task exception: %s", repr(exc))
-            return
-
-        self._command_queue_task = None
-        if excs := self._command_queue_excs:
-            if debug_command_queue:
-                _LOGGER.debug("command queue exceptions: %s", repr(excs))
-            if len(excs) == 1:
-                raise excs[0]
-            raise ExceptionGroup("command queue exceptions", excs)
-
-    async def _command_queue_cancel(self, ignore_exception: bool = False) -> None:
-        """Cancel any pending commands and the task itself."""
-        debug_command_queue = self.params.get_param(PARAM_DEBUG_COMMAND_QUEUE)
-        await cancel_task(
-            self._command_queue_task,
-            debug=debug_command_queue,
-            ignore_exception=ignore_exception,
-        )
-        self._command_queue_task = None
-        self.properties.command_queue.purge()
-
-    def _command_queue_schedule(self) -> None:
-        """Schedule commands to queue."""
-        if self.properties.command_queue.peek() is None:
-            return
-
-        ## NOTE: does not create new task if one already exists
-        if self._command_queue_task:
-            if self._command_queue_task.done():
-                if exc := self._command_queue_task.exception():
-                    _LOGGER.error("command queue task exception: %s", repr(exc))
-                self._command_queue_task = None
-        if self._command_queue_task is None:
-            if self.params.get_param(PARAM_DEBUG_COMMAND_QUEUE):
-                _LOGGER.debug("creating command queue task")
-            self._command_queue_task = asyncio.create_task(
-                self._execute_command_queue(), name="avr_command_queue"
-            )
-            self._command_queue_excs = []
-
-    def queue_command(
-        self,
-        command: str | list,
-        skip_if_queued: bool = None,
-        insert_at: int = None,
-    ) -> None:
-        """Add a new command to the queue to run."""
-
-        args = []
-        if isinstance(command, list):
-            args = command[1:]
-            command = command[0]
-        self.properties.command_queue.enqueue(
-            CommandQueueItem(
-                command, *args, insert_at=insert_at, skip_if_queued=skip_if_queued
-            )
-        )
-        self._command_queue_schedule()
+    async def _execute_command(self, command_item: CommandItem) -> None:
+        """Execute a command from the command queue."""
+        command = command_item.command
+        args = command_item.args
+        if command.startswith("_"):
+            await self._execute_local_command(command, args)
+        else:
+            await self.send_command(command, ignore_error=False)
 
     ## AVR methods
     def _check_zone(self, zone: Zone) -> Zone:
@@ -853,7 +733,7 @@ class PioneerAVR(AVRConnection):
         """Set the tuner frequency and band."""
         await self.select_tuner_band(band)
         if band is TunerBand.AM and not self.properties.tuner.get("am_frequency_step"):
-            await self._command_queue_wait()  ## wait for AM step to be calculated
+            await self.properties.command_queue.wait()  ## for AM step calculation
 
         code = (
             FrequencyAM(frequency) if band is TunerBand.AM else FrequencyFM(frequency)

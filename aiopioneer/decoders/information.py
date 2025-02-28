@@ -1,5 +1,6 @@
 """aiopioneer response decoders for informational responses."""
 
+from ..command_queue import CommandItem
 from ..params import AVRParams
 from .code_map import (
     CodeMapBase,
@@ -152,7 +153,9 @@ class InputMultichannel(CodeBoolMap):
             """Trigger listening mode update if input multichannel has changed."""
             if response.properties.audio.get("input_multichannel") == response.value:
                 return []
-            response.update(queue_commands=["_update_listening_modes"])
+            response.update(
+                queue_commands=[CommandItem("_update_listening_modes", queue_id=3)]
+            )
             return [response]
 
         super().decode_response(response, params)

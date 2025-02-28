@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from typing import Any, Self
+from ..command_queue import CommandItem
 from ..const import Zone
 from ..properties import AVRProperties
 
@@ -19,7 +20,7 @@ class Response:
         zone: Zone = None,
         update_zones: set[Zone] = None,
         value: Any = None,
-        queue_commands: list[str | list] = None,
+        queue_commands: list[CommandItem] = None,
         callback: Callable[[Self], list[Self]] = None,
     ):
         self.properties = properties
@@ -55,8 +56,8 @@ class Response:
         zone: Zone = None,
         update_zones: set[Zone] = None,
         value: Any = None,
-        queue_commands: list[str | list] = None,
-        append_queue_commands: list[str | list] = None,
+        queue_commands: list[CommandItem] = None,
+        append_queue_commands: list[CommandItem] = None,
         callback: Callable[[Self], list[Self]] = None,
         clear_property: bool = False,
         clear_value: bool = False,
@@ -97,7 +98,7 @@ class Response:
         zone: Zone = None,
         update_zones: set[Zone] = None,  ## NOTE: merged with existing
         value: Any = None,
-        queue_commands: list[str | list] = None,
+        queue_commands: list[CommandItem] = None,
         callback: Callable[[Self], list[Self]] = None,
         inherit_property: bool = True,
         inherit_value: bool = True,
@@ -126,6 +127,6 @@ class Response:
             property_name=property_name,
             zone=zone,
             value=value,
-            queue_commands=queue_commands,
+            queue_commands=queue_commands if queue_commands is not None else [],
             callback=callback,
         )

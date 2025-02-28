@@ -30,7 +30,7 @@ class AVRProperties:
         ## AVR base properties
         self.zones: set[Zone] = set()
         self.zones_initial_refresh: set[Zone] = set()
-        self.command_queue = CommandQueue()
+        self.command_queue = CommandQueue(params)
         self.power: dict[Zone, bool] = {}
         self.volume: dict[Zone, int] = {}
         self.max_volume: dict[Zone, int] = {}
