@@ -48,12 +48,11 @@ class Power(CodeInverseBoolMap):
                 CommandItem("_delayed_query_basic", queue_id=3),
             ]
             if zone not in properties.zones_initial_refresh:
-                if not properties.command_queue.is_executing():
-                    _LOGGER.info("queueing initial refresh for %s", zone.full_name)
-                    queue_commands = [
-                        CommandItem("_sleep", 2, queue_id=2),
-                        CommandItem("_refresh_zone", zone, queue_id=2),
-                    ]
+                _LOGGER.info("queueing initial refresh for %s", zone.full_name)
+                queue_commands = [
+                    CommandItem("_sleep", 2, queue_id=2),
+                    CommandItem("_refresh_zone", zone, queue_id=2),
+                ]
 
             if zone is Zone.Z1 and params.get_param(PARAM_POWER_ON_VOLUME_BOUNCE):
                 _LOGGER.info("queueing volume workaround for Main Zone")
@@ -69,12 +68,13 @@ class Power(CodeInverseBoolMap):
             return [response]
 
         super().decode_response(response, params)
-        if response.value:
-            response.update(callback=check_power_on)
-        else:
-            response.update(
-                queue_commands=[CommandItem("_delayed_query_basic", queue_id=3)]
-            )
+        if not response.properties.command_queue.is_starting():
+            if response.value:
+                response.update(callback=check_power_on)
+            else:
+                response.update(
+                    queue_commands=[CommandItem("_delayed_query_basic", queue_id=3)]
+                )
         response.update(update_zones={Zone.ALL})
         return [response]
 

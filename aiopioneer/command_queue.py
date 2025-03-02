@@ -20,6 +20,7 @@ class CommandItem:
         command: str,
         *args,
         queue_id: int = 1,
+        skip_if_startup: bool = False,
         skip_if_executing: bool = False,
         skip_if_queued: bool = True,
         insert_at: int = -1,
@@ -27,6 +28,7 @@ class CommandItem:
         self.command = command
         self.args = args
         self.queue_id = queue_id
+        self.skip_if_startup = skip_if_startup
         self.skip_if_executing = skip_if_executing
         self.skip_if_queued = skip_if_queued
         self.insert_at = insert_at
@@ -53,9 +55,10 @@ class CommandQueue:
         self._num_queues = num_queues
         self._queue: list[list[CommandItem]] = [[] for _ in range(num_queues)]
         self._task = None
-        self._execute_lock = asyncio.Lock()
         self._execute_callback: Callable[[CommandItem], None] = None
         self._command_exceptions: list[Exception] = []
+        self._execute_lock = asyncio.Lock()
+        self.startup_lock = asyncio.Lock()
 
     def __iter__(self):
         return itertools.chain.from_iterable(self._queue)
@@ -79,6 +82,7 @@ class CommandQueue:
         self,
         item: CommandItem,
         queue_id: int = None,
+        skip_if_startup: bool = None,
         skip_if_queued: bool = None,
         skip_if_executing: bool = None,
         insert_at: int = None,
@@ -87,6 +91,12 @@ class CommandQueue:
         """Enqueue a CommandItem in the specified command queue."""
         if not isinstance(item, CommandItem):
             raise ValueError(f"queuing invalid command: {item}")
+        if skip_if_startup is None:
+            skip_if_startup = item.skip_if_startup
+        if skip_if_startup and self.is_starting():
+            if self._debug:
+                _LOGGER.debug("not queuing %s: module is starting", item)
+            return
         if skip_if_executing is None:
             skip_if_executing = item.skip_if_executing
         if skip_if_executing and self.is_executing():
@@ -157,6 +167,10 @@ class CommandQueue:
     def is_executing(self) -> bool:
         """Return whether command queue is executing."""
         return self._execute_lock.locked()
+
+    def is_starting(self) -> bool:
+        """Return whether AVR is starting."""
+        return self.startup_lock.locked()
 
     async def _execute(self) -> None:
         """Execute commands from the command queue."""

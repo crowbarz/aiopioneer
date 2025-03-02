@@ -100,11 +100,12 @@ class PioneerAVR(AVRConnection):
     async def on_connect(self) -> None:
         """Start AVR tasks on connection."""
         await super().on_connect()
-        if await self.query_device_model() is None:
-            raise AVRConnectProtocolError
-        self.update_listening_modes()
-        await self._updater_schedule()
-        await asyncio.sleep(0)  # yield to updater task
+        async with self.properties.command_queue.startup_lock:
+            if await self.query_device_model() is None:
+                raise AVRConnectProtocolError
+            self.update_listening_modes()
+            await self._updater_schedule()
+            await asyncio.sleep(0)  # yield to updater task
 
     async def on_reconnect(self) -> None:
         """Update AVR on reconnection."""
@@ -134,7 +135,6 @@ class PioneerAVR(AVRConnection):
         _LOGGER.info("querying available zones on AVR")
         ignored_zones = [Zone(z) for z in self.params.get_param(PARAM_IGNORED_ZONES)]
         ignore_volume_check = self.params.get_param(PARAM_IGNORE_VOLUME_CHECK)
-        # Defer updates to after query_zones has completed
 
         async def query_zone(zone: Zone, max_volume: int) -> bool | None:
             if await self.send_command("query_power", zone, ignore_error=True) and (
@@ -150,7 +150,9 @@ class PioneerAVR(AVRConnection):
                 return False
             return None
 
-        async with self.properties.command_queue:
+        command_queue = self.properties.command_queue
+        await command_queue.wait()  ## wait for command queue to complete
+        async with command_queue, command_queue.startup_lock:
             if not await query_zone(Zone.Z1, self.params.get_param(PARAM_MAX_VOLUME)):
                 _LOGGER.warning("%s not discovered on AVR", Zone.Z1.full_name)
             for zone in [Zone.Z2, Zone.Z3, Zone.HDZ]:
@@ -162,9 +164,11 @@ class PioneerAVR(AVRConnection):
         self.properties.query_sources = True
         self.properties.source_name_to_id = {}
         self.properties.source_id_to_name = {}
-        await self.properties.command_queue.wait()  ## wait for command queue to complete
+
+        command_queue = self.properties.command_queue
+        await command_queue.wait()  ## wait for command queue to complete
         _LOGGER.info("querying AVR source names")
-        async with self.properties.command_queue:
+        async with command_queue, command_queue.startup_lock:
             for src_id in range(self.params.get_param(PARAM_MAX_SOURCE_ID) + 1):
                 try:
                     response = await self.send_command(
