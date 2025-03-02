@@ -79,6 +79,24 @@ class Power(CodeInverseBoolMap):
         return [response]
 
 
+class Volume(CodeIntMap):
+    """Zone volume."""
+
+    friendly_name = "volume"
+
+    def __new__(cls, value: int, zone: Zone, max_volume: int) -> str:
+        if not isinstance(value, int):
+            raise ValueError(f"{value} is not an int for {cls.get_name()}")
+
+        if not 0 <= value <= max_volume:
+            raise ValueError(
+                f"{value} outside of range 0 -- {max_volume} "
+                f"for {zone.full_name} {cls.get_name()}"
+            )
+        code = cls.value_to_code(value)
+        return code.zfill(3 if zone is Zone.Z1 else 2)
+
+
 class InputSource(CodeMapBase):
     """Zone input source."""
 
