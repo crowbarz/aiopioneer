@@ -6,6 +6,7 @@ import logging
 from typing import Any
 from types import MappingProxyType
 
+from .command_queue import CommandQueue
 from .const import Zone, MEDIA_CONTROL_COMMANDS, LISTENING_MODES, SOURCE_TUNER
 from .params import (
     AVRParams,
@@ -29,6 +30,7 @@ class AVRProperties:
         ## AVR base properties
         self.zones: set[Zone] = set()
         self.zones_initial_refresh: set[Zone] = set()
+        self.command_queue = CommandQueue(params)
         self.power: dict[Zone, bool] = {}
         self.volume: dict[Zone, int] = {}
         self.max_volume: dict[Zone, int] = {}
@@ -64,6 +66,7 @@ class AVRProperties:
 
     def reset(self) -> None:
         """Reset AVR properties."""
+        self.command_queue.purge()
         self.power = {}
         self.volume = {}
         self.mute = {}
