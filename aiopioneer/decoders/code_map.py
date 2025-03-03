@@ -35,6 +35,11 @@ class CodeMapBase:
         return cls.friendly_name if cls.friendly_name else cls.__name__
 
     @classmethod
+    def get_len(cls) -> int:
+        """Get class field length."""
+        raise ValueError(f"class length undefined for {cls.get_name()}")
+
+    @classmethod
     def value_to_code(cls, value) -> str:
         """Convert value to code."""
         return str(value)
@@ -45,9 +50,11 @@ class CodeMapBase:
         return str(code)
 
     @classmethod
-    def match(cls, v, value):
-        """Default value match function."""
-        return v == value
+    def parse_args(cls, args: list, params: AVRParams) -> str:
+        """Convert and pop argument(s) to code."""
+        if not isinstance(args, list) or len(args) == 0:
+            raise ValueError(f"insufficient arguments for {cls.get_name()}")
+        return cls.value_to_code(args.pop(0))
 
     @classmethod
     def decode_response(
@@ -60,11 +67,60 @@ class CodeMapBase:
         return [response]
 
 
+class CodeMapSequence(CodeMapBase):
+    """Map AVR codes to a sequence of code maps."""
+
+    code_map_sequence: list[tuple[CodeMapBase, str]] = []
+
+    @classmethod
+    def get_len(cls) -> int:
+        return sum([child_map.get_len() for child_map, _ in cls.code_map_sequence])
+
+    @classmethod
+    def value_to_code(cls, value) -> str:
+        raise ValueError(f"value_to_code unsupported for {cls.get_name()}")
+
+    @classmethod
+    def code_to_value(cls, code: str) -> Any:
+        raise ValueError(f"code_to_value unsupported for {cls.get_name()}")
+
+    @classmethod
+    def parse_args(cls, args: list, params: AVRParams) -> str:
+        return "".join(
+            [
+                child_map.parse_args(args, params)
+                for child_map, _ in cls.code_map_sequence
+            ]
+        )
+
+    @classmethod
+    def decode_response(
+        cls,
+        response: Response,
+        params: AVRParams,  # pylint: disable=unused-argument
+    ) -> list[Response]:
+        code_index = 0
+        responses = []
+        for child_map, child_property_name in cls.code_map_sequence:
+            child_len = child_map.get_len()
+            child_code = response.code[code_index : code_index + child_len]
+            child_response = response.clone(
+                code=child_code, property_name=child_property_name
+            )
+            responses.extend(child_map.decode_response(child_response, params))
+            code_index += child_len
+        return responses
+
+
 class CodeStrMap(CodeMapBase):
     """Map AVR codes to str values of fixed length."""
 
     code_len = 0
     code_fillchar = "_"
+
+    @classmethod
+    def get_len(cls) -> int:
+        return cls.code_len if cls.code_len else super().get_len()
 
     @classmethod
     def value_to_code(cls, value: str) -> str:
@@ -77,6 +133,10 @@ class CodeBoolMap(CodeMapBase):
 
     code_true = "1"
     code_false = "0"
+
+    @classmethod
+    def get_len(cls) -> int:
+        return 1
 
     @classmethod
     def value_to_code(cls, value: bool) -> str:
@@ -102,6 +162,11 @@ class CodeDictMap(CodeMapBase):
     code_map: dict[str, Any] = {}
 
     @classmethod
+    def get_len(cls) -> int:
+        ## NOTE: assumes that all codes in dict are of the same length
+        return len(next(k for k in cls.code_map if k != CodeDefault()))
+
+    @classmethod
     def value_to_code(cls, value: Any) -> str:
         for k, v in cls.code_map.items():
             if cls.match(v, value):
@@ -115,6 +180,11 @@ class CodeDictMap(CodeMapBase):
         if CodeDefault() in cls.code_map:
             return cls.code_map[CodeDefault()]
         raise ValueError(f"key {code} not found for {cls.get_name()}")
+
+    @classmethod
+    def match(cls, v, value):
+        """Default value match function."""
+        return v == value
 
     @classmethod
     def keys(cls) -> list[str]:
@@ -144,14 +214,14 @@ class CodeDictListMap(CodeDictMap):
     code_map: dict[str, list] = {}
 
     @classmethod
-    def match(cls, v: list, value: str):
-        """Match value to first element of list."""
-        return v[0] == value
-
-    @classmethod
     def code_to_value(cls, code: str) -> Tuple[str, list]:
         value_list = super().code_to_value(code)
         return value_list[0]
+
+    @classmethod
+    def match(cls, v: list, value: str):
+        """Match value to first element of list."""
+        return v[0] == value
 
     @classmethod
     def values(cls) -> list[Any]:
@@ -179,6 +249,10 @@ class CodeFloatMap(CodeMapBase):
     value_step: float | int = 1
     value_divider: float | int = 1
     value_offset: float | int = 0
+
+    @classmethod
+    def get_len(cls) -> int:
+        return cls.code_zfill if cls.code_zfill else super().get_len()
 
     def __new__(cls, value: float | int) -> str:
         if not isinstance(value, (float, int)):
