@@ -8,7 +8,7 @@ from .response import Response
 
 
 class FrequencyFM(CodeFloatMap):
-    """Tuner FM frequency."""
+    """Tuner FM frequency. (1step = 0.01MHz)"""
 
     value_min = 87.5
     value_max = 108.0
@@ -31,7 +31,7 @@ class FrequencyFM(CodeFloatMap):
 
 
 class FrequencyAM(CodeIntMap):
-    """Tuner AM frequency."""
+    """Tuner AM frequency. (1step = 1kHz)"""
 
     value_min = 530
     value_max = 1701

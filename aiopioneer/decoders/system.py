@@ -80,7 +80,7 @@ class Power(CodeInverseBoolMap):
 
 
 class Volume(CodeIntMap):
-    """Zone volume."""
+    """Zone volume. (1step = 0.5dB for Main Zone, 1step = 1.0dB for other zones)"""
 
     friendly_name = "volume"
 

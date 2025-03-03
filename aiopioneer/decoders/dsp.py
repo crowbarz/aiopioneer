@@ -27,7 +27,7 @@ class DspSignalSelect(CodeDictStrMap):
 
 
 class DspPhaseControlPlus(CodeIntMap):
-    """DSP phase control plus."""
+    """DSP phase control plus. (1step = 1ms)"""
 
     value_min = 0
     value_max = 16
@@ -40,7 +40,7 @@ class DspPhaseControlPlus(CodeIntMap):
 
     @classmethod
     def code_to_value(cls, code: str) -> int:
-        if code == "97":
+        if code in ["97", "98", "99"]:
             return "auto"
         return super().code_to_value(code)
 
