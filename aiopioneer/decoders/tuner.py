@@ -73,7 +73,6 @@ class FrequencyAM(CodeIntMap):
             response.update(
                 clear_property=True,
                 queue_commands=[
-                    CommandItem("_sleep", 2, queue_id=0),
                     CommandItem("_calculate_am_frequency_step", queue_id=0),
                 ],
             )

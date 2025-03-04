@@ -423,13 +423,14 @@ class PioneerAVR(AVRConnection):
             case "_refresh_zone":
                 check_args(command, args, 1)
                 await self._refresh_zone(zone=Zone(args[0]))
-            case "_delayed_query_basic":
-                if not (
-                    any(self.properties.power.values())
-                    and not self.params.get_param(PARAM_DISABLE_AUTO_QUERY)
-                ):
-                    return
+            case "_delayed_refresh_zone":
                 await asyncio.sleep(2.5)  ## TODO: parameterise
+                await self._refresh_zone(zone=Zone(args[0]))
+            case "_delayed_query_basic":
+                check_args(command, args, 1)
+                if self.params.get_param(PARAM_DISABLE_AUTO_QUERY):
+                    return
+                await asyncio.sleep(args[0])  ## TODO: parameterise
                 for cmd in [
                     "query_listening_mode",
                     "query_basic_audio_information",
@@ -439,6 +440,7 @@ class PioneerAVR(AVRConnection):
             case "_update_listening_modes":
                 self.update_listening_modes()
             case "_calculate_am_frequency_step":
+                await asyncio.sleep(2.5)  ## TODO: parameterise
                 await self._calculate_am_frequency_step()
             case "_sleep":
                 check_args(command, args, 1)

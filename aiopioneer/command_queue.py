@@ -34,6 +34,14 @@ class CommandItem:
         self.insert_at = insert_at
 
     def __eq__(self, value: Self):
+        if self.command in ["_delayed_query_basic"]:
+            return self.command == value.command
+        ## NOTE: assumes queue_item is lhs for `in` comparison
+        if self.command == "_full_refresh" and value.command in [
+            "_refresh_zone",
+            "_delayed_refresh_zone",
+        ]:
+            return True
         return self.command == value.command and self.args == value.args
 
     def __repr__(self) -> str:
@@ -258,3 +266,8 @@ class CommandQueue:
             if len(excs) == 1:
                 raise excs[0]
             raise ExceptionGroup("command queue exceptions", excs)
+
+
+## Test list in operator comparison order
+if CommandItem("_refresh_zone") not in [CommandItem("_full_refresh")]:
+    _LOGGER.warning("unexpected list membership comparison order detected")

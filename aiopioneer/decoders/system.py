@@ -37,22 +37,21 @@ class Power(CodeInverseBoolMap):
     ) -> list[Response]:
         """Response decoder for zone power status."""
 
-        def check_power_on(response: Response) -> list[Response]:
-            """Check for power on."""
+        def power_on(response: Response) -> list[Response]:
+            """Power on."""
             zone = response.zone
             properties = response.properties
-            if properties.power.get(zone):  ## zone is already on
-                return []
 
             queue_commands = [
-                CommandItem("_delayed_query_basic", queue_id=3),
+                CommandItem("_delayed_query_basic", 2.5, queue_id=3),
             ]
             if zone not in properties.zones_initial_refresh:
                 _LOGGER.info("queueing initial refresh for %s", zone.full_name)
-                queue_commands = [
-                    CommandItem("_sleep", 2, queue_id=2),
-                    CommandItem("_refresh_zone", zone, queue_id=2),
-                ]
+                queue_commands.append(
+                    CommandItem("_delayed_refresh_zone", zone, queue_id=2),
+                )
+            elif properties.power.get(zone):  ## zone is already on
+                return []
 
             if zone is Zone.Z1 and params.get_param(PARAM_POWER_ON_VOLUME_BOUNCE):
                 _LOGGER.info("queueing volume workaround for Main Zone")
@@ -67,14 +66,23 @@ class Power(CodeInverseBoolMap):
             response.update(queue_commands=queue_commands)
             return [response]
 
+        def power_off(response: Response) -> list[Response]:
+            """Power off."""
+            zone = response.zone
+            properties = response.properties
+            if properties.power.get(zone) is False:  ## zone is already off
+                return []
+            response.update(
+                queue_commands=[CommandItem("_delayed_query_basic", 4.5, queue_id=3)]
+            )
+            return [response]
+
         super().decode_response(response, params)
         if not response.properties.command_queue.is_starting():
             if response.value:
-                response.update(callback=check_power_on)
+                response.update(callback=power_on)
             else:
-                response.update(
-                    queue_commands=[CommandItem("_delayed_query_basic", queue_id=3)]
-                )
+                response.update(callback=power_off)
         response.update(update_zones={Zone.ALL})
         return [response]
 
@@ -119,7 +127,7 @@ class InputSource(CodeMapBase):
                     CommandItem("query_tuner_preset"),
                 ]
             )
-        queue_commands.append(CommandItem("_delayed_query_basic", queue_id=3))
+        queue_commands.append(CommandItem("_delayed_query_basic", 2.5, queue_id=3))
         if source in MEDIA_CONTROL_SOURCES:
             media_control_mode = MEDIA_CONTROL_SOURCES.get(source)
         elif source == params.get_param(PARAM_MHL_SOURCE):
@@ -344,7 +352,7 @@ class AudioParameterProhibition(CodeMapBase):
     ) -> list[Response]:
         """Response decoder for audio parameter prohibition."""
         response.update(
-            queue_commands=[CommandItem("_delayed_query_basic", queue_id=3)]
+            queue_commands=[CommandItem("_delayed_query_basic", 2.5, queue_id=3)]
         )
         return [response]
 
@@ -360,6 +368,6 @@ class AudioParameterWorking(CodeMapBase):
     ) -> list[Response]:
         """Response decoder for audio parameter working."""
         response.update(
-            queue_commands=[CommandItem("_delayed_query_basic", queue_id=3)]
+            queue_commands=[CommandItem("_delayed_query_basic", 2.5, queue_id=3)]
         )
         return [response]
