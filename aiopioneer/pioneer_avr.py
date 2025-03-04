@@ -148,7 +148,7 @@ class PioneerAVR(AVRConnection):
                     _LOGGER.info("%s discovered", zone.full_name)
                     if zone not in self.properties.zones:
                         self.properties.zones.add(zone)
-                        self.properties.max_volume[zone.value] = max_volume
+                        self.properties.max_volume[zone] = max_volume
                     return True
                 return False
             return None
@@ -499,7 +499,7 @@ class PioneerAVR(AVRConnection):
     async def set_volume_level(self, target_volume: int, zone: Zone = Zone.Z1) -> None:
         """Set volume level (0..185 for Zone 1, 0..81 for other Zones)."""
         zone = self._check_zone(zone)
-        current_volume = self.properties.volume.get(zone.value)
+        current_volume = self.properties.volume.get(zone)
         vol_prefix = Volume(target_volume, zone, self.properties.max_volume[zone])
 
         if not self.params.get_param(PARAM_VOLUME_STEP_ONLY):
@@ -513,7 +513,7 @@ class PioneerAVR(AVRConnection):
             while current_volume < target_volume:
                 await self.volume_up(zone)
                 volume_step_count += 1
-                new_volume = self.properties.volume.get(zone.value)
+                new_volume = self.properties.volume.get(zone)
                 if new_volume <= current_volume:  # going wrong way
                     raise AVRCommandError(
                         command="set_volume_level",
@@ -532,7 +532,7 @@ class PioneerAVR(AVRConnection):
                 _LOGGER.debug("current volume: %d", current_volume)
                 await self.volume_down(zone)
                 volume_step_count += 1
-                new_volume = self.properties.volume.get(zone.value)
+                new_volume = self.properties.volume.get(zone)
                 if new_volume >= current_volume:  # going wrong way
                     raise AVRCommandError(
                         command="set_volume_level",
@@ -545,7 +545,7 @@ class PioneerAVR(AVRConnection):
                         err="maximum volume steps exceeded",
                         zone=zone,
                     )
-                current_volume = self.properties.volume.get(zone.value)
+                current_volume = self.properties.volume.get(zone)
 
     async def mute_on(self, zone: Zone = Zone.Z1) -> None:
         """Mute AVR."""
@@ -884,7 +884,7 @@ class PioneerAVR(AVRConnection):
             raise AVRLocalCommandError(
                 command="media_control",
                 err_key="media_controls_not_supported",
-                source=self.properties.source_name.get(zone.value),
+                source=self.properties.source_name.get(zone),
             )
 
         command = MEDIA_CONTROL_COMMANDS.get(control_mode, {}).get(action)
@@ -892,7 +892,7 @@ class PioneerAVR(AVRConnection):
             raise AVRLocalCommandError(
                 command="media_control",
                 err_key="media_action_not_supported",
-                source=self.properties.source_name.get(zone.value),
+                source=self.properties.source_name.get(zone),
                 action=action,
             )
 
