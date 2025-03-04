@@ -116,6 +116,17 @@ class AVRCommandResponseError(AVRCommandError):
         super().__init__(command=command, err=err, **kwargs)
 
 
+class AVRCommandUnavailableError(AVRCommandError):
+    """AVR responded with an error."""
+
+    base_err_key = "command_unavailable"
+
+    def __init__(self, command: str, err: str = None, err_key: str = None, **kwargs):
+        if err_key:
+            err = self.format_err(CommandUnavailableErrorFormatText, err_key, **kwargs)
+        super().__init__(command=command, err=err, **kwargs)
+
+
 class AVRResponseDecodeError(AVRError):
     """AVR response could not be decoded."""
 
@@ -147,7 +158,7 @@ class AVRLocalCommandError(AVRCommandError):
         super().__init__(command=command, err=err, exc=exc, **kwargs)
 
 
-class AVRTunerUnavailableError(AVRLocalCommandError):
+class AVRTunerUnavailableError(AVRCommandUnavailableError):
     """Tuner is not available."""
 
     def __init__(self, command: str, **kwargs):
@@ -161,6 +172,7 @@ ErrorFormatText = {
     "avr_unavailable": "AVR connection is not available",
     "unknown_command": "unknown AVR command {command} for zone {zone}",
     "unknown_local_command": "unknown command {command}",
+    "command_unavailable": "AVR command {command} is unavailable: {err}",
     "response_timeout": "AVR command {command} timed out",
     "command_error": "AVR command {command} returned error: {err}",
     "response_decode_error": "exception decoding response: {response}: {err}",
@@ -168,12 +180,15 @@ ErrorFormatText = {
 }
 
 LocalCommandErrorFormatText = {
-    "tuner_unavailable": "AVR tuner is unavailable",
-    "tone_unavailable": "tone controls not supported for {zone.full_name}",
     "freq_step_error": "unable to calculate AM frequency step, parameter 'am_frequency_step' required",
     "freq_step_unknown": "unknown AM tuner frequency step, parameter 'am_frequency_step' required",
     "freq_step_max_exceeded": "maximum tuner frequency step count exceeded",
     "freq_set_failed": "unable to set tuner frequency to {frequency}",
+}
+
+CommandUnavailableErrorFormatText = {
+    "tuner_unavailable": "AVR tuner is unavailable",
+    "tone_unavailable": "tone controls not supported for {zone.full_name}",
     "channel_levels_unavailable": "channel levels not supported for {zone.full_name}",
     "channel_unavailable": "channel {channel} unavailable for {zone.full_name}",
     "video_settings_unavailable": "video settings not supported for {zone.full_name}",

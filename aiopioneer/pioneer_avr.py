@@ -32,6 +32,7 @@ from .exceptions import (
     AVRTunerUnavailableError,
     AVRConnectProtocolError,
     AVRLocalCommandError,
+    AVRCommandUnavailableError,
 )
 from .params import (
     AVRParams,
@@ -587,7 +588,7 @@ class PioneerAVR(AVRConnection):
         ## Check the zone supports tone settings and that inputs are within range
         zone = self._check_zone(zone)
         if self.properties.tone.get(zone) is None:
-            raise AVRLocalCommandError(
+            raise AVRCommandUnavailableError(
                 command="set_tone_settings", err_key="tone_unavailable", zone=zone
             )
 
@@ -614,7 +615,7 @@ class PioneerAVR(AVRConnection):
                 ["speaker_mode", "hdmi_out", "hdmi3_out", "hdmi_audio", "pqls", "mode"]
             ):
                 if self.properties.amp.get(arg) is None:
-                    raise AVRLocalCommandError(
+                    raise AVRCommandUnavailableError(
                         command=command, err_key=f"{arg}_unavailable"
                     )
             await self.send_command(command, zone=zone, prefix=arg_code_map(value))
@@ -778,13 +779,13 @@ class PioneerAVR(AVRConnection):
         """Set the level (gain) for amplifier channel in zone."""
         zone = self._check_zone(zone)
         if channel_levels := self.properties.channel_levels.get(zone) is None:
-            raise AVRLocalCommandError(
+            raise AVRCommandUnavailableError(
                 command="set_channel_levels",
                 err_key="channel_levels_unavailable",
                 zone=zone,
             )
         if channel_levels.get(channel) is None:
-            raise AVRLocalCommandError(
+            raise AVRCommandUnavailableError(
                 command="set_channel_levels",
                 err_key="channel_unavailable",
                 zone=zone,
@@ -800,7 +801,7 @@ class PioneerAVR(AVRConnection):
         # This function is only valid for zone 1, no video settings are
         # available for zone 2, 3, 4 and HDZone
         if zone is not Zone.Z1:
-            raise AVRLocalCommandError(
+            raise AVRCommandUnavailableError(
                 command="set_video_settings",
                 err_key="video_settings_unavailable",
                 zone=zone,
@@ -813,7 +814,7 @@ class PioneerAVR(AVRConnection):
             if arg == "resolution":
                 resolution_modes = self.params.get_param(PARAM_VIDEO_RESOLUTION_MODES)
                 if not resolution_modes or code not in resolution_modes:
-                    raise AVRLocalCommandError(
+                    raise AVRCommandUnavailableError(
                         command=command,
                         err_key="resolution_unavailable",
                         resolution=value,
@@ -843,7 +844,7 @@ class PioneerAVR(AVRConnection):
         """Set the DSP settings for the amplifier."""
         zone = self._check_zone(zone)
         if zone is not Zone.Z1:
-            raise AVRLocalCommandError(
+            raise AVRCommandUnavailableError(
                 command="set_dsp_settings",
                 err_key="dsp_settings_unavailable",
                 zone=zone,
@@ -881,7 +882,7 @@ class PioneerAVR(AVRConnection):
         zone = self._check_zone(zone)
         control_mode = self.properties.media_control_mode.get(zone)
         if control_mode is None:
-            raise AVRLocalCommandError(
+            raise AVRCommandUnavailableError(
                 command="media_control",
                 err_key="media_controls_not_supported",
                 source=self.properties.source_name.get(zone),
@@ -889,7 +890,7 @@ class PioneerAVR(AVRConnection):
 
         command = MEDIA_CONTROL_COMMANDS.get(control_mode, {}).get(action)
         if command is None:
-            raise AVRLocalCommandError(
+            raise AVRCommandUnavailableError(
                 command="media_control",
                 err_key="media_action_not_supported",
                 source=self.properties.source_name.get(zone),
