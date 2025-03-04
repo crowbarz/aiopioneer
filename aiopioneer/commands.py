@@ -1,7 +1,7 @@
 """Pioneer AVR commands."""
 
 from .const import Zone
-from .decoders.code_map import CodeBoolMap
+from .decoders.code_map import CodeMapBase, CodeBoolMap
 from .decoders.dsp import (
     DspMcaccMemorySet,
     DspPhaseControl,
@@ -48,7 +48,7 @@ from .decoders.video import (
     VideoSuperResolution,
 )
 
-PIONEER_COMMANDS = {
+PIONEER_COMMANDS: dict[str, dict[Zone | str, str | list[str] | list[CodeMapBase]]] = {
     "query_model": {Zone.Z1: ["?RGD", "RGD"]},
     "system_query_mac_addr": {Zone.Z1: ["?SVB", "SVB"]},
     "system_query_software_version": {Zone.Z1: ["?SSI", "SSI"]},
