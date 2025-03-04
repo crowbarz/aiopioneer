@@ -4,6 +4,7 @@ from ..command_queue import CommandItem
 from ..params import AVRParams
 from .code_map import (
     CodeMapBase,
+    CodeMapSequence,
     CodeStrMap,
     CodeDefault,
     CodeBoolMap,
@@ -11,122 +12,6 @@ from .code_map import (
     CodeIntMap,
 )
 from .response import Response
-
-
-class AudioInformation(CodeMapBase):
-    """Audio information."""
-
-    @classmethod
-    def decode_response(
-        cls,
-        response: Response,
-        params: AVRParams,
-    ) -> list[Response]:
-        """Response decoder for audio information."""
-
-        def decode_child_response(
-            property_name: str, code: str, code_map: CodeMapBase
-        ) -> list[Response]:
-            """Decode a child response."""
-            child_response = response.clone(property_name=property_name, code=code)
-            return code_map.decode_response(child_response, params)
-
-        def decode_input_channel(channel: str, code: str) -> list[Response]:
-            return decode_child_response(
-                property_name=f"input_channels.{channel}",
-                code=code,
-                code_map=AudioChannelActive,
-            )
-
-        def decode_output_channel(channel: str, code: str) -> list[Response]:
-            return decode_child_response(
-                property_name=f"output_channels.{channel}",
-                code=code,
-                code_map=AudioChannelActive,
-            )
-
-        responses = [
-            *decode_child_response(
-                property_name="input_signal",
-                code=response.code[:2],
-                code_map=AudioSignalInputInfo,
-            ),
-            *decode_child_response(
-                property_name="input_frequency",
-                code=response.code[2:4],
-                code_map=AudioSignalInputFreq,
-            ),
-            *decode_child_response(
-                property_name="input_multichannel",
-                code=response.code[4:7],
-                code_map=InputMultichannel,
-            ),
-            *decode_input_channel(channel="L", code=response.code[4]),
-            *decode_input_channel(channel="C", code=response.code[5]),
-            *decode_input_channel(channel="R", code=response.code[6]),
-            *decode_input_channel(channel="SL", code=response.code[7]),
-            *decode_input_channel(channel="SR", code=response.code[8]),
-            *decode_input_channel(channel="SBL", code=response.code[9]),
-            *decode_input_channel(channel="SBC", code=response.code[10]),
-            *decode_input_channel(channel="SBR", code=response.code[11]),
-            *decode_input_channel(channel="LFE", code=response.code[12]),
-            *decode_input_channel(channel="FHL", code=response.code[13]),
-            *decode_input_channel(channel="FHR", code=response.code[14]),
-            *decode_input_channel(channel="FWL", code=response.code[15]),
-            *decode_input_channel(channel="FWR", code=response.code[16]),
-            *decode_input_channel(channel="XL", code=response.code[17]),
-            *decode_input_channel(channel="XC", code=response.code[18]),
-            *decode_input_channel(channel="XR", code=response.code[19]),
-        ]
-
-        ## (data21) to (data25) are reserved according to FY16AVRs
-        ## Decode output signal data
-        responses.extend(
-            [
-                *decode_output_channel(channel="L", code=response.code[25]),
-                *decode_output_channel(channel="C", code=response.code[26]),
-                *decode_output_channel(channel="R", code=response.code[27]),
-                *decode_output_channel(channel="SL", code=response.code[28]),
-                *decode_output_channel(channel="SR", code=response.code[29]),
-                *decode_output_channel(channel="SBL", code=response.code[30]),
-                *decode_output_channel(channel="SB", code=response.code[31]),
-                *decode_output_channel(channel="SBR", code=response.code[32]),
-            ]
-        )
-
-        ## FY11 AVRs do not have more than data 43 data bits (VSX-1021)
-        if len(response.code) > 43:
-            responses.extend(
-                [
-                    *decode_child_response(
-                        property_name="output_frequency",
-                        code=response.code[43:45],
-                        code_map=AudioSignalInputFreq,
-                    ),
-                    *decode_child_response(
-                        property_name="output_bits",
-                        code=response.code[45:47],
-                        code_map=CodeIntMap,
-                    ),
-                    *decode_child_response(
-                        property_name="output_pqls",
-                        code=response.code[51],
-                        code_map=AudioWorkingPqls,
-                    ),
-                    *decode_child_response(
-                        property_name="output_auto_phase_control_plus",
-                        code=response.code[52:54],
-                        code_map=CodeIntMap,
-                    ),
-                    *decode_child_response(
-                        property_name="output_reverse_phase",
-                        code=response.code[54],
-                        code_map=CodeBoolMap,
-                    ),
-                ]
-            )
-
-        return responses
 
 
 class AudioChannelActive(CodeDictStrMap):
@@ -233,10 +118,93 @@ class AudioSignalInputFreq(CodeDictStrMap):
     }
 
 
+class AudioOutputBits(CodeIntMap):
+    """Audio output bits."""
+
+    code_zfill = 2
+
+
 class AudioWorkingPqls(CodeDictStrMap):
     """Audio working PQLS."""
 
     code_map = {"0": "off", "1": "2h", "2": "Multi-channel", "3": "Bitstream"}
+
+
+class AudioOutputAutoPhaseControlPlus(CodeIntMap):
+    """Audio output phase control plus."""
+
+    code_zfill = 2
+
+
+class AudioInformation(CodeMapSequence):
+    """Audio information."""
+
+    code_map_sequence = [
+        (AudioSignalInputInfo, "input_signal"),  # [0:2]
+        (AudioSignalInputFreq, "input_frequency"),  # [2:4]
+        (AudioChannelActive, "input_channels.L"),  # [4]
+        (AudioChannelActive, "input_channels.C"),  # [5]
+        (AudioChannelActive, "input_channels.R"),  # [6]
+        (AudioChannelActive, "input_channels.SL"),  # [7]
+        (AudioChannelActive, "input_channels.SR"),  # [8]
+        (AudioChannelActive, "input_channels.SBL"),  # [9]
+        (AudioChannelActive, "input_channels.SBC"),  # [10]
+        (AudioChannelActive, "input_channels.SBR"),  # [11]
+        (AudioChannelActive, "input_channels.LFE"),  # [12]
+        (AudioChannelActive, "input_channels.FHL"),  # [13]
+        (AudioChannelActive, "input_channels.FHR"),  # [14]
+        (AudioChannelActive, "input_channels.FWL"),  # [15]
+        (AudioChannelActive, "input_channels.FWR"),  # [16]
+        (AudioChannelActive, "input_channels.XL"),  # [17]
+        (AudioChannelActive, "input_channels.XC"),  # [18]
+        (AudioChannelActive, "input_channels.XR"),  # [19]
+        5,  ## (data21) to (data25) are reserved according to FY16AVRs
+        (AudioChannelActive, "output.channels.L"),  # [25]
+        (AudioChannelActive, "output.channels.C"),  # [26]
+        (AudioChannelActive, "output.channels.R"),  # [27]
+        (AudioChannelActive, "output.channels.SL"),  # [28]
+        (AudioChannelActive, "output.channels.SR"),  # [29]
+        (AudioChannelActive, "output.channels.SBL"),  # [30]
+        (AudioChannelActive, "output.channels.SB"),  # [31]
+        (AudioChannelActive, "output.channels.SBR"),  # [32]
+    ]
+    code_map_sequence_extra = [
+        *code_map_sequence,
+        10,
+        (AudioSignalInputFreq, "output_frequency"),  # [43:45]
+        (AudioOutputBits, "output_bits"),  # [45:47]
+        4,
+        (AudioWorkingPqls, "output_pqls"),  # [51]
+        (AudioOutputAutoPhaseControlPlus, "output_auto_phase_control_plus"),  # [52:54]
+        (CodeBoolMap, "output_reverse_phase"),  # [54]
+    ]
+
+    @classmethod
+    def decode_response(
+        cls,
+        response: Response,
+        params: AVRParams,
+        code_map_sequence: list[tuple[CodeMapBase, str] | int] = None,  # ignored
+    ) -> list[Response]:
+        """Response decoder for audio information."""
+        code_map_sequence = cls.code_map_sequence
+
+        ## FY11 AVRs do not have more than 43 data bits (VSX-1021)
+        if len(response.code) > 43:
+            code_map_sequence = cls.code_map_sequence_extra
+
+        responses = InputMultichannel.decode_response(
+            response=response.clone(
+                code=response.code[4:7], property_name="input_multichannel"
+            ),
+            params=params,
+        )
+        responses.extend(
+            super().decode_response(
+                response=response, params=params, code_map_sequence=code_map_sequence
+            )
+        )
+        return responses
 
 
 class VideoSignalInputTerminal(CodeDictStrMap):
@@ -251,142 +219,6 @@ class VideoSignalInputTerminal(CodeDictStrMap):
         "4": "HDMI",
         "5": "Self OSD/JPEG",
     }
-
-
-class VideoInformation(CodeMapBase):
-    """Video information."""
-
-    @classmethod
-    def decode_response(
-        cls,
-        response: Response,
-        params: AVRParams,
-    ) -> list[Response]:
-        """Response decoder for video information."""
-
-        def decode_child_response(
-            property_name: str, code: str, code_map: CodeMapBase
-        ) -> list[Response]:
-            """Decode a child response."""
-            child_response = response.clone(property_name=property_name, code=code)
-            return code_map.decode_response(child_response, params)
-
-        responses = [
-            *decode_child_response(
-                property_name="signal_input_terminal",
-                code=response.code[0],
-                code_map=VideoSignalInputTerminal,
-            ),
-            *decode_child_response(
-                property_name="signal_input_resolution",
-                code=response.code[1:3],
-                code_map=VideoSignalFormat,
-            ),
-            *decode_child_response(
-                property_name="signal_input_aspect",
-                code=response.code[3],
-                code_map=VideoSignalAspect,
-            ),
-            *decode_child_response(
-                property_name="signal_input_color_format",
-                code=response.code[4],
-                code_map=VideoSignalColorspace,
-            ),
-            *decode_child_response(
-                property_name="signal_input_bit",
-                code=response.code[5],
-                code_map=VideoSignalBits,
-            ),
-            *decode_child_response(
-                property_name="signal_input_extended_colorspace",
-                code=response.code[6],
-                code_map=VideoSignalExtColorspace,
-            ),
-            *decode_child_response(
-                property_name="signal_output_resolution",
-                code=response.code[7:9],
-                code_map=VideoSignalFormat,
-            ),
-            *decode_child_response(
-                property_name="signal_output_aspect",
-                code=response.code[9],
-                code_map=VideoSignalAspect,
-            ),
-            *decode_child_response(
-                property_name="signal_output_color_format",
-                code=response.code[10],
-                code_map=VideoSignalColorspace,
-            ),
-            *decode_child_response(
-                property_name="signal_output_bit",
-                code=response.code[11],
-                code_map=VideoSignalBits,
-            ),
-            *decode_child_response(
-                property_name="signal_output_extended_colorspace",
-                code=response.code[12],
-                code_map=VideoSignalExtColorspace,
-            ),
-            *decode_child_response(
-                property_name="signal_hdmi1_recommended_resolution",
-                code=response.code[13:15],
-                code_map=VideoSignalFormat,
-            ),
-            *decode_child_response(
-                property_name="signal_hdmi1_deepcolor",
-                code=response.code[15],
-                code_map=VideoSignalBits,
-            ),
-            *decode_child_response(
-                property_name="signal_hdmi2_recommended_resolution",
-                code=response.code[21:23],
-                code_map=VideoSignalFormat,
-            ),
-            *decode_child_response(
-                property_name="signal_hdmi2_deepcolor",
-                code=response.code[23],
-                code_map=VideoSignalBits,
-            ),
-        ]
-
-        ## FY11 AVRs only return 25 data values
-        if len(response.code) > 40:
-            responses.extend(
-                [
-                    *decode_child_response(
-                        property_name="signal_hdmi3_recommended_resolution",
-                        code=response.code[29:31],
-                        code_map=VideoSignalFormat,
-                    ),
-                    *decode_child_response(
-                        property_name="signal_hdmi3_deepcolor",
-                        code=response.code[31],
-                        code_map=VideoSignalBits,
-                    ),
-                    *decode_child_response(
-                        property_name="input_3d_format",
-                        code=response.code[37:39],
-                        code_map=VideoSignal3DMode,
-                    ),
-                    *decode_child_response(
-                        property_name="output_3d_format",
-                        code=response.code[39:41],
-                        code_map=VideoSignal3DMode,
-                    ),
-                    *decode_child_response(
-                        property_name="signal_hdmi4_recommended_resolution",
-                        code=response.code[41:43],
-                        code_map=VideoSignalFormat,
-                    ),
-                    *decode_child_response(
-                        property_name="signal_hdmi4_deepcolor",
-                        code=response.code[44],
-                        code_map=VideoSignalBits,
-                    ),
-                ]
-            )
-
-        return responses
 
 
 class VideoSignalFormat(CodeDictStrMap):
@@ -484,6 +316,59 @@ class VideoSignal3DMode(CodeDictStrMap):
         "07": "Top-and-Bottom",
         "08": "Side-by-Side(Half)",
     }
+
+
+class VideoInformation(CodeMapSequence):
+    """Video information."""
+
+    code_map_sequence = [
+        (VideoSignalInputTerminal, "signal_input_terminal"),  # [0]
+        (VideoSignalFormat, "signal_input_resolution"),  # [1:3]
+        (VideoSignalAspect, "signal_input_aspect"),  # [3]
+        (VideoSignalColorspace, "signal_input_color_format"),  # [4]
+        (VideoSignalBits, "signal_input_bit"),  # [5]
+        (VideoSignalExtColorspace, "signal_input_extended_colorspace"),  # [6]
+        (VideoSignalFormat, "signal_output_resolution"),  # [7:9]
+        (VideoSignalAspect, "signal_output_aspect"),  # [9]
+        (VideoSignalColorspace, "signal_output_color_format"),  # [10]
+        (VideoSignalBits, "signal_output_bit"),  # [11]
+        (VideoSignalExtColorspace, "signal_output_extended_colorspace"),  # [12]
+        (VideoSignalFormat, "signal_hdmi1_recommended_resolution"),  # [13:15]
+        (VideoSignalBits, "signal_hdmi1_deepcolor"),  # [15]
+        5,
+        (VideoSignalFormat, "signal_hdmi2_recommended_resolution"),  # [21:23]
+        (VideoSignalBits, "signal_hdmi2_deepcolor"),  # [23]
+    ]
+
+    code_map_sequence_extra = [
+        *code_map_sequence,
+        5,
+        (VideoSignalFormat, "signal_hdmi3_recommended_resolution"),  # [29:31]
+        (VideoSignalBits, "signal_hdmi3_deepcolor"),  # [31]
+        5,
+        (VideoSignal3DMode, "input_3d_format"),  # [37:39]
+        (VideoSignal3DMode, "output_3d_format"),  # [39:41]
+        (VideoSignalFormat, "signal_hdmi4_recommended_resolution"),  # [41:43]
+        (VideoSignalBits, "signal_hdmi4_deepcolor"),  # [44]
+    ]
+
+    @classmethod
+    def decode_response(
+        cls,
+        response: Response,
+        params: AVRParams,
+        code_map_sequence: list[tuple[CodeMapBase, str] | int] = None,  # ignored
+    ) -> list[Response]:
+        """Response decoder for video information."""
+        code_map_sequence = cls.code_map_sequence
+
+        ## FY11 AVRs only return 25 data values
+        if len(response.code) > 40:
+            code_map_sequence = cls.code_map_sequence_extra
+
+        return super().decode_response(
+            response=response, params=params, code_map_sequence=code_map_sequence
+        )
 
 
 class DisplayText(CodeStrMap):
