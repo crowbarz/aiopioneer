@@ -3,6 +3,7 @@
 from typing import Any, Tuple
 from .response import Response
 from ..params import AVRParams
+from ..properties import AVRProperties
 
 CODE_MAP_NDIGITS = 3
 CODE_MAP_EXP = pow(10, CODE_MAP_NDIGITS)
@@ -51,7 +52,10 @@ class CodeMapBase:
 
     @classmethod
     def parse_args(
-        cls, args: list, params: AVRParams  # pylint: disable=unused-argument
+        cls,
+        args: list,
+        params: AVRParams,  # pylint: disable=unused-argument
+        properties: AVRProperties,  # pylint: disable=unused-argument
     ) -> str:
         """Convert and pop argument(s) to code."""
         if not isinstance(args, list) or len(args) == 0:
@@ -92,6 +96,7 @@ class CodeMapSequence(CodeMapBase):
         cls,
         args: list,
         params: AVRParams,
+        properties: AVRProperties,
         code_map_sequence: list[tuple[CodeMapBase, str] | int] = None,
     ) -> str:
         if code_map_sequence is None:
@@ -100,7 +105,9 @@ class CodeMapSequence(CodeMapBase):
         def parse_child_item(child_item: tuple[CodeMapBase, str] | int) -> str:
             if isinstance(child_item, tuple):  ## item is (code_map, property)
                 child_map, _ = child_item
-                return child_map.parse_args(args, params)
+                return child_map.parse_args(
+                    args=args, params=params, properties=properties
+                )
             elif isinstance(child_item, int):  ## item is gap
                 child_len = child_item
                 return "".ljust(child_len, cls.code_fillchar)
