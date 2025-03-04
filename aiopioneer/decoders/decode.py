@@ -360,6 +360,8 @@ def process_raw_response(
                 _LOGGER.debug(
                     "response callback: %s -> %s", callback.__name__, callback_responses
                 )
+                if callback_responses is None:
+                    raise RuntimeError("decoder callback returned null response")
                 callback_responses.extend(responses)  # prepend callback_responses
                 responses = callback_responses
                 continue  ## don't process original callback response
