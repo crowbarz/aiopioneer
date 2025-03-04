@@ -138,9 +138,11 @@ class PioneerAVR(AVRConnection):
         ignore_volume_check = self.params.get_param(PARAM_IGNORE_VOLUME_CHECK)
 
         async def query_zone(zone: Zone, max_volume: int) -> bool | None:
-            if await self.send_command("query_power", zone, ignore_error=True) and (
+            if await self.send_command(
+                "query_power", zone=zone, ignore_error=True
+            ) and (
                 ignore_volume_check
-                or await self.send_command("query_volume", zone, ignore_error=True)
+                or await self.send_command("query_volume", zone=zone, ignore_error=True)
             ):
                 if zone not in ignored_zones:
                     _LOGGER.info("%s discovered", zone.full_name)
@@ -312,21 +314,21 @@ class PioneerAVR(AVRConnection):
         _LOGGER.info("refreshing %s", zone.full_name)
 
         ## Refresh only if zone is powered on
-        await self.send_command("query_power", zone)
+        await self.send_command("query_power", zone=zone)
         if not bool(self.properties.power.get(zone)):
             return
 
         ## Check for timeouts, but ignore errors (eg. ?V will
         ## return E02 immediately after power on)
         for command in ["query_volume", "query_mute", "query_source_id"]:
-            if await self.send_command(command, zone, ignore_error=True) is None:
+            if await self.send_command(command, zone=zone, ignore_error=True) is None:
                 raise AVRResponseTimeoutError(command=command)
 
         async def send_query_command(command: str, enabled_functions: set[str]):
             comm_parts = command.split("_")
             if comm_parts[0] == "query" and comm_parts[1] in enabled_functions:
                 await self.send_command(
-                    command, zone, ignore_error=True, rate_limit=False
+                    command, zone=zone, ignore_error=True, rate_limit=False
                 )
             elif (
                 ## TODO: parameterise query_channel_levels
@@ -340,7 +342,7 @@ class PioneerAVR(AVRConnection):
                 for channel in CHANNELS_ALL:
                     await self.send_command(
                         command,
-                        zone,
+                        zone=zone,
                         prefix="?" + channel.ljust(3, "_"),
                         ignore_error=True,
                         rate_limit=False,
@@ -468,11 +470,11 @@ class PioneerAVR(AVRConnection):
 
     async def turn_on(self, zone: Zone = Zone.Z1) -> None:
         """Turn on the Pioneer AVR zone."""
-        await self.send_command("turn_on", self._check_zone(zone))
+        await self.send_command("turn_on", zone=self._check_zone(zone))
 
     async def turn_off(self, zone: Zone = Zone.Z1) -> None:
         """Turn off the Pioneer AVR zone."""
-        await self.send_command("turn_off", self._check_zone(zone))
+        await self.send_command("turn_off", zone=self._check_zone(zone))
 
     async def select_source(
         self, source: str = None, source_id: str = None, zone: Zone = Zone.Z1
@@ -484,15 +486,15 @@ class PioneerAVR(AVRConnection):
         if source_id is None:
             raise ValueError(f"invalid source {source} for {zone.full_name}")
 
-        await self.send_command("select_source", zone, prefix=source_id)
+        await self.send_command("select_source", zone=zone, prefix=source_id)
 
     async def volume_up(self, zone: Zone = Zone.Z1) -> None:
         """Volume up media player."""
-        await self.send_command("volume_up", self._check_zone(zone))
+        await self.send_command("volume_up", zone=self._check_zone(zone))
 
     async def volume_down(self, zone: Zone = Zone.Z1) -> None:
         """Volume down media player."""
-        await self.send_command("volume_down", self._check_zone(zone))
+        await self.send_command("volume_down", zone=self._check_zone(zone))
 
     async def set_volume_level(self, target_volume: int, zone: Zone = Zone.Z1) -> None:
         """Set volume level (0..185 for Zone 1, 0..81 for other Zones)."""
@@ -501,7 +503,7 @@ class PioneerAVR(AVRConnection):
         vol_prefix = Volume(target_volume, zone, self.properties.max_volume[zone])
 
         if not self.params.get_param(PARAM_VOLUME_STEP_ONLY):
-            await self.send_command("set_volume_level", zone, prefix=vol_prefix)
+            await self.send_command("set_volume_level", zone=zone, prefix=vol_prefix)
             return
 
         ## Step volume to reach target volume
@@ -547,11 +549,11 @@ class PioneerAVR(AVRConnection):
 
     async def mute_on(self, zone: Zone = Zone.Z1) -> None:
         """Mute AVR."""
-        await self.send_command("mute_on", self._check_zone(zone))
+        await self.send_command("mute_on", zone=self._check_zone(zone))
 
     async def mute_off(self, zone: Zone = Zone.Z1) -> None:
         """Unmute AVR."""
-        await self.send_command("mute_off", self._check_zone(zone))
+        await self.send_command("mute_off", zone=self._check_zone(zone))
 
     def update_listening_modes(self) -> None:
         """Update list of valid listening modes for current input source."""
@@ -615,7 +617,7 @@ class PioneerAVR(AVRConnection):
                     raise AVRLocalCommandError(
                         command=command, err_key=f"{arg}_unavailable"
                     )
-            await self.send_command(command, zone, prefix=arg_code_map(value))
+            await self.send_command(command, zone=zone, prefix=arg_code_map(value))
 
         for arg, value in kwargs.items():
             if self.properties.amp.get(arg) == value:
@@ -704,7 +706,7 @@ class PioneerAVR(AVRConnection):
             while current_freq < target_freq and count > 0 and rc:
                 rc = await self.send_command(
                     "increase_tuner_frequency",
-                    zone,
+                    zone=zone,
                     ignore_error=False,
                     rate_limit=False,
                 )
@@ -716,7 +718,7 @@ class PioneerAVR(AVRConnection):
             while current_freq > target_freq and count > 0 and rc:
                 rc = await self.send_command(
                     "decrease_tuner_frequency",
-                    zone,
+                    zone=zone,
                     ignore_error=False,
                     rate_limit=False,
                 )
@@ -816,7 +818,7 @@ class PioneerAVR(AVRConnection):
                         err_key="resolution_unavailable",
                         resolution=value,
                     )
-            await self.send_command(command, zone, prefix=code)
+            await self.send_command(command, zone=zone, prefix=code)
 
         for arg, value in arguments.items():
             if self.properties.video.get(arg) == value:
@@ -850,7 +852,7 @@ class PioneerAVR(AVRConnection):
         async def set_dsp_setting(
             command: str, _arg: str, value: Any, arg_code_map: CodeMapBase
         ) -> None:
-            await self.send_command(command, zone, prefix=arg_code_map(value))
+            await self.send_command(command, zone=zone, prefix=arg_code_map(value))
 
         for arg, value in arguments.items():
             if self.properties.dsp.get(arg) == value:
@@ -896,16 +898,14 @@ class PioneerAVR(AVRConnection):
 
         # These commands are ALWAYS sent to zone 1 because each zone
         # does not have unique commands
-        await self.send_command(command, Zone.Z1)
+        await self.send_command(command)
 
     async def set_source_name(
         self, source_id: str, source_name: str = "", default: bool = False
     ) -> None:
         """Renames a given input, set the default parameter to true to reset to default."""
         if default:
-            await self.send_command(
-                "set_default_source_name", Zone.Z1, suffix=source_id
-            )
+            await self.send_command("set_default_source_name", suffix=source_id)
             return
 
         if len(source_name) > 14:
@@ -913,6 +913,4 @@ class PioneerAVR(AVRConnection):
         if self.properties.source_id_to_name.get(source_id) == source_name:
             return
 
-        await self.send_command(
-            "set_source_name", Zone.Z1, prefix=source_name, suffix=source_id
-        )
+        await self.send_command("set_source_name", prefix=source_name, suffix=source_id)
