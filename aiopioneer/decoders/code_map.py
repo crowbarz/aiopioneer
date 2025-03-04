@@ -50,7 +50,9 @@ class CodeMapBase:
         return str(code)
 
     @classmethod
-    def parse_args(cls, args: list, params: AVRParams) -> str:
+    def parse_args(
+        cls, args: list, params: AVRParams  # pylint: disable=unused-argument
+    ) -> str:
         """Convert and pop argument(s) to code."""
         if not isinstance(args, list) or len(args) == 0:
             raise ValueError(f"insufficient arguments for {cls.get_name()}")
@@ -70,7 +72,8 @@ class CodeMapBase:
 class CodeMapSequence(CodeMapBase):
     """Map AVR codes to a sequence of code maps."""
 
-    code_map_sequence: list[tuple[CodeMapBase, str]] = []
+    code_map_sequence: list[tuple[CodeMapBase, str] | int] = []
+    code_fillchar = "_"
 
     @classmethod
     def get_len(cls) -> int:
@@ -85,12 +88,29 @@ class CodeMapSequence(CodeMapBase):
         raise ValueError(f"code_to_value unsupported for {cls.get_name()}")
 
     @classmethod
-    def parse_args(cls, args: list, params: AVRParams) -> str:
+    def parse_args(
+        cls,
+        args: list,
+        params: AVRParams,
+        code_map_sequence: list[tuple[CodeMapBase, str] | int] = None,
+    ) -> str:
+        if code_map_sequence is None:
+            code_map_sequence = cls.code_map_sequence
+
+        def parse_child_item(child_item: tuple[CodeMapBase, str] | int) -> str:
+            if isinstance(child_item, tuple):  ## item is (code_map, property)
+                child_map, _ = child_item
+                return child_map.parse_args(args, params)
+            elif isinstance(child_item, int):  ## item is gap
+                child_len = child_item
+                return "".ljust(child_len, cls.code_fillchar)
+            else:
+                raise RuntimeError(
+                    f"invalid sequence item {child_item} for {cls.get_name()}"
+                )
+
         return "".join(
-            [
-                child_map.parse_args(args, params)
-                for child_map, _ in cls.code_map_sequence
-            ]
+            [parse_child_item(child_item) for child_item in code_map_sequence]
         )
 
     @classmethod
@@ -98,17 +118,32 @@ class CodeMapSequence(CodeMapBase):
         cls,
         response: Response,
         params: AVRParams,  # pylint: disable=unused-argument
+        code_map_sequence: list[tuple[CodeMapBase, str]] = None,
     ) -> list[Response]:
         code_index = 0
         responses = []
-        for child_map, child_property_name in cls.code_map_sequence:
-            child_len = child_map.get_len()
-            child_code = response.code[code_index : code_index + child_len]
-            child_response = response.clone(
-                code=child_code, property_name=child_property_name
-            )
-            responses.extend(child_map.decode_response(child_response, params))
+        if code_map_sequence is None:
+            code_map_sequence = cls.code_map_sequence
+
+        for child_item in code_map_sequence:
+            if isinstance(child_item, tuple):  ## item is (code_map, property)
+                child_map, child_property_name = child_item
+                child_len = child_map.get_len()
+                child_code = response.code[code_index : code_index + child_len]
+                child_response = response.clone(
+                    code=child_code, property_name=child_property_name
+                )
+                responses.extend(
+                    child_map.decode_response(response=child_response, params=params)
+                )
+            elif isinstance(child_item, int):  ## item is gap
+                child_len = child_item
+            else:
+                raise RuntimeError(
+                    f"invalid sequence item {child_item} for {cls.get_name()}"
+                )
             code_index += child_len
+
         return responses
 
 
@@ -126,6 +161,7 @@ class CodeStrMap(CodeMapBase):
     def value_to_code(cls, value: str) -> str:
         if cls.code_len:
             return value.ljust(cls.code_len, cls.code_fillchar)
+        return value
 
 
 class CodeBoolMap(CodeMapBase):
