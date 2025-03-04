@@ -7,14 +7,14 @@ import logging
 import time
 import traceback
 
-from .params import (
-    AVRParams,
-    PARAM_COMMAND_DELAY,
-    PARAM_ALWAYS_POLL,
-    PARAM_DEBUG_LISTENER,
-    PARAM_DEBUG_COMMAND,
-)
 from .commands import PIONEER_COMMANDS
+from .const import (
+    Zone,
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    DEFAULT_SCAN_INTERVAL,
+)
+from .decoders.code_map import CodeMapBase
 from .exceptions import (
     AVRError,
     AVRUnavailableError,
@@ -27,16 +27,17 @@ from .exceptions import (
     AVRConnectTimeoutError,
     AVRResponseDecodeError,
 )
+from .params import (
+    AVRParams,
+    PARAM_COMMAND_DELAY,
+    PARAM_ALWAYS_POLL,
+    PARAM_DEBUG_LISTENER,
+    PARAM_DEBUG_COMMAND,
+)
 from .util import (
     sock_set_keepalive,
     get_backoff_delay,
     cancel_task,
-)
-from .const import (
-    Zone,
-    DEFAULT_PORT,
-    DEFAULT_TIMEOUT,
-    DEFAULT_SCAN_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
