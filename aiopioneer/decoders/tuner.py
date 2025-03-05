@@ -22,7 +22,7 @@ class FrequencyFM(CodeFloatMap):
         params: AVRParams,
     ) -> list[Response]:
         """Response decoder for tuner FM frequency."""
-        super().decode_response(response, params)
+        super().decode_response(response=response, params=params)
         return [
             response.clone(property_name="band", value=TunerBand.FM),
             *Preset.update_preset(response),
@@ -47,7 +47,7 @@ class FrequencyAM(CodeIntMap):
         params: AVRParams,
     ) -> list[Response]:
         """Response decoder for tuner AM frequency."""
-        super().decode_response(response, params)
+        super().decode_response(response=response, params=params)
 
         def glean_frequency_step(response: Response) -> list[Response]:
             """Determine frequency step from current frequency."""
@@ -136,7 +136,7 @@ class Preset(CodeMapBase):
             cls.cached_preset = response.value
             return [response]
 
-        super().decode_response(response, params)
+        super().decode_response(response=response, params=params)
         response.update(
             clear_property=True,
             queue_commands=[
@@ -202,7 +202,7 @@ class FrequencyAMStep(CodeIntMap):
     ) -> list[Response]:
         """Response decoder for AM frequency step."""
 
-        super().decode_response(response, params)
+        super().decode_response(response=response, params=params)
         return FrequencyAM.update_frequency_step(
             response=response, frequency_step=response.value
         )

@@ -77,7 +77,7 @@ class Power(CodeInverseBoolMap):
             )
             return [response]
 
-        super().decode_response(response, params)
+        super().decode_response(response=response, params=params)
         if not response.properties.command_queue.is_starting():
             if response.value:
                 response.update(callback=power_on)
@@ -117,7 +117,7 @@ class InputSource(CodeMapBase):
         params: AVRParams,
     ) -> list[Response]:
         """Response decoder for zone input source."""
-        super().decode_response(response, params)
+        super().decode_response(response=response, params=params)
         source = response.value
         queue_commands = []
         if response.properties.is_source_tuner(source):
@@ -250,7 +250,7 @@ class SpeakerSystem(CodeDictStrMap):
     ) -> list[Response]:
         """Response decoder for speaker system."""
         cls.code_map = params.get_param(PARAM_SPEAKER_SYSTEM_MODES, {})
-        super().decode_response(response, params)
+        super().decode_response(response=response, params=params)
         return [
             response,
             response.clone(property_name="speaker_system_raw", value=response.code),
@@ -284,7 +284,7 @@ class InputName(CodeMapBase):
             if source_name in properties.source_name_to_id:
                 properties.source_name_to_id.pop(source_name)
 
-        super().decode_response(response, params)
+        super().decode_response(response=response, params=params)
         source_id, source_name = response.value
         return [
             response.clone(callback=clear_source_id, value=source_id),

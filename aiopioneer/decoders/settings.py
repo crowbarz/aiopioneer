@@ -232,7 +232,7 @@ class StandingWaveSwTrim(CodeFloatMap):
         mcacc_memory = response.code[:2]
         response.code = response.code[2:4]
         response.property_name = f"standing_wave_sw_trim.{mcacc_memory}"
-        return super().decode_response(response, params)
+        return super().decode_response(response=response, params=params)
 
     ## NOTE: value_to_code not implemented
 
@@ -288,9 +288,10 @@ class SpeakerSettings(CodeDictMap):
     ) -> list[Response]:
         """Response decoder for speaker setting."""
         speaker = response.code[:2]
-        speaker_sub = response.code[2]
-        response.value = cls.code_to_value(speaker).get(speaker_sub, speaker_sub)
+        response.code = speaker_sub = response.code[2]
         response.property_name = f"speaker_setting.{speaker}"
+        super().decode_response(response=response, params=params)
+        response.value = response.value.get(speaker_sub, speaker_sub)
         return [response]
 
     ## NOTE: value_to_code unimplemented
@@ -313,7 +314,7 @@ class McaccChannelLevel(CodeFloatMap):
         speaker = response.code[2:5].replace("_", "")
         response.code = response.code[5:7]
         response.property_name = f"mcacc_channel_level.{memory}.{speaker}"
-        return super().decode_response(response, params)
+        return super().decode_response(response=response, params=params)
 
     ## NOTE: value_to_code unimplemented
 
@@ -334,7 +335,7 @@ class McaccSpeakerDistance(CodeFloatMap):
         speaker = response.code[2:5].replace("_", "")
         response.code = response.code[5:]
         response.property_name = f"mcacc_speaker_distance.{memory}.{speaker}"
-        super().decode_response(response, params)
+        super().decode_response(response=response, params=params)
         unit = "m" if isinstance(response.value, float) else "ft"
         return [
             response,
@@ -370,7 +371,7 @@ class InputLevelAdjust(CodeFloatMap):
         source = response.code[0:2]
         response.code = response.code[2:4]
         response.property_name = f"input_level.{source}"
-        return super().decode_response(response, params)
+        return super().decode_response(response=response, params=params)
 
     ## NOTE: value_to_code unimplemented
 
@@ -455,4 +456,4 @@ class ExternalHdmiTrigger(CodeDictStrMap):
         """Response decoder for 12V Trigger 1 (HDMI Setup)."""
 
         response.update_zones = {Zone.ALL}
-        return super().decode_response(response, params)
+        return super().decode_response(response=response, params=params)

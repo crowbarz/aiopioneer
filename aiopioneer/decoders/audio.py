@@ -25,7 +25,7 @@ class ChannelLevel(CodeFloatMap):
         code = response.code[3:]
         speaker = response.code[:3].strip("_").upper()
         response.update(code=code, property_name=speaker)
-        return super().decode_response(response, params)
+        return super().decode_response(response=response, params=params)
 
 
 class ListeningMode(CodeDictListMap):
@@ -40,7 +40,7 @@ class ListeningMode(CodeDictListMap):
         params: AVRParams,
     ) -> list[Response]:
         """Response decoder for listening mode."""
-        super().decode_response(response, params)
+        super().decode_response(response=response, params=params)
         return [
             response,
             response.clone(base_property="listening_mode_raw", value=response.code),

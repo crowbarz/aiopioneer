@@ -43,7 +43,7 @@ class InputMultichannel(CodeBoolMap):
             )
             return [response]
 
-        super().decode_response(response, params)
+        super().decode_response(response=response, params=params)
         response.update(callback=check_input_multichannel)
         return [response]
 
