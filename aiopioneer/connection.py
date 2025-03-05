@@ -7,20 +7,11 @@ import logging
 import time
 import traceback
 
-from .commands import PIONEER_COMMANDS
-from .const import (
-    Zone,
-    DEFAULT_PORT,
-    DEFAULT_TIMEOUT,
-    DEFAULT_SCAN_INTERVAL,
-)
-from .decoders.code_map import CodeMapBase
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DEFAULT_SCAN_INTERVAL
 from .exceptions import (
     AVRError,
     AVRUnavailableError,
-    AVRUnknownCommandError,
     AVRResponseTimeoutError,
-    AVRCommandError,
     AVRCommandResponseError,
     AVRConnectError,
     AVRDisconnectError,
@@ -413,67 +404,3 @@ class AVRConnection:
             self._queue_responses = False
             self._response_queue = []
             return response
-
-    async def send_command(
-        self,
-        command: str,
-        zone: Zone = Zone.Z1,
-        prefix: str = "",
-        suffix: str = "",
-        ignore_error: bool | None = None,
-        rate_limit: bool = True,
-    ) -> str | bool | None:
-        """Send a command or request to the device."""
-        # pylint: disable=unidiomatic-typecheck disable=logging-not-lazy
-        debug_command = self.params.get_param(PARAM_DEBUG_COMMAND)
-        if debug_command:
-            _LOGGER.debug(
-                ">> send_command(%s, zone=%s, prefix=%s, "
-                "suffix=%s, ignore_error=%s, rate_limit=%s)",
-                repr(command),
-                zone,
-                repr(prefix),
-                repr(suffix),
-                repr(ignore_error),
-                repr(rate_limit),
-            )
-
-        async def _send_command():
-            raw_command = PIONEER_COMMANDS.get(command, {}).get(zone)
-            if isinstance(raw_command, list):
-                if len(raw_command) == 2:
-                    # Handle command as request
-                    expected_response = raw_command[1]
-                    raw_command = raw_command[0]
-                    response = await self.send_raw_request(
-                        prefix + raw_command + suffix,
-                        response_prefix=expected_response,
-                        rate_limit=rate_limit,
-                    )
-                    if debug_command:
-                        _LOGGER.debug("send_command received response: %s", response)
-                    return response
-                raise AVRUnknownCommandError(command=command, zone=zone)
-            elif isinstance(raw_command, str):
-                await self.send_raw_command(
-                    prefix + raw_command + suffix, rate_limit=rate_limit
-                )
-                return True
-            raise AVRUnknownCommandError(command=command, zone=zone)
-
-        try:
-            return await _send_command()
-        except AVRUnavailableError:  ## always raise even if ignoring errors
-            raise
-        except AVRError as exc:
-            if ignore_error is None:
-                _LOGGER.debug("send_command raised exception: %s", str(exc))
-                raise exc
-            if ignore_error:
-                _LOGGER.debug(str(exc))
-            else:
-                _LOGGER.error(str(exc))
-            return False if isinstance(exc, AVRCommandError) else None
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.error("send_command exception: %s: %s", command, repr(exc))
-            _LOGGER.error(traceback.format_exc())

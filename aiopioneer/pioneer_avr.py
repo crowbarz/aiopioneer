@@ -5,9 +5,9 @@
 import asyncio
 import logging
 import time
+import traceback
 
 from collections.abc import Callable
-from typing import Any
 
 from .commands import PIONEER_COMMANDS
 from .command_queue import CommandItem
@@ -33,6 +33,7 @@ from .exceptions import (
     AVRConnectProtocolError,
     AVRLocalCommandError,
     AVRCommandUnavailableError,
+    AVRUnavailableError,
 )
 from .params import (
     AVRParams,
@@ -43,8 +44,8 @@ from .params import (
     PARAM_VOLUME_STEP_ONLY,
     PARAM_IGNORE_VOLUME_CHECK,
     PARAM_DEBUG_UPDATER,
+    PARAM_DEBUG_COMMAND,
     PARAM_DEBUG_COMMAND_QUEUE,
-    PARAM_VIDEO_RESOLUTION_MODES,
     PARAM_ENABLED_FUNCTIONS,
     PARAM_INITIAL_REFRESH_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY,
@@ -410,7 +411,94 @@ class PioneerAVR(AVRConnection):
         if wait:
             await command_queue.wait()
 
-    ## Command queue
+    ## Command execution
+    async def send_command(
+        self,
+        command: str,
+        *command_args,
+        zone: Zone = Zone.Z1,
+        prefix: str = None,
+        suffix: str = None,
+        ignore_error: bool | None = None,
+        rate_limit: bool = True,
+    ) -> str | bool | None:
+        """Send a command or request to the device."""
+        # pylint: disable=unidiomatic-typecheck disable=logging-not-lazy
+        debug_command = self.params.get_param(PARAM_DEBUG_COMMAND)
+        if debug_command:
+            _LOGGER.debug(
+                ">> send_command(%s, %s, zone=%s, prefix=%s, "
+                "suffix=%s, ignore_error=%s, rate_limit=%s)",
+                repr(command),
+                repr(command_args),
+                zone,
+                repr(prefix),
+                repr(suffix),
+                repr(ignore_error),
+                repr(rate_limit),
+            )
+
+        try:
+            command_info = PIONEER_COMMANDS.get(command, {})
+            command_list: list[str] | str = command_info.get(zone)
+            arg_code_maps: list[CodeMapBase] = command_info.get("args", [])
+            if arg_code_maps and prefix is None and suffix is None:
+                ## Convert command_args to prefix and suffix
+                args_list = list(command_args)
+                prefix_map = arg_code_maps[0]
+                prefix_map.get_nargs(len(args_list))  ## check available args
+                prefix = prefix_map.parse_args(
+                    command=command,
+                    args=args_list,
+                    params=self.params,
+                    properties=self.properties,
+                )
+                if len(arg_code_maps) > 1:
+                    suffix_map = arg_code_maps[1]
+                    suffix_map.get_nargs(len(args_list))  ## check available args
+                    suffix = suffix_map.parse_args(
+                        command=command,
+                        args=args_list,
+                        params=self.params,
+                        properties=self.properties,
+                    )
+                return True
+            if isinstance(command_list, list):
+                ## Send raw command, then wait for response
+                response = await self.send_raw_request(
+                    command=(prefix or "") + command_list[0] + (suffix or ""),
+                    response_prefix=command_list[1],
+                    rate_limit=rate_limit,
+                )
+                if debug_command:
+                    _LOGGER.debug(
+                        "send_command %s received response: %s", command, response
+                    )
+                return response
+            elif isinstance(command_list, str):
+                ## Send raw command only
+                await self.send_raw_command(
+                    command=(prefix or "") + command_list + (suffix or ""),
+                    rate_limit=rate_limit,
+                )
+                return True
+            raise AVRUnknownCommandError(command=command, zone=zone)
+
+        except AVRUnavailableError:  ## always raise even if ignoring errors
+            raise
+        except AVRError as exc:
+            if ignore_error is None:
+                _LOGGER.debug("send_command raised exception: %s", str(exc))
+                raise exc
+            if ignore_error:
+                _LOGGER.debug(str(exc))
+            else:
+                _LOGGER.error(str(exc))
+            return False if isinstance(exc, AVRCommandError) else None
+        except Exception as exc:  # pylint: disable=broad-except
+            _LOGGER.error("send_command exception: %s: %s", command, repr(exc))
+            _LOGGER.error(traceback.format_exc())
+
     async def _execute_local_command(self, command: str, args: list) -> None:
         """Execute local command."""
 
@@ -456,9 +544,9 @@ class PioneerAVR(AVRConnection):
         command = command_item.command
         args = command_item.args
         if command.startswith("_"):
-            await self._execute_local_command(command, args)
+            await self._execute_local_command(command=command, args=args)
         else:
-            await self.send_command(command, ignore_error=False)
+            await self.send_command(command=command, *args, ignore_error=False)
 
     ## AVR methods
     def _check_zone(self, zone: Zone) -> Zone:
