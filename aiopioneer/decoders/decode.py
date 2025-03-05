@@ -108,21 +108,21 @@ RESPONSE_DATA = [
     ["Z2MUT", CodeInverseBoolMap, Zone.Z2, "mute"],
     ["Z3MUT", CodeInverseBoolMap, Zone.Z3, "mute"],
     ["HZMUT", CodeInverseBoolMap, Zone.HDZ, "mute"],
-    ["SPK", SpeakerMode, Zone.ALL, "amp", "speaker_mode"],
-    ["HO", HdmiOut, Zone.ALL, "amp", "hdmi_out"],
-    ["HDO", Hdmi3Out, Zone.ALL, "amp", "hdmi3_out"],
-    ["HA", HdmiAudio, Zone.ALL, "amp", "hdmi_audio"],
-    ["PQ", Pqls, Zone.ALL, "amp", "pqls"],
-    ["SAA", Dimmer, Zone.ALL, "amp", "dimmer"],
-    ["SAB", CodeIntMap, Zone.ALL, "amp", "sleep_time"],
-    ["SAC", AmpMode, Zone.ALL, "amp", "mode"],
-    ["PKL", PanelLock, Zone.ALL, "amp", "panel_lock"],
-    ["RML", CodeBoolMap, Zone.ALL, "amp", "remote_lock"],
-    ["SSF", SpeakerSystem, Zone.ALL, "system", "speaker_system"],
+    ["SPK", SpeakerMode, Zone.ALL],  # amp.speaker_mode
+    ["HO", HdmiOut, Zone.ALL],  # amp.hdmi_out
+    ["HDO", Hdmi3Out, Zone.ALL],  # amp.hdmi3_out
+    ["HA", HdmiAudio, Zone.ALL],  # amp.hdmi_audio
+    ["PQ", Pqls, Zone.ALL],  # amp.pqls
+    ["SAA", Dimmer, Zone.ALL],  # amp.dimmer
+    ["SAB", CodeIntMap, Zone.ALL],  # amp.sleep_time
+    ["SAC", AmpMode, Zone.ALL],  # amp.mode
+    ["PKL", PanelLock, Zone.ALL],  # amp.panel_lock
+    ["RML", CodeBoolMap, Zone.ALL],  # amp.remote_lock
+    ["SSF", SpeakerSystem, Zone.ALL],  # system.speaker_system
     ["RGB", InputName, Zone.ALL],
-    ["SVB", SystemMacAddress, Zone.ALL, "amp", "mac_addr"],
-    ["RGD", SystemAvrModel, Zone.ALL, "amp", "model"],
-    ["SSI", SystemSoftwareVesion, Zone.ALL, "amp", "software_version"],
+    ["SVB", SystemMacAddress, Zone.ALL],  # amp.mac_addr
+    ["RGD", SystemAvrModel, Zone.ALL],  # amp.model
+    ["SSI", SystemSoftwareVesion, Zone.ALL],  # amp.software_version
     ["AUA", AudioParameterProhibition, Zone.Z1],
     ["AUB", AudioParameterWorking, Zone.Z1],
     ## settings

@@ -13,6 +13,7 @@ from ..params import (
 )
 from .code_map import (
     CodeMapBase,
+    CodeMapHasProperty,
     CodeBoolMap,
     CodeStrMap,
     CodeInverseBoolMap,
@@ -151,43 +152,53 @@ class InputSource(CodeMapBase):
         ]
 
 
-class SpeakerMode(CodeDictStrMap):
+class SpeakerMode(CodeMapHasProperty, CodeDictStrMap):
     """Speaker mode."""
 
     friendly_name = "speaker mode"
+    base_property = "amp"
+    property_name = "speaker_mode"
 
     code_map = {"0": "off", "1": "A", "2": "B", "3": "A+B"}
 
 
-class HdmiOut(CodeDictStrMap):
+class HdmiOut(CodeMapHasProperty, CodeDictStrMap):
     """HDMI out."""
 
     friendly_name = "HDMI out"
+    base_property = "amp"
+    property_name = "hdmi_out"
 
     code_map = {"0": "all", "1": "HDMI 1", "2": "HDMI 2"}
 
 
-class Hdmi3Out(CodeBoolMap):
+class Hdmi3Out(CodeMapHasProperty, CodeBoolMap):
     """HDMI3 out."""
 
     friendly_name = "HDMI3 out"
+    base_property = "amp"
+    property_name = "hdmi3_out"
 
     code_true = "1"
     code_false = "3"
 
 
-class HdmiAudio(CodeDictStrMap):
+class HdmiAudio(CodeMapHasProperty, CodeDictStrMap):
     """HDMI audio."""
 
     friendly_name = "HDMI audio"
+    base_property = "amp"
+    property_name = "hdmi_audio"
 
     code_map = {"0": "amp", "1": "passthrough"}
 
 
-class Pqls(CodeDictStrMap):
+class Pqls(CodeMapHasProperty, CodeDictStrMap):
     """PQLS."""
 
     friendly_name = "PQLS"
+    base_property = "amp"
+    property_name = "pqls"
 
     code_map = {"0": "off", "1": "auto"}
 
@@ -196,6 +207,8 @@ class Dimmer(CodeDictStrMap):
     """Dimmer."""
 
     friendly_name = "dimmer"
+    base_property = "amp"
+    property_name = "dimmer"
 
     code_map = {
         "0": "brightest",
@@ -209,6 +222,8 @@ class SleepTime(CodeIntMap):
     """Sleep time remaining."""
 
     friendly_name = "sleep time"
+    base_property = "amp"
+    property_name = "sleep_time"
 
     value_min = 0
     value_max = 90
@@ -216,10 +231,12 @@ class SleepTime(CodeIntMap):
     code_zfill = 3
 
 
-class AmpMode(CodeDictStrMap):
+class AmpMode(CodeMapHasProperty, CodeDictStrMap):
     """AMP status."""
 
     friendly_name = "AMP status"
+    base_property = "amp"
+    property_name = "mode"
 
     code_map = {
         "0": "amp on",
@@ -233,6 +250,8 @@ class PanelLock(CodeDictStrMap):
     """Panel lock."""
 
     friendly_name = "panel lock"
+    base_property = "amp"
+    property_name = "panel_lock"
 
     code_map = {"0": "off", "1": "panel only", "2": "panel + volume"}
 
@@ -241,6 +260,8 @@ class SpeakerSystem(CodeDictStrMap):
     """Speaker system."""
 
     friendly_name = "speaker system"
+    base_property = "system"
+    property_name = "speaker_system"
 
     @classmethod
     def decode_response(
@@ -308,6 +329,10 @@ class InputName(CodeMapBase):
 class SystemMacAddress(CodeStrMap):
     """System MAC address."""
 
+    friendly_name = "system MAC address"
+    base_property = "amp"
+    property_name = "mac_addr"
+
     ## NOTE: value_to_code not implemented
 
     @classmethod
@@ -318,6 +343,9 @@ class SystemMacAddress(CodeStrMap):
 class SystemAvrModel(CodeStrMap):
     """System AVR model."""
 
+    friendly_name = "system AVR model"
+    base_property = "amp"
+    property_name = "model"
     ## NOTE: value_to_code not implemented
 
     @classmethod
@@ -330,6 +358,10 @@ class SystemAvrModel(CodeStrMap):
 
 class SystemSoftwareVesion(CodeStrMap):
     """System software version."""
+
+    friendly_name = "system software version"
+    base_property = "amp"
+    property_name = "software_version"
 
     ## NOTE: value_to_code not implemented
 

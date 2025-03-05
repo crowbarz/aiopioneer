@@ -1,9 +1,11 @@
 """aiopioneer code map class."""
 
 from typing import Any, Tuple
-from .response import Response
+
+from ..exceptions import AVRCommandUnavailableError
 from ..params import AVRParams
 from ..properties import AVRProperties
+from .response import Response
 
 CODE_MAP_NDIGITS = 3
 CODE_MAP_EXP = pow(10, CODE_MAP_NDIGITS)
@@ -174,6 +176,28 @@ class CodeMapSequence(CodeMapBase):
             code_index += child_len
 
         return responses
+
+
+class CodeMapHasProperty(CodeMapBase):
+    """
+    Code map mixin that checks settable property is supported by AVR.
+
+    Requires cls.base_property and cls.property_name to be set in class.
+    """
+
+    @classmethod
+    def parse_args(
+        cls,
+        command: str,
+        args: list,
+        params: AVRParams,
+        properties: AVRProperties,
+    ) -> str:
+        if getattr(properties, cls.base_property, {}).get(cls.property_name) is None:
+            raise AVRCommandUnavailableError(command=command, err_key=command)
+        return super().parse_args(
+            command=command, args=args, params=params, properties=properties
+        )
 
 
 class CodeStrMap(CodeMapBase):
