@@ -677,7 +677,7 @@ class PioneerAVR(AVRConnection):
         zone = self._check_zone(zone)
         if self.properties.tone.get(zone) is None:
             raise AVRCommandUnavailableError(
-                command="set_tone_settings", err_key="tone_unavailable", zone=zone
+                command="set_tone_settings", err_key="tone", zone=zone
             )
 
         if tone is not None:
@@ -693,35 +693,11 @@ class PioneerAVR(AVRConnection):
                 await self.send_command("set_tone_bass", zone=zone, prefix=ToneDb(bass))
 
     async def set_amp_settings(self, **kwargs) -> None:
-        """Set amplifier settings."""
-        zone = Zone.Z1
-
-        async def set_amp_setting(
-            command: str, arg: str, value: Any, arg_code_map: CodeMapBase
-        ) -> None:
-            if arg in (
-                ["speaker_mode", "hdmi_out", "hdmi3_out", "hdmi_audio", "pqls", "mode"]
-            ):
-                if self.properties.amp.get(arg) is None:
-                    raise AVRCommandUnavailableError(
-                        command=command, err_key=f"{arg}_unavailable"
-                    )
-            await self.send_command(command, zone=zone, prefix=arg_code_map(value))
-
+        """Set amplifier settings (always use Main Zone)."""
         for arg, value in kwargs.items():
-            if self.properties.amp.get(arg) == value:
-                continue
-            if (command := "set_amp_" + arg) not in PIONEER_COMMANDS:
-                raise AVRUnknownCommandError(command=command, zone=zone)
-            arg_format = PIONEER_COMMANDS[command].get("args")
-            if not isinstance(arg_format, list):
-                raise RuntimeError(f"no arguments defined for amp setting {arg}")
-            if not issubclass(arg_code_map := arg_format[0], CodeMapBase):
-                raise RuntimeError(
-                    f"invalid code map {arg_code_map} for amp setting {arg}"
-                )
             try:
-                await set_amp_setting(command, arg, value, arg_code_map)
+                command = f"set_amp_{arg}"
+                await self.send_command(command, value)
             except AVRError:
                 raise
             except Exception as exc:  # pylint: disable=broad-except
@@ -868,14 +844,12 @@ class PioneerAVR(AVRConnection):
         zone = self._check_zone(zone)
         if channel_levels := self.properties.channel_levels.get(zone) is None:
             raise AVRCommandUnavailableError(
-                command="set_channel_levels",
-                err_key="channel_levels_unavailable",
-                zone=zone,
+                command="set_channel_levels", err_key="channel_levels", zone=zone
             )
         if channel_levels.get(channel) is None:
             raise AVRCommandUnavailableError(
                 command="set_channel_levels",
-                err_key="channel_unavailable",
+                err_key="channel",
                 zone=zone,
                 channel=channel,
             )
@@ -885,44 +859,19 @@ class PioneerAVR(AVRConnection):
     async def set_video_settings(self, zone: Zone, **arguments) -> None:
         """Set video settings for a given zone."""
         zone = self._check_zone(zone)
+        command = "set_video_settings"
 
-        # This function is only valid for zone 1, no video settings are
-        # available for zone 2, 3, 4 and HDZone
         if zone is not Zone.Z1:
             raise AVRCommandUnavailableError(
-                command="set_video_settings",
-                err_key="video_settings_unavailable",
-                zone=zone,
+                command=command, err_key="video_settings", zone=zone
             )
-
-        async def set_video_setting(
-            command: str, arg: str, value: Any, arg_code_map: CodeMapBase
-        ) -> None:
-            code = arg_code_map(value)
-            if arg == "resolution":
-                resolution_modes = self.params.get_param(PARAM_VIDEO_RESOLUTION_MODES)
-                if not resolution_modes or code not in resolution_modes:
-                    raise AVRCommandUnavailableError(
-                        command=command,
-                        err_key="resolution_unavailable",
-                        resolution=value,
-                    )
-            await self.send_command(command, zone=zone, prefix=code)
 
         for arg, value in arguments.items():
             if self.properties.video.get(arg) == value:
                 continue
-            if (command := "set_video_" + arg) not in PIONEER_COMMANDS:
-                raise AVRUnknownCommandError(command=command, zone=zone)
-            arg_format = PIONEER_COMMANDS[command].get("args")
-            if not isinstance(arg_format, list):
-                raise RuntimeError(f"no arguments defined for command {command}")
-            if not issubclass(arg_code_map := arg_format[0], CodeMapBase):
-                raise RuntimeError(
-                    f"invalid code map {arg_code_map} for command {command}"
-                )
             try:
-                await set_video_setting(command, arg, value, arg_code_map)
+                command = f"set_video_{arg}"
+                await self.send_command(command, value, zone=zone)
             except AVRError:
                 raise
             except Exception as exc:  # pylint: disable=broad-except
@@ -931,32 +880,19 @@ class PioneerAVR(AVRConnection):
     async def set_dsp_settings(self, zone: Zone, **arguments) -> None:
         """Set the DSP settings for the amplifier."""
         zone = self._check_zone(zone)
+        command = "set_dsp_settings"
+
         if zone is not Zone.Z1:
             raise AVRCommandUnavailableError(
-                command="set_dsp_settings",
-                err_key="dsp_settings_unavailable",
-                zone=zone,
+                command=command, err_key="dsp_settings", zone=zone
             )
-
-        async def set_dsp_setting(
-            command: str, _arg: str, value: Any, arg_code_map: CodeMapBase
-        ) -> None:
-            await self.send_command(command, zone=zone, prefix=arg_code_map(value))
 
         for arg, value in arguments.items():
             if self.properties.dsp.get(arg) == value:
                 continue
-            if (command := "set_dsp_" + arg) not in PIONEER_COMMANDS:
-                raise AVRUnknownCommandError(command=command, zone=zone)
-            arg_format = PIONEER_COMMANDS[command].get("args")
-            if not isinstance(arg_format, list):
-                raise RuntimeError(f"no arguments defined for DSP setting {arg}")
-            if not issubclass(arg_code_map := arg_format[0], CodeMapBase):
-                raise RuntimeError(
-                    f"invalid code map {arg_code_map} for DSP setting {arg}"
-                )
             try:
-                await set_dsp_setting(command, arg, value, arg_code_map)
+                command = f"set_dsp_{arg}"
+                await self.send_command(command, value, zone=zone)
             except AVRError:
                 raise
             except Exception as exc:  # pylint: disable=broad-except
@@ -972,7 +908,7 @@ class PioneerAVR(AVRConnection):
         if control_mode is None:
             raise AVRCommandUnavailableError(
                 command="media_control",
-                err_key="media_controls_not_supported",
+                err_key="media_controls",
                 source=self.properties.source_name.get(zone),
             )
 
@@ -980,7 +916,7 @@ class PioneerAVR(AVRConnection):
         if command is None:
             raise AVRCommandUnavailableError(
                 command="media_control",
-                err_key="media_action_not_supported",
+                err_key="media_action",
                 source=self.properties.source_name.get(zone),
                 action=action,
             )

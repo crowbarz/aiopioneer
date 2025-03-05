@@ -162,7 +162,7 @@ class AVRTunerUnavailableError(AVRCommandUnavailableError):
     """Tuner is not available."""
 
     def __init__(self, command: str, **kwargs):
-        super().__init__(command=command, err_key="tuner_unavailable", **kwargs)
+        super().__init__(command=command, err_key="tuner", **kwargs)
 
 
 ErrorFormatText = {
@@ -180,27 +180,30 @@ ErrorFormatText = {
 }
 
 LocalCommandErrorFormatText = {
-    "freq_step_error": "unable to calculate AM frequency step, parameter 'am_frequency_step' required",
+    "freq_step_error": (
+        "unable to calculate AM frequency step, "
+        "parameter 'am_frequency_step' required"
+    ),
     "freq_step_unknown": "unknown AM tuner frequency step, parameter 'am_frequency_step' required",
     "freq_step_max_exceeded": "maximum tuner frequency step count exceeded",
     "freq_set_failed": "unable to set tuner frequency to {frequency}",
 }
 
 CommandUnavailableErrorFormatText = {
-    "tuner_unavailable": "AVR tuner is unavailable",
-    "tone_unavailable": "tone controls not supported for {zone.full_name}",
-    "channel_levels_unavailable": "channel levels not supported for {zone.full_name}",
-    "channel_unavailable": "channel {channel} unavailable for {zone.full_name}",
-    "video_settings_unavailable": "video settings not supported for {zone.full_name}",
-    "dsp_settings_unavailable": "DSP settings not supported for {zone.full_name}",
+    "tuner": "AVR tuner is unavailable",
+    "tone": "tone controls not supported for {zone.full_name}",
+    "channel_levels": "channel levels not supported for {zone.full_name}",
+    "channel": "channel {channel} unavailable for {zone.full_name}",
+    "video_settings": "video settings not supported for {zone.full_name}",
+    "dsp_settings": "DSP settings not supported for {zone.full_name}",
     "set_amp_speaker_mode": "speaker configuration not supported",
     "set_amp_hdmi_out": "HDMI out configuration not supported",
     "set_amp_hdmi3_out": "HDMI3 out configuration not supported",
     "set_amp_hdmi_audio": "HDMI audio configuration not supported",
     "set_amp_pqls": "PQLS configuration not supported",
     "set_amp_mode": "amp mode configuration not supported",
-    "media_controls_not_supported": "media controls not supported on source {source}",
-    "media_action_not_supported": "media action {action} not supported on source {source}",
+    "media_controls": "media controls not supported on source {source}",
+    "media_action": "media action {action} not supported on source {source}",
     "resolution_unavailable": "resolution {resolution} unavailable",
 }
 
