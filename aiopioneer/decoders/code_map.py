@@ -62,6 +62,7 @@ class CodeMapBase:
     @classmethod
     def parse_args(
         cls,
+        command: str,  # pylint: disable=unused-argument
         args: list,
         params: AVRParams,  # pylint: disable=unused-argument
         properties: AVRProperties,  # pylint: disable=unused-argument
@@ -114,6 +115,7 @@ class CodeMapSequence(CodeMapBase):
     @classmethod
     def parse_args(
         cls,
+        command: str,  # pylint: disable=unused-argument
         args: list,
         params: AVRParams,
         properties: AVRProperties,
@@ -126,7 +128,7 @@ class CodeMapSequence(CodeMapBase):
             if isinstance(child_item, tuple):  ## item is (code_map, property)
                 child_map, _ = child_item
                 return child_map.parse_args(
-                    args=args, params=params, properties=properties
+                    command=command, args=args, params=params, properties=properties
                 )
             elif isinstance(child_item, int):  ## item is gap
                 child_len = child_item
