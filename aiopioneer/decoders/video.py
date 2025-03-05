@@ -1,5 +1,8 @@
 """aiopioneer response decoders for video parameters."""
 
+from ..exceptions import AVRCommandUnavailableError
+from ..params import AVRParams, PARAM_VIDEO_RESOLUTION_MODES
+from ..properties import AVRProperties
 from .code_map import CodeIntMap, CodeDictStrMap
 
 
@@ -33,6 +36,25 @@ class VideoResolution(CodeDictStrMap):
         "8": "4K",
         "9": "4K/24p",
     }
+
+    @classmethod
+    def parse_args(
+        cls,
+        command: str,
+        args: list,
+        params: AVRParams,
+        properties: AVRProperties,  # pylint: disable=unused-argument
+    ) -> str:
+        arg = args.pop(0)
+        code = cls.value_to_code(arg)
+        resolution_modes = params.get_param(PARAM_VIDEO_RESOLUTION_MODES)
+        if not resolution_modes or code not in resolution_modes:
+            raise AVRCommandUnavailableError(
+                command=command,
+                err_key="resolution_unavailable",
+                resolution=arg,
+            )
+        return code
 
 
 class VideoPureCinema(CodeDictStrMap):
