@@ -23,6 +23,8 @@ class CodeMapBase:
     """Map AVR codes to values."""
 
     friendly_name = None
+    base_property = None
+    property_name = None
 
     def __new__(cls, value):
         return cls.value_to_code(value)
@@ -76,6 +78,10 @@ class CodeMapBase:
         params: AVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Decode a response."""
+        if cls.base_property is not None:
+            response.update(base_property=cls.base_property)
+        if cls.property_name is not None:
+            response.update(property_name=cls.property_name)
         response.update(value=cls.code_to_value(response.code))
         return [response]
 
