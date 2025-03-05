@@ -41,6 +41,13 @@ class CodeMapBase:
         raise ValueError(f"class length undefined for {cls.get_name()}")
 
     @classmethod
+    def get_nargs(cls, min_nargs: int = None) -> int:
+        """Get or check number of args consumed by class."""
+        if min_nargs is not None and min_nargs > 1:
+            raise ValueError(f"insufficient arguments for {cls.get_name()}")
+        return 1
+
+    @classmethod
     def value_to_code(cls, value) -> str:
         """Convert value to code."""
         return str(value)
@@ -82,6 +89,13 @@ class CodeMapSequence(CodeMapBase):
     @classmethod
     def get_len(cls) -> int:
         return sum([child_map.get_len() for child_map, _ in cls.code_map_sequence])
+
+    @classmethod
+    def get_nargs(cls, min_nargs: int = None) -> int:
+        nargs = sum([child_map.get_nargs() for child_map, _ in cls.code_map_sequence])
+        if min_nargs is not None and min_nargs > nargs:
+            raise ValueError(f"insufficient arguments for {cls.get_name()}")
+        return nargs
 
     @classmethod
     def value_to_code(cls, value) -> str:
