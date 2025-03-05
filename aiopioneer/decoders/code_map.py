@@ -2,6 +2,7 @@
 
 from typing import Any, Tuple
 
+from ..const import Zone
 from ..exceptions import AVRCommandUnavailableError
 from ..params import AVRParams
 from ..properties import AVRProperties
@@ -66,6 +67,7 @@ class CodeMapBase:
         cls,
         command: str,  # pylint: disable=unused-argument
         args: list,
+        zone: Zone,  # pylint: disable=unused-argument
         params: AVRParams,  # pylint: disable=unused-argument
         properties: AVRProperties,  # pylint: disable=unused-argument
     ) -> str:
@@ -119,6 +121,7 @@ class CodeMapSequence(CodeMapBase):
         cls,
         command: str,  # pylint: disable=unused-argument
         args: list,
+        zone: Zone,
         params: AVRParams,
         properties: AVRProperties,
         code_map_sequence: list[tuple[CodeMapBase, str] | int] = None,
@@ -130,7 +133,11 @@ class CodeMapSequence(CodeMapBase):
             if isinstance(child_item, tuple):  ## item is (code_map, property)
                 child_map, _ = child_item
                 return child_map.parse_args(
-                    command=command, args=args, params=params, properties=properties
+                    command=command,
+                    args=args,
+                    zone=zone,
+                    params=params,
+                    properties=properties,
                 )
             elif isinstance(child_item, int):  ## item is gap
                 child_len = child_item
@@ -190,13 +197,14 @@ class CodeMapHasProperty(CodeMapBase):
         cls,
         command: str,
         args: list,
+        zone: Zone,
         params: AVRParams,
         properties: AVRProperties,
     ) -> str:
         if getattr(properties, cls.base_property, {}).get(cls.property_name) is None:
             raise AVRCommandUnavailableError(command=command, err_key=command)
         return super().parse_args(
-            command=command, args=args, params=params, properties=properties
+            command=command, args=args, zone=zone, params=params, properties=properties
         )
 
 

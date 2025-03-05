@@ -1,5 +1,6 @@
 """aiopioneer response decoders for video parameters."""
 
+from ..const import Zone
 from ..exceptions import AVRCommandUnavailableError
 from ..params import AVRParams, PARAM_VIDEO_RESOLUTION_MODES
 from ..properties import AVRProperties
@@ -42,6 +43,7 @@ class VideoResolution(CodeDictStrMap):
         cls,
         command: str,
         args: list,
+        zone: Zone,  # pylint: disable=unused-argument
         params: AVRParams,
         properties: AVRProperties,  # pylint: disable=unused-argument
     ) -> str:

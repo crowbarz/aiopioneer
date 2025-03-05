@@ -450,6 +450,7 @@ class PioneerAVR(AVRConnection):
                 prefix = prefix_map.parse_args(
                     command=command,
                     args=args_list,
+                    zone=zone,
                     params=self.params,
                     properties=self.properties,
                 )
@@ -459,6 +460,7 @@ class PioneerAVR(AVRConnection):
                     suffix = suffix_map.parse_args(
                         command=command,
                         args=args_list,
+                        zone=zone,
                         params=self.params,
                         properties=self.properties,
                     )
