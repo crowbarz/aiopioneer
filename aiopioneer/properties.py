@@ -66,6 +66,7 @@ class AVRProperties:
 
     def reset(self) -> None:
         """Reset AVR properties."""
+        self.zones_initial_refresh: set[Zone] = set()
         self.command_queue.purge()
         self.power = {}
         self.volume = {}
