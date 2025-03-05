@@ -71,7 +71,7 @@ from .system import (
     InputName,
     SystemMacAddress,
     SystemAvrModel,
-    SystemSoftwareVesion,
+    SystemSoftwareVersion,
     AudioParameterProhibition,
     AudioParameterWorking,
 )
@@ -122,7 +122,7 @@ RESPONSE_DATA = [
     ["RGB", InputName, Zone.ALL],
     ["SVB", SystemMacAddress, Zone.ALL],  # amp.mac_addr
     ["RGD", SystemAvrModel, Zone.ALL],  # amp.model
-    ["SSI", SystemSoftwareVesion, Zone.ALL],  # amp.software_version
+    ["SSI", SystemSoftwareVersion, Zone.ALL],  # amp.software_version
     ["AUA", AudioParameterProhibition, Zone.Z1],
     ["AUB", AudioParameterWorking, Zone.Z1],
     ## settings

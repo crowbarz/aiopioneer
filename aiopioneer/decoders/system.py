@@ -356,7 +356,7 @@ class SystemAvrModel(CodeStrMap):
         return value
 
 
-class SystemSoftwareVesion(CodeStrMap):
+class SystemSoftwareVersion(CodeStrMap):
     """System software version."""
 
     friendly_name = "system software version"
