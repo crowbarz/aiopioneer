@@ -11,6 +11,7 @@ from ..params import (
     PARAM_SPEAKER_SYSTEM_MODES,
     PARAM_POWER_ON_VOLUME_BOUNCE,
 )
+from ..properties import AVRProperties
 from .code_map import (
     CodeMapBase,
     CodeMapHasProperty,
@@ -29,6 +30,7 @@ class Power(CodeInverseBoolMap):
     """Zone power status."""
 
     friendly_name = "zone power"
+    base_property = "power"
 
     @classmethod
     def decode_response(
@@ -110,6 +112,7 @@ class InputSource(CodeMapBase):
     """Zone input source."""
 
     friendly_name = "zone input source"
+    base_property = "source_id"
 
     @classmethod
     def decode_response(
@@ -150,6 +153,13 @@ class InputSource(CodeMapBase):
                 value=media_control_mode,
             ),
         ]
+
+
+class Mute(CodeInverseBoolMap):
+    """Mute."""
+
+    friendly_name = "mute"
+    base_property = "mute"
 
 
 class SpeakerMode(CodeMapHasProperty, CodeDictStrMap):
@@ -254,6 +264,14 @@ class PanelLock(CodeDictStrMap):
     property_name = "panel_lock"
 
     code_map = {"0": "off", "1": "panel only", "2": "panel + volume"}
+
+
+class RemoteLock(CodeBoolMap):
+    """Remote lock."""
+
+    friendly_name = "remote lock"
+    base_property = "amp"
+    property_name = "remote_lock"
 
 
 class SpeakerSystem(CodeDictStrMap):
@@ -376,6 +394,8 @@ class SystemSoftwareVersion(CodeStrMap):
 class AudioParameterProhibition(CodeMapBase):
     """Audio parameter prohibition."""
 
+    friendly_name = "audio parameter prohibition"
+
     @classmethod
     def decode_response(
         cls,
@@ -391,6 +411,8 @@ class AudioParameterProhibition(CodeMapBase):
 
 class AudioParameterWorking(CodeMapBase):
     """Audio parameter working."""
+
+    friendly_name = "audio parameter working"
 
     @classmethod
     def decode_response(

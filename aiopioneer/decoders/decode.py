@@ -10,8 +10,6 @@ from .audio import ChannelLevel, ListeningMode, ToneMode, ToneDb
 from .code_map import (
     CodeMapBase,
     CodeBoolMap,
-    CodeIntMap,
-    CodeInverseBoolMap,
 )
 from .dsp import (
     DspMcaccMemorySet,
@@ -56,17 +54,20 @@ from .settings import (
     ExternalHdmiTrigger,
 )
 from .system import (
-    InputSource,
     Power,
     Volume,
+    InputSource,
+    Mute,
     SpeakerMode,
     HdmiOut,
     Hdmi3Out,
     HdmiAudio,
     Pqls,
     Dimmer,
+    SleepTime,
     AmpMode,
     PanelLock,
+    RemoteLock,
     SpeakerSystem,
     InputName,
     SystemMacAddress,
@@ -92,32 +93,32 @@ _LOGGER = logging.getLogger(__name__)
 
 RESPONSE_DATA = [
     ## system
-    ["PWR", Power, Zone.Z1, "power"],
-    ["APR", Power, Zone.Z2, "power"],
-    ["BPR", Power, Zone.Z3, "power"],
-    ["ZEP", Power, Zone.HDZ, "power"],
-    ["FN", InputSource, Zone.Z1, "source_id"],
-    ["Z2F", InputSource, Zone.Z2, "source_id"],
-    ["Z3F", InputSource, Zone.Z3, "source_id"],
-    ["ZEA", InputSource, Zone.HDZ, "source_id"],
-    ["VOL", Volume, Zone.Z1, "volume"],
-    ["ZV", Volume, Zone.Z2, "volume"],
-    ["YV", Volume, Zone.Z3, "volume"],
-    ["XV", Volume, Zone.HDZ, "volume"],
-    ["MUT", CodeInverseBoolMap, Zone.Z1, "mute"],
-    ["Z2MUT", CodeInverseBoolMap, Zone.Z2, "mute"],
-    ["Z3MUT", CodeInverseBoolMap, Zone.Z3, "mute"],
-    ["HZMUT", CodeInverseBoolMap, Zone.HDZ, "mute"],
+    ["PWR", Power, Zone.Z1],  # power
+    ["APR", Power, Zone.Z2],  # power
+    ["BPR", Power, Zone.Z3],  # power
+    ["ZEP", Power, Zone.HDZ],  # power
+    ["VOL", Volume, Zone.Z1],  # volume
+    ["ZV", Volume, Zone.Z2],  # volume
+    ["YV", Volume, Zone.Z3],  # volume
+    ["XV", Volume, Zone.HDZ],  # volume
+    ["FN", InputSource, Zone.Z1],  # source_id
+    ["Z2F", InputSource, Zone.Z2],  # source_id
+    ["Z3F", InputSource, Zone.Z3],  # source_id
+    ["ZEA", InputSource, Zone.HDZ],  # source_id
+    ["MUT", Mute, Zone.Z1],  # mute
+    ["Z2MUT", Mute, Zone.Z2],  # mute
+    ["Z3MUT", Mute, Zone.Z3],  # mute
+    ["HZMUT", Mute, Zone.HDZ],  # mute
     ["SPK", SpeakerMode, Zone.ALL],  # amp.speaker_mode
     ["HO", HdmiOut, Zone.ALL],  # amp.hdmi_out
     ["HDO", Hdmi3Out, Zone.ALL],  # amp.hdmi3_out
     ["HA", HdmiAudio, Zone.ALL],  # amp.hdmi_audio
     ["PQ", Pqls, Zone.ALL],  # amp.pqls
     ["SAA", Dimmer, Zone.ALL],  # amp.dimmer
-    ["SAB", CodeIntMap, Zone.ALL],  # amp.sleep_time
+    ["SAB", SleepTime, Zone.ALL],  # amp.sleep_time
     ["SAC", AmpMode, Zone.ALL],  # amp.mode
     ["PKL", PanelLock, Zone.ALL],  # amp.panel_lock
-    ["RML", CodeBoolMap, Zone.ALL],  # amp.remote_lock
+    ["RML", RemoteLock, Zone.ALL],  # amp.remote_lock
     ["SSF", SpeakerSystem, Zone.ALL],  # system.speaker_system
     ["RGB", InputName, Zone.ALL],
     ["SVB", SystemMacAddress, Zone.ALL],  # amp.mac_addr
