@@ -94,18 +94,29 @@ class Volume(CodeIntMap):
     """Zone volume. (1step = 0.5dB for Main Zone, 1step = 1.0dB for other zones)"""
 
     friendly_name = "volume"
+    base_property = "volume"
+    value_min = 0
+    # value_max: 185 for Main Zone, 81 for other Zones
 
-    def __new__(cls, value: int, zone: Zone, max_volume: int) -> str:
-        if not isinstance(value, int):
-            raise ValueError(f"{value} is not an int for {cls.get_name()}")
-
-        if not 0 <= value <= max_volume:
-            raise ValueError(
-                f"{value} outside of range 0 -- {max_volume} "
-                f"for {zone.full_name} {cls.get_name()}"
-            )
-        code = cls.value_to_code(value)
+    @classmethod
+    def parse_args(
+        cls,
+        command: str,  # pylint: disable=unused-argument
+        args: list,
+        zone: Zone,
+        params: AVRParams,  # pylint: disable=unused-argument
+        properties: AVRProperties,
+    ) -> str:
+        cls.check_args(args)
+        code = cls.check_volume(volume=args.pop(0), zone=zone, properties=properties)
         return code.zfill(3 if zone is Zone.Z1 else 2)
+
+    @classmethod
+    def check_volume(cls, volume: int, zone: Zone, properties: AVRProperties):
+        """Check max volume for zone."""
+        if (value_max := properties.max_volume.get(zone)) is None:
+            raise ValueError(f"volume for {zone.full_name} is not available")
+        return cls.value_to_code_bounded(value=volume, value_max=value_max)
 
 
 class InputSource(CodeMapBase):

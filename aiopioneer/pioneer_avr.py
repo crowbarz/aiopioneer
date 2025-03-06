@@ -590,15 +590,15 @@ class PioneerAVR(AVRConnection):
     async def set_volume_level(self, target_volume: int, zone: Zone = Zone.Z1) -> None:
         """Set volume level (0..185 for Zone 1, 0..81 for other Zones)."""
         zone = self._check_zone(zone)
-        current_volume = self.properties.volume.get(zone)
-        vol_prefix = Volume(target_volume, zone, self.properties.max_volume[zone])
 
         if not self.params.get_param(PARAM_VOLUME_STEP_ONLY):
-            await self.send_command("set_volume_level", zone=zone, prefix=vol_prefix)
+            await self.send_command("set_volume_level", target_volume, zone=zone)
             return
 
         ## Step volume to reach target volume
-        start_volume = current_volume
+        Volume.check_volume(volume=target_volume, zone=zone, properties=self.properties)
+        start_volume = self.properties.volume.get(zone)
+        current_volume = start_volume
         volume_step_count = 0
         if target_volume > start_volume:  # step up
             while current_volume < target_volume:
