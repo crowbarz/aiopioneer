@@ -673,6 +673,8 @@ class AVRParams:
     def __init__(self, params: dict[str, str] = None):
         """Initialise the Pioneer AVR params."""
 
+        if params is None:
+            params = {}
         self._default_params = PARAM_DEFAULTS
         self._user_params: dict[str, Any] = {}
         self._params: dict[str, Any] = {}
