@@ -342,7 +342,7 @@ class CodeFloatMap(CodeMapBase):
     code_zfill: int = None
     code_offset: float | int = 0
     value_min: float | int = None
-    value_max: float | int = None  ## NOTE: value_min must be set if value_max is set
+    value_max: float | int = None
     value_step: float | int = 1
     value_divider: float | int = 1
     value_offset: float | int = 0
@@ -351,19 +351,41 @@ class CodeFloatMap(CodeMapBase):
     def get_len(cls) -> int:
         return cls.code_zfill if cls.code_zfill else super().get_len()
 
-    def __new__(cls, value: float | int) -> str:
+    @classmethod
+    def value_to_code(cls, value: float | int):
+        return cls.value_to_code_bounded(
+            value=value, value_min=cls.value_min, value_max=cls.value_max
+        )
+
+    @classmethod
+    def value_to_code_bounded(
+        cls,
+        value: float | int,
+        value_min: float | int = None,
+        value_max: float | int = None,
+    ) -> str:
+        """Convert float or int value to code with bounds."""
         if not isinstance(value, (float, int)):
             raise ValueError(f"{value} is not a float or int for {cls.get_name()}")
-        if cls.value_min is not None:
-            if cls.value_max is None:
-                if cls.value_min >= value:
+        if value_min is None:
+            value_min = cls.value_min
+        if value_max is None:
+            value_max = cls.value_max
+        if value_min is not None:
+            if value_max is None:
+                if not value_min <= value:
                     raise ValueError(
-                        f"{value} below minimum {cls.value_min} for {cls.get_name()}"
+                        f"{value} is below minimum {value_min} for {cls.get_name()}"
                     )
-            elif not cls.value_min <= value <= cls.value_max:
+            elif not value_min <= value <= value_max:
                 raise ValueError(
-                    f"{value} outside of range "
-                    f"{cls.value_min} -- {cls.value_max} for {cls.get_name()}"
+                    f"{value} is outside of range "
+                    f"{value_min} -- {value_max} for {cls.get_name()}"
+                )
+        elif value_max is not None:
+            if not value <= value_max:
+                raise ValueError(
+                    f"{value} is above maximum {value_max} for {cls.get_name()}"
                 )
         if cls.value_step != 1 and int(value * CODE_MAP_EXP) % int(
             cls.value_step * CODE_MAP_EXP
@@ -371,13 +393,7 @@ class CodeFloatMap(CodeMapBase):
             raise ValueError(
                 f"{value} is not a multiple of {cls.value_step} for {cls.get_name()}"
             )
-        code = cls.value_to_code(value)
-        return code.zfill(cls.code_zfill) if cls.code_zfill else code
-
-    @classmethod
-    def value_to_code(cls, value) -> str:
-        """Convert value to code."""
-        return str(
+        code = str(
             int(
                 round(
                     (value + cls.value_offset) / cls.value_divider - cls.code_offset,
@@ -385,6 +401,7 @@ class CodeFloatMap(CodeMapBase):
                 )
             )
         )
+        return code.zfill(cls.code_zfill) if cls.code_zfill else code
 
     ## NOTE: codes are not validated to value_min/value_max
 
@@ -400,17 +417,32 @@ class CodeIntMap(CodeFloatMap):
     """Map AVR codes to integer values."""
 
     value_min: int = None
-    value_max: int = None  ## NOTE: value_min must be set if value_max is set
+    value_max: int = None
+    value_step: int = 1
+    value_divider: int = 1
+    value_offset: int = 0
     value_step: int = 1
     value_divider: int = 1
     value_offset: int = 0
 
-    def __new__(cls, value: int) -> str:
+    @classmethod
+    def value_to_code(cls, value: int):
+        return cls.value_to_code_bounded(
+            value=value, value_min=cls.value_min, value_max=cls.value_max
+        )
+
+    @classmethod
+    def value_to_code_bounded(
+        cls, value: int, value_min: int = None, value_max: int = None
+    ) -> str:
+        """Convert int value to code with bounds."""
         if isinstance(value, float) and value.is_integer():
             value = int(value)
         elif not isinstance(value, int):
             raise ValueError(f"{value} is not an int for {cls.get_name()}")
-        return super().__new__(cls, value)
+        return super().value_to_code_bounded(
+            value=value, value_min=value_min, value_max=value_max
+        )
 
     ## NOTE: codes are not validated to value_min/value_max
 
