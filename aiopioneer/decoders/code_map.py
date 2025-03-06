@@ -46,11 +46,21 @@ class CodeMapBase:
         raise ValueError(f"class length undefined for {cls.get_name()}")
 
     @classmethod
-    def get_nargs(cls, min_nargs: int = None) -> int:
-        """Get or check number of args consumed by class."""
-        if min_nargs is not None and min_nargs > 1:
-            raise ValueError(f"insufficient arguments for {cls.get_name()}")
+    def get_nargs(cls) -> int:
+        """Get number of arguments consumed by code map."""
         return 1
+
+    @classmethod
+    def check_args(cls, args: list, extra_args: bool = False) -> None:
+        """Check sufficient arguments have been supplied."""
+        if not isinstance(args, list):
+            raise ValueError(f"invalid argument list for {cls.get_name()}")
+        nargs = cls.get_nargs()
+        if (not extra_args and nargs != len(args)) or (
+            extra_args and nargs > len(args)
+        ):
+            plural = "s" if nargs > 1 else ""
+            raise ValueError(f"{nargs} argument{plural} expected for {cls.get_name()}")
 
     @classmethod
     def value_to_code(cls, value) -> str:
@@ -71,10 +81,9 @@ class CodeMapBase:
         params: AVRParams,  # pylint: disable=unused-argument
         properties: AVRProperties,  # pylint: disable=unused-argument
     ) -> str:
-        """Convert and pop argument(s) to code."""
-        if not isinstance(args, list) or len(args) == 0:
-            raise ValueError(f"insufficient arguments for {cls.get_name()}")
-        return cls.value_to_code(args.pop(0))
+        """Convert and pop arg(s) to code."""
+        cls.check_args(args)
+        return cls.value_to_code(args[0])
 
     @classmethod
     def decode_response(
@@ -102,11 +111,8 @@ class CodeMapSequence(CodeMapBase):
         return sum([child_map.get_len() for child_map, _ in cls.code_map_sequence])
 
     @classmethod
-    def get_nargs(cls, min_nargs: int = None) -> int:
-        nargs = sum([child_map.get_nargs() for child_map, _ in cls.code_map_sequence])
-        if min_nargs is not None and min_nargs > nargs:
-            raise ValueError(f"insufficient arguments for {cls.get_name()}")
-        return nargs
+    def get_nargs(cls) -> int:
+        return sum([child_map.get_nargs() for child_map, _ in cls.code_map_sequence])
 
     @classmethod
     def value_to_code(cls, value) -> str:
@@ -132,13 +138,17 @@ class CodeMapSequence(CodeMapBase):
         def parse_child_item(child_item: tuple[CodeMapBase, str] | int) -> str:
             if isinstance(child_item, tuple):  ## item is (code_map, property)
                 child_map, _ = child_item
-                return child_map.parse_args(
+                child_nargs = child_map.get_nargs()
+                child_map.check_args(args, extra_args=True)
+                child_code = child_map.parse_args(
                     command=command,
-                    args=args,
+                    args=args[:child_nargs],
                     zone=zone,
                     params=params,
                     properties=properties,
                 )
+                del args[:child_nargs]
+                return child_code
             elif isinstance(child_item, int):  ## item is gap
                 child_len = child_item
                 return "".ljust(child_len, cls.code_fillchar)

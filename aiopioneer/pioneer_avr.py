@@ -444,27 +444,30 @@ class PioneerAVR(AVRConnection):
             arg_code_maps: list[CodeMapBase] = command_info.get("args", [])
             if arg_code_maps and prefix is None and suffix is None:
                 ## Convert command_args to prefix and suffix
-                args_list = list(command_args)
                 prefix_map = arg_code_maps[0]
-                prefix_map.get_nargs(len(args_list))  ## check available args
-                prefix = prefix_map.parse_args(
-                    command=command,
-                    args=args_list,
-                    zone=zone,
-                    params=self.params,
-                    properties=self.properties,
-                )
+                prefix_args = list(command_args)
                 if len(arg_code_maps) > 1:
+                    ## Parse suffix code map (requires prefix code map)
+                    prefix_nargs = prefix_map.get_nargs()
                     suffix_map = arg_code_maps[1]
-                    suffix_map.get_nargs(len(args_list))  ## check available args
+                    suffix_args = prefix_args[prefix_nargs:]
+                    del prefix_args[prefix_nargs:]
                     suffix = suffix_map.parse_args(
                         command=command,
-                        args=args_list,
+                        args=suffix_args,
                         zone=zone,
                         params=self.params,
                         properties=self.properties,
                     )
-                return True
+                ## Parse prefix code map
+                prefix = prefix_map.parse_args(
+                    command=command,
+                    args=prefix_args,
+                    zone=zone,
+                    params=self.params,
+                    properties=self.properties,
+                )
+
             if isinstance(command_list, list):
                 ## Send raw command, then wait for response
                 response = await self.send_raw_request(

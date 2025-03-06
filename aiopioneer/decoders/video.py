@@ -47,14 +47,13 @@ class VideoResolution(CodeDictStrMap):
         params: AVRParams,
         properties: AVRProperties,  # pylint: disable=unused-argument
     ) -> str:
-        arg = args.pop(0)
-        code = cls.value_to_code(arg)
+        code = cls.value_to_code(args[0])
         resolution_modes = params.get_param(PARAM_VIDEO_RESOLUTION_MODES)
         if not resolution_modes or code not in resolution_modes:
             raise AVRCommandUnavailableError(
                 command=command,
                 err_key="resolution_unavailable",
-                resolution=arg,
+                resolution=args[0],
             )
         return code
 

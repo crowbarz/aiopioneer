@@ -108,7 +108,7 @@ class Volume(CodeIntMap):
         properties: AVRProperties,
     ) -> str:
         cls.check_args(args)
-        code = cls.check_volume(volume=args.pop(0), zone=zone, properties=properties)
+        code = cls.check_volume(volume=args[0], zone=zone, properties=properties)
         return code.zfill(3 if zone is Zone.Z1 else 2)
 
     @classmethod
