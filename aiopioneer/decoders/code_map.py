@@ -235,7 +235,7 @@ class CodeMapSequence(CodeMapBase):
             child_property_name = None
             if isinstance(child_item, tuple):  ## item is (code_map, property)
                 child_map, child_property_name = child_item
-            if issubclass(child_item, CodeMapBase):  ## item is code_map
+            elif issubclass(child_item, CodeMapBase):  ## item is code_map
                 child_map = child_item
             else:
                 raise RuntimeError(
