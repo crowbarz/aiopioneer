@@ -1,4 +1,4 @@
-"""aiopioneer response decoders for core system responses."""
+"""aiopioneer response decoders for amp responses."""
 
 import logging
 import re
@@ -8,7 +8,6 @@ from ..const import MEDIA_CONTROL_SOURCES, Zone
 from ..params import (
     AVRParams,
     PARAM_MHL_SOURCE,
-    PARAM_SPEAKER_SYSTEM_MODES,
     PARAM_POWER_ON_VOLUME_BOUNCE,
 )
 from ..properties import AVRProperties
@@ -166,6 +165,54 @@ class InputSource(CodeMapBase):
         ]
 
 
+class InputName(CodeMapBase):
+    """Input name."""
+
+    friendly_name = "input name"
+
+    @classmethod
+    def decode_response(
+        cls,
+        response: Response,
+        params: AVRParams,
+    ) -> list[Response]:
+        """Response decoder for input name."""
+
+        if not response.properties.query_sources:
+            ## Only update AVR source mappings if AVR sources are being queried
+            return []
+
+        def clear_source_id(response: Response) -> list[Response]:
+            """Clear source ID before applying new source ID mapping."""
+            properties = response.properties
+            source_name = None
+            if (source_id := response.value) in properties.source_id_to_name:
+                source_name = properties.source_id_to_name[source_id]
+                properties.source_id_to_name.pop(source_id)
+            if source_name in properties.source_name_to_id:
+                properties.source_name_to_id.pop(source_name)
+
+        super().decode_response(response=response, params=params)
+        source_id, source_name = response.value
+        return [
+            response.clone(callback=clear_source_id, value=source_id),
+            response.clone(
+                base_property="source_name_to_id",
+                property_name=source_name,
+                value=source_id,
+            ),
+            response.clone(
+                base_property="source_id_to_name",
+                property_name=source_id,
+                value=source_name,
+            ),
+        ]
+
+    @classmethod
+    def code_to_value(cls, code: str) -> tuple[str, str]:
+        return code[:2], code[3:]
+
+
 class Mute(CodeInverseBoolMap):
     """Mute."""
 
@@ -285,76 +332,6 @@ class RemoteLock(CodeBoolMap):
     property_name = "remote_lock"
 
 
-class SpeakerSystem(CodeDictStrMap):
-    """Speaker system."""
-
-    friendly_name = "speaker system"
-    base_property = "system"
-    property_name = "speaker_system"
-
-    @classmethod
-    def decode_response(
-        cls,
-        response: Response,
-        params: AVRParams,
-    ) -> list[Response]:
-        """Response decoder for speaker system."""
-        cls.code_map = params.get_param(PARAM_SPEAKER_SYSTEM_MODES, {})
-        super().decode_response(response=response, params=params)
-        return [
-            response,
-            response.clone(property_name="speaker_system_raw", value=response.code),
-        ]
-
-
-class InputName(CodeMapBase):
-    """Input name."""
-
-    friendly_name = "input name"
-
-    @classmethod
-    def decode_response(
-        cls,
-        response: Response,
-        params: AVRParams,
-    ) -> list[Response]:
-        """Response decoder for input name."""
-
-        if not response.properties.query_sources:
-            ## Only update AVR source mappings if AVR sources are being queried
-            return []
-
-        def clear_source_id(response: Response) -> list[Response]:
-            """Clear source ID before applying new source ID mapping."""
-            properties = response.properties
-            source_name = None
-            if (source_id := response.value) in properties.source_id_to_name:
-                source_name = properties.source_id_to_name[source_id]
-                properties.source_id_to_name.pop(source_id)
-            if source_name in properties.source_name_to_id:
-                properties.source_name_to_id.pop(source_name)
-
-        super().decode_response(response=response, params=params)
-        source_id, source_name = response.value
-        return [
-            response.clone(callback=clear_source_id, value=source_id),
-            response.clone(
-                base_property="source_name_to_id",
-                property_name=source_name,
-                value=source_id,
-            ),
-            response.clone(
-                base_property="source_id_to_name",
-                property_name=source_id,
-                value=source_name,
-            ),
-        ]
-
-    @classmethod
-    def code_to_value(cls, code: str) -> tuple[str, str]:
-        return code[:2], code[3:]
-
-
 class SystemMacAddress(CodeStrMap):
     """System MAC address."""
 
@@ -436,3 +413,39 @@ class AudioParameterWorking(CodeMapBase):
             queue_commands=[CommandItem("_delayed_query_basic", 2.5, queue_id=3)]
         )
         return [response]
+
+
+RESPONSE_DATA_AMP = [
+    ["PWR", Power, Zone.Z1],  # power
+    ["APR", Power, Zone.Z2],  # power
+    ["BPR", Power, Zone.Z3],  # power
+    ["ZEP", Power, Zone.HDZ],  # power
+    ["VOL", Volume, Zone.Z1],  # volume
+    ["ZV", Volume, Zone.Z2],  # volume
+    ["YV", Volume, Zone.Z3],  # volume
+    ["XV", Volume, Zone.HDZ],  # volume
+    ["FN", InputSource, Zone.Z1],  # source_id
+    ["Z2F", InputSource, Zone.Z2],  # source_id
+    ["Z3F", InputSource, Zone.Z3],  # source_id
+    ["ZEA", InputSource, Zone.HDZ],  # source_id
+    ["RGB", InputName, Zone.ALL],  # source_name_to_id
+    ["MUT", Mute, Zone.Z1],  # mute
+    ["Z2MUT", Mute, Zone.Z2],  # mute
+    ["Z3MUT", Mute, Zone.Z3],  # mute
+    ["HZMUT", Mute, Zone.HDZ],  # mute
+    ["SPK", SpeakerMode, Zone.ALL],  # amp.speaker_mode
+    ["HO", HdmiOut, Zone.ALL],  # amp.hdmi_out
+    ["HDO", Hdmi3Out, Zone.ALL],  # amp.hdmi3_out
+    ["HA", HdmiAudio, Zone.ALL],  # amp.hdmi_audio
+    ["PQ", Pqls, Zone.ALL],  # amp.pqls
+    ["SAA", Dimmer, Zone.ALL],  # amp.dimmer
+    ["SAB", SleepTime, Zone.ALL],  # amp.sleep_time
+    ["SAC", AmpMode, Zone.ALL],  # amp.mode
+    ["PKL", PanelLock, Zone.ALL],  # amp.panel_lock
+    ["RML", RemoteLock, Zone.ALL],  # amp.remote_lock
+    ["SVB", SystemMacAddress, Zone.ALL],  # amp.mac_addr
+    ["RGD", SystemAvrModel, Zone.ALL],  # amp.model
+    ["SSI", SystemSoftwareVersion, Zone.ALL],  # amp.software_version
+    ["AUA", AudioParameterProhibition, Zone.Z1],
+    ["AUB", AudioParameterWorking, Zone.Z1],
+]

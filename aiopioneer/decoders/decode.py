@@ -53,29 +53,7 @@ from .settings import (
     StandbyPassthrough,
     ExternalHdmiTrigger,
 )
-from .system import (
-    Power,
-    Volume,
-    InputSource,
-    Mute,
-    SpeakerMode,
-    HdmiOut,
-    Hdmi3Out,
-    HdmiAudio,
-    Pqls,
-    Dimmer,
-    SleepTime,
-    AmpMode,
-    PanelLock,
-    RemoteLock,
-    SpeakerSystem,
-    InputName,
-    SystemMacAddress,
-    SystemAvrModel,
-    SystemSoftwareVersion,
-    AudioParameterProhibition,
-    AudioParameterWorking,
-)
+from .system import RESPONSE_DATA_AMP
 from .tuner import FrequencyFM, FrequencyAM, Preset, FrequencyAMStep
 from .video import (
     VideoInt08Map,
@@ -92,43 +70,11 @@ from .video import (
 _LOGGER = logging.getLogger(__name__)
 
 RESPONSE_DATA = [
-    ## system
-    ["PWR", Power, Zone.Z1],  # power
-    ["APR", Power, Zone.Z2],  # power
-    ["BPR", Power, Zone.Z3],  # power
-    ["ZEP", Power, Zone.HDZ],  # power
-    ["VOL", Volume, Zone.Z1],  # volume
-    ["ZV", Volume, Zone.Z2],  # volume
-    ["YV", Volume, Zone.Z3],  # volume
-    ["XV", Volume, Zone.HDZ],  # volume
-    ["FN", InputSource, Zone.Z1],  # source_id
-    ["Z2F", InputSource, Zone.Z2],  # source_id
-    ["Z3F", InputSource, Zone.Z3],  # source_id
-    ["ZEA", InputSource, Zone.HDZ],  # source_id
-    ["MUT", Mute, Zone.Z1],  # mute
-    ["Z2MUT", Mute, Zone.Z2],  # mute
-    ["Z3MUT", Mute, Zone.Z3],  # mute
-    ["HZMUT", Mute, Zone.HDZ],  # mute
-    ["SPK", SpeakerMode, Zone.ALL],  # amp.speaker_mode
-    ["HO", HdmiOut, Zone.ALL],  # amp.hdmi_out
-    ["HDO", Hdmi3Out, Zone.ALL],  # amp.hdmi3_out
-    ["HA", HdmiAudio, Zone.ALL],  # amp.hdmi_audio
-    ["PQ", Pqls, Zone.ALL],  # amp.pqls
-    ["SAA", Dimmer, Zone.ALL],  # amp.dimmer
-    ["SAB", SleepTime, Zone.ALL],  # amp.sleep_time
-    ["SAC", AmpMode, Zone.ALL],  # amp.mode
-    ["PKL", PanelLock, Zone.ALL],  # amp.panel_lock
-    ["RML", RemoteLock, Zone.ALL],  # amp.remote_lock
-    ["SSF", SpeakerSystem, Zone.ALL],  # system.speaker_system
-    ["RGB", InputName, Zone.ALL],
-    ["SVB", SystemMacAddress, Zone.ALL],  # amp.mac_addr
-    ["RGD", SystemAvrModel, Zone.ALL],  # amp.model
-    ["SSI", SystemSoftwareVersion, Zone.ALL],  # amp.software_version
-    ["AUA", AudioParameterProhibition, Zone.Z1],
-    ["AUB", AudioParameterWorking, Zone.Z1],
+    *RESPONSE_DATA_AMP,
     ## settings
-    ["SSL", CodeBoolMap, Zone.ALL, "system", "home_menu_status"],
-    ["SSJ", McaccDiagnosticStatus, Zone.ALL, "system"],
+    ["SSF", SpeakerSystem, Zone.ALL],  # system.speaker_system
+    ["SSL", HomeMenuStatus, Zone.ALL, "system", "home_menu_status"],
+    ["SSJ", McaccDiagnosticStatusSummary, Zone.ALL, "system"],
     ["SUU", StandingWaveStatus, Zone.ALL, "system"],
     ["SUV", StandingWaveSwTrim, Zone.ALL],
     ["SSP", SurroundPosition, Zone.ALL, "system", "surround_position"],
