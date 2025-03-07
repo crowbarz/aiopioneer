@@ -1,4 +1,4 @@
-"""aiopioneer response decoders for AVR settings."""
+"""aiopioneer response decoders for AVR system responses."""
 
 from ..const import Zone
 from ..params import AVRParams, PARAM_SPEAKER_SYSTEM_MODES
@@ -677,7 +677,7 @@ class UserLock(CodeBoolMap):
     property_name = "user_lock"
 
 
-RESPONSE_DATA_SETTINGS = [
+RESPONSE_DATA_SYSTEM = [
     ["SSF", SpeakerSystem, Zone.ALL],  # system.speaker_system
     ["SSL", HomeMenuStatus, Zone.ALL],  # system.home_menu_status
     ["SSJ", McaccDiagnosticStatusSummary, Zone.ALL],  # system

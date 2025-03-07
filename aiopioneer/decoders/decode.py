@@ -36,7 +36,7 @@ from .dsp import (
 )
 from .information import AudioInformation, VideoInformation, DisplayText
 from .response import Response
-from .settings import RESPONSE_DATA_SETTINGS
+from .settings import RESPONSE_DATA_SYSTEM
 from .amp import RESPONSE_DATA_AMP
 from .tuner import FrequencyFM, FrequencyAM, Preset, FrequencyAMStep
 from .video import (
@@ -55,7 +55,7 @@ _LOGGER = logging.getLogger(__name__)
 
 RESPONSE_DATA = [
     *RESPONSE_DATA_AMP,
-    *RESPONSE_DATA_SETTINGS,
+    *RESPONSE_DATA_SYSTEM,
     ## audio
     ["CLV", ChannelLevel, Zone.Z1, "channel_levels"],
     ["ZGE", ChannelLevel, Zone.Z2, "channel_levels"],
