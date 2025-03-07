@@ -1,10 +1,12 @@
 """aiopioneer response decoders for AVR settings."""
 
 from ..const import Zone
-from ..params import AVRParams
+from ..params import AVRParams, PARAM_SPEAKER_SYSTEM_MODES
 from .code_map import (
     CodeDefault,
     CodeMapBase,
+    CodeMapSequence,
+    CodeBoolMap,
     CodeStrMap,
     CodeDictMap,
     CodeDictStrMap,
@@ -14,8 +16,12 @@ from .code_map import (
 from .response import Response
 
 
-class McaccDiagnosticStatus(CodeMapBase):
-    """MCACC diagnostic status."""
+class SpeakerSystem(CodeDictStrMap):
+    """Speaker system."""
+
+    friendly_name = "speaker system"
+    base_property = "system"
+    property_name = "speaker_system"
 
     @classmethod
     def decode_response(
@@ -23,41 +29,29 @@ class McaccDiagnosticStatus(CodeMapBase):
         response: Response,
         params: AVRParams,
     ) -> list[Response]:
-        """Response decoder for MCACC diagnostic status."""
-
-        def decode_child_response(
-            property_name: str, code: str, code_map: CodeMapBase
-        ) -> list[Response]:
-            """Decode a child response."""
-            child_response = response.clone(property_name=property_name, code=code)
-            return code_map.decode_response(child_response, params)
-
+        """Response decoder for speaker system."""
+        cls.code_map = params.get_param(PARAM_SPEAKER_SYSTEM_MODES, {})
+        super().decode_response(response=response, params=params)
         return [
-            *decode_child_response(
-                property_name="mcacc_diagnostic_current_measurement",
-                code=response.code[:2],
-                code_map=McaccDiagnosticCurrentMeasurement,
-            ),
-            *decode_child_response(
-                property_name="mcacc_diagnostic_total_measurement",
-                code=response.code[2:4],
-                code_map=McaccDiagnosticTotalMeasurement,
-            ),
-            *decode_child_response(
-                property_name="mcacc_diagnostic_status",
-                code=response.code[5],
-                code_map=McaccMeasurementStatus,
-            ),
-            *decode_child_response(
-                property_name="mcacc_diagnostic_error",
-                code=response.code[-1],
-                code_map=McaccMeasurementError,
-            ),
+            response,
+            response.clone(property_name="speaker_system_raw", value=response.code),
         ]
+
+
+class HomeMenuStatus(CodeBoolMap):
+    """Home menu status."""
+
+    friendly_name = "home menu status"
+    base_property = "system"
+    property_name = "home_menu_status"
 
 
 class McaccDiagnosticCurrentMeasurement(CodeIntMap):
     """MCACC diagnostic current measurement."""
+
+    friendly_name = "MCACC diagnostic current measurement"
+    base_property = "system"
+    property_name = "mcacc_diagnostic_current_measurement"
 
     code_zfill = 2
 
@@ -65,17 +59,29 @@ class McaccDiagnosticCurrentMeasurement(CodeIntMap):
 class McaccDiagnosticTotalMeasurement(CodeIntMap):
     """MCACC diagnostic total measurement."""
 
+    friendly_name = "MCACC diagnostic total measurement"
+    base_property = "system"
+    property_name = "mcacc_diagnostic_total_measurement"
+
     code_zfill = 2
 
 
-class McaccMeasurementStatus(CodeDictStrMap):
-    """MCACC measurement status."""
+class McaccDiagnosticStatus(CodeDictStrMap):
+    """MCACC diagnostic status."""
+
+    friendly_name = "MCACC diagnostic status"
+    base_property = "system"
+    property_name = "mcacc_diagnostic_status"
 
     code_map = {"0": "inactive", "1": "measuring"}
 
 
-class McaccMeasurementError(CodeDictStrMap):
+class McaccDiagnosticError(CodeDictStrMap):
     """MCACC measurement error."""
+
+    friendly_name = "MCACC diagnostic error"
+    base_property = "system"
+    property_name = "mcacc_diagnostic_error"
 
     code_map = {
         "0": "no error",
@@ -88,60 +94,29 @@ class McaccMeasurementError(CodeDictStrMap):
     }
 
 
-class StandingWaveStatus(CodeMapBase):
-    """Standing wave status."""
+class McaccDiagnosticStatusSummary(CodeMapSequence):
+    """MCACC diagnostic status summary."""
 
-    @classmethod
-    def decode_response(
-        cls,
-        response: Response,
-        params: AVRParams,
-    ) -> list[Response]:
-        """Response decoder for standing wave status."""
+    friendly_name = "MCACC diagnostic status summary"
+    base_property = "system"
+    property_name = "mcacc_diagnostic_status_summary"  # unused
 
-        def decode_child_response(
-            property_name: str, code: str, code_map: CodeMapBase
-        ) -> list[Response]:
-            """Decode a child response."""
-            child_response = response.clone(property_name=property_name, code=code)
-            return code_map.decode_response(child_response, params)
-
-        return [
-            *decode_child_response(
-                property_name="standing_wave_memory",
-                code=response.code[:2],
-                code_map=StandingWaveMemory,
-            ),
-            *decode_child_response(
-                property_name="standing_wave_filter_channel",
-                code=response.code[2],
-                code_map=StandingWaveFilterChannel,
-            ),
-            *decode_child_response(
-                property_name="standing_wave_filter_number",
-                code=response.code[3],
-                code_map=StandingWaveFilterNumber,
-            ),
-            *decode_child_response(
-                property_name="standing_wave_frequency",
-                code=response.code[4:6],
-                code_map=StandingWaveFrequency,
-            ),
-            *decode_child_response(
-                property_name="standing_wave_q",
-                code=response.code[6:8],
-                code_map=StandingWaveQ,
-            ),
-            *decode_child_response(
-                property_name="standing_wave_attenuator",
-                code=response.code[8:10],  ## NOTE: assumed
-                code_map=StandingWaveAttenuator,
-            ),
-        ]
+    code_map_sequence = [
+        McaccDiagnosticCurrentMeasurement,  # [:2]
+        McaccDiagnosticTotalMeasurement,  # [2:4]
+        1,
+        McaccDiagnosticStatus,  # [5]
+        -1,
+        McaccDiagnosticError,  # [-1]
+    ]
 
 
 class StandingWaveMemory(CodeStrMap):
     """Standing wave memory."""
+
+    friendly_name = "standing wave memory"
+    base_property = "system"
+    property_name = "standing_wave_memory"
 
     code_len = 2
 
@@ -149,17 +124,29 @@ class StandingWaveMemory(CodeStrMap):
 class StandingWaveFilterChannel(CodeStrMap):
     """Standing wave filter channel."""
 
+    friendly_name = "standing wave filter channel"
+    base_property = "system"
+    property_name = "standing_wave_filter_channel"
+
     code_len = 1
 
 
 class StandingWaveFilterNumber(CodeStrMap):
     """Standing wave filter number."""
 
+    friendly_name = "standing wave filter number"
+    base_property = "system"
+    property_name = "standing_wave_filter_number"
+
     code_len = 1
 
 
 class StandingWaveFrequency(CodeDictStrMap):
     """Standing wave frequency."""
+
+    friendly_name = "standing wave frequency"
+    base_property = "system"
+    property_name = "standing_wave_frequency"
 
     code_map = {
         "00": "63Hz",
@@ -201,6 +188,10 @@ class StandingWaveFrequency(CodeDictStrMap):
 class StandingWaveQ(CodeFloatMap):
     """Standing wave Q."""
 
+    friendly_name = "standing wave Q"
+    base_property = "system"
+    property_name = "standing_wave_q"
+
     code_zfill = 2
     value_offset = -2
     value_divider = 0.2
@@ -210,13 +201,38 @@ class StandingWaveQ(CodeFloatMap):
 class StandingWaveAttenuator(CodeFloatMap):
     """Standing wave attenuator."""
 
+    friendly_name = "standing wave attenuator"
+    base_property = "system"
+    property_name = "standing_wave_attenuator"
+
     code_zfill = 2
     value_divider = 0.5
     value_step = 0.5
 
 
+class StandingWaveStatus(CodeMapSequence):
+    """Standing wave status."""
+
+    friendly_name = "standing wave status"
+    base_property = "system"
+    property_name = "standing_wave_status"  # unused
+
+    code_map_sequence = [
+        StandingWaveMemory,  # [:2]
+        StandingWaveFilterChannel,  # [2]
+        StandingWaveFilterNumber,  # [3]
+        StandingWaveFrequency,  # [4:6]
+        StandingWaveQ,  # [6:8]
+        StandingWaveAttenuator,  # [8:10] NOTE: assumed
+    ]
+
+
 class StandingWaveSwTrim(CodeFloatMap):
     """Standing wave SW trim."""
+
+    friendly_name = "standing wave SW trim"
+    base_property = "system"
+    property_name = "standing_wave_sw_trim"  # unused
 
     code_zfill = 2
     code_offset = -50
@@ -240,17 +256,29 @@ class StandingWaveSwTrim(CodeFloatMap):
 class SurroundPosition(CodeDictStrMap):
     """Surround position."""
 
+    friendly_name = "surround position"
+    base_property = "system"
+    property_name = "surround_position"
+
     code_map = {"0": "side", "1": "rear"}
 
 
 class XOver(CodeDictStrMap):
     """X over."""
 
+    friendly_name = "X over"
+    base_property = "system"
+    property_name = "x_over"
+
     code_map = {"0": "50Hz", "1": "80Hz", "2": "100Hz", "3": "150Hz", "4": "200Hz"}
 
 
 class XCurve(CodeFloatMap):
     """X curve (1step=0.5)"""
+
+    friendly_name = "X curve"
+    base_property = "system"
+    property_name = "x_curve"
 
     code_zfill = 2
     value_min = -49.5
@@ -262,12 +290,21 @@ class XCurve(CodeFloatMap):
 class SbchProcessing(CodeDictStrMap):
     """SBch processing (THX Audio)."""
 
+    friendly_name = "SBch processing"
+    base_property = "system"
+    property_name = "sbch_processing"
+
     code_map = {"0": "auto", "1": "manual"}
 
 
 class SpeakerSettings(CodeDictMap):
     """Speaker setting."""
 
+    friendly_name = "speaker setting"
+    base_property = "system"
+    property_name = "speaker_setting"  # unused
+
+    code_len = 3
     code_map = {
         "05": {
             "0": "small*2",
@@ -300,6 +337,11 @@ class SpeakerSettings(CodeDictMap):
 class McaccChannelLevel(CodeFloatMap):
     """MCACC channel level."""
 
+    friendly_name = "MCACC channel level"
+    base_property = "system"
+    property_name = "mcacc_channel_level"  # unused
+
+    code_zfill = 7
     code_offset = -50
     value_divider = 0.5
 
@@ -322,6 +364,11 @@ class McaccChannelLevel(CodeFloatMap):
 class McaccSpeakerDistance(CodeFloatMap):
     """MCACC speaker distance."""
 
+    friendly_name = "MCACC speaker distance"
+    base_property = "system"
+    property_name = "mcacc_speaker_distance"  # unused
+
+    code_zfill = 12
     value_divider = 0.01
 
     @classmethod
@@ -355,10 +402,17 @@ class McaccSpeakerDistance(CodeFloatMap):
         return f"{value_ft}'.{value_in}{value_half_in}\""
 
 
-class InputLevelAdjust(CodeFloatMap):
-    """Input level adjust."""
+class InputLevel(CodeFloatMap):
+    """Input level."""
 
+    friendly_name = "input level"
+    base_property = "system"
+    property_name = "input_level"  # unused
+
+    code_zfill = 2
     code_offset = -50
+    value_min = -12
+    value_max = 12
     value_divider = 0.5
 
     @classmethod
@@ -367,7 +421,7 @@ class InputLevelAdjust(CodeFloatMap):
         response: Response,
         params: AVRParams,
     ) -> list[Response]:
-        """Response decoder for input level adjust."""
+        """Response decoder for input level."""
         source = response.code[0:2]
         response.code = response.code[2:4]
         response.property_name = f"input_level.{source}"
@@ -376,8 +430,36 @@ class InputLevelAdjust(CodeFloatMap):
     ## NOTE: value_to_code unimplemented
 
 
+class ThxUltraselect2(CodeBoolMap):
+    """thx ultra/select2."""
+
+    friendly_name = "THX ultra/select2"
+    base_property = "system"
+    property_name = "thx_ultraselect2"
+
+
+class BoundaryGainCompression(CodeBoolMap):
+    """boundary gain compression."""
+
+    friendly_name = "boundary gain"
+    base_property = "system"
+    property_name = "boundary_gain_compression"
+
+
+class ReEqualization(CodeBoolMap):
+    """re-equalization."""
+
+    friendly_name = "re-equalization"
+    base_property = "system"
+    property_name = "re_equalization"
+
+
 class OsdLanguage(CodeDictStrMap):
     """OSD language."""
+
+    friendly_name = "OSD language"
+    base_property = "system"
+    property_name = "osd_language"
 
     code_map = {
         "00": "English",
@@ -393,8 +475,60 @@ class OsdLanguage(CodeDictStrMap):
     }
 
 
-class PortNumbers(CodeMapBase):
-    """Enabled TCP port numbers."""
+class NetworkDhcp(CodeBoolMap):
+    """Network DHCP."""
+
+    friendly_name = "network dhcp"
+    base_property = "system"
+    property_name = "network_dhcp"
+
+
+class NetworkProxyActive(CodeBoolMap):
+    """Network proxy active."""
+
+    friendly_name = "network proxy active"
+    base_property = "system"
+    property_name = "network_proxy_active"
+
+
+class NetworkStandby(CodeBoolMap):
+    """Network standby."""
+
+    friendly_name = "network standby"
+    base_property = "system"
+    property_name = "network_standby"
+
+
+class FriendlyName(CodeStrMap):
+    """Friendly name."""
+
+    friendly_name = "friendly name"
+    base_property = "system"
+    property_name = "friendly_name"
+
+
+class ParentalLock(CodeBoolMap):
+    """Parental lock."""
+
+    friendly_name = "parental lock"
+    base_property = "system"
+    property_name = "parental_lock"
+
+
+class ParentalLockPassword(CodeStrMap):
+    """Parental lock password."""
+
+    friendly_name = "parental lock password"
+    base_property = "system"
+    property_name = "parental_lock_password"
+
+
+class IpControlPorts(CodeMapBase):
+    """Enabled IP control ports."""
+
+    friendly_name = "enabled IP control ports"
+    base_property = "system"
+    property_name = "ip_control_port"  # unused
 
     @classmethod
     def decode_response(
@@ -402,7 +536,7 @@ class PortNumbers(CodeMapBase):
         response: Response,
         params: AVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
-        """Response decoder for enabled TCP port numbers."""
+        """Response decoder for enabled IP control ports."""
 
         ports = [int(response.code[i : i + 5]) for i in range(0, len(response.code), 5)]
 
@@ -418,8 +552,44 @@ class PortNumbers(CodeMapBase):
     ## NOTE: value_to_code unimplemented
 
 
+class HdmiControl(CodeBoolMap):
+    """HDMI control."""
+
+    friendly_name = "HDMI control"
+    base_property = "system"
+    property_name = "hdmi_control"
+
+
+class HdmiControlMode(CodeBoolMap):
+    """HDMI control mode."""
+
+    friendly_name = "HDMI control mode"
+    base_property = "system"
+    property_name = "hdmi_control_mode"
+
+
+class HdmiArc(CodeBoolMap):
+    """HDMI arc."""
+
+    friendly_name = "HDMI arc"
+    base_property = "system"
+    property_name = "hdmi_arc"
+
+
+class PqlsForBackup(CodeBoolMap):
+    """PQLS for backup."""
+
+    friendly_name = "PQLS for backup"
+    base_property = "system"
+    property_name = "pqls_for_backup"
+
+
 class StandbyPassthrough(CodeDictStrMap):
-    """Standby Passthrough."""
+    """Standby passthrough."""
+
+    friendly_name = "standby passthrough"
+    base_property = "system"
+    property_name = "standby_passthrough"
 
     code_map = {
         "00": "off",
@@ -439,6 +609,10 @@ class StandbyPassthrough(CodeDictStrMap):
 class ExternalHdmiTrigger(CodeDictStrMap):
     """External HDMI trigger."""
 
+    friendly_name = "external HDMI trigger"
+    base_property = "system"
+    property_name = "external_hdmi_trigger"
+
     code_map = {
         "0": "off",
         "1": "HDMI OUT 1",
@@ -457,3 +631,87 @@ class ExternalHdmiTrigger(CodeDictStrMap):
 
         response.update_zones = {Zone.ALL}
         return super().decode_response(response=response, params=params)
+
+
+class ExternalHdmiTrigger1(ExternalHdmiTrigger):
+    """External HDMI trigger 1."""
+
+    property_name = "external_hdmi_trigger_1"
+
+
+class ExternalHdmiTrigger2(ExternalHdmiTrigger):
+    """External HDMI trigger 2."""
+
+    property_name = "external_hdmi_trigger_2"
+
+
+class SpeakerBLink(CodeBoolMap):
+    """Speaker B link."""
+
+    friendly_name = "speaker B link"
+    base_property = "system"
+    property_name = "speaker_b_link"
+
+
+class OsdOverlay(CodeBoolMap):
+    """OSD overlay."""
+
+    friendly_name = "OSD overlay"
+    base_property = "system"
+    property_name = "osd_overlay"
+
+
+class AdditionalService(CodeBoolMap):
+    """Additional service."""
+
+    friendly_name = "additional service"
+    base_property = "system"
+    property_name = "additional_service"
+
+
+class UserLock(CodeBoolMap):
+    """User lock."""
+
+    friendly_name = "user lock"
+    base_property = "system"
+    property_name = "user_lock"
+
+
+RESPONSE_DATA_SETTINGS = [
+    ["SSF", SpeakerSystem, Zone.ALL],  # system.speaker_system
+    ["SSL", HomeMenuStatus, Zone.ALL],  # system.home_menu_status
+    ["SSJ", McaccDiagnosticStatusSummary, Zone.ALL],  # system
+    ["SUU", StandingWaveStatus, Zone.ALL],  # system
+    ["SUV", StandingWaveSwTrim, Zone.ALL],  # system
+    ["SSP", SurroundPosition, Zone.ALL],  # system.surround_position
+    ["SSQ", XOver, Zone.ALL],  # system.x_over
+    ["SST", XCurve, Zone.ALL],  # system.x_curve
+    ["SSU", CodeBoolMap, Zone.ALL],  # system.loudness_plus
+    ["SSV", SbchProcessing, Zone.ALL],  # system.sbch_processing
+    ["SSG", SpeakerSettings, Zone.ALL],  # system.speaker_setting
+    ["SSR", McaccChannelLevel, Zone.ALL],  # system.mcacc_channel_level
+    ["SSS", McaccSpeakerDistance, Zone.ALL],  # system.mcacc_speaker_distance
+    ["ILA", InputLevel, Zone.ALL],  # system.input_level
+    ["SSW", ThxUltraselect2, Zone.ALL],  # system.thx_ultraselect2
+    ["SSX", BoundaryGainCompression, Zone.ALL],  # system.boundary_gain_compression
+    ["SSB", ReEqualization, Zone.ALL],  # system.re_equalization
+    ["SSE", OsdLanguage, Zone.ALL],  # system.osd_language
+    ["STA", NetworkDhcp, Zone.ALL],  # system.network_dhcp
+    ["STG", NetworkProxyActive, Zone.ALL],  # system.network_proxy_active
+    ["STJ", NetworkStandby, Zone.ALL],  # system.network_standby
+    ["SSO", FriendlyName, Zone.ALL],  # system.friendly_name
+    ["STK", ParentalLock, Zone.ALL],  # system.parental_lock
+    ["STL", ParentalLockPassword, Zone.ALL],  # system.parental_lock_password
+    ["SUM", IpControlPorts, Zone.ALL],  # system.ip_control_port
+    ["STQ", HdmiControl, Zone.ALL],  # system.hdmi_control
+    ["STR", HdmiControlMode, Zone.ALL],  # system.hdmi_control_mode
+    ["STT", HdmiArc, Zone.ALL],  # system.hdmi_arc
+    ["SVL", PqlsForBackup, Zone.ALL],  # system.pqls_for_backup
+    ["STU", StandbyPassthrough, Zone.ALL],  # system.standby_passthrough
+    ["STV", ExternalHdmiTrigger1, Zone.Z1],  # system.external_hdmi_trigger_1
+    ["STW", ExternalHdmiTrigger2, Zone.Z2],  # system.external_hdmi_trigger_2
+    ["STX", SpeakerBLink, Zone.ALL],  # system.speaker_b_link
+    ["SVA", OsdOverlay, Zone.ALL],  # system.osd_overlay
+    ["ADS", AdditionalService, Zone.ALL],  # system.additional_service
+    ["SUT", UserLock, Zone.ALL],  # system.user_lock
+]

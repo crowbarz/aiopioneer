@@ -36,23 +36,7 @@ from .dsp import (
 )
 from .information import AudioInformation, VideoInformation, DisplayText
 from .response import Response
-from .settings import (
-    McaccDiagnosticStatus,
-    StandingWaveStatus,
-    StandingWaveSwTrim,
-    SurroundPosition,
-    XOver,
-    XCurve,
-    SbchProcessing,
-    SpeakerSettings,
-    McaccChannelLevel,
-    McaccSpeakerDistance,
-    InputLevelAdjust,
-    OsdLanguage,
-    PortNumbers,
-    StandbyPassthrough,
-    ExternalHdmiTrigger,
-)
+from .settings import RESPONSE_DATA_SETTINGS
 from .system import RESPONSE_DATA_AMP
 from .tuner import FrequencyFM, FrequencyAM, Preset, FrequencyAMStep
 from .video import (
@@ -71,43 +55,7 @@ _LOGGER = logging.getLogger(__name__)
 
 RESPONSE_DATA = [
     *RESPONSE_DATA_AMP,
-    ## settings
-    ["SSF", SpeakerSystem, Zone.ALL],  # system.speaker_system
-    ["SSL", HomeMenuStatus, Zone.ALL, "system", "home_menu_status"],
-    ["SSJ", McaccDiagnosticStatusSummary, Zone.ALL, "system"],
-    ["SUU", StandingWaveStatus, Zone.ALL, "system"],
-    ["SUV", StandingWaveSwTrim, Zone.ALL],
-    ["SSP", SurroundPosition, Zone.ALL, "system", "surround_position"],
-    ["SSQ", XOver, Zone.ALL, "system", "x_over"],
-    ["SST", XCurve, Zone.ALL, "system", "x_curve"],
-    ["SSU", CodeBoolMap, Zone.ALL, "system", "loudness_plus"],
-    ["SSV", SbchProcessing, Zone.ALL, "system", "sbch_processing"],
-    ["SSG", SpeakerSettings, Zone.ALL, "system", "speaker_setting"],
-    ["SSR", McaccChannelLevel, Zone.ALL, "system", "mcacc_channel_level"],
-    ["SSS", McaccSpeakerDistance, Zone.ALL, "system", "mcacc_speaker_distance"],
-    ["ILA", InputLevelAdjust, Zone.ALL, "system", "input_level"],
-    ["SSW", CodeBoolMap, Zone.ALL, "system", "thx_ultraselect2"],
-    ["SSX", CodeBoolMap, Zone.ALL, "system", "boundary_gain_compression"],
-    ["SSB", CodeBoolMap, Zone.ALL, "system", "re_equalization"],
-    ["SSE", OsdLanguage, Zone.ALL, "system", "osd_language"],
-    ["STA", CodeBoolMap, Zone.ALL, "system", "network_dhcp"],
-    ["STG", CodeBoolMap, Zone.ALL, "system", "network_proxy_active"],
-    ["STJ", CodeBoolMap, Zone.ALL, "system", "network_standby"],
-    ["SSO", CodeMapBase, Zone.ALL, "system", "friendly_name"],
-    ["STK", CodeBoolMap, Zone.ALL, "system", "parental_lock"],
-    ["STL", CodeMapBase, Zone.ALL, "system", "parental_lock_password"],
-    ["SUM", PortNumbers, Zone.ALL, "system", "ip_control_port"],
-    ["STQ", CodeBoolMap, Zone.ALL, "system", "hdmi_control"],
-    ["STR", CodeBoolMap, Zone.ALL, "system", "hdmi_control_mode"],
-    ["STT", CodeBoolMap, Zone.ALL, "system", "hdmi_arc"],
-    ["SVL", CodeBoolMap, Zone.ALL, "system", "pqls_for_backup"],
-    ["STU", StandbyPassthrough, Zone.ALL, "system", "standby_passthrough"],
-    ["STV", ExternalHdmiTrigger, Zone.Z1, "system", "external_hdmi_trigger_1"],
-    ["STW", ExternalHdmiTrigger, Zone.Z2, "system", "external_hdmi_trigger_2"],
-    ["STX", CodeBoolMap, Zone.ALL, "system", "speaker_b_link"],
-    ["SVA", CodeBoolMap, Zone.ALL, "system", "osd_overlay"],
-    ["ADS", CodeBoolMap, Zone.ALL, "system", "additional_service"],
-    ["SUT", CodeBoolMap, Zone.ALL, "system", "user_lock"],
+    *RESPONSE_DATA_SETTINGS,
     ## audio
     ["CLV", ChannelLevel, Zone.Z1, "channel_levels"],
     ["ZGE", ChannelLevel, Zone.Z2, "channel_levels"],
