@@ -37,7 +37,7 @@ from .dsp import (
 from .information import AudioInformation, VideoInformation, DisplayText
 from .response import Response
 from .settings import RESPONSE_DATA_SETTINGS
-from .system import RESPONSE_DATA_AMP
+from .amp import RESPONSE_DATA_AMP
 from .tuner import FrequencyFM, FrequencyAM, Preset, FrequencyAMStep
 from .video import (
     VideoInt08Map,

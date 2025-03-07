@@ -25,7 +25,7 @@ from .decoders.dsp import (
     DspVirtualDepth,
     DspRenderingMode,
 )
-from .decoders.system import (
+from .decoders.amp import (
     SpeakerMode,
     HdmiOut,
     Hdmi3Out,

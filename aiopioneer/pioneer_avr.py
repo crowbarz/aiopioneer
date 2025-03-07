@@ -59,7 +59,7 @@ from .decoders.audio import (
 )
 from .decoders.code_map import CodeMapBase
 from .decoders.decode import process_raw_response
-from .decoders.system import Volume
+from .decoders.amp import Volume
 from .decoders.tuner import FrequencyAM, FrequencyFM, Preset
 from .properties import AVRProperties
 from .util import cancel_task
