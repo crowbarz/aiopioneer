@@ -103,16 +103,60 @@ class CodeMapBase:
 class CodeMapSequence(CodeMapBase):
     """Map AVR codes to a sequence of code maps."""
 
-    code_map_sequence: list[tuple[CodeMapBase, str] | int] = []
+    code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int] = []
     code_fillchar = "_"
 
     @classmethod
-    def get_len(cls) -> int:
-        return sum([child_map.get_len() for child_map, _ in cls.code_map_sequence])
+    def get_len(
+        cls,
+        code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int] = None,
+    ) -> int:
+
+        def get_len_item(
+            child_item: tuple[CodeMapBase, str] | CodeMapBase | int,
+        ) -> str:
+            if isinstance(child_item, int):  ## item is gap length
+                if child_item < 0:
+                    raise RuntimeError(f"len not available for {cls.get_name()}")
+                return child_item
+            if isinstance(child_item, tuple):  ## item is (code_map, property)
+                child_map, _ = child_item
+            elif issubclass(child_item, CodeMapBase):
+                child_map = child_item
+            else:
+                raise RuntimeError(
+                    f"invalid sequence item {child_item} for {cls.get_name()}"
+                )
+            return child_map.get_len()
+
+        if code_map_sequence is None:
+            code_map_sequence = cls.code_map_sequence
+        return sum(get_len_item(child_item) for child_item in code_map_sequence)
 
     @classmethod
-    def get_nargs(cls) -> int:
-        return sum([child_map.get_nargs() for child_map, _ in cls.code_map_sequence])
+    def get_nargs(
+        cls,
+        code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int] = None,
+    ) -> int:
+
+        def get_nargs_item(
+            child_item: tuple[CodeMapBase, str] | CodeMapBase | int,
+        ) -> str:
+            if isinstance(child_item, int):  ## item is gap length
+                return 0
+            if isinstance(child_item, tuple):  ## item is (code_map, property)
+                child_map, _ = child_item
+            elif issubclass(child_item, CodeMapBase):
+                child_map = child_item
+            else:
+                raise RuntimeError(
+                    f"invalid sequence item {child_item} for {cls.get_name()}"
+                )
+            return child_map.get_nargs()
+
+        if code_map_sequence is None:
+            code_map_sequence = cls.code_map_sequence
+        return sum(get_nargs_item(child_item) for child_item in code_map_sequence)
 
     @classmethod
     def value_to_code(cls, value) -> str:
@@ -130,32 +174,41 @@ class CodeMapSequence(CodeMapBase):
         zone: Zone,
         params: AVRParams,
         properties: AVRProperties,
-        code_map_sequence: list[tuple[CodeMapBase, str] | int] = None,
+        code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int] = None,
     ) -> str:
         if code_map_sequence is None:
             code_map_sequence = cls.code_map_sequence
 
-        def parse_child_item(child_item: tuple[CodeMapBase, str] | int) -> str:
-            if isinstance(child_item, tuple):  ## item is (code_map, property)
-                child_map, _ = child_item
-                child_nargs = child_map.get_nargs()
-                child_map.check_args(args, extra_args=True)
-                child_code = child_map.parse_args(
-                    command=command,
-                    args=args[:child_nargs],
-                    zone=zone,
-                    params=params,
-                    properties=properties,
-                )
-                del args[:child_nargs]
-                return child_code
-            elif isinstance(child_item, int):  ## item is gap
+        def parse_child_map(child_map: CodeMapBase, args: list) -> str:
+            child_map.check_args(args, extra_args=True)
+            return child_map.parse_args(
+                command=command,
+                args=args,
+                zone=zone,
+                params=params,
+                properties=properties,
+            )
+
+        def parse_child_item(
+            child_item: tuple[CodeMapBase, str] | CodeMapBase | int,
+        ) -> str:
+            if isinstance(child_item, int):  ## item is gap length
+                if child_item < 0:
+                    return ""
                 child_len = child_item
                 return "".ljust(child_len, cls.code_fillchar)
+            if isinstance(child_item, tuple):  ## item is (code_map, property)
+                child_map, _ = child_item
+            elif issubclass(child_item, CodeMapBase):
+                child_map = child_item
             else:
                 raise RuntimeError(
                     f"invalid sequence item {child_item} for {cls.get_name()}"
                 )
+            child_nargs = child_map.get_nargs()
+            child_code = parse_child_map(child_map=child_map, args=args[:child_nargs])
+            del args[:child_nargs]
+            return child_code
 
         return "".join(
             [parse_child_item(child_item) for child_item in code_map_sequence]
@@ -166,7 +219,7 @@ class CodeMapSequence(CodeMapBase):
         cls,
         response: Response,
         params: AVRParams,  # pylint: disable=unused-argument
-        code_map_sequence: list[tuple[CodeMapBase, str]] = None,
+        code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int] = None,
     ) -> list[Response]:
         code_index = 0
         responses = []
@@ -174,22 +227,28 @@ class CodeMapSequence(CodeMapBase):
             code_map_sequence = cls.code_map_sequence
 
         for child_item in code_map_sequence:
+            if isinstance(child_item, int):  ## item is gap length
+                if (child_len := child_item) < 0:
+                    code_index = len(response.code) + child_len
+                code_index += child_len
+                continue
+            child_property_name = None
             if isinstance(child_item, tuple):  ## item is (code_map, property)
                 child_map, child_property_name = child_item
-                child_len = child_map.get_len()
-                child_code = response.code[code_index : code_index + child_len]
-                child_response = response.clone(
-                    code=child_code, property_name=child_property_name
-                )
-                responses.extend(
-                    child_map.decode_response(response=child_response, params=params)
-                )
-            elif isinstance(child_item, int):  ## item is gap
-                child_len = child_item
+            if issubclass(child_item, CodeMapBase):  ## item is code_map
+                child_map = child_item
             else:
                 raise RuntimeError(
                     f"invalid sequence item {child_item} for {cls.get_name()}"
                 )
+            child_len = child_map.get_len()
+            child_code = response.code[code_index : code_index + child_len]
+            child_response = response.clone(
+                code=child_code, property_name=child_property_name
+            )
+            responses.extend(
+                child_map.decode_response(response=child_response, params=params)
+            )
             code_index += child_len
 
         return responses
@@ -267,10 +326,13 @@ class CodeDictMap(CodeMapBase):
     """Map AVR codes to generic map of values."""
 
     code_map: dict[str, Any] = {}
+    code_len: int = None
 
     @classmethod
     def get_len(cls) -> int:
         ## NOTE: assumes that all codes in dict are of the same length
+        if cls.code_len is not None:
+            return cls.code_len
         return len(next(k for k in cls.code_map if k != CodeDefault()))
 
     @classmethod
