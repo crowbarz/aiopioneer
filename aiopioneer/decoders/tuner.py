@@ -3,7 +3,7 @@
 from ..command_queue import CommandItem
 from ..const import TunerBand
 from ..params import AVRParams
-from .code_map import CodeMapBase, CodeIntMap, CodeFloatMap
+from .code_map import CodeStrMap, CodeIntMap, CodeFloatMap
 from .response import Response
 
 
@@ -118,7 +118,7 @@ class FrequencyAM(CodeIntMap):
         ]
 
 
-class Preset(CodeMapBase):
+class Preset(CodeStrMap):
     """Tuner preset."""
 
     cached_preset: tuple[str, int] = []

@@ -4,7 +4,6 @@ from ..const import Zone
 from ..params import AVRParams, PARAM_SPEAKER_SYSTEM_MODES
 from .code_map import (
     CodeDefault,
-    CodeMapBase,
     CodeMapSequence,
     CodeBoolMap,
     CodeStrMap,
@@ -523,7 +522,7 @@ class ParentalLockPassword(CodeStrMap):
     property_name = "parental_lock_password"
 
 
-class IpControlPorts(CodeMapBase):
+class IpControlPorts(CodeStrMap):
     """Enabled IP control ports."""
 
     friendly_name = "enabled IP control ports"

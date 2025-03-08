@@ -118,7 +118,7 @@ class Volume(CodeIntMap):
         return cls.value_to_code_bounded(value=volume, value_max=value_max)
 
 
-class InputSource(CodeMapBase):
+class InputSource(CodeStrMap):
     """Zone input source."""
 
     friendly_name = "zone input source"
@@ -165,7 +165,7 @@ class InputSource(CodeMapBase):
         ]
 
 
-class InputName(CodeMapBase):
+class InputName(CodeStrMap):
     """Input name."""
 
     friendly_name = "input name"
@@ -379,7 +379,7 @@ class SystemSoftwareVersion(CodeStrMap):
         return value
 
 
-class AudioParameterProhibition(CodeMapBase):
+class AudioParameterProhibition(CodeStrMap):
     """Audio parameter prohibition."""
 
     friendly_name = "audio parameter prohibition"
@@ -397,7 +397,7 @@ class AudioParameterProhibition(CodeMapBase):
         return [response]
 
 
-class AudioParameterWorking(CodeMapBase):
+class AudioParameterWorking(CodeStrMap):
     """Audio parameter working."""
 
     friendly_name = "audio parameter working"
