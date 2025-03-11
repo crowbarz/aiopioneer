@@ -389,7 +389,7 @@ class RenderingMode(CodeDictStrMap):
     code_map = {"0": "object base", "1": "channel base"}
 
 
-RESPONSE_MAP_DSP = [
+RESPONSE_DATA_DSP = [
     ["MC", McaccMemorySet, Zone.ALL],  # dsp.mcacc_memory_set
     ["IS", PhaseControl, Zone.ALL],  # dsp.phase_control
     ["ATE", PhaseControlPlus, Zone.ALL],  # dsp.phase_control_plus

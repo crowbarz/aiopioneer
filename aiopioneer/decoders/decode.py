@@ -11,7 +11,7 @@ from .code_map import (
     CodeMapBase,
     CodeBoolMap,
 )
-from .dsp import RESPONSE_MAP_DSP
+from .dsp import RESPONSE_DATA_DSP
 from .information import AudioInformation, VideoInformation, DisplayText
 from .response import Response
 from .settings import RESPONSE_DATA_SYSTEM
@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 RESPONSE_DATA = [
     *RESPONSE_DATA_AMP,
     *RESPONSE_DATA_SYSTEM,
-    *RESPONSE_MAP_DSP,
+    *RESPONSE_DATA_DSP,
     ## audio
     ["CLV", ChannelLevel, Zone.Z1, "channel_levels"],
     ["ZGE", ChannelLevel, Zone.Z2, "channel_levels"],
