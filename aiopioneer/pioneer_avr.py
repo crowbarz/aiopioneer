@@ -52,7 +52,6 @@ from .params import (
 )
 from .decoders.audio import (
     ChannelLevel,
-    ListeningMode,
     AvailableListeningMode,
     ToneDb,
     ToneMode,
@@ -97,7 +96,7 @@ class PioneerAVR(AVRConnection):
         self._zone_callback: dict[Zone, Callable[[None], None]] = {}
 
         # Register params update callbacks
-        self.params.register_update_callback(self.update_listening_modes)
+        self.params.register_update_callback(self.properties.update_listening_modes)
 
     ## Connection/disconnection
     async def on_connect(self) -> None:
@@ -106,7 +105,7 @@ class PioneerAVR(AVRConnection):
         async with self.properties.command_queue.startup_lock:
             if await self.query_device_model() is None:
                 raise AVRConnectProtocolError
-            self.update_listening_modes()
+            self.properties.update_listening_modes()
             await self._updater_schedule()
             await asyncio.sleep(0)  # yield to updater task
 
@@ -534,7 +533,7 @@ class PioneerAVR(AVRConnection):
                 ]:
                     await self.send_command(cmd, ignore_error=True)
             case "_update_listening_modes":
-                self.update_listening_modes()
+                self.properties.update_listening_modes()
             case "_calculate_am_frequency_step":
                 await asyncio.sleep(2.5)  ## TODO: parameterise
                 await self._calculate_am_frequency_step()
@@ -649,15 +648,9 @@ class PioneerAVR(AVRConnection):
         """Unmute AVR."""
         await self.send_command("mute_off", zone=self._check_zone(zone))
 
-    def update_listening_modes(self) -> None:
-        """Update list of valid listening modes for current input source."""
-        self.properties.update_listening_modes()
-        ListeningMode.code_map = self.properties.listening_modes_all
-        AvailableListeningMode.code_map = self.properties.available_listening_modes
-
     def get_listening_modes(self) -> dict[str, str] | None:
         """Return dict of valid listening modes and names for Zone 1."""
-        return AvailableListeningMode.values()
+        return self.properties.available_listening_modes.values()
 
     async def select_listening_mode(
         self, mode_name: str = None, mode_id: str = None
@@ -665,7 +658,7 @@ class PioneerAVR(AVRConnection):
         """Set the listening mode using the predefined list of options in params."""
 
         if mode_name and mode_id is None:
-            mode_id = AvailableListeningMode(mode_name)
+            mode_id = AvailableListeningMode(mode_name, properties=self.properties)
         if mode_id not in self.properties.available_listening_modes:
             raise ValueError(f"listening mode {mode_id} is not available")
         await self.send_command("set_listening_mode", prefix=mode_id)
