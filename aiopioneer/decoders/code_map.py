@@ -29,8 +29,8 @@ class CodeMapBase:
     base_property = None
     property_name = None
 
-    def __new__(cls, value):
-        return cls.value_to_code(value)
+    def __new__(cls, value, **kwargs):
+        return cls.value_to_code(value, **kwargs)
 
     def __class_getitem__(cls, code: str):
         return cls.code_to_value(code)
@@ -63,6 +63,14 @@ class CodeMapBase:
             raise ValueError(f"{nargs} argument{plural} expected for {cls.get_name()}")
 
     @classmethod
+    def set_response_properties(cls, response: Response):
+        """Set response properties from code map class if defined."""
+        if cls.base_property is not None:
+            response.update(base_property=cls.base_property)
+        if cls.property_name is not None:
+            response.update(property_name=cls.property_name)
+
+    @classmethod
     def value_to_code(cls, value) -> str:
         """Convert value to code."""
         raise NotImplementedError(f"value_to_code unsupported for {cls.get_name()}")
@@ -92,10 +100,7 @@ class CodeMapBase:
         params: AVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Decode a response."""
-        if cls.base_property is not None:
-            response.update(base_property=cls.base_property)
-        if cls.property_name is not None:
-            response.update(property_name=cls.property_name)
+        cls.set_response_properties(response)
         response.update(value=cls.code_to_value(response.code))
         return [response]
 
@@ -373,10 +378,7 @@ class CodeDynamicDictMap(CodeMapBase):
         code_map: list[tuple[CodeMapBase, str] | CodeMapBase | int],
     ) -> list[Response]:
         """Decode a response using a code map."""
-        if cls.base_property is not None:
-            response.update(base_property=cls.base_property)
-        if cls.property_name is not None:
-            response.update(property_name=cls.property_name)
+        cls.set_response_properties(response)
         response.update(
             value=cls.code_to_value_dynamic(response.code, code_map=code_map)
         )
