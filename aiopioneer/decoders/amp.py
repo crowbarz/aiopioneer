@@ -12,7 +12,6 @@ from ..params import (
 )
 from ..properties import AVRProperties
 from .code_map import (
-    CodeMapBase,
     CodeMapHasProperty,
     CodeBoolMap,
     CodeStrMap,
@@ -98,6 +97,19 @@ class Volume(CodeIntMap):
     # value_max: 185 for Main Zone, 81 for other Zones
 
     @classmethod
+    def value_to_code(
+        cls, value: str, zone: Zone = None, properties: AVRProperties = None
+    ) -> str:
+        if not isinstance(zone, Zone):
+            raise RuntimeError(f"Zone required for {cls.get_name()}")
+        if not isinstance(properties, AVRProperties):
+            raise RuntimeError(f"AVRProperties required for {cls.get_name()}")
+        if (value_max := properties.max_volume.get(zone)) is None:
+            raise ValueError(f"volume for {zone.full_name} is not available")
+        code = cls.value_to_code_bounded(value=value, value_max=value_max)
+        return code.zfill(3 if zone is Zone.Z1 else 2)
+
+    @classmethod
     def parse_args(
         cls,
         command: str,  # pylint: disable=unused-argument
@@ -107,15 +119,7 @@ class Volume(CodeIntMap):
         properties: AVRProperties,
     ) -> str:
         cls.check_args(args)
-        code = cls.check_volume(volume=args[0], zone=zone, properties=properties)
-        return code.zfill(3 if zone is Zone.Z1 else 2)
-
-    @classmethod
-    def check_volume(cls, volume: int, zone: Zone, properties: AVRProperties):
-        """Check max volume for zone."""
-        if (value_max := properties.max_volume.get(zone)) is None:
-            raise ValueError(f"volume for {zone.full_name} is not available")
-        return cls.value_to_code_bounded(value=volume, value_max=value_max)
+        return cls.value_to_code(value=args[0], zone=zone, properties=properties)
 
 
 class InputSource(CodeStrMap):

@@ -26,6 +26,7 @@ from .decoders.dsp import (
     RenderingMode,
 )
 from .decoders.amp import (
+    Volume,
     SpeakerMode,
     HdmiOut,
     Hdmi3Out,
@@ -87,6 +88,7 @@ PIONEER_COMMANDS: dict[str, dict[Zone | str, str | list[str] | list[CodeMapBase]
         Zone.Z2: ["ZV", "ZV"],
         Zone.Z3: ["YV", "YV"],
         Zone.HDZ: ["HZV", "XV"],
+        "args": [Volume],
     },
     "mute_on": {
         Zone.Z1: ["MO", "MUT"],
