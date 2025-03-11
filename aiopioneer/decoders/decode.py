@@ -6,7 +6,7 @@ from ..const import Zone
 from ..exceptions import AVRResponseDecodeError
 from ..params import AVRParams
 from ..properties import AVRProperties
-from .audio import ChannelLevel, ListeningMode, ToneMode, ToneDb
+from .audio import RESPONSE_DATA_AUDIO
 from .code_map import (
     CodeMapBase,
     CodeBoolMap,
@@ -35,17 +35,7 @@ RESPONSE_DATA = [
     *RESPONSE_DATA_AMP,
     *RESPONSE_DATA_SYSTEM,
     *RESPONSE_DATA_DSP,
-    ## audio
-    ["CLV", ChannelLevel, Zone.Z1, "channel_levels"],
-    ["ZGE", ChannelLevel, Zone.Z2, "channel_levels"],
-    ["ZHE", ChannelLevel, Zone.Z3, "channel_levels"],
-    ["SR", ListeningMode, Zone.ALL, "listening_mode"],
-    ["TO", ToneMode, Zone.Z1, "tone", "status"],
-    ["BA", ToneDb, Zone.Z1, "tone", "bass"],
-    ["TR", ToneDb, Zone.Z1, "tone", "treble"],
-    ["ZGA", ToneMode, Zone.Z2, "tone", "status"],
-    ["ZGB", ToneDb, Zone.Z2, "tone", "bass"],
-    ["ZGC", ToneDb, Zone.Z2, "tone", "treble"],
+    *RESPONSE_DATA_AUDIO,
     ## tuner
     ["FRF", FrequencyFM, Zone.ALL, "tuner", "frequency"],
     ["FRA", FrequencyAM, Zone.ALL, "tuner", "frequency"],
