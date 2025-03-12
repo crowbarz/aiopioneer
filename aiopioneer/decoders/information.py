@@ -1,9 +1,9 @@
 """aiopioneer response decoders for informational responses."""
 
 from ..command_queue import CommandItem
+from ..const import Zone
 from ..params import AVRParams
 from .code_map import (
-    CodeMapBase,
     CodeMapSequence,
     CodeStrMap,
     CodeDefault,
@@ -15,16 +15,36 @@ from .response import Response
 
 
 class AudioChannelActive(CodeDictStrMap):
-    """Audio active."""
+    """Audio channel active."""
+
+    friendly_name = "audio channel active"
+    base_property = "audio"
+    property_name = "channel_active"  # unused
 
     code_map = {
         "0": "inactive",
         "1": "active",
     }
 
+    @classmethod
+    def subclass(cls, channel_type: str, channel: str):
+        """Create a subclass for channel type and name."""
+        return type(
+            f"AudioChannelActive_{channel_type}_{channel}",
+            (AudioChannelActive,),
+            {
+                "friendly_name": f"{channel_type} channel {channel}",
+                "property_name": f"{channel_type}_channels.{channel}",
+            },
+        )
 
-class InputMultichannel(CodeBoolMap):
-    """Input multichannel."""
+
+class AudioInputMultichannel(CodeBoolMap):
+    """Audio input multichannel."""
+
+    friendly_name = "audio input multichannel"
+    base_property = "audio"
+    property_name = "input_multichannel"
 
     @classmethod
     def decode_response(
@@ -54,6 +74,10 @@ class InputMultichannel(CodeBoolMap):
 
 class AudioSignalInputInfo(CodeDictStrMap):
     """Audio signal input info."""
+
+    friendly_name = "audio input signal"  # NOTE: inconsistent
+    base_property = "audio"
+    property_name = "input_signal"
 
     code_map = {
         "00": "ANALOG",
@@ -100,8 +124,12 @@ class AudioSignalInputInfo(CodeDictStrMap):
     }
 
 
-class AudioSignalInputFreq(CodeDictStrMap):
-    """Audio signal input frequency."""
+class AudioSignalFrequency(CodeDictStrMap):
+    """Audio signal frequency."""
+
+    friendly_name = "audio frequency"
+    base_property = "audio"
+    property_name = "frequency"  # unused
 
     code_map = {
         CodeDefault(): None,
@@ -118,65 +146,105 @@ class AudioSignalInputFreq(CodeDictStrMap):
     }
 
 
+class AudioInputFrequency(AudioSignalFrequency):
+    """Audio input frequency."""
+
+    friendly_name = "audio input frequency"
+    base_property = "audio"
+    property_name = "input_frequency"
+
+
+class AudioOutputFrequency(AudioSignalFrequency):
+    """Audio output frequency."""
+
+    friendly_name = "audio output frequency"
+    base_property = "audio"
+    property_name = "output_frequency"
+
+
 class AudioOutputBits(CodeIntMap):
     """Audio output bits."""
+
+    friendly_name = "audio output bits"
+    base_property = "audio"
+    property_name = "output_bits"
 
     code_zfill = 2
 
 
-class AudioWorkingPqls(CodeDictStrMap):
-    """Audio working PQLS."""
+class AudioOutputPqls(CodeDictStrMap):
+    """Audio output PQLS."""
+
+    friendly_name = "audio output PQLS"
+    base_property = "audio"
+    property_name = "output_pqls"
 
     code_map = {"0": "off", "1": "2h", "2": "Multi-channel", "3": "Bitstream"}
 
 
 class AudioOutputAutoPhaseControlPlus(CodeIntMap):
-    """Audio output phase control plus."""
+    """Audio output auto phase control plus."""
+
+    friendly_name = "audio output auto phase control plus"
+    base_property = "audio"
+    property_name = "output_auto_phase_control_plus"
 
     code_zfill = 2
+
+
+class AudioOutputReversePhase(CodeBoolMap):
+    """Audio output reverse phase."""
+
+    friendly_name = "audio output reverse phase"
+    base_property = "audio"
+    property_name = "output_reverse_phase"
 
 
 class AudioInformation(CodeMapSequence):
     """Audio information."""
 
+    friendly_name = "audio information"
+    base_property = "audio"
+    property_name = "information"  # unused
+
     code_map_sequence = [
-        (AudioSignalInputInfo, "input_signal"),  # [0:2]
-        (AudioSignalInputFreq, "input_frequency"),  # [2:4]
-        (AudioChannelActive, "input_channels.L"),  # [4]
-        (AudioChannelActive, "input_channels.C"),  # [5]
-        (AudioChannelActive, "input_channels.R"),  # [6]
-        (AudioChannelActive, "input_channels.SL"),  # [7]
-        (AudioChannelActive, "input_channels.SR"),  # [8]
-        (AudioChannelActive, "input_channels.SBL"),  # [9]
-        (AudioChannelActive, "input_channels.SBC"),  # [10]
-        (AudioChannelActive, "input_channels.SBR"),  # [11]
-        (AudioChannelActive, "input_channels.LFE"),  # [12]
-        (AudioChannelActive, "input_channels.FHL"),  # [13]
-        (AudioChannelActive, "input_channels.FHR"),  # [14]
-        (AudioChannelActive, "input_channels.FWL"),  # [15]
-        (AudioChannelActive, "input_channels.FWR"),  # [16]
-        (AudioChannelActive, "input_channels.XL"),  # [17]
-        (AudioChannelActive, "input_channels.XC"),  # [18]
-        (AudioChannelActive, "input_channels.XR"),  # [19]
+        AudioSignalInputInfo,  # [0:2] audio.input_signal
+        AudioInputFrequency,  # [2:4] audio.input_frequency
+        AudioChannelActive.subclass("input", "L"),  # [4]
+        AudioChannelActive.subclass("input", "C"),  # [5]
+        AudioChannelActive.subclass("input", "R"),  # [6]
+        AudioChannelActive.subclass("input", "SL"),  # [7]
+        AudioChannelActive.subclass("input", "SR"),  # [8]
+        AudioChannelActive.subclass("input", "SBL"),  # [9]
+        AudioChannelActive.subclass("input", "SBC"),  # [10]
+        AudioChannelActive.subclass("input", "SBR"),  # [11]
+        AudioChannelActive.subclass("input", "LFE"),  # [12]
+        AudioChannelActive.subclass("input", "FHL"),  # [13]
+        AudioChannelActive.subclass("input", "FHR"),  # [14]
+        AudioChannelActive.subclass("input", "FWL"),  # [15]
+        AudioChannelActive.subclass("input", "FWR"),  # [16]
+        AudioChannelActive.subclass("input", "XL"),  # [17]
+        AudioChannelActive.subclass("input", "XC"),  # [18]
+        AudioChannelActive.subclass("input", "XR"),  # [19]
         5,  ## (data21) to (data25) are reserved according to FY16AVRs
-        (AudioChannelActive, "output.channels.L"),  # [25]
-        (AudioChannelActive, "output.channels.C"),  # [26]
-        (AudioChannelActive, "output.channels.R"),  # [27]
-        (AudioChannelActive, "output.channels.SL"),  # [28]
-        (AudioChannelActive, "output.channels.SR"),  # [29]
-        (AudioChannelActive, "output.channels.SBL"),  # [30]
-        (AudioChannelActive, "output.channels.SB"),  # [31]
-        (AudioChannelActive, "output.channels.SBR"),  # [32]
+        AudioChannelActive.subclass("output", "L"),  # [25]
+        AudioChannelActive.subclass("output", "C"),  # [26]
+        AudioChannelActive.subclass("output", "R"),  # [27]
+        AudioChannelActive.subclass("output", "SL"),  # [28]
+        AudioChannelActive.subclass("output", "SR"),  # [29]
+        AudioChannelActive.subclass("output", "SBL"),  # [30]
+        AudioChannelActive.subclass("output", "SB"),  # [31]
+        AudioChannelActive.subclass("output", "SBR"),  # [32]
     ]
     code_map_sequence_extra = [
         *code_map_sequence,
         10,
-        (AudioSignalInputFreq, "output_frequency"),  # [43:45]
-        (AudioOutputBits, "output_bits"),  # [45:47]
+        AudioOutputFrequency,  # [43:45] audio.output_frequency
+        AudioOutputBits,  # [45:47] audio.output_bits
         4,
-        (AudioWorkingPqls, "output_pqls"),  # [51]
-        (AudioOutputAutoPhaseControlPlus, "output_auto_phase_control_plus"),  # [52:54]
-        (CodeBoolMap, "output_reverse_phase"),  # [54]
+        AudioOutputPqls,  # [51] audio.output_pqls
+        AudioOutputAutoPhaseControlPlus,  # [52:54] audio.output_auto_phase_control_plus
+        AudioOutputReversePhase,  # [54] audio.output_reverse_phase
     ]
 
     @classmethod
@@ -184,7 +252,6 @@ class AudioInformation(CodeMapSequence):
         cls,
         response: Response,
         params: AVRParams,
-        code_map_sequence: list[tuple[CodeMapBase, str] | int] = None,  # ignored
     ) -> list[Response]:
         """Response decoder for audio information."""
         code_map_sequence = cls.code_map_sequence
@@ -193,14 +260,11 @@ class AudioInformation(CodeMapSequence):
         if len(response.code) > 43:
             code_map_sequence = cls.code_map_sequence_extra
 
-        responses = InputMultichannel.decode_response(
-            response=response.clone(
-                code=response.code[4:7], property_name="input_multichannel"
-            ),
-            params=params,
+        responses = AudioInputMultichannel.decode_response(
+            response=response.clone(code=response.code[4:7]), params=params
         )
         responses.extend(
-            super().decode_response(
+            cls.decode_response_sequence(
                 response=response, params=params, code_map_sequence=code_map_sequence
             )
         )
@@ -209,6 +273,10 @@ class AudioInformation(CodeMapSequence):
 
 class VideoSignalInputTerminal(CodeDictStrMap):
     """Video signal input terminal."""
+
+    friendly_name = "video signal input terminal"
+    base_property = "video"
+    property_name = "signal_input_terminal"
 
     code_map = {
         CodeDefault(): None,
@@ -223,6 +291,10 @@ class VideoSignalInputTerminal(CodeDictStrMap):
 
 class VideoSignalFormat(CodeDictStrMap):
     """Video signal format."""
+
+    friendly_name = "video signal format"
+    base_property = "video"
+    property_name = "signal_format"  # unused
 
     code_map = {
         CodeDefault(): None,
@@ -247,8 +319,60 @@ class VideoSignalFormat(CodeDictStrMap):
     }
 
 
+class VideoSignalInputResolution(VideoSignalFormat):
+    """Video signal input resolution."""
+
+    friendly_name = "video signal input resolution"
+    base_property = "video"
+    property_name = "signal_input_resolution"
+
+
+class VideoSignalOutputResolution(VideoSignalFormat):
+    """Video signal output resolution."""
+
+    friendly_name = "video signal output resolution"
+    base_property = "video"
+    property_name = "signal_output_resolution"
+
+
+class VideoSignalHdmi1RecommendedResolution(VideoSignalFormat):
+    """Video signal HDMI1 recommended resolution."""
+
+    friendly_name = "video signal HDMI1 recommended resolution"
+    base_property = "video"
+    property_name = "signal_hdmi1_recommended_resolution"
+
+
+class VideoSignalHdmi2RecommendedResolution(VideoSignalFormat):
+    """Video signal HDMI2 recommended resolution."""
+
+    friendly_name = "video signal HDMI2 recommended resolution"
+    base_property = "video"
+    property_name = "signal_hdmi2_recommended_resolution"
+
+
+class VideoSignalHdmi3RecommendedResolution(VideoSignalFormat):
+    """Video signal HDMI3 recommended resolution."""
+
+    friendly_name = "video signal HDMI3 recommended resolution"
+    base_property = "video"
+    property_name = "signal_hdmi3_recommended_resolution"
+
+
+class VideoSignalHdmi4RecommendedResolution(VideoSignalFormat):
+    """Video signal HDMI4 recommended resolution."""
+
+    friendly_name = "video signal HDMI4 recommended resolution"
+    base_property = "video"
+    property_name = "signal_hdmi4_recommended_resolution"
+
+
 class VideoSignalAspect(CodeDictStrMap):
     """Video signal aspect."""
+
+    friendly_name = "video signal aspect"
+    base_property = "video"
+    property_name = "signal_aspect"  # unused
 
     code_map = {
         CodeDefault(): None,
@@ -259,8 +383,28 @@ class VideoSignalAspect(CodeDictStrMap):
     }
 
 
+class VideoSignalInputAspect(VideoSignalAspect):
+    """Video signal input aspect."""
+
+    friendly_name = "video signal input aspect"
+    base_property = "video"
+    property_name = "signal_input_aspect"
+
+
+class VideoSignalOutputAspect(VideoSignalAspect):
+    """Video signal output aspect."""
+
+    friendly_name = "video signal output aspect"
+    base_property = "video"
+    property_name = "signal_output_aspect"
+
+
 class VideoSignalColorspace(CodeDictStrMap):
     """Video signal colorspace."""
+
+    friendly_name = "video signal colorspace"
+    base_property = "video"
+    property_name = "signal_colorspace"  # unused
 
     code_map = {
         CodeDefault(): None,
@@ -273,8 +417,28 @@ class VideoSignalColorspace(CodeDictStrMap):
     }
 
 
+class VideoSignalInputColorspace(VideoSignalColorspace):
+    """Video signal input colorspace."""
+
+    friendly_name = "video signal input colorspace"
+    base_property = "video"
+    property_name = "signal_input_color_format"  # NOTE: inconsistent
+
+
+class VideoSignalOutputColorspace(VideoSignalColorspace):
+    """Video signal output colorspace."""
+
+    friendly_name = "video signal output colorspace"
+    base_property = "video"
+    property_name = "signal_output_color_format"  # NOTE: inconsistent
+
+
 class VideoSignalBits(CodeDictStrMap):
     """Video signal bits."""
+
+    friendly_name = "video signal bits"
+    base_property = "video"
+    property_name = "signal_bits"  # unused
 
     code_map = {
         CodeDefault(): None,
@@ -286,8 +450,60 @@ class VideoSignalBits(CodeDictStrMap):
     }
 
 
-class VideoSignalExtColorspace(CodeDictStrMap):
+class VideoSignalInputBits(VideoSignalBits):
+    """Video signal input bits."""
+
+    friendly_name = "video signal input bits"
+    base_property = "video"
+    property_name = "signal_input_bit"  # NOTE: inconsistent
+
+
+class VideoSignalOutputBits(VideoSignalBits):
+    """Video signal output bits."""
+
+    friendly_name = "video signal output bits"
+    base_property = "video"
+    property_name = "signal_output_bit"  # NOTE: inconsistent
+
+
+class VideoSignalHdmi1Deepcolor(VideoSignalBits):
+    """Video signal HDMI1 deepcolor."""
+
+    friendly_name = "video signal HDMI1 deepcolor"
+    base_property = "video"
+    property_name = "signal_hdmi1_deepcolor"  # NOTE: inconsistent
+
+
+class VideoSignalHdmi2Deepcolor(VideoSignalBits):
+    """Video signal HDMI2 deepcolor."""
+
+    friendly_name = "video signal HDMI2 deepcolor"
+    base_property = "video"
+    property_name = "signal_hdmi2_deepcolor"  # NOTE: inconsistent
+
+
+class VideoSignalHdmi3Deepcolor(VideoSignalBits):
+    """Video signal HDMI3 deepcolor."""
+
+    friendly_name = "video signal HDMI3 deepcolor"
+    base_property = "video"
+    property_name = "signal_hdmi3_deepcolor"  # NOTE: inconsistent
+
+
+class VideoSignalHdmi4Deepcolor(VideoSignalBits):
+    """Video signal HDMI4 deepcolor."""
+
+    friendly_name = "video signal HDMI4 deepcolor"
+    base_property = "video"
+    property_name = "signal_hdmi4_deepcolor"  # NOTE: inconsistent
+
+
+class VideoSignalExtendedColorspace(CodeDictStrMap):
     """Video signal ext colorspace."""
+
+    friendly_name = "video signal ext colorspace"
+    base_property = "video"
+    property_name = "signal_ext_colorspace"  # unused
 
     code_map = {
         CodeDefault(): None,
@@ -301,8 +517,28 @@ class VideoSignalExtColorspace(CodeDictStrMap):
     }
 
 
-class VideoSignal3DMode(CodeDictStrMap):
+class VideoSignalInputExtendedColorspace(VideoSignalExtendedColorspace):
+    """Video signal input extended colorspace."""
+
+    friendly_name = "video signal input extended colorspace"
+    base_property = "video"
+    property_name = "signal_input_extended_colorspace"
+
+
+class VideoSignalOutputExtendedColorspace(VideoSignalExtendedColorspace):
+    """Video signal output extended colorspace."""
+
+    friendly_name = "video signal output extended colorspace"
+    base_property = "video"
+    property_name = "signal_output_extended_colorspace"
+
+
+class VideoSignal3DFormat(CodeDictStrMap):
     """Video signal 3D mode."""
+
+    friendly_name = "video signal 3D mode"
+    base_property = "video"
+    property_name = "signal_3d_format"  # unused
 
     code_map = {
         CodeDefault(): None,
@@ -318,38 +554,58 @@ class VideoSignal3DMode(CodeDictStrMap):
     }
 
 
+class VideoSignalInput3DFormat(VideoSignal3DFormat):
+    """Video signal input 3D format."""
+
+    friendly_name = "video signal input 3D format"
+    base_property = "video"
+    property_name = "input_3d_format"
+
+
+class VideoSignalOutput3DFormat(VideoSignal3DFormat):
+    """Video signal output 3D format."""
+
+    friendly_name = "video signal output 3D format"
+    base_property = "video"
+    property_name = "output_3d_format"
+
+
 class VideoInformation(CodeMapSequence):
     """Video information."""
 
+    friendly_name = "video information"
+    base_property = "video"
+    property_name = "information"  # unused
+
     code_map_sequence = [
-        (VideoSignalInputTerminal, "signal_input_terminal"),  # [0]
-        (VideoSignalFormat, "signal_input_resolution"),  # [1:3]
-        (VideoSignalAspect, "signal_input_aspect"),  # [3]
-        (VideoSignalColorspace, "signal_input_color_format"),  # [4]
-        (VideoSignalBits, "signal_input_bit"),  # [5]
-        (VideoSignalExtColorspace, "signal_input_extended_colorspace"),  # [6]
-        (VideoSignalFormat, "signal_output_resolution"),  # [7:9]
-        (VideoSignalAspect, "signal_output_aspect"),  # [9]
-        (VideoSignalColorspace, "signal_output_color_format"),  # [10]
-        (VideoSignalBits, "signal_output_bit"),  # [11]
-        (VideoSignalExtColorspace, "signal_output_extended_colorspace"),  # [12]
-        (VideoSignalFormat, "signal_hdmi1_recommended_resolution"),  # [13:15]
-        (VideoSignalBits, "signal_hdmi1_deepcolor"),  # [15]
+        VideoSignalInputTerminal,  # [0] signal_input_terminal
+        VideoSignalInputResolution,  # [1:3] signal_input_resolution
+        VideoSignalInputAspect,  # [3] signal_input_aspect
+        VideoSignalInputColorspace,  # [4] signal_input_color_format
+        VideoSignalInputBits,  # [5] signal_input_bit
+        VideoSignalInputExtendedColorspace,  # [6] signal_input_extended_colorspace
+        VideoSignalOutputResolution,  # [7:9] signal_output_resolution
+        VideoSignalOutputAspect,  # [9] signal_output_aspect
+        VideoSignalOutputColorspace,  # [10] signal_output_color_format
+        VideoSignalOutputBits,  # [11] signal_output_bit
+        VideoSignalOutputExtendedColorspace,  # [12] signal_output_extended_colorspace
+        VideoSignalHdmi1RecommendedResolution,  # [13:15] signal_hdmi1_recommended_resolution
+        VideoSignalHdmi1Deepcolor,  # [15] signal_hdmi1_deepcolor
         5,
-        (VideoSignalFormat, "signal_hdmi2_recommended_resolution"),  # [21:23]
-        (VideoSignalBits, "signal_hdmi2_deepcolor"),  # [23]
+        VideoSignalHdmi2RecommendedResolution,  # [21:23] signal_hdmi2_recommended_resolution
+        VideoSignalHdmi2Deepcolor,  # [23] signal_hdmi2_deepcolor
     ]
 
     code_map_sequence_extra = [
         *code_map_sequence,
         5,
-        (VideoSignalFormat, "signal_hdmi3_recommended_resolution"),  # [29:31]
-        (VideoSignalBits, "signal_hdmi3_deepcolor"),  # [31]
+        VideoSignalHdmi3RecommendedResolution,  # [29:31] signal_hdmi3_recommended_resolution
+        VideoSignalHdmi3Deepcolor,  # [31] signal_hdmi3_deepcolor
         5,
-        (VideoSignal3DMode, "input_3d_format"),  # [37:39]
-        (VideoSignal3DMode, "output_3d_format"),  # [39:41]
-        (VideoSignalFormat, "signal_hdmi4_recommended_resolution"),  # [41:43]
-        (VideoSignalBits, "signal_hdmi4_deepcolor"),  # [44]
+        VideoSignalInput3DFormat,  # [37:39] input_3d_format
+        VideoSignalOutput3DFormat,  # [39:41] output_3d_format
+        VideoSignalHdmi4RecommendedResolution,  # [41:43] signal_hdmi4_recommended_resolution
+        VideoSignalHdmi4Deepcolor,  # [44] signal_hdmi4_deepcolor
     ]
 
     @classmethod
@@ -357,7 +613,6 @@ class VideoInformation(CodeMapSequence):
         cls,
         response: Response,
         params: AVRParams,
-        code_map_sequence: list[tuple[CodeMapBase, str] | int] = None,  # ignored
     ) -> list[Response]:
         """Response decoder for video information."""
         code_map_sequence = cls.code_map_sequence
@@ -366,13 +621,17 @@ class VideoInformation(CodeMapSequence):
         if len(response.code) > 40:
             code_map_sequence = cls.code_map_sequence_extra
 
-        return super().decode_response(
+        return cls.decode_response_sequence(
             response=response, params=params, code_map_sequence=code_map_sequence
         )
 
 
 class DisplayText(CodeStrMap):
-    """Display information."""
+    """Display text."""
+
+    friendly_name = "display text"
+    base_property = "amp"
+    property_name = "display"
 
     ## NOTE: value_to_code not implemented
 
@@ -384,3 +643,10 @@ class DisplayText(CodeStrMap):
             .expandtabs(1)
             .strip()
         )
+
+
+RESPONSE_DATA_INFO = [
+    ["AST", AudioInformation, Zone.ALL, "audio"],
+    ["VST", VideoInformation, Zone.ALL, "video"],
+    ["FL", DisplayText, Zone.ALL, "amp", "display"],
+]

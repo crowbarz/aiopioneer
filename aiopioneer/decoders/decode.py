@@ -12,7 +12,7 @@ from .code_map import (
     CodeBoolMap,
 )
 from .dsp import RESPONSE_DATA_DSP
-from .information import AudioInformation, VideoInformation, DisplayText
+from .information import RESPONSE_DATA_INFO
 from .response import Response
 from .settings import RESPONSE_DATA_SYSTEM
 from .amp import RESPONSE_DATA_AMP
@@ -37,10 +37,7 @@ RESPONSE_DATA = [
     *RESPONSE_DATA_DSP,
     *RESPONSE_DATA_AUDIO,
     *RESPONSE_DATA_TUNER,
-    ## information
-    ["AST", AudioInformation, Zone.ALL, "audio"],
-    ["VST", VideoInformation, Zone.ALL, "video"],
-    ["FL", DisplayText, Zone.ALL, "amp", "display"],
+    *RESPONSE_DATA_INFO,
     ## video
     ["VTC", VideoResolution, Zone.Z1, "video", "resolution"],
     ["VTB", CodeBoolMap, Zone.Z1, "video", "converter"],
