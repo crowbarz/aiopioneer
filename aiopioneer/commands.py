@@ -13,6 +13,7 @@ from .decoders.amp import (
     AmpMode,
     PanelLock,
 )
+from .decoders.audio import AvailableListeningMode
 from .decoders.code_map import CodeMapBase, CodeBoolMap
 from .decoders.dsp import (
     McaccMemorySet,
@@ -128,7 +129,7 @@ PIONEER_COMMANDS: dict[str, dict[Zone | str, str | list[str] | list[CodeMapBase]
         Zone.HDZ: ["?ZEA", "ZEA"],
     },
     "query_listening_mode": {Zone.Z1: ["?S", "SR"]},
-    "set_listening_mode": {Zone.Z1: ["SR", "SR"]},
+    "set_listening_mode": {Zone.Z1: ["SR", "SR"], "args": [AvailableListeningMode]},
     ## basic
     "query_basic_audio_information": {Zone.Z1: ["?AST", "AST"]},
     "query_basic_video_information": {Zone.Z1: ["?VST", "VST"]},

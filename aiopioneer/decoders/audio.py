@@ -105,6 +105,18 @@ class AvailableListeningMode(CodeDynamicDictStrMap):
             value, code_map=properties.available_listening_modes
         )
 
+    @classmethod
+    def parse_args(
+        cls,
+        command: str,
+        args: list,
+        zone: Zone,  # pylint: disable=unused-argument
+        params: AVRParams,  # pylint: disable=unused-argument
+        properties: AVRProperties,
+    ) -> str:
+        cls.check_args(args)
+        return cls.value_to_code(value=args[0], properties=properties)
+
     ## NOTE: code_to_value unimplemented
 
 
