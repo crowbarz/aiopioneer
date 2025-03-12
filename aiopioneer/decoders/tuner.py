@@ -1,14 +1,20 @@
 """aiopioneer response decoders for tuner parameters."""
 
+from ..const import Zone
 from ..command_queue import CommandItem
 from ..const import TunerBand
 from ..params import AVRParams
+from ..properties import AVRProperties
 from .code_map import CodeStrMap, CodeIntMap, CodeFloatMap
 from .response import Response
 
 
 class FrequencyFM(CodeFloatMap):
     """Tuner FM frequency. (1step = 0.01MHz)"""
+
+    friendly_name = "FM frequency"
+    base_property = "tuner"
+    property_name = "frequency"
 
     value_min = 87.5
     value_max = 108.0
@@ -33,12 +39,44 @@ class FrequencyFM(CodeFloatMap):
 class FrequencyAM(CodeIntMap):
     """Tuner AM frequency. (1step = 1kHz)"""
 
-    value_min = 530
-    value_max = 1701
-    value_step = 1  # default/unknown AM frequency step
+    friendly_name = "AM frequency"
+    base_property = "tuner"
+    property_name = "frequency"
 
-    VALUE_MIN_STEP = {9: 531, 10: 530}
-    VALUE_MAX_STEP = {9: 1701, 10: 1700}
+    value_bounds = {9: (531, 1701), 10: (530, 1700)}
+
+    @classmethod
+    def get_frequency_bounds(cls, am_frequency_step: int) -> tuple[int, int]:
+        """Get bounds for frequency AM step."""
+        return cls.value_bounds[am_frequency_step]
+
+    @classmethod
+    def value_to_code(cls, value: str, properties: AVRProperties = None) -> str:
+        if not isinstance(properties, AVRProperties):
+            raise RuntimeError(f"AVRProperties required for {cls.get_name()}")
+        if not (am_frequency_step := properties.tuner.get("am_frequency_step")):
+            raise ValueError(
+                "unknown AM tuner frequency step, parameter 'am_frequency_step' required"
+            )
+        value_min, value_max = cls.get_frequency_bounds(am_frequency_step)
+        return cls.value_to_code_bounded(
+            value=value,
+            value_min=value_min,
+            value_max=value_max,
+            value_step=am_frequency_step,
+        )
+
+    @classmethod
+    def parse_args(
+        cls,
+        command: str,
+        args: list,
+        zone: Zone,  # pylint: disable=unused-argument
+        params: AVRParams,  # pylint: disable=unused-argument
+        properties: AVRProperties,
+    ) -> str:
+        cls.check_args(args)
+        return cls.value_to_code(value=args[0], properties=properties)
 
     @classmethod
     def decode_response(
@@ -65,32 +103,43 @@ class FrequencyAM(CodeIntMap):
             elif not freq_div9 and freq_div10:
                 frequency_step = 10
             if frequency_step:
-                return [
-                    *cls.update_frequency_step(
-                        response=response, frequency_step=frequency_step
-                    ),
-                ]
+                return FrequencyAMStep.update_frequency_step(
+                    response=response.clone(), frequency_step=frequency_step
+                )
             response.update(
                 clear_property=True,
                 queue_commands=[
                     CommandItem("_calculate_am_frequency_step", queue_id=0),
+                    ## NOTE: skipped if currently running
                 ],
             )
             return [response]
 
-        responses = []
-        if response.properties.tuner.get("band") is not TunerBand.AM:
-            responses = [
-                response.clone(inherit_property=False, callback=glean_frequency_step)
-            ]
-        responses.extend(
-            [
-                response.clone(property_name="band", value=TunerBand.AM),
-                *Preset.update_preset(response),
-                response,
-            ]
-        )
-        return responses
+        return [
+            response.clone(inherit_property=False, callback=glean_frequency_step),
+            response.clone(property_name="band", value=TunerBand.AM),
+            *Preset.update_preset(response),
+            response,
+        ]
+
+
+class FrequencyAMStep(CodeIntMap):
+    """AM frequency step. (Supported on very few AVRs)"""
+
+    friendly_name = "AM frequency step"
+    base_property = "tuner"
+    property_name = "am_frequency_step"
+
+    value_min = 9
+    value_max = 10
+    value_offset = -9
+    code_zfill = 1
+
+    @classmethod
+    def code_to_value(cls, code: str) -> int:
+        return 9 if code == "0" else 10
+
+    ## NOTE: value_to_code unimplemented
 
     @classmethod
     def update_frequency_step(
@@ -98,30 +147,21 @@ class FrequencyAM(CodeIntMap):
     ) -> list[Response]:
         """Generate response to update AM frequency step."""
 
-        def set_frequency_step(response: Response) -> list[Response]:
-            """Set AM frequency step."""
-            if (frequency_step := response.value) not in [9, 10]:
-                raise ValueError(
-                    f"invalid frequency step {frequency_step}, must be 9 or 10"
-                )
-            FrequencyAM.value_step = frequency_step
-            FrequencyAM.value_min = cls.VALUE_MIN_STEP[frequency_step]
-            FrequencyAM.value_max = cls.VALUE_MAX_STEP[frequency_step]
-            return [response]
-
-        return [
-            response.clone(
-                property_name="am_frequency_step",
-                value=frequency_step,
-                callback=set_frequency_step,
+        if frequency_step not in [9, 10]:
+            raise ValueError(
+                f"invalid frequency step {frequency_step}, must be 9 or 10"
             )
-        ]
+        cls.set_response_properties(response=response)
+        response.update(value=frequency_step)
+        return [response]
 
 
 class Preset(CodeStrMap):
     """Tuner preset."""
 
-    cached_preset: tuple[str, int] = []
+    friendly_name = "tuner preset"
+    base_property = "tuner"
+    property_name = "preset"
 
     @classmethod
     def decode_response(
@@ -133,7 +173,7 @@ class Preset(CodeStrMap):
 
         def cache_preset(response: Response) -> list[Response]:
             """Cache preset for later update."""
-            cls.cached_preset = response.value
+            response.properties.tuner["cached_preset"] = response.value
             return [response]
 
         super().decode_response(response=response, params=params)
@@ -152,11 +192,13 @@ class Preset(CodeStrMap):
 
         def check_cached_preset(response: Response) -> list[Response]:
             """Update preset based on cached preset."""
+            properties = response.properties
+            cached_preset = properties.tuner.get("cached_preset")
             response.update(base_property="tuner")
-            if cls.cached_preset is not None:
+            if cached_preset is not None:
                 # pylint: disable=unbalanced-tuple-unpacking
-                (tuner_class, tuner_preset) = cls.cached_preset
-                cls.cached_preset = None
+                (tuner_class, tuner_preset) = cached_preset
+                properties.tuner["cached_preset"] = None
                 return [
                     response.clone(property_name="class", value=tuner_class),
                     response.clone(property_name="preset", value=tuner_preset),
@@ -191,24 +233,9 @@ class Preset(CodeStrMap):
         return code[0], int(code[1:])
 
 
-class FrequencyAMStep(CodeIntMap):
-    """AM frequency step. (Supported on very few AVRs)"""
-
-    @classmethod
-    def decode_response(
-        cls,
-        response: Response,
-        params: AVRParams,  # pylint: disable=unused-argument
-    ) -> list[Response]:
-        """Response decoder for AM frequency step."""
-
-        super().decode_response(response=response, params=params)
-        return FrequencyAM.update_frequency_step(
-            response=response, frequency_step=response.value
-        )
-
-    @classmethod
-    def code_to_value(cls, code: str) -> int:
-        return 9 if code == "0" else 10
-
-    ## NOTE: value_to_code unimplemented
+RESPONSE_DATA_TUNER = [
+    ["FRF", FrequencyFM, Zone.ALL],  # tuner.frequency
+    ["FRA", FrequencyAM, Zone.ALL],  # tuner.frequency
+    ["SUQ", FrequencyAMStep, Zone.ALL],  # tuner.am_frequency_step
+    ["PR", Preset, Zone.ALL],  # tuner.preset
+]

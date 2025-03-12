@@ -16,7 +16,7 @@ from .information import AudioInformation, VideoInformation, DisplayText
 from .response import Response
 from .settings import RESPONSE_DATA_SYSTEM
 from .amp import RESPONSE_DATA_AMP
-from .tuner import FrequencyFM, FrequencyAM, Preset, FrequencyAMStep
+from .tuner import RESPONSE_DATA_TUNER
 from .video import (
     VideoInt08Map,
     VideoProgMotion,
@@ -36,11 +36,7 @@ RESPONSE_DATA = [
     *RESPONSE_DATA_SYSTEM,
     *RESPONSE_DATA_DSP,
     *RESPONSE_DATA_AUDIO,
-    ## tuner
-    ["FRF", FrequencyFM, Zone.ALL, "tuner", "frequency"],
-    ["FRA", FrequencyAM, Zone.ALL, "tuner", "frequency"],
-    ["PR", Preset, Zone.ALL, "tuner", "preset"],
-    ["SUQ", FrequencyAMStep, Zone.ALL, "tuner", "am_frequency_step"],
+    *RESPONSE_DATA_TUNER,
     ## information
     ["AST", AudioInformation, Zone.ALL, "audio"],
     ["VST", VideoInformation, Zone.ALL, "video"],

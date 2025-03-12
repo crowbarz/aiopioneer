@@ -1,6 +1,18 @@
 """Pioneer AVR commands."""
 
 from .const import Zone
+from .decoders.amp import (
+    Volume,
+    SpeakerMode,
+    HdmiOut,
+    Hdmi3Out,
+    HdmiAudio,
+    Pqls,
+    Dimmer,
+    SleepTime,
+    AmpMode,
+    PanelLock,
+)
 from .decoders.code_map import CodeMapBase, CodeBoolMap
 from .decoders.dsp import (
     McaccMemorySet,
@@ -25,18 +37,7 @@ from .decoders.dsp import (
     VirtualDepth,
     RenderingMode,
 )
-from .decoders.amp import (
-    Volume,
-    SpeakerMode,
-    HdmiOut,
-    Hdmi3Out,
-    HdmiAudio,
-    Pqls,
-    Dimmer,
-    SleepTime,
-    AmpMode,
-    PanelLock,
-)
+from .decoders.tuner import Preset
 from .decoders.video import (
     AdvancedVideoAdjust,
     VideoAspect,
@@ -374,7 +375,7 @@ PIONEER_COMMANDS: dict[str, dict[Zone | str, str | list[str] | list[CodeMapBase]
     "query_tuner_am_step": {Zone.Z1: ["?SUQ", "SUQ"]},
     "query_tuner_preset": {Zone.Z1: ["?PR", "PR"]},
     "query_tuner_frequency": {Zone.Z1: ["?FR", "FR"]},
-    "select_tuner_preset": {Zone.Z1: ["PR", "PR"]},
+    "select_tuner_preset": {Zone.Z1: ["PR", "PR"], "args": [Preset]},
     "increase_tuner_preset": {Zone.Z1: ["TPI", "PR"]},
     "decrease_tuner_preset": {Zone.Z1: ["TPD", "PR"]},
     "set_tuner_band_am": {Zone.Z1: ["01TN", "FR"]},

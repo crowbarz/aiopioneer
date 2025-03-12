@@ -59,7 +59,7 @@ from .decoders.audio import (
 from .decoders.code_map import CodeMapBase
 from .decoders.decode import process_raw_response
 from .decoders.amp import Volume
-from .decoders.tuner import FrequencyAM, FrequencyFM, Preset
+from .decoders.tuner import FrequencyAM, FrequencyFM
 from .properties import AVRProperties
 from .util import cancel_task
 
@@ -792,13 +792,15 @@ class PioneerAVR(AVRConnection):
         self, band: TunerBand, frequency: float | int
     ) -> None:
         """Set the tuner frequency and band."""
+        command = "set_tuner_frequency"
         await self.select_tuner_band(band)
         if band is TunerBand.AM and not self.properties.tuner.get("am_frequency_step"):
             await self.properties.command_queue.wait()  ## for AM step calculation
 
-        code = (
-            FrequencyAM(frequency) if band is TunerBand.AM else FrequencyFM(frequency)
-        )
+        if band is TunerBand.AM:
+            code = FrequencyAM(frequency, properties=self.properties)
+        else:
+            code = FrequencyFM(frequency)
 
         if await self.send_command("operation_direct_access", ignore_error=True):
             ## Set tuner frequency directly if command is supported
@@ -809,16 +811,14 @@ class PioneerAVR(AVRConnection):
                     )
             except AVRCommandError as exc:
                 raise AVRLocalCommandError(
-                    command="set_tuner_frequency", err_key="freq_set_failed", exc=exc
+                    command=command, err_key="freq_set_failed", exc=exc
                 ) from exc
         else:
             await self._step_tuner_frequency(band=band, frequency=frequency)
 
     async def select_tuner_preset(self, tuner_class: str, tuner_preset: int) -> None:
         """Select the tuner preset."""
-        await self.send_command(
-            "select_tuner_preset", prefix=Preset((tuner_class, tuner_preset))
-        )
+        await self.send_command("select_tuner_preset", (tuner_class, tuner_preset))
 
     async def tuner_previous_preset(self) -> None:
         """Select the previous tuner preset."""
