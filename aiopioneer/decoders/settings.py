@@ -536,7 +536,7 @@ class IpControlPorts(CodeStrMap):
         params: AVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Response decoder for enabled IP control ports."""
-
+        cls.set_response_properties(response)
         ports = [int(response.code[i : i + 5]) for i in range(0, len(response.code), 5)]
 
         def port_response(index: int) -> Response:
