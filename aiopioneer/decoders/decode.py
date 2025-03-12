@@ -7,27 +7,14 @@ from ..exceptions import AVRResponseDecodeError
 from ..params import AVRParams
 from ..properties import AVRProperties
 from .audio import RESPONSE_DATA_AUDIO
-from .code_map import (
-    CodeMapBase,
-    CodeBoolMap,
-)
+from .code_map import CodeMapBase
 from .dsp import RESPONSE_DATA_DSP
 from .information import RESPONSE_DATA_INFO
 from .response import Response
 from .settings import RESPONSE_DATA_SYSTEM
 from .amp import RESPONSE_DATA_AMP
 from .tuner import RESPONSE_DATA_TUNER
-from .video import (
-    VideoInt08Map,
-    VideoProgMotion,
-    VideoInt66Map,
-    VideoResolution,
-    VideoPureCinema,
-    VideoStreamSmoother,
-    AdvancedVideoAdjust,
-    VideoAspect,
-    VideoSuperResolution,
-)
+from .video import RESPONSE_DATA_VIDEO
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,26 +25,7 @@ RESPONSE_DATA = [
     *RESPONSE_DATA_AUDIO,
     *RESPONSE_DATA_TUNER,
     *RESPONSE_DATA_INFO,
-    ## video
-    ["VTC", VideoResolution, Zone.Z1, "video", "resolution"],
-    ["VTB", CodeBoolMap, Zone.Z1, "video", "converter"],
-    ["VTD", VideoPureCinema, Zone.Z1, "video", "pure_cinema"],
-    ["VTE", VideoProgMotion, Zone.Z1, "video", "prog_motion"],
-    ["VTF", VideoStreamSmoother, Zone.Z1, "video", "stream_smoother"],
-    ["VTG", AdvancedVideoAdjust, Zone.Z1, "video", "advanced_video_adjust"],
-    ["VTH", VideoInt08Map, Zone.Z1, "video", "ynr"],
-    ["VTI", VideoInt08Map, Zone.Z1, "video", "cnr"],
-    ["VTJ", VideoInt08Map, Zone.Z1, "video", "bnr"],
-    ["VTK", VideoInt08Map, Zone.Z1, "video", "mnr"],
-    ["VTL", VideoInt08Map, Zone.Z1, "video", "detail"],
-    ["VTM", VideoInt08Map, Zone.Z1, "video", "sharpness"],
-    ["VTN", VideoInt66Map, Zone.Z1, "video", "brightness"],
-    ["VTO", VideoInt66Map, Zone.Z1, "video", "contrast"],
-    ["VTP", VideoInt66Map, Zone.Z1, "video", "hue"],
-    ["VTQ", VideoInt66Map, Zone.Z1, "video", "chroma"],
-    ["VTR", CodeBoolMap, Zone.Z1, "video", "black_setup"],
-    ["VTS", VideoAspect, Zone.Z1, "video", "aspect"],
-    ["VTT", VideoSuperResolution, Zone.Z1, "video", "super_resolution"],
+    *RESPONSE_DATA_VIDEO,
 ]
 
 
