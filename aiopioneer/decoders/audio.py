@@ -47,13 +47,13 @@ class ListeningMode(CodeDynamicDictListMap):
 
     @classmethod
     def value_to_code(cls, value: str, properties: AVRProperties = None) -> str:
-        if not issubclass(properties, AVRProperties):
+        if not isinstance(properties, AVRProperties):
             raise RuntimeError(f"AVRProperties required for {cls.get_name()}")
         return cls.value_to_code_dynamic(value, code_map=properties.listening_modes_all)
 
     @classmethod
     def code_to_value(cls, code: str, properties: AVRProperties = None) -> str:
-        if not issubclass(properties, AVRProperties):
+        if not isinstance(properties, AVRProperties):
             raise RuntimeError(f"AVRProperties required for {cls.get_name()}")
         return cls.code_to_value_dynamic(code, code_map=properties.listening_modes_all)
 
@@ -99,7 +99,7 @@ class AvailableListeningMode(CodeDynamicDictStrMap):
 
     @classmethod
     def value_to_code(cls, value: str, properties: AVRProperties = None) -> str:
-        if not issubclass(properties, AVRProperties):
+        if not isinstance(properties, AVRProperties):
             raise RuntimeError(f"AVRProperties required for {cls.get_name()}")
         return cls.value_to_code_dynamic(
             value, code_map=properties.available_listening_modes
