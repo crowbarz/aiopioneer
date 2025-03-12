@@ -165,17 +165,24 @@ class CodeMapSequence(CodeMapBase):
         return sum(get_nargs_item(child_item) for child_item in code_map_sequence)
 
     @classmethod
-    def parse_args(
+    def value_to_code(cls, value) -> str:
+        raise RuntimeError(f"value_to_code unsupported for {cls.get_name()}")
+
+    @classmethod
+    def code_to_value(cls, code: str) -> Any:
+        raise RuntimeError(f"code_to_value unsupported for {cls.get_name()}")
+
+    @classmethod
+    def parse_args_sequence(
         cls,
         command: str,  # pylint: disable=unused-argument
         args: list,
         zone: Zone,
         params: AVRParams,
         properties: AVRProperties,
-        code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int] = None,
+        code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int],
     ) -> str:
-        if code_map_sequence is None:
-            code_map_sequence = cls.code_map_sequence
+        """Convert arg to code with code map sequence."""
 
         def parse_child_map(child_map: CodeMapBase, args: list) -> str:
             child_map.check_args(args, extra_args=True)
@@ -213,12 +220,13 @@ class CodeMapSequence(CodeMapBase):
         )
 
     @classmethod
-    def decode_response(
+    def decode_response_sequence(
         cls,
         response: Response,
         params: AVRParams,  # pylint: disable=unused-argument
         code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int] = None,
     ) -> list[Response]:
+        """Decode a response with code map sequence."""
         code_index = 0
         responses = []
         if code_map_sequence is None:
@@ -250,6 +258,30 @@ class CodeMapSequence(CodeMapBase):
             code_index += child_len
 
         return responses
+
+    @classmethod
+    def parse_args(
+        cls,
+        command: str,  # pylint: disable=unused-argument
+        args: list,
+        zone: Zone,
+        params: AVRParams,
+        properties: AVRProperties,
+    ) -> str:
+        return cls.parse_args_sequence(
+            command=command,
+            args=args,
+            zone=zone,
+            params=params,
+            properties=properties,
+            code_map_sequence=cls.code_map_sequence,
+        )
+
+    @classmethod
+    def decode_response(cls, response: Response, params: AVRParams) -> list[Response]:
+        return cls.decode_response_sequence(
+            response=response, params=params, code_map_sequence=cls.code_map_sequence
+        )
 
 
 # pylint: disable=abstract-method
