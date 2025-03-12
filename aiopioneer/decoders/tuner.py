@@ -3,6 +3,7 @@
 from ..const import Zone
 from ..command_queue import CommandItem
 from ..const import TunerBand
+from ..exceptions import AVRLocalCommandError
 from ..params import AVRParams
 from ..properties import AVRProperties
 from .code_map import CodeStrMap, CodeIntMap, CodeFloatMap
@@ -55,8 +56,8 @@ class FrequencyAM(CodeIntMap):
         if not isinstance(properties, AVRProperties):
             raise RuntimeError(f"AVRProperties required for {cls.get_name()}")
         if not (am_frequency_step := properties.tuner.get("am_frequency_step")):
-            raise ValueError(
-                "unknown AM tuner frequency step, parameter 'am_frequency_step' required"
+            raise AVRLocalCommandError(
+                command="set_tuner_frequency", err_key="freq_step_unknown"
             )
         value_min, value_max = cls.get_frequency_bounds(am_frequency_step)
         return cls.value_to_code_bounded(

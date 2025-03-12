@@ -748,7 +748,7 @@ class PioneerAVR(AVRConnection):
                 am_frequency_step := self.properties.tuner.get("am_frequency_step")
             ):
                 raise AVRLocalCommandError(
-                    command="step_tuner_frequency", err_key="freq_step_unknown"
+                    command="set_tuner_frequency", err_key="freq_step_unknown"
                 )
             target_freq = frequency // am_frequency_step * am_frequency_step
             count = abs(frequency - current_freq) // am_frequency_step + 1
