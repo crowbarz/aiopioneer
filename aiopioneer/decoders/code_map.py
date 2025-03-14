@@ -109,13 +109,13 @@ class CodeMapBase:
 class CodeMapSequence(CodeMapBase):
     """Map AVR codes to a sequence of code maps."""
 
-    code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int] = []
+    code_map_sequence: list[CodeMapBase | int] = []
     code_fillchar = "_"
 
     @classmethod
     def get_len(
         cls,
-        code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int] = None,
+        code_map_sequence: list[CodeMapBase | int] = None,
     ) -> int:
 
         def get_len_item(
@@ -125,9 +125,7 @@ class CodeMapSequence(CodeMapBase):
                 if child_item < 0:
                     raise RuntimeError(f"len not available for {cls.get_name()}")
                 return child_item
-            if isinstance(child_item, tuple):  ## item is (code_map, property)
-                child_map, _ = child_item
-            elif issubclass(child_item, CodeMapBase):
+            if issubclass(child_item, CodeMapBase):
                 child_map = child_item
             else:
                 raise RuntimeError(
@@ -142,7 +140,7 @@ class CodeMapSequence(CodeMapBase):
     @classmethod
     def get_nargs(
         cls,
-        code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int] = None,
+        code_map_sequence: list[CodeMapBase | int] = None,
     ) -> int:
 
         def get_nargs_item(
@@ -150,9 +148,7 @@ class CodeMapSequence(CodeMapBase):
         ) -> str:
             if isinstance(child_item, int):  ## item is gap length
                 return 0
-            if isinstance(child_item, tuple):  ## item is (code_map, property)
-                child_map, _ = child_item
-            elif issubclass(child_item, CodeMapBase):
+            if issubclass(child_item, CodeMapBase):
                 child_map = child_item
             else:
                 raise RuntimeError(
@@ -180,7 +176,7 @@ class CodeMapSequence(CodeMapBase):
         zone: Zone,
         params: AVRParams,
         properties: AVRProperties,
-        code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int],
+        code_map_sequence: list[CodeMapBase | int],
     ) -> str:
         """Convert arg to code with code map sequence."""
 
@@ -202,9 +198,7 @@ class CodeMapSequence(CodeMapBase):
                     return ""
                 child_len = child_item
                 return "".ljust(child_len, cls.code_fillchar)
-            if isinstance(child_item, tuple):  ## item is (code_map, property)
-                child_map, _ = child_item
-            elif issubclass(child_item, CodeMapBase):
+            if issubclass(child_item, CodeMapBase):
                 child_map = child_item
             else:
                 raise RuntimeError(
@@ -224,7 +218,7 @@ class CodeMapSequence(CodeMapBase):
         cls,
         response: Response,
         params: AVRParams,  # pylint: disable=unused-argument
-        code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int] = None,
+        code_map_sequence: list[CodeMapBase | int] = None,
     ) -> list[Response]:
         """Decode a response with code map sequence."""
         code_index = 0
@@ -238,10 +232,7 @@ class CodeMapSequence(CodeMapBase):
                     code_index = len(response.code) + child_len
                 code_index += child_len
                 continue
-            child_property_name = None
-            if isinstance(child_item, tuple):  ## item is (code_map, property)
-                child_map, child_property_name = child_item
-            elif issubclass(child_item, CodeMapBase):  ## item is code_map
+            if issubclass(child_item, CodeMapBase):  ## item is code_map
                 child_map = child_item
             else:
                 raise RuntimeError(
@@ -249,9 +240,7 @@ class CodeMapSequence(CodeMapBase):
                 )
             child_len = child_map.get_len()
             child_code = response.code[code_index : code_index + child_len]
-            child_response = response.clone(
-                code=child_code, property_name=child_property_name
-            )
+            child_response = response.clone(code=child_code)
             responses.extend(
                 child_map.decode_response(response=child_response, params=params)
             )
@@ -396,7 +385,7 @@ class CodeDynamicDictMap(CodeMapBase):
         zone: Zone,  # pylint: disable=unused-argument
         params: AVRParams,  # pylint: disable=unused-argument
         properties: AVRProperties,  # pylint: disable=unused-argument
-        code_map: list[tuple[CodeMapBase, str] | CodeMapBase | int],
+        code_map: dict[str, Any],
     ) -> str:
         """Convert arg to code for code map."""
         cls.check_args(args)
@@ -407,7 +396,7 @@ class CodeDynamicDictMap(CodeMapBase):
         cls,
         response: Response,
         params: AVRParams,  # pylint: disable=unused-argument
-        code_map: list[tuple[CodeMapBase, str] | CodeMapBase | int],
+        code_map: dict[str, Any],
     ) -> list[Response]:
         """Decode a response using a code map."""
         cls.set_response_properties(response)
