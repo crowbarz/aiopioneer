@@ -235,8 +235,8 @@ class Preset(CodeStrMap):
 
 
 RESPONSE_DATA_TUNER = [
-    ["FRF", FrequencyFM, Zone.ALL],  # tuner.frequency
-    ["FRA", FrequencyAM, Zone.ALL],  # tuner.frequency
-    ["SUQ", FrequencyAMStep, Zone.ALL],  # tuner.am_frequency_step
-    ["PR", Preset, Zone.ALL],  # tuner.preset
+    ("FRF", FrequencyFM, Zone.ALL),  # tuner.frequency
+    ("FRA", FrequencyAM, Zone.ALL),  # tuner.frequency
+    ("SUQ", FrequencyAMStep, Zone.ALL),  # tuner.am_frequency_step
+    ("PR", Preset, Zone.ALL),  # tuner.preset
 ]

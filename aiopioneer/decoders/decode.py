@@ -17,7 +17,7 @@ from .video import RESPONSE_DATA_VIDEO
 
 _LOGGER = logging.getLogger(__name__)
 
-RESPONSE_DATA = [
+RESPONSE_DATA: list[tuple[str, CodeMapBase, Zone]] = [
     *RESPONSE_DATA_AMP,
     *RESPONSE_DATA_SYSTEM,
     *RESPONSE_DATA_DSP,
@@ -113,11 +113,8 @@ def process_raw_response(
                 _LOGGER.debug("undecoded response: %s", raw_resp)
             return []
 
-        response_cmd: str = match_resp[0]
-        code_map = match_resp[1]
-        response_zone: Zone = match_resp[2]
+        response_cmd, code_map, response_zone = match_resp
         code = raw_resp[len(response_cmd) :]
-
         if not issubclass(code_map, CodeMapBase):
             raise RuntimeError(f"invalid decoder {code_map} for response: {code}")
         responses = code_map.decode_response(
@@ -125,8 +122,6 @@ def process_raw_response(
                 properties=properties,
                 code=code,
                 response_command=response_cmd,
-                base_property=match_resp[3] if len(match_resp) >= 4 else None,
-                property_name=match_resp[4] if len(match_resp) >= 5 else None,
                 zone=response_zone,
             ),
             params=params,

@@ -439,37 +439,37 @@ class AudioParameterWorking(CodeStrMap):
 
 
 RESPONSE_DATA_AMP = [
-    ["PWR", Power, Zone.Z1],  # power
-    ["APR", Power, Zone.Z2],  # power
-    ["BPR", Power, Zone.Z3],  # power
-    ["ZEP", Power, Zone.HDZ],  # power
-    ["VOL", Volume, Zone.Z1],  # volume
-    ["ZV", Volume, Zone.Z2],  # volume
-    ["YV", Volume, Zone.Z3],  # volume
-    ["XV", Volume, Zone.HDZ],  # volume
-    ["FN", InputSource, Zone.Z1],  # source_id
-    ["Z2F", InputSource, Zone.Z2],  # source_id
-    ["Z3F", InputSource, Zone.Z3],  # source_id
-    ["ZEA", InputSource, Zone.HDZ],  # source_id
-    ["RGB", InputName, Zone.ALL],  # source_name_to_id
-    ["MUT", Mute, Zone.Z1],  # mute
-    ["Z2MUT", Mute, Zone.Z2],  # mute
-    ["Z3MUT", Mute, Zone.Z3],  # mute
-    ["HZMUT", Mute, Zone.HDZ],  # mute
-    ["SPK", SpeakerMode, Zone.ALL],  # amp.speaker_mode
-    ["HO", HdmiOut, Zone.ALL],  # amp.hdmi_out
-    ["HDO", Hdmi3Out, Zone.ALL],  # amp.hdmi3_out
-    ["HA", HdmiAudio, Zone.ALL],  # amp.hdmi_audio
-    ["PQ", Pqls, Zone.ALL],  # amp.pqls
-    ["FL", DisplayText, Zone.ALL],  # amp.display
-    ["SAA", Dimmer, Zone.ALL],  # amp.dimmer
-    ["SAB", SleepTime, Zone.ALL],  # amp.sleep_time
-    ["SAC", AmpMode, Zone.ALL],  # amp.mode
-    ["PKL", PanelLock, Zone.ALL],  # amp.panel_lock
-    ["RML", RemoteLock, Zone.ALL],  # amp.remote_lock
-    ["SVB", SystemMacAddress, Zone.ALL],  # amp.mac_addr
-    ["RGD", SystemAvrModel, Zone.ALL],  # amp.model
-    ["SSI", SystemSoftwareVersion, Zone.ALL],  # amp.software_version
-    ["AUA", AudioParameterProhibition, Zone.Z1],
-    ["AUB", AudioParameterWorking, Zone.Z1],
+    ("PWR", Power, Zone.Z1),  # power
+    ("APR", Power, Zone.Z2),  # power
+    ("BPR", Power, Zone.Z3),  # power
+    ("ZEP", Power, Zone.HDZ),  # power
+    ("VOL", Volume, Zone.Z1),  # volume
+    ("ZV", Volume, Zone.Z2),  # volume
+    ("YV", Volume, Zone.Z3),  # volume
+    ("XV", Volume, Zone.HDZ),  # volume
+    ("FN", InputSource, Zone.Z1),  # source_id
+    ("Z2F", InputSource, Zone.Z2),  # source_id
+    ("Z3F", InputSource, Zone.Z3),  # source_id
+    ("ZEA", InputSource, Zone.HDZ),  # source_id
+    ("RGB", InputName, Zone.ALL),  # source_name_to_id
+    ("MUT", Mute, Zone.Z1),  # mute
+    ("Z2MUT", Mute, Zone.Z2),  # mute
+    ("Z3MUT", Mute, Zone.Z3),  # mute
+    ("HZMUT", Mute, Zone.HDZ),  # mute
+    ("SPK", SpeakerMode, Zone.ALL),  # amp.speaker_mode
+    ("HO", HdmiOut, Zone.ALL),  # amp.hdmi_out
+    ("HDO", Hdmi3Out, Zone.ALL),  # amp.hdmi3_out
+    ("HA", HdmiAudio, Zone.ALL),  # amp.hdmi_audio
+    ("PQ", Pqls, Zone.ALL),  # amp.pqls
+    ("FL", DisplayText, Zone.ALL),  # amp.display
+    ("SAA", Dimmer, Zone.ALL),  # amp.dimmer
+    ("SAB", SleepTime, Zone.ALL),  # amp.sleep_time
+    ("SAC", AmpMode, Zone.ALL),  # amp.mode
+    ("PKL", PanelLock, Zone.ALL),  # amp.panel_lock
+    ("RML", RemoteLock, Zone.ALL),  # amp.remote_lock
+    ("SVB", SystemMacAddress, Zone.ALL),  # amp.mac_addr
+    ("RGD", SystemAvrModel, Zone.ALL),  # amp.model
+    ("SSI", SystemSoftwareVersion, Zone.ALL),  # amp.software_version
+    ("AUA", AudioParameterProhibition, Zone.Z1),
+    ("AUB", AudioParameterWorking, Zone.Z1),
 ]

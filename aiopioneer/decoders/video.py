@@ -586,24 +586,24 @@ class VideoSuperResolution(CodeIntMap):
 
 
 RESPONSE_DATA_VIDEO = [
-    ["VST", VideoInformation, Zone.ALL],  # video
-    ["VTC", VideoResolution, Zone.Z1],  # video.resolution
-    ["VTB", VideoConverter, Zone.Z1],  # video.converter
-    ["VTD", VideoPureCinema, Zone.Z1],  # video.pure_cinema
-    ["VTE", VideoProgMotion, Zone.Z1],  # video.prog_motion
-    ["VTF", VideoStreamSmoother, Zone.Z1],  # video.stream_smoother
-    ["VTG", AdvancedVideoAdjust, Zone.Z1],  # video.advanced_video_adjust
-    ["VTH", VideoYnr, Zone.Z1],  # video.ynr
-    ["VTI", VideoCnr, Zone.Z1],  # video.cnr
-    ["VTJ", VideoBnr, Zone.Z1],  # video.bnr
-    ["VTK", VideoMnr, Zone.Z1],  # video.mnr
-    ["VTL", VideoDetail, Zone.Z1],  # video.detail
-    ["VTM", VideoSharpness, Zone.Z1],  # video.sharpness
-    ["VTN", VideoBrightness, Zone.Z1],  # video.brightness
-    ["VTO", VideoContrast, Zone.Z1],  # video.contrast
-    ["VTP", VideoHue, Zone.Z1],  # video.hue
-    ["VTQ", VideoChroma, Zone.Z1],  # video.chroma
-    ["VTR", VideoBlackSetup, Zone.Z1],  # video.black_setup
-    ["VTS", VideoAspect, Zone.Z1],  # video.aspect
-    ["VTT", VideoSuperResolution, Zone.Z1],  # video.super_resolution
+    ("VST", VideoInformation, Zone.ALL),  # video
+    ("VTC", VideoResolution, Zone.Z1),  # video.resolution
+    ("VTB", VideoConverter, Zone.Z1),  # video.converter
+    ("VTD", VideoPureCinema, Zone.Z1),  # video.pure_cinema
+    ("VTE", VideoProgMotion, Zone.Z1),  # video.prog_motion
+    ("VTF", VideoStreamSmoother, Zone.Z1),  # video.stream_smoother
+    ("VTG", AdvancedVideoAdjust, Zone.Z1),  # video.advanced_video_adjust
+    ("VTH", VideoYnr, Zone.Z1),  # video.ynr
+    ("VTI", VideoCnr, Zone.Z1),  # video.cnr
+    ("VTJ", VideoBnr, Zone.Z1),  # video.bnr
+    ("VTK", VideoMnr, Zone.Z1),  # video.mnr
+    ("VTL", VideoDetail, Zone.Z1),  # video.detail
+    ("VTM", VideoSharpness, Zone.Z1),  # video.sharpness
+    ("VTN", VideoBrightness, Zone.Z1),  # video.brightness
+    ("VTO", VideoContrast, Zone.Z1),  # video.contrast
+    ("VTP", VideoHue, Zone.Z1),  # video.hue
+    ("VTQ", VideoChroma, Zone.Z1),  # video.chroma
+    ("VTR", VideoBlackSetup, Zone.Z1),  # video.black_setup
+    ("VTS", VideoAspect, Zone.Z1),  # video.aspect
+    ("VTT", VideoSuperResolution, Zone.Z1),  # video.super_resolution
 ]

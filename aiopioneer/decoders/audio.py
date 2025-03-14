@@ -418,15 +418,15 @@ class ToneTreble(ToneDb):
 
 
 RESPONSE_DATA_AUDIO = [
-    ["AST", AudioInformation, Zone.ALL],  # audio
-    ["CLV", ChannelLevel, Zone.Z1],  # channel_levels
-    ["ZGE", ChannelLevel, Zone.Z2],  # channel_levels
-    ["ZHE", ChannelLevel, Zone.Z3],  # channel_levels
-    ["SR", ListeningMode, Zone.ALL],  # listening_mode
-    ["TO", ToneMode, Zone.Z1],  # tone.status
-    ["BA", ToneBass, Zone.Z1],  # tone.bass
-    ["TR", ToneTreble, Zone.Z1],  # tone.treble
-    ["ZGA", ToneMode, Zone.Z2],  # tone.status
-    ["ZGB", ToneBass, Zone.Z2],  # tone.bass
-    ["ZGC", ToneTreble, Zone.Z2],  # tone.treble
+    ("AST", AudioInformation, Zone.ALL),  # audio
+    ("CLV", ChannelLevel, Zone.Z1),  # channel_levels
+    ("ZGE", ChannelLevel, Zone.Z2),  # channel_levels
+    ("ZHE", ChannelLevel, Zone.Z3),  # channel_levels
+    ("SR", ListeningMode, Zone.ALL),  # listening_mode
+    ("TO", ToneMode, Zone.Z1),  # tone.status
+    ("BA", ToneBass, Zone.Z1),  # tone.bass
+    ("TR", ToneTreble, Zone.Z1),  # tone.treble
+    ("ZGA", ToneMode, Zone.Z2),  # tone.status
+    ("ZGB", ToneBass, Zone.Z2),  # tone.bass
+    ("ZGC", ToneTreble, Zone.Z2),  # tone.treble
 ]
