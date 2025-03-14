@@ -537,11 +537,12 @@ class IpControlPorts(CodeStrMap):
     ) -> list[Response]:
         """Response decoder for enabled IP control ports."""
         cls.set_response_properties(response)
-        ports = [int(response.code[i : i + 5]) for i in range(0, len(response.code), 5)]
+        ports = [response.code[i : i + 5] for i in range(0, len(response.code), 5)]
 
         def port_response(index: int) -> Response:
-            port = ports[index]
+            port = int(port_str := ports[index])
             return response.clone(
+                code=port_str,
                 property_name=f"ip_control_port_{index}",
                 value="disabled" if port == 99999 else port,
             )
