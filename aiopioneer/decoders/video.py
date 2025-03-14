@@ -6,6 +6,7 @@ from ..params import AVRParams, PARAM_VIDEO_RESOLUTION_MODES
 from ..properties import AVRProperties
 from .code_map import (
     CodeDefault,
+    CodeMapBlank,
     CodeMapSequence,
     CodeBoolMap,
     CodeIntMap,
@@ -334,17 +335,17 @@ class VideoInformation(CodeMapSequence):
         VideoSignalOutputExtendedColorspace,  # [12] signal_output_extended_colorspace
         VideoSignalHdmi1RecommendedResolution,  # [13:15] signal_hdmi1_recommended_resolution
         VideoSignalHdmi1Deepcolor,  # [15] signal_hdmi1_deepcolor
-        5,
+        CodeMapBlank(5),
         VideoSignalHdmi2RecommendedResolution,  # [21:23] signal_hdmi2_recommended_resolution
         VideoSignalHdmi2Deepcolor,  # [23] signal_hdmi2_deepcolor
     ]
 
     code_map_sequence_extra = [
         *code_map_sequence,
-        5,
+        CodeMapBlank(5),
         VideoSignalHdmi3RecommendedResolution,  # [29:31] signal_hdmi3_recommended_resolution
         VideoSignalHdmi3Deepcolor,  # [31] signal_hdmi3_deepcolor
-        5,
+        CodeMapBlank(5),
         VideoSignalInput3DFormat,  # [37:39] input_3d_format
         VideoSignalOutput3DFormat,  # [39:41] output_3d_format
         VideoSignalHdmi4RecommendedResolution,  # [41:43] signal_hdmi4_recommended_resolution

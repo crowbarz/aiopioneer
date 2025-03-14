@@ -6,6 +6,7 @@ from ..params import AVRParams
 from ..properties import AVRProperties
 from .code_map import (
     CodeDefault,
+    CodeMapBlank,
     CodeMapSequence,
     CodeDynamicDictStrMap,
     CodeDynamicDictListMap,
@@ -29,8 +30,7 @@ class AudioChannelActive(CodeDictStrMap):
         "1": "active",
     }
 
-    @classmethod
-    def subclass(cls, channel_type: str, channel: str):
+    def __new__(cls, channel_type: str, channel: str):
         """Create a subclass for channel type and name."""
         return type(
             f"AudioChannelActive_{channel_type}_{channel}",
@@ -213,38 +213,38 @@ class AudioInformation(CodeMapSequence):
     code_map_sequence = [
         AudioSignalInputInfo,  # [0:2] audio.input_signal
         AudioInputFrequency,  # [2:4] audio.input_frequency
-        AudioChannelActive.subclass("input", "L"),  # [4]
-        AudioChannelActive.subclass("input", "C"),  # [5]
-        AudioChannelActive.subclass("input", "R"),  # [6]
-        AudioChannelActive.subclass("input", "SL"),  # [7]
-        AudioChannelActive.subclass("input", "SR"),  # [8]
-        AudioChannelActive.subclass("input", "SBL"),  # [9]
-        AudioChannelActive.subclass("input", "SBC"),  # [10]
-        AudioChannelActive.subclass("input", "SBR"),  # [11]
-        AudioChannelActive.subclass("input", "LFE"),  # [12]
-        AudioChannelActive.subclass("input", "FHL"),  # [13]
-        AudioChannelActive.subclass("input", "FHR"),  # [14]
-        AudioChannelActive.subclass("input", "FWL"),  # [15]
-        AudioChannelActive.subclass("input", "FWR"),  # [16]
-        AudioChannelActive.subclass("input", "XL"),  # [17]
-        AudioChannelActive.subclass("input", "XC"),  # [18]
-        AudioChannelActive.subclass("input", "XR"),  # [19]
-        5,  ## (data21) to (data25) are reserved according to FY16AVRs
-        AudioChannelActive.subclass("output", "L"),  # [25]
-        AudioChannelActive.subclass("output", "C"),  # [26]
-        AudioChannelActive.subclass("output", "R"),  # [27]
-        AudioChannelActive.subclass("output", "SL"),  # [28]
-        AudioChannelActive.subclass("output", "SR"),  # [29]
-        AudioChannelActive.subclass("output", "SBL"),  # [30]
-        AudioChannelActive.subclass("output", "SB"),  # [31]
-        AudioChannelActive.subclass("output", "SBR"),  # [32]
+        AudioChannelActive("input", "L"),  # [4]
+        AudioChannelActive("input", "C"),  # [5]
+        AudioChannelActive("input", "R"),  # [6]
+        AudioChannelActive("input", "SL"),  # [7]
+        AudioChannelActive("input", "SR"),  # [8]
+        AudioChannelActive("input", "SBL"),  # [9]
+        AudioChannelActive("input", "SBC"),  # [10]
+        AudioChannelActive("input", "SBR"),  # [11]
+        AudioChannelActive("input", "LFE"),  # [12]
+        AudioChannelActive("input", "FHL"),  # [13]
+        AudioChannelActive("input", "FHR"),  # [14]
+        AudioChannelActive("input", "FWL"),  # [15]
+        AudioChannelActive("input", "FWR"),  # [16]
+        AudioChannelActive("input", "XL"),  # [17]
+        AudioChannelActive("input", "XC"),  # [18]
+        AudioChannelActive("input", "XR"),  # [19]
+        CodeMapBlank(5),  ## (data21) to (data25) are reserved according to FY16AVRs
+        AudioChannelActive("output", "L"),  # [25]
+        AudioChannelActive("output", "C"),  # [26]
+        AudioChannelActive("output", "R"),  # [27]
+        AudioChannelActive("output", "SL"),  # [28]
+        AudioChannelActive("output", "SR"),  # [29]
+        AudioChannelActive("output", "SBL"),  # [30]
+        AudioChannelActive("output", "SB"),  # [31]
+        AudioChannelActive("output", "SBR"),  # [32]
     ]
     code_map_sequence_extra = [
         *code_map_sequence,
-        10,
+        CodeMapBlank(10),
         AudioOutputFrequency,  # [43:45] audio.output_frequency
         AudioOutputBits,  # [45:47] audio.output_bits
-        4,
+        CodeMapBlank(4),
         AudioOutputPqls,  # [51] audio.output_pqls
         AudioOutputAutoPhaseControlPlus,  # [52:54] audio.output_auto_phase_control_plus
         AudioOutputReversePhase,  # [54] audio.output_reverse_phase

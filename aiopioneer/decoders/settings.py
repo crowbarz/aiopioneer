@@ -5,6 +5,7 @@ from ..params import AVRParams, PARAM_SPEAKER_SYSTEM_MODES
 from .code_map import (
     CodeDefault,
     CodeMapSequence,
+    CodeMapBlank,
     CodeBoolMap,
     CodeStrMap,
     CodeDictMap,
@@ -103,9 +104,9 @@ class McaccDiagnosticStatusSummary(CodeMapSequence):
     code_map_sequence = [
         McaccDiagnosticCurrentMeasurement,  # [:2]
         McaccDiagnosticTotalMeasurement,  # [2:4]
-        1,
+        CodeMapBlank(1),
         McaccDiagnosticStatus,  # [5]
-        -1,
+        CodeMapBlank(-1),
         McaccDiagnosticError,  # [-1]
     ]
 
