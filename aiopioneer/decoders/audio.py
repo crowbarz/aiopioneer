@@ -1,16 +1,277 @@
 """aiopioneer response decoders for audio responses."""
 
+from ..command_queue import CommandItem
 from ..const import Zone
 from ..params import AVRParams
 from ..properties import AVRProperties
 from .code_map import (
+    CodeDefault,
+    CodeMapSequence,
     CodeDynamicDictStrMap,
     CodeDynamicDictListMap,
     CodeDictStrMap,
+    CodeBoolMap,
     CodeIntMap,
     CodeFloatMap,
 )
 from .response import Response
+
+
+class AudioChannelActive(CodeDictStrMap):
+    """Audio channel active."""
+
+    friendly_name = "audio channel active"
+    base_property = "audio"
+    property_name = "channel_active"  # unused
+
+    code_map = {
+        "0": "inactive",
+        "1": "active",
+    }
+
+    @classmethod
+    def subclass(cls, channel_type: str, channel: str):
+        """Create a subclass for channel type and name."""
+        return type(
+            f"AudioChannelActive_{channel_type}_{channel}",
+            (AudioChannelActive,),
+            {
+                "friendly_name": f"{channel_type} channel {channel}",
+                "property_name": f"{channel_type}_channels.{channel}",
+            },
+        )
+
+
+class AudioInputMultichannel(CodeBoolMap):
+    """Audio input multichannel."""
+
+    friendly_name = "audio input multichannel"
+    base_property = "audio"
+    property_name = "input_multichannel"
+
+    @classmethod
+    def decode_response(
+        cls,
+        response: Response,
+        params: AVRParams,
+    ) -> list[Response]:
+        """Response decoder for input multichannel."""
+
+        def check_input_multichannel(response: Response) -> list[Response]:
+            """Trigger listening mode update if input multichannel has changed."""
+            if response.properties.audio.get("input_multichannel") == response.value:
+                return []
+            response.update(
+                queue_commands=[CommandItem("_update_listening_modes", queue_id=3)]
+            )
+            return [response]
+
+        super().decode_response(response=response, params=params)
+        response.update(callback=check_input_multichannel)
+        return [response]
+
+    @classmethod
+    def code_to_value(cls, code: str) -> bool:
+        return all([CodeBoolMap[c] for c in code])
+
+
+class AudioSignalInputInfo(CodeDictStrMap):
+    """Audio signal input info."""
+
+    friendly_name = "audio input signal"  # NOTE: inconsistent
+    base_property = "audio"
+    property_name = "input_signal"
+
+    code_map = {
+        "00": "ANALOG",
+        "01": "ANALOG",
+        "02": "ANALOG",
+        "03": "PCM",
+        "04": "PCM",
+        "05": "DOLBY DIGITAL",
+        "06": "DTS",
+        "07": "DTS-ES Matrix",
+        "08": "DTS-ES Discrete",
+        "09": "DTS 96/24",
+        "10": "DTS 96/24 ES Matrix",
+        "11": "DTS 96/24 ES Discrete",
+        "12": "MPEG-2 AAC",
+        "13": "WMA9 Pro",
+        "14": "DSD (HDMI or File via DSP route)",
+        "15": "HDMI THROUGH",
+        "16": "DOLBY DIGITAL PLUS",
+        "17": "DOLBY TrueHD",
+        "18": "DTS EXPRESS",
+        "19": "DTS-HD Master Audio",
+        "20": "DTS-HD High Resolution",
+        "21": "DTS-HD High Resolution",
+        "22": "DTS-HD High Resolution",
+        "23": "DTS-HD High Resolution",
+        "24": "DTS-HD High Resolution",
+        "25": "DTS-HD High Resolution",
+        "26": "DTS-HD High Resolution",
+        "27": "DTS-HD Master Audio",
+        "28": "DSD (HDMI or File via DSD DIRECT route)",
+        "29": "Dolby Atmos",
+        "30": "Dolby Atmos over Dolby Digital Plus",
+        "31": "Dolby Atmos over Dolby TrueHD",
+        "64": "MP3",
+        "65": "WAV",
+        "66": "WMA",
+        "67": "MPEG4-AAC",
+        "68": "FLAC",
+        "69": "ALAC(Apple Lossless)",
+        "70": "AIFF",
+        "71": "DSD (USB-DAC)",
+        "72": "Spotify",
+    }
+
+
+class AudioSignalFrequency(CodeDictStrMap):
+    """Audio signal frequency."""
+
+    friendly_name = "audio frequency"
+    base_property = "audio"
+    property_name = "frequency"  # unused
+
+    code_map = {
+        CodeDefault(): None,
+        "00": "32kHz",
+        "01": "44.1kHz",
+        "02": "48kHz",
+        "03": "88.2kHz",
+        "04": "96kHz",
+        "05": "176.4kHz",
+        "06": "192kHz",
+        # "07": "---",
+        "32": "2.8MHz",
+        "33": "5.6MHz",
+    }
+
+
+class AudioInputFrequency(AudioSignalFrequency):
+    """Audio input frequency."""
+
+    friendly_name = "audio input frequency"
+    base_property = "audio"
+    property_name = "input_frequency"
+
+
+class AudioOutputFrequency(AudioSignalFrequency):
+    """Audio output frequency."""
+
+    friendly_name = "audio output frequency"
+    base_property = "audio"
+    property_name = "output_frequency"
+
+
+class AudioOutputBits(CodeIntMap):
+    """Audio output bits."""
+
+    friendly_name = "audio output bits"
+    base_property = "audio"
+    property_name = "output_bits"
+
+    code_zfill = 2
+
+
+class AudioOutputPqls(CodeDictStrMap):
+    """Audio output PQLS."""
+
+    friendly_name = "audio output PQLS"
+    base_property = "audio"
+    property_name = "output_pqls"
+
+    code_map = {"0": "off", "1": "2h", "2": "Multi-channel", "3": "Bitstream"}
+
+
+class AudioOutputAutoPhaseControlPlus(CodeIntMap):
+    """Audio output auto phase control plus."""
+
+    friendly_name = "audio output auto phase control plus"
+    base_property = "audio"
+    property_name = "output_auto_phase_control_plus"
+
+    code_zfill = 2
+
+
+class AudioOutputReversePhase(CodeBoolMap):
+    """Audio output reverse phase."""
+
+    friendly_name = "audio output reverse phase"
+    base_property = "audio"
+    property_name = "output_reverse_phase"
+
+
+class AudioInformation(CodeMapSequence):
+    """Audio information."""
+
+    friendly_name = "audio information"
+    base_property = "audio"
+    property_name = "information"  # unused
+
+    code_map_sequence = [
+        AudioSignalInputInfo,  # [0:2] audio.input_signal
+        AudioInputFrequency,  # [2:4] audio.input_frequency
+        AudioChannelActive.subclass("input", "L"),  # [4]
+        AudioChannelActive.subclass("input", "C"),  # [5]
+        AudioChannelActive.subclass("input", "R"),  # [6]
+        AudioChannelActive.subclass("input", "SL"),  # [7]
+        AudioChannelActive.subclass("input", "SR"),  # [8]
+        AudioChannelActive.subclass("input", "SBL"),  # [9]
+        AudioChannelActive.subclass("input", "SBC"),  # [10]
+        AudioChannelActive.subclass("input", "SBR"),  # [11]
+        AudioChannelActive.subclass("input", "LFE"),  # [12]
+        AudioChannelActive.subclass("input", "FHL"),  # [13]
+        AudioChannelActive.subclass("input", "FHR"),  # [14]
+        AudioChannelActive.subclass("input", "FWL"),  # [15]
+        AudioChannelActive.subclass("input", "FWR"),  # [16]
+        AudioChannelActive.subclass("input", "XL"),  # [17]
+        AudioChannelActive.subclass("input", "XC"),  # [18]
+        AudioChannelActive.subclass("input", "XR"),  # [19]
+        5,  ## (data21) to (data25) are reserved according to FY16AVRs
+        AudioChannelActive.subclass("output", "L"),  # [25]
+        AudioChannelActive.subclass("output", "C"),  # [26]
+        AudioChannelActive.subclass("output", "R"),  # [27]
+        AudioChannelActive.subclass("output", "SL"),  # [28]
+        AudioChannelActive.subclass("output", "SR"),  # [29]
+        AudioChannelActive.subclass("output", "SBL"),  # [30]
+        AudioChannelActive.subclass("output", "SB"),  # [31]
+        AudioChannelActive.subclass("output", "SBR"),  # [32]
+    ]
+    code_map_sequence_extra = [
+        *code_map_sequence,
+        10,
+        AudioOutputFrequency,  # [43:45] audio.output_frequency
+        AudioOutputBits,  # [45:47] audio.output_bits
+        4,
+        AudioOutputPqls,  # [51] audio.output_pqls
+        AudioOutputAutoPhaseControlPlus,  # [52:54] audio.output_auto_phase_control_plus
+        AudioOutputReversePhase,  # [54] audio.output_reverse_phase
+    ]
+
+    @classmethod
+    def decode_response(
+        cls,
+        response: Response,
+        params: AVRParams,
+    ) -> list[Response]:
+        """Response decoder for audio information."""
+        code_map_sequence = cls.code_map_sequence
+
+        ## FY11 AVRs do not have more than 43 data bits (VSX-1021)
+        if len(response.code) > 43:
+            code_map_sequence = cls.code_map_sequence_extra
+
+        responses = AudioInputMultichannel.decode_response(
+            response=response.clone(code=response.code[4:7]), params=params
+        )
+        responses.extend(
+            cls.decode_response_sequence(
+                response=response, params=params, code_map_sequence=code_map_sequence
+            )
+        )
+        return responses
 
 
 class ChannelLevel(CodeFloatMap):
@@ -157,6 +418,7 @@ class ToneTreble(ToneDb):
 
 
 RESPONSE_DATA_AUDIO = [
+    ["AST", AudioInformation, Zone.ALL],  # audio
     ["CLV", ChannelLevel, Zone.Z1],  # channel_levels
     ["ZGE", ChannelLevel, Zone.Z2],  # channel_levels
     ["ZHE", ChannelLevel, Zone.Z3],  # channel_levels

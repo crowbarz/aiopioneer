@@ -275,6 +275,25 @@ class Pqls(CodeMapHasProperty, CodeDictStrMap):
     code_map = {"0": "off", "1": "auto"}
 
 
+class DisplayText(CodeStrMap):
+    """Display text."""
+
+    friendly_name = "display text"
+    base_property = "amp"
+    property_name = "display"
+
+    ## NOTE: value_to_code not implemented
+
+    @classmethod
+    def code_to_value(cls, code: str) -> str:
+        """Convert code to value."""
+        return (
+            "".join([chr(int(code[i : i + 2], 16)) for i in range(2, len(code) - 1, 2)])
+            .expandtabs(1)
+            .strip()
+        )
+
+
 class Dimmer(CodeDictStrMap):
     """Dimmer."""
 
@@ -442,6 +461,7 @@ RESPONSE_DATA_AMP = [
     ["HDO", Hdmi3Out, Zone.ALL],  # amp.hdmi3_out
     ["HA", HdmiAudio, Zone.ALL],  # amp.hdmi_audio
     ["PQ", Pqls, Zone.ALL],  # amp.pqls
+    ["FL", DisplayText, Zone.ALL],  # amp.display
     ["SAA", Dimmer, Zone.ALL],  # amp.dimmer
     ["SAB", SleepTime, Zone.ALL],  # amp.sleep_time
     ["SAC", AmpMode, Zone.ALL],  # amp.mode

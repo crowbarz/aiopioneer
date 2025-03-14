@@ -9,7 +9,6 @@ from ..properties import AVRProperties
 from .audio import RESPONSE_DATA_AUDIO
 from .code_map import CodeMapBase
 from .dsp import RESPONSE_DATA_DSP
-from .information import RESPONSE_DATA_INFO
 from .response import Response
 from .settings import RESPONSE_DATA_SYSTEM
 from .amp import RESPONSE_DATA_AMP
@@ -24,7 +23,6 @@ RESPONSE_DATA = [
     *RESPONSE_DATA_DSP,
     *RESPONSE_DATA_AUDIO,
     *RESPONSE_DATA_TUNER,
-    *RESPONSE_DATA_INFO,
     *RESPONSE_DATA_VIDEO,
 ]
 
