@@ -195,6 +195,7 @@ class SourceName(CodeStrMap):
                 properties.source_id_to_name.pop(source_id)
             if source_name in properties.source_name_to_id:
                 properties.source_name_to_id.pop(source_name)
+            return []
 
         super().decode_response(response=response, params=params)
         source_id, source_name = response.value
