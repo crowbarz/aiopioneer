@@ -395,7 +395,7 @@ class McaccSpeakerDistance(CodeFloatMap):
     def code_to_value(cls, code: str) -> str | float:
         unit_metric = code[0] == "1"
         if unit_metric:
-            return super().code_to_value(code[1:])
+            return super().code_to_value(code=code[1:])
         value_ft = int(code[1:3])
         value_in = int(code[3:5])
         value_half_in = " 1/2" if code[5:7] == "12" else ""

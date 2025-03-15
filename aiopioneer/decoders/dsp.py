@@ -46,13 +46,13 @@ class PhaseControlPlus(CodeIntMap):
     def value_to_code(cls, value: int | str) -> str:
         if value == "auto":
             return "97"
-        return super().value_to_code(value)
+        return super().value_to_code(value=value)
 
     @classmethod
     def code_to_value(cls, code: str) -> int:
         if code in ["97", "98", "99"]:
             return "auto"
-        return super().code_to_value(code)
+        return super().code_to_value(code=code)
 
 
 class VirtualSpeakers(CodeDictStrMap):
@@ -255,13 +255,13 @@ class LfeAttenuator(CodeIntMap):
     def value_to_code(cls, value: int | str) -> str:
         if value == "off":
             return "50"
-        return super().value_to_code(value)
+        return super().value_to_code(value=value)
 
     @classmethod
     def code_to_value(cls, code: str) -> int | str:
         if code == "50":
             return "off"
-        return super().code_to_value(code)
+        return super().code_to_value(code=code)
 
 
 class SacdGain(CodeIntMap):

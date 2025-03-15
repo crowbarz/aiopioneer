@@ -529,7 +529,7 @@ class CodeDictListMap(CodeDictMap):
 
     @classmethod
     def code_to_value(cls, code: str) -> Tuple[str, list]:
-        value_list = super().code_to_value(code)
+        value_list = super().code_to_value(code=code)
         return value_list[0]
 
     @classmethod
