@@ -156,7 +156,7 @@ PIONEER_COMMANDS: dict[str, dict[Zone | str, str | list[str] | list[CodeMapBase]
         Zone.Z3: ["?Z3M", "Z3MUT"],
         Zone.HDZ: ["?HZM", "HZMUT"],
     },
-    "query_source_id": {
+    "query_zone_source": {
         Zone.Z1: ["?F", "FN"],
         Zone.Z2: ["?ZS", "Z2F"],
         Zone.Z3: ["?ZT", "Z3F"],
@@ -427,11 +427,11 @@ PIONEER_COMMANDS: dict[str, dict[Zone | str, str | list[str] | list[CodeMapBase]
     ## system
     "query_system_speaker_system": {Zone.Z1: ["?SSF", "SSF"]},
     "set_system_speaker_system": {Zone.Z1: ["?SSF", "SSF"], "args": [SpeakerSystem]},
-    "query_source_name": {Zone.Z1: ["?RGB", "RGB"]},
+    "query_source_name": {Zone.Z1: ["?RGB", "RGB"], "args": [CodeMapBlank(), SourceId]},
     "set_source_name": {Zone.Z1: ["1RGB", "RGB"], "args": [SourceName, SourceId]},
     "set_default_source_name": {
         Zone.Z1: ["0RGB", "RGB"],
-        "args": [CodeMapBlank(None), SourceId],
+        "args": [CodeMapBlank(), SourceId],
     },
     "query_system_home_menu_status": {Zone.Z1: ["?SSL", "SSL"]},
     "query_system_mcacc_diagnostics": {Zone.Z1: ["?SSJ", "SSJ"]},

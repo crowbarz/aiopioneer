@@ -122,11 +122,15 @@ class Volume(CodeIntMap):
         return cls.value_to_code(value=args[0], zone=zone, properties=properties)
 
 
-class InputSource(CodeStrMap):
-    """Zone input source."""
+class SourceId(CodeStrMap):
+    """Zone source ID."""
 
-    friendly_name = "zone input source"
-    base_property = "source_id"
+    friendly_name = "source ID"
+    base_property = "source_id"  # unused
+
+    code_zfill = 2
+    value_min = 0
+    value_max = 99
 
     @classmethod
     def decode_response(
@@ -134,7 +138,7 @@ class InputSource(CodeStrMap):
         response: Response,
         params: AVRParams,
     ) -> list[Response]:
-        """Response decoder for zone input source."""
+        """Response decoder for zone source ID."""
         super().decode_response(response=response, params=params)
         source = response.value
         queue_commands = []
@@ -167,6 +171,12 @@ class InputSource(CodeStrMap):
                 value=media_control_mode,
             ),
         ]
+
+    @classmethod
+    def value_to_code(cls, value: str | int):
+        if isinstance(value, int):
+            return str(value).zfill(2)
+        return super().value_to_code(value=value)
 
 
 class SourceName(CodeStrMap):
@@ -222,16 +232,6 @@ class SourceName(CodeStrMap):
     @classmethod
     def code_to_value(cls, code: str) -> tuple[str, str]:
         return code[:2], code[3:]
-
-
-class SourceId(CodeIntMap):
-    """Source ID."""
-
-    friendly_name = "source ID"
-
-    code_zfill = 2
-    value_min = 0
-    value_max = 99
 
 
 class Mute(CodeInverseBoolMap):
@@ -464,10 +464,10 @@ RESPONSE_DATA_AMP = [
     ("ZV", Volume, Zone.Z2),  # volume
     ("YV", Volume, Zone.Z3),  # volume
     ("XV", Volume, Zone.HDZ),  # volume
-    ("FN", InputSource, Zone.Z1),  # source_id
-    ("Z2F", InputSource, Zone.Z2),  # source_id
-    ("Z3F", InputSource, Zone.Z3),  # source_id
-    ("ZEA", InputSource, Zone.HDZ),  # source_id
+    ("FN", SourceId, Zone.Z1),  # source_id
+    ("Z2F", SourceId, Zone.Z2),  # source_id
+    ("Z3F", SourceId, Zone.Z3),  # source_id
+    ("ZEA", SourceId, Zone.HDZ),  # source_id
     ("RGB", SourceName, Zone.ALL),  # source_name_to_id, source_id_to_name
     ("MUT", Mute, Zone.Z1),  # mute
     ("Z2MUT", Mute, Zone.Z2),  # mute

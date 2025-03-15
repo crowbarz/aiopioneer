@@ -176,9 +176,7 @@ class PioneerAVR(AVRConnection):
             for src_id in range(self.params.get_param(PARAM_MAX_SOURCE_ID) + 1):
                 try:
                     response = await self.send_command(
-                        "query_source_name",
-                        suffix=str(src_id).zfill(2),
-                        rate_limit=False,
+                        "query_source_name", src_id, rate_limit=False
                     )
                 except (AVRCommandError, AVRResponseTimeoutError):
                     response = None
@@ -321,7 +319,7 @@ class PioneerAVR(AVRConnection):
 
         ## Check for timeouts, but ignore errors (eg. ?V will
         ## return E02 immediately after power on)
-        for command in ["query_volume", "query_mute", "query_source_id"]:
+        for command in ["query_volume", "query_mute", "query_zone_source"]:
             if await self.send_command(command, zone=zone, ignore_error=True) is None:
                 raise AVRResponseTimeoutError(command=command)
 
