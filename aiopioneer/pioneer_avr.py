@@ -916,17 +916,11 @@ class PioneerAVR(AVRConnection):
         # does not have unique commands
         await self.send_command(command)
 
-    async def set_source_name(
-        self, source_id: str, source_name: str = "", default: bool = False
-    ) -> None:
-        """Renames a given input, set the default parameter to true to reset to default."""
-        if default:
-            await self.send_command("set_default_source_name", suffix=source_id)
+    async def set_source_name(self, source_id: str, source_name: str = None) -> None:
+        """Renames an input to source_name. Reset to default if source_name is None."""
+        if source_name is None:
+            await self.send_command("set_default_source_name", source_id)
             return
-
-        if len(source_name) > 14:
-            raise ValueError(f"source name {source_name} is longer than 14 characters")
         if self.properties.source_id_to_name.get(source_id) == source_name:
             return
-
-        await self.send_command("set_source_name", prefix=source_name, suffix=source_id)
+        await self.send_command("set_source_name", source_name, source_id)

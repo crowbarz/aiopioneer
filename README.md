@@ -187,10 +187,10 @@ If _zone_ is **None**, then return the dict of all available source names to sou
 
 Return the source name for _source_id_.
 
-_awaitable_ `PioneerAVR.set_source_name(`_source_id_: **str**, _source_name_: **str** = "", _default_: **bool** = **False**`)` -> **bool**
+_awaitable_ `PioneerAVR.set_source_name(`_source_id_: **str**, _source_name_: **str** = **None**`)` -> **bool**
 
 Renames _source_id_ to _source_name_ on the AVR. <br/>
-If _default_ is **True**, reset _source_id_ to the default source name.
+If _source_name_ is **None**, reset source name to default.
 
 `AVRProperties.clear_source_id(`_source_id_: **str**`)`
 

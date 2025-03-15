@@ -169,10 +169,10 @@ class InputSource(CodeStrMap):
         ]
 
 
-class InputName(CodeStrMap):
-    """Input name."""
+class SourceName(CodeStrMap):
+    """Source name."""
 
-    friendly_name = "input name"
+    friendly_name = "source name"
 
     @classmethod
     def decode_response(
@@ -180,7 +180,7 @@ class InputName(CodeStrMap):
         response: Response,
         params: AVRParams,
     ) -> list[Response]:
-        """Response decoder for input name."""
+        """Response decoder for source name."""
 
         if not response.properties.query_sources:
             ## Only update AVR source mappings if AVR sources are being queried
@@ -213,8 +213,24 @@ class InputName(CodeStrMap):
         ]
 
     @classmethod
+    def value_to_code(cls, value: str) -> str:
+        if len(value) > 14:
+            raise ValueError(f"source name {value} is longer than 14 characters")
+        return value
+
+    @classmethod
     def code_to_value(cls, code: str) -> tuple[str, str]:
         return code[:2], code[3:]
+
+
+class SourceId(CodeIntMap):
+    """Source ID."""
+
+    friendly_name = "source ID"
+
+    code_zfill = 2
+    value_min = 0
+    value_max = 99
 
 
 class Mute(CodeInverseBoolMap):
@@ -451,7 +467,7 @@ RESPONSE_DATA_AMP = [
     ("Z2F", InputSource, Zone.Z2),  # source_id
     ("Z3F", InputSource, Zone.Z3),  # source_id
     ("ZEA", InputSource, Zone.HDZ),  # source_id
-    ("RGB", InputName, Zone.ALL),  # source_name_to_id
+    ("RGB", SourceName, Zone.ALL),  # source_name_to_id, source_id_to_name
     ("MUT", Mute, Zone.Z1),  # mute
     ("Z2MUT", Mute, Zone.Z2),  # mute
     ("Z3MUT", Mute, Zone.Z3),  # mute

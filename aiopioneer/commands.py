@@ -3,6 +3,8 @@
 from .const import Zone
 from .decoders.amp import (
     Volume,
+    SourceName,
+    SourceId,
     SpeakerMode,
     HdmiOut,
     Hdmi3Out,
@@ -426,8 +428,11 @@ PIONEER_COMMANDS: dict[str, dict[Zone | str, str | list[str] | list[CodeMapBase]
     "query_system_speaker_system": {Zone.Z1: ["?SSF", "SSF"]},
     "set_system_speaker_system": {Zone.Z1: ["?SSF", "SSF"], "args": [SpeakerSystem]},
     "query_source_name": {Zone.Z1: ["?RGB", "RGB"]},
-    "set_source_name": {Zone.Z1: ["1RGB", "RGB"]},
-    "set_default_source_name": {Zone.Z1: ["0RGB", "RGB"]},
+    "set_source_name": {Zone.Z1: ["1RGB", "RGB"], "args": [SourceName, SourceId]},
+    "set_default_source_name": {
+        Zone.Z1: ["0RGB", "RGB"],
+        "args": [CodeMapBlank(None), SourceId],
+    },
     "query_system_home_menu_status": {Zone.Z1: ["?SSL", "SSL"]},
     "query_system_mcacc_diagnostics": {Zone.Z1: ["?SSJ", "SSJ"]},
     "query_system_standing_wave_status": {Zone.Z1: ["?SUU", "SUU"]},
