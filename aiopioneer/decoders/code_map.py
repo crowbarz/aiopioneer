@@ -1,6 +1,7 @@
 """aiopioneer code map class."""
 
 import logging
+from abc import ABC, abstractmethod
 from typing import Any, Tuple
 
 from ..const import Zone
@@ -25,7 +26,7 @@ class CodeDefault:
         return isinstance(value, CodeDefault)
 
 
-class CodeMapBase:
+class CodeMapBase(ABC):
     """Map AVR codes to values."""
 
     friendly_name = None
@@ -44,6 +45,7 @@ class CodeMapBase:
         return cls.friendly_name if cls.friendly_name else cls.__name__
 
     @classmethod
+    @abstractmethod
     def get_len(cls) -> int:
         """Get class field length."""
         raise NotImplementedError(f"class length undefined for {cls.get_name()}")
@@ -74,11 +76,13 @@ class CodeMapBase:
             response.update(property_name=cls.property_name)
 
     @classmethod
+    @abstractmethod
     def value_to_code(cls, value) -> str:
         """Convert value to code."""
         raise NotImplementedError(f"value_to_code unsupported for {cls.get_name()}")
 
     @classmethod
+    @abstractmethod
     def code_to_value(cls, code: str) -> Any:
         """Convert code to value."""
         raise NotImplementedError(f"code_to_value unsupported for {cls.get_name()}")
@@ -418,10 +422,9 @@ class CodeDynamicDictMap(CodeMapBase):
         )
         return [response]
 
-    ## Override in child class
-
     # pylint: disable=unused-argument
     @classmethod
+    @abstractmethod
     def parse_args(
         cls,
         command: str,
@@ -434,6 +437,7 @@ class CodeDynamicDictMap(CodeMapBase):
 
     # pylint: disable=unused-argument
     @classmethod
+    @abstractmethod
     def decode_response(cls, response: Response, params: AVRParams) -> list[Response]:
         raise NotImplementedError(f"decode_response unsupported for {cls.get_name()}")
 
