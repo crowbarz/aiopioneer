@@ -17,7 +17,7 @@ from .video import RESPONSE_DATA_VIDEO
 
 _LOGGER = logging.getLogger(__name__)
 
-RESPONSE_DATA: list[tuple[str, CodeMapBase, Zone]] = [
+RESPONSE_DATA: list[tuple[str, type[CodeMapBase], Zone]] = [
     *RESPONSE_DATA_AMP,
     *RESPONSE_DATA_SYSTEM,
     *RESPONSE_DATA_DSP,
