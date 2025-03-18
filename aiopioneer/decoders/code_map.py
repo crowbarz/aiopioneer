@@ -162,6 +162,34 @@ class CodeMapBlank(CodeMapComplex, CodeMapBase):
         return []
 
 
+class CodeMapQuery(CodeMapBase):
+    """Query code map."""
+
+    @classmethod
+    def get_len(cls):
+        return 1
+
+    @classmethod
+    def get_nargs(cls):
+        return 0
+
+    # pylint: disable=unused-argument
+    @classmethod
+    def parse_args(
+        cls,
+        command: str,
+        args: list,
+        zone: Zone,
+        params: AVRParams,
+        properties: AVRProperties,
+    ) -> str:
+        return "?"
+
+    @classmethod
+    def decode_response(cls, response: Response, params: AVRParams) -> list[Response]:
+        return []
+
+
 # pylint: disable=abstract-method
 class CodeMapSequence(CodeMapComplex, CodeMapBase):
     """Map AVR codes to a sequence of code maps."""

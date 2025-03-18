@@ -326,25 +326,18 @@ class PioneerAVR(AVRConnection):
         async def send_query_command(command: str, enabled_functions: set[str]):
             comm_parts = command.split("_")
             if comm_parts[0] == "query" and comm_parts[1] in enabled_functions:
-                await self.send_command(
-                    command, zone=zone, ignore_error=True, rate_limit=False
-                )
-            elif (
-                ## TODO: parameterise query_channel_levels
-                command == "set_channel_levels"
-                and "channels" in enabled_functions
-                and self.properties.power.get(Zone.Z1)
-            ):
-                ## Channel level updates are handled differently as it
-                ## requires more complex logic to send the commands we use
-                ## the set_channel_levels command and prefix the query to it
-                for channel in CHANNELS_ALL:
+                if comm_parts[1] == "channel":
+                    for channel in CHANNELS_ALL:
+                        await self.send_command(
+                            command,
+                            channel,
+                            zone=zone,
+                            ignore_error=True,
+                            rate_limit=False,
+                        )
+                else:
                     await self.send_command(
-                        command,
-                        zone=zone,
-                        prefix="?" + channel.ljust(3, "_"),
-                        ignore_error=True,
-                        rate_limit=False,
+                        command, zone=zone, ignore_error=True, rate_limit=False
                     )
 
         ## Zone-specific updates, if enabled
@@ -383,6 +376,7 @@ class PioneerAVR(AVRConnection):
             last_updated_str = f"{(now - self.last_updated):.3f}s ago"
         _LOGGER.info("refreshing all zones (last updated %s)", last_updated_str)
         self.last_updated = time.time()
+        self.properties.zones_initial_refresh = set()
 
         for zone in Zone:  ## refresh zones in enum order
             if zone in self.properties.zones:
@@ -831,19 +825,7 @@ class PioneerAVR(AVRConnection):
     ) -> None:
         """Set the level (gain) for amplifier channel in zone."""
         zone = self._check_zone(zone)
-        if channel_levels := self.properties.channel_levels.get(zone) is None:
-            raise AVRCommandUnavailableError(
-                command="set_channel_levels", err_key="channel_levels", zone=zone
-            )
-        if channel_levels.get(channel) is None:
-            raise AVRCommandUnavailableError(
-                command="set_channel_levels",
-                err_key="channel",
-                zone=zone,
-                channel=channel,
-            )
-        prefix = channel.ljust(3, "_") + ChannelLevel(level)
-        await self.send_command("set_channel_levels", zone=zone, prefix=prefix)
+        await self.send_command("set_channel_levels", channel, level, zone=zone)
 
     async def set_video_settings(self, zone: Zone, **arguments) -> None:
         """Set video settings for a given zone."""

@@ -1,16 +1,19 @@
 """aiopioneer response decoders for audio responses."""
 
 from ..command_queue import CommandItem
-from ..const import Zone
+from ..const import Zone, CHANNELS_ALL
+from ..exceptions import AVRCommandUnavailableError
 from ..params import AVRParams
 from ..properties import AVRProperties
 from .code_map import (
     CodeDefault,
     CodeMapBlank,
+    CodeMapQuery,
     CodeMapSequence,
     CodeDynamicDictStrMap,
     CodeDynamicDictListMap,
     CodeDictStrMap,
+    CodeStrMap,
     CodeBoolMap,
     CodeIntMap,
     CodeFloatMap,
@@ -239,9 +242,21 @@ class AudioInformation(CodeMapSequence):
         AudioChannelActive("output", "SB"),  # [31]
         AudioChannelActive("output", "SBR"),  # [32]
     ]
-    code_map_sequence_extra = [
+    code_map_sequence_extra_1 = [
         *code_map_sequence,
-        CodeMapBlank(10),
+        AudioChannelActive("output", "SW"),  # [33]
+        AudioChannelActive("output", "FHL"),  # [34]
+        AudioChannelActive("output", "FHR"),  # [35]
+        AudioChannelActive("output", "FWL"),  # [36]
+        AudioChannelActive("output", "FWR"),  # [37]
+        AudioChannelActive("output", "TML"),  # [38]
+        AudioChannelActive("output", "TMR"),  # [39]
+        AudioChannelActive("output", "TRL"),  # [40]
+        AudioChannelActive("output", "TRR"),  # [41]
+        AudioChannelActive("output", "SW2"),  # [42]
+    ]
+    code_map_sequence_extra_2 = [
+        *code_map_sequence_extra_1,
         AudioOutputFrequency,  # [43:45] audio.output_frequency
         AudioOutputBits,  # [45:47] audio.output_bits
         CodeMapBlank(4),
@@ -259,9 +274,11 @@ class AudioInformation(CodeMapSequence):
         """Response decoder for audio information."""
         code_map_sequence = cls.code_map_sequence
 
-        ## FY11 AVRs do not have more than 43 data bits (VSX-1021)
-        if len(response.code) > 43:
-            code_map_sequence = cls.code_map_sequence_extra
+        if len(response.code) >= 55:
+            code_map_sequence = cls.code_map_sequence_extra_2
+        elif len(response.code) >= 43:
+            ## FY11 AVRs do not have more than 43 data bits (VSX-1021)
+            code_map_sequence = cls.code_map_sequence_extra_1
 
         responses = AudioInputMultichannel.decode_response(
             response=response.clone(code=response.code[4:7]), params=params
@@ -278,7 +295,6 @@ class ChannelLevel(CodeFloatMap):
     """Channel level. (1step=0.5dB)"""
 
     friendly_name = "channel level"
-    base_property = "channel_levels"  # NOTE: inconsistency
 
     value_min = -12
     value_max = 12
@@ -287,17 +303,79 @@ class ChannelLevel(CodeFloatMap):
     value_offset = 25
     code_zfill = 2
 
+
+class SpeakerChannel(CodeStrMap):
+    """Speaker channel."""
+
+    friendly_name = "speaker channel"
+
+    code_len = 3
+
     @classmethod
-    def decode_response(
+    def value_to_code(cls, value: str) -> str:
+        if value == "all":
+            value = value.upper()
+        elif value not in CHANNELS_ALL:
+            raise ValueError(f"unknown channel {value} for {cls.get_name()}")
+        return super().value_to_code(value=value)
+
+    @classmethod
+    def code_to_value(cls, code: str) -> str:
+        return super().code_to_value(code=code).upper()
+
+    @classmethod
+    def parse_args(
         cls,
-        response: Response,
+        command: str,
+        args: list,
+        zone: Zone,
         params: AVRParams,
-    ) -> list[Response]:
-        """Response decoder for channel level."""
-        code = response.code[3:]
-        speaker = response.code[:3].strip("_").upper()
-        response.update(code=code, property_name=speaker)
-        return super().decode_response(response=response, params=params)
+        properties: AVRProperties,
+    ) -> str:
+        channel: str = args[0]
+        if channel != "all" and zone in properties.zones_initial_refresh:
+            if (channel_levels := properties.channel_levels.get(zone)) is None:
+                raise AVRCommandUnavailableError(
+                    command=command, err_key="channel_levels", zone=zone
+                )
+            if channel_levels.get(channel) is None:
+                raise AVRCommandUnavailableError(
+                    command=command, err_key="channel", zone=zone, channel=channel
+                )
+        return super().parse_args(
+            command=command, args=args, zone=zone, params=params, properties=properties
+        )
+
+
+class SpeakerChannelLevel(CodeMapSequence):
+    """Speaker channel level."""
+
+    friendly_name = "speaker channel level"
+    base_property = "channel_levels"
+    code_map_sequence = [SpeakerChannel, ChannelLevel]
+
+    @classmethod
+    def decode_response(cls, response: Response, params: AVRParams) -> list[Response]:
+        responses = super().decode_response(response=response, params=params)
+        speaker = responses[0].value
+        level = responses[1].value
+        level_code = responses[1].code
+        if speaker == "ALL":
+            responses = []
+            channel_levels = response.properties.channel_levels.get(response.zone, {})
+            for channel in channel_levels.keys():
+                responses.append(
+                    response.clone(code=level_code, property_name=channel, value=level)
+                )
+            return responses
+        response.update(code=level_code, property_name=speaker, value=level)
+        return [response]
+
+
+class QuerySpeakerChannel(CodeMapSequence):
+    """Query speaker channel."""
+
+    code_map_sequence = [CodeMapQuery, SpeakerChannel]
 
 
 class ListeningMode(CodeDynamicDictListMap):
@@ -419,9 +497,9 @@ class ToneTreble(ToneDb):
 
 RESPONSE_DATA_AUDIO = [
     ("AST", AudioInformation, Zone.ALL),  # audio
-    ("CLV", ChannelLevel, Zone.Z1),  # channel_levels
-    ("ZGE", ChannelLevel, Zone.Z2),  # channel_levels
-    ("ZHE", ChannelLevel, Zone.Z3),  # channel_levels
+    ("CLV", SpeakerChannelLevel, Zone.Z1),  # channel_levels
+    ("ZGE", SpeakerChannelLevel, Zone.Z2),  # channel_levels
+    ("ZHE", SpeakerChannelLevel, Zone.Z3),  # channel_levels
     ("SR", ListeningMode, Zone.ALL),  # listening_mode
     ("TO", ToneMode, Zone.Z1),  # tone.status
     ("BA", ToneBass, Zone.Z1),  # tone.bass

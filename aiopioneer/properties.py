@@ -57,7 +57,7 @@ class AVRProperties:
         self.audio: dict[str | Zone, Any] = {}
 
         ## Complex object that holds multiple different props for the CHANNEL/DSP functions
-        self.channel_levels: dict[str, Any] = {}
+        self.channel_levels: dict[Zone, dict[str, Any]] = {}
 
         ## Source name mappings
         self.query_sources = None

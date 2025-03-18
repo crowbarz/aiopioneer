@@ -17,7 +17,8 @@ from .decoders.amp import (
     PanelLock,
 )
 from .decoders.audio import (
-    ChannelLevel,
+    SpeakerChannelLevel,
+    QuerySpeakerChannel,
     AvailableListeningMode,
     ToneMode,
     ToneBass,
@@ -295,7 +296,13 @@ PIONEER_COMMANDS: dict[str, dict[Zone | str, str | list[str] | list[CodeMapBase]
         Zone.Z1: ["CLV", "CLV"],
         Zone.Z2: ["ZGE", "ZGE"],
         Zone.Z3: ["ZHE", "ZHE"],
-        "args": [ChannelLevel],
+        "args": [SpeakerChannelLevel],
+    },
+    "query_channel_levels": {
+        Zone.Z1: ["CLV", "CLV"],
+        Zone.Z2: ["ZGE", "ZGE"],
+        Zone.Z3: ["ZHE", "ZHE"],
+        "args": [QuerySpeakerChannel],
     },
     ## video
     "query_video_resolution": {Zone.Z1: ["?VTC", "VTC"]},
