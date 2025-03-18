@@ -109,6 +109,7 @@ PIONEER_COMMANDS: dict[
         Zone.Z2: ["ZS", "Z2F"],
         Zone.Z3: ["ZT", "Z3F"],
         Zone.HDZ: ["ZEA", "ZEA"],
+        "args": [SourceId],
     },
     "volume_up": {
         Zone.Z1: ["VU", "VOL"],
@@ -159,7 +160,7 @@ PIONEER_COMMANDS: dict[
         Zone.Z3: ["?Z3M", "Z3MUT"],
         Zone.HDZ: ["?HZM", "HZMUT"],
     },
-    "query_zone_source": {
+    "query_source": {
         Zone.Z1: ["?F", "FN"],
         Zone.Z2: ["?ZS", "Z2F"],
         Zone.Z3: ["?ZT", "Z3F"],

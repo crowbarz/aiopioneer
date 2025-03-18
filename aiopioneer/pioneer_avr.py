@@ -319,7 +319,7 @@ class PioneerAVR(AVRConnection):
 
         ## Check for timeouts, but ignore errors (eg. ?V will
         ## return E02 immediately after power on)
-        for command in ["query_volume", "query_mute", "query_zone_source"]:
+        for command in ["query_volume", "query_mute", "query_source"]:
             if await self.send_command(command, zone=zone, ignore_error=True) is None:
                 raise AVRResponseTimeoutError(command=command)
 
@@ -566,12 +566,11 @@ class PioneerAVR(AVRConnection):
     ) -> None:
         """Select input source."""
         zone = self._check_zone(zone)
-        if source_id is None:
+        if source_id is None and source is not None:
             source_id = self.properties.source_name_to_id.get(source)
         if source_id is None:
             raise ValueError(f"invalid source {source} for {zone.full_name}")
-
-        await self.send_command("select_source", zone=zone, prefix=source_id)
+        await self.send_command("select_source", source_id, zone=zone)
 
     async def volume_up(self, zone: Zone = Zone.Z1) -> None:
         """Volume up media player."""
