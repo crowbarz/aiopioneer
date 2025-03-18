@@ -93,7 +93,7 @@ class FrequencyAM(CodeIntMap):
             properties = response.properties
             frequency_step = properties.tuner.get("am_frequency_step")
 
-            if frequency_step or not properties.is_source_tuner():
+            if frequency_step:
                 return []
 
             ## Check whether new frequency is divisible by 9 or 10
@@ -107,6 +107,10 @@ class FrequencyAM(CodeIntMap):
                 return FrequencyAMStep.update_frequency_step(
                     response=response.clone(), frequency_step=frequency_step
                 )
+
+            ## Trigger frequency bounce if source is tuner
+            if not properties.is_source_tuner():
+                return []
             response.update(
                 clear_property=True,
                 queue_commands=[
