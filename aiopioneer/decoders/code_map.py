@@ -320,7 +320,7 @@ class CodeMapSequence(CodeMapComplex, CodeMapBase):
 
 
 # pylint: disable=abstract-method
-class CodeMapHasProperty(CodeMapBase):
+class CodeMapHasPropertyMixin(CodeMapBase):
     """
     Code map mixin that checks settable property is supported by AVR.
 

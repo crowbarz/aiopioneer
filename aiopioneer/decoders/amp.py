@@ -12,7 +12,7 @@ from ..params import (
 )
 from ..properties import AVRProperties
 from .code_map import (
-    CodeMapHasProperty,
+    CodeMapHasPropertyMixin,
     CodeBoolMap,
     CodeStrMap,
     CodeInverseBoolMap,
@@ -241,7 +241,7 @@ class Mute(CodeInverseBoolMap):
     base_property = "mute"
 
 
-class SpeakerMode(CodeMapHasProperty, CodeDictStrMap):
+class SpeakerMode(CodeMapHasPropertyMixin, CodeDictStrMap):
     """Speaker mode."""
 
     friendly_name = "speaker mode"
@@ -251,7 +251,7 @@ class SpeakerMode(CodeMapHasProperty, CodeDictStrMap):
     code_map = {"0": "off", "1": "A", "2": "B", "3": "A+B"}
 
 
-class HdmiOut(CodeMapHasProperty, CodeDictStrMap):
+class HdmiOut(CodeMapHasPropertyMixin, CodeDictStrMap):
     """HDMI out."""
 
     friendly_name = "HDMI out"
@@ -261,7 +261,7 @@ class HdmiOut(CodeMapHasProperty, CodeDictStrMap):
     code_map = {"0": "all", "1": "HDMI 1", "2": "HDMI 2"}
 
 
-class Hdmi3Out(CodeMapHasProperty, CodeBoolMap):
+class Hdmi3Out(CodeMapHasPropertyMixin, CodeBoolMap):
     """HDMI3 out."""
 
     friendly_name = "HDMI3 out"
@@ -272,7 +272,7 @@ class Hdmi3Out(CodeMapHasProperty, CodeBoolMap):
     code_false = "3"
 
 
-class HdmiAudio(CodeMapHasProperty, CodeDictStrMap):
+class HdmiAudio(CodeMapHasPropertyMixin, CodeDictStrMap):
     """HDMI audio."""
 
     friendly_name = "HDMI audio"
@@ -282,7 +282,7 @@ class HdmiAudio(CodeMapHasProperty, CodeDictStrMap):
     code_map = {"0": "amp", "1": "passthrough"}
 
 
-class Pqls(CodeMapHasProperty, CodeDictStrMap):
+class Pqls(CodeMapHasPropertyMixin, CodeDictStrMap):
     """PQLS."""
 
     friendly_name = "PQLS"
@@ -339,7 +339,7 @@ class SleepTime(CodeIntMap):
     code_zfill = 3
 
 
-class AmpMode(CodeMapHasProperty, CodeDictStrMap):
+class AmpMode(CodeMapHasPropertyMixin, CodeDictStrMap):
     """AMP status."""
 
     friendly_name = "AMP status"
