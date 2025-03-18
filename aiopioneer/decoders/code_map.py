@@ -1,7 +1,7 @@
 """aiopioneer code map class."""
 
 import logging
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Any, Tuple
 
 from ..const import Zone
@@ -26,7 +26,7 @@ class CodeDefault:
         return isinstance(value, CodeDefault)
 
 
-class CodeMapBase(ABC):
+class CodeMapBase:
     """Map AVR codes to values."""
 
     friendly_name = None
@@ -272,6 +272,7 @@ class CodeMapSequence(CodeMapComplex, CodeMapBase):
         code_map_sequence: list[CodeMapBase] = None,
     ) -> list[Response]:
         """Decode a response with code map sequence."""
+        cls.set_response_properties(response)
         code_index = 0
         responses = []
         if code_map_sequence is None:
@@ -359,7 +360,9 @@ class CodeStrMap(CodeMapBase):
         return value
 
     @classmethod
-    def code_to_value(cls, code: str) -> Any:
+    def code_to_value(cls, code: str) -> str:
+        if cls.code_len and cls.code_fillchar:
+            return str(code).rstrip(cls.code_fillchar)
         return str(code)
 
 
