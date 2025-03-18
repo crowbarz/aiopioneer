@@ -398,6 +398,7 @@ class CodeDynamicDictMap(CodeMapBase):
     """Map AVR codes to dynamic map of values."""
 
     code_len: int = None
+    index_map: type[CodeMapBase] = None
 
     @classmethod
     def get_len(cls) -> int:
@@ -409,18 +410,23 @@ class CodeDynamicDictMap(CodeMapBase):
         return v == value
 
     @classmethod
-    def value_to_code_dynamic(cls, value: Any, code_map: dict[str, Any]) -> str:
+    def value_to_code_dynamic(cls, value: Any, code_map: dict[Any, Any]) -> str:
         """Convert value to code for code map."""
         for k, v in code_map.items():
             if cls.match(v, value):
+                if cls.index_map:
+                    return cls.index_map.value_to_code(k)
                 return k
         raise ValueError(f"value {value} not found for {cls.get_name()}")
 
     @classmethod
-    def code_to_value_dynamic(cls, code: str, code_map: dict[str, Any]) -> Any:
+    def code_to_value_dynamic(cls, code: str, code_map: dict[Any, Any]) -> Any:
         """Convert code to value for code map."""
-        if code in code_map:
-            return code_map[code]
+        index = code
+        if cls.index_map:
+            index = cls.index_map.code_to_value(code)
+        if index in code_map:
+            return code_map[index]
         if CodeDefault() in code_map:
             return code_map[CodeDefault()]
         raise KeyError(f"key {code} not found for {cls.get_name()}")
@@ -481,7 +487,7 @@ class CodeDynamicDictListMap(CodeDynamicDictMap):
     """Map AVR codes to dynamic dict of list items with value as first element."""
 
     @classmethod
-    def code_to_value_dynamic(cls, code: str, code_map: dict[str, Any]) -> Any:
+    def code_to_value_dynamic(cls, code: str, code_map: dict[Any, Any]) -> Any:
         value_list = super().code_to_value_dynamic(code, code_map=code_map)
         return value_list[0]
 
@@ -677,7 +683,6 @@ class CodeIntMap(CodeFloatMap):
     value_step: int = 1
     value_divider: int = 1
     value_offset: int = 0
-    value_step: int = 1
 
     @classmethod
     def value_to_code(cls, value: int):
