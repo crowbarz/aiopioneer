@@ -8,7 +8,6 @@ from ..properties import AVRProperties
 from .code_map import (
     CodeDefault,
     CodeMapBlank,
-    CodeMapQuery,
     CodeMapSequence,
     CodeDynamicDictStrMap,
     CodeDynamicDictListMap,
@@ -378,6 +377,17 @@ class ListeningMode(CodeDynamicDictListMap):
     friendly_name = "listening mode"
     base_property = "listening_mode"
 
+    class ListeningModeIndex(CodeIntMap):
+        """Listening mode index."""
+
+        friendly_name = "listening mode"
+
+        value_min = 0
+        value_max = 9999
+        code_zfill = 4
+
+    index_map = ListeningModeIndex
+
     @classmethod
     def value_to_code(cls, value: str, properties: AVRProperties = None) -> str:
         if not isinstance(properties, AVRProperties):
@@ -422,7 +432,10 @@ class ListeningMode(CodeDynamicDictListMap):
         )
         return [
             response,
-            response.clone(base_property="listening_mode_raw", value=response.code),
+            response.clone(
+                base_property="listening_mode_raw",
+                value=cls.index_map.code_to_value(response.code),
+            ),
         ]
 
 
