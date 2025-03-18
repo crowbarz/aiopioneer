@@ -50,12 +50,7 @@ from .params import (
     PARAM_INITIAL_REFRESH_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY,
 )
-from .decoders.audio import (
-    ChannelLevel,
-    AvailableListeningMode,
-    ToneDb,
-    ToneMode,
-)
+from .decoders.audio import AvailableListeningMode
 from .decoders.code_map import CodeMapBase
 from .decoders.decode import process_raw_response
 from .decoders.amp import Volume
@@ -663,16 +658,12 @@ class PioneerAVR(AVRConnection):
             )
 
         if tone is not None:
-            await self.send_command("set_tone_mode", zone=zone, prefix=ToneMode(tone))
-
-        ## Set treble and bass only if zone tone status is set to "On"
+            await self.send_command("set_tone_mode", tone, zone=zone)
         if self.properties.tone[zone].get("status") == "on":
             if treble is not None:
-                await self.send_command(
-                    "set_tone_treble", zone=zone, prefix=ToneDb(treble)
-                )
+                await self.send_command("set_tone_treble", treble, zone=zone)
             if bass is not None:
-                await self.send_command("set_tone_bass", zone=zone, prefix=ToneDb(bass))
+                await self.send_command("set_tone_bass", bass, zone=zone)
 
     async def set_amp_settings(self, **kwargs) -> None:
         """Set amplifier settings (always use Main Zone)."""
