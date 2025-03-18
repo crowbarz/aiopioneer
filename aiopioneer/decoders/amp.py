@@ -1,4 +1,4 @@
-"""aiopioneer response decoders for core system responses."""
+"""aiopioneer response decoders for amp responses."""
 
 import logging
 import re
@@ -8,13 +8,11 @@ from ..const import MEDIA_CONTROL_SOURCES, Zone
 from ..params import (
     AVRParams,
     PARAM_MHL_SOURCE,
-    PARAM_SPEAKER_SYSTEM_MODES,
     PARAM_POWER_ON_VOLUME_BOUNCE,
 )
 from ..properties import AVRProperties
 from .code_map import (
-    CodeMapBase,
-    CodeMapHasProperty,
+    CodeMapHasPropertyMixin,
     CodeBoolMap,
     CodeStrMap,
     CodeInverseBoolMap,
@@ -99,6 +97,19 @@ class Volume(CodeIntMap):
     # value_max: 185 for Main Zone, 81 for other Zones
 
     @classmethod
+    def value_to_code(
+        cls, value: str, zone: Zone = None, properties: AVRProperties = None
+    ) -> str:
+        if not isinstance(zone, Zone):
+            raise RuntimeError(f"Zone required for {cls.get_name()}")
+        if not isinstance(properties, AVRProperties):
+            raise RuntimeError(f"AVRProperties required for {cls.get_name()}")
+        if (value_max := properties.max_volume.get(zone)) is None:
+            raise ValueError(f"volume for {zone.full_name} is not available")
+        code = cls.value_to_code_bounded(value=value, value_max=value_max)
+        return code.zfill(3 if zone is Zone.Z1 else 2)
+
+    @classmethod
     def parse_args(
         cls,
         command: str,  # pylint: disable=unused-argument
@@ -108,22 +119,18 @@ class Volume(CodeIntMap):
         properties: AVRProperties,
     ) -> str:
         cls.check_args(args)
-        code = cls.check_volume(volume=args[0], zone=zone, properties=properties)
-        return code.zfill(3 if zone is Zone.Z1 else 2)
-
-    @classmethod
-    def check_volume(cls, volume: int, zone: Zone, properties: AVRProperties):
-        """Check max volume for zone."""
-        if (value_max := properties.max_volume.get(zone)) is None:
-            raise ValueError(f"volume for {zone.full_name} is not available")
-        return cls.value_to_code_bounded(value=volume, value_max=value_max)
+        return cls.value_to_code(value=args[0], zone=zone, properties=properties)
 
 
-class InputSource(CodeMapBase):
-    """Zone input source."""
+class SourceId(CodeStrMap):
+    """Zone source ID."""
 
-    friendly_name = "zone input source"
-    base_property = "source_id"
+    friendly_name = "source ID"
+    base_property = "source_id"  # unused
+
+    code_zfill = 2
+    value_min = 0
+    value_max = 99
 
     @classmethod
     def decode_response(
@@ -131,7 +138,7 @@ class InputSource(CodeMapBase):
         response: Response,
         params: AVRParams,
     ) -> list[Response]:
-        """Response decoder for zone input source."""
+        """Response decoder for zone source ID."""
         super().decode_response(response=response, params=params)
         source = response.value
         queue_commands = []
@@ -165,6 +172,67 @@ class InputSource(CodeMapBase):
             ),
         ]
 
+    @classmethod
+    def value_to_code(cls, value: str | int):
+        if isinstance(value, int):
+            return str(value).zfill(2)
+        return super().value_to_code(value=value)
+
+
+class SourceName(CodeStrMap):
+    """Source name."""
+
+    friendly_name = "source name"
+
+    @classmethod
+    def decode_response(
+        cls,
+        response: Response,
+        params: AVRParams,
+    ) -> list[Response]:
+        """Response decoder for source name."""
+
+        if not response.properties.query_sources:
+            ## Only update AVR source mappings if AVR sources are being queried
+            return []
+
+        def clear_source_id(response: Response) -> list[Response]:
+            """Clear source ID before applying new source ID mapping."""
+            properties = response.properties
+            source_name = None
+            if (source_id := response.value) in properties.source_id_to_name:
+                source_name = properties.source_id_to_name[source_id]
+                properties.source_id_to_name.pop(source_id)
+            if source_name in properties.source_name_to_id:
+                properties.source_name_to_id.pop(source_name)
+            return []
+
+        super().decode_response(response=response, params=params)
+        source_id, source_name = response.value
+        return [
+            response.clone(callback=clear_source_id, value=source_id),
+            response.clone(
+                base_property="source_name_to_id",
+                property_name=source_name,
+                value=source_id,
+            ),
+            response.clone(
+                base_property="source_id_to_name",
+                property_name=source_id,
+                value=source_name,
+            ),
+        ]
+
+    @classmethod
+    def value_to_code(cls, value: str) -> str:
+        if len(value) > 14:
+            raise ValueError(f"source name {value} is longer than 14 characters")
+        return value
+
+    @classmethod
+    def code_to_value(cls, code: str) -> tuple[str, str]:
+        return code[:2], code[3:]
+
 
 class Mute(CodeInverseBoolMap):
     """Mute."""
@@ -173,7 +241,7 @@ class Mute(CodeInverseBoolMap):
     base_property = "mute"
 
 
-class SpeakerMode(CodeMapHasProperty, CodeDictStrMap):
+class SpeakerMode(CodeMapHasPropertyMixin, CodeDictStrMap):
     """Speaker mode."""
 
     friendly_name = "speaker mode"
@@ -183,7 +251,7 @@ class SpeakerMode(CodeMapHasProperty, CodeDictStrMap):
     code_map = {"0": "off", "1": "A", "2": "B", "3": "A+B"}
 
 
-class HdmiOut(CodeMapHasProperty, CodeDictStrMap):
+class HdmiOut(CodeMapHasPropertyMixin, CodeDictStrMap):
     """HDMI out."""
 
     friendly_name = "HDMI out"
@@ -193,7 +261,7 @@ class HdmiOut(CodeMapHasProperty, CodeDictStrMap):
     code_map = {"0": "all", "1": "HDMI 1", "2": "HDMI 2"}
 
 
-class Hdmi3Out(CodeMapHasProperty, CodeBoolMap):
+class Hdmi3Out(CodeMapHasPropertyMixin, CodeBoolMap):
     """HDMI3 out."""
 
     friendly_name = "HDMI3 out"
@@ -204,7 +272,7 @@ class Hdmi3Out(CodeMapHasProperty, CodeBoolMap):
     code_false = "3"
 
 
-class HdmiAudio(CodeMapHasProperty, CodeDictStrMap):
+class HdmiAudio(CodeMapHasPropertyMixin, CodeDictStrMap):
     """HDMI audio."""
 
     friendly_name = "HDMI audio"
@@ -214,7 +282,7 @@ class HdmiAudio(CodeMapHasProperty, CodeDictStrMap):
     code_map = {"0": "amp", "1": "passthrough"}
 
 
-class Pqls(CodeMapHasProperty, CodeDictStrMap):
+class Pqls(CodeMapHasPropertyMixin, CodeDictStrMap):
     """PQLS."""
 
     friendly_name = "PQLS"
@@ -222,6 +290,25 @@ class Pqls(CodeMapHasProperty, CodeDictStrMap):
     property_name = "pqls"
 
     code_map = {"0": "off", "1": "auto"}
+
+
+class DisplayText(CodeStrMap):
+    """Display text."""
+
+    friendly_name = "display text"
+    base_property = "amp"
+    property_name = "display"
+
+    ## NOTE: value_to_code not implemented
+
+    @classmethod
+    def code_to_value(cls, code: str) -> str:
+        """Convert code to value."""
+        return (
+            "".join([chr(int(code[i : i + 2], 16)) for i in range(2, len(code) - 1, 2)])
+            .expandtabs(1)
+            .strip()
+        )
 
 
 class Dimmer(CodeDictStrMap):
@@ -252,7 +339,7 @@ class SleepTime(CodeIntMap):
     code_zfill = 3
 
 
-class AmpMode(CodeMapHasProperty, CodeDictStrMap):
+class AmpMode(CodeMapHasPropertyMixin, CodeDictStrMap):
     """AMP status."""
 
     friendly_name = "AMP status"
@@ -283,76 +370,6 @@ class RemoteLock(CodeBoolMap):
     friendly_name = "remote lock"
     base_property = "amp"
     property_name = "remote_lock"
-
-
-class SpeakerSystem(CodeDictStrMap):
-    """Speaker system."""
-
-    friendly_name = "speaker system"
-    base_property = "system"
-    property_name = "speaker_system"
-
-    @classmethod
-    def decode_response(
-        cls,
-        response: Response,
-        params: AVRParams,
-    ) -> list[Response]:
-        """Response decoder for speaker system."""
-        cls.code_map = params.get_param(PARAM_SPEAKER_SYSTEM_MODES, {})
-        super().decode_response(response=response, params=params)
-        return [
-            response,
-            response.clone(property_name="speaker_system_raw", value=response.code),
-        ]
-
-
-class InputName(CodeMapBase):
-    """Input name."""
-
-    friendly_name = "input name"
-
-    @classmethod
-    def decode_response(
-        cls,
-        response: Response,
-        params: AVRParams,
-    ) -> list[Response]:
-        """Response decoder for input name."""
-
-        if not response.properties.query_sources:
-            ## Only update AVR source mappings if AVR sources are being queried
-            return []
-
-        def clear_source_id(response: Response) -> list[Response]:
-            """Clear source ID before applying new source ID mapping."""
-            properties = response.properties
-            source_name = None
-            if (source_id := response.value) in properties.source_id_to_name:
-                source_name = properties.source_id_to_name[source_id]
-                properties.source_id_to_name.pop(source_id)
-            if source_name in properties.source_name_to_id:
-                properties.source_name_to_id.pop(source_name)
-
-        super().decode_response(response=response, params=params)
-        source_id, source_name = response.value
-        return [
-            response.clone(callback=clear_source_id, value=source_id),
-            response.clone(
-                base_property="source_name_to_id",
-                property_name=source_name,
-                value=source_id,
-            ),
-            response.clone(
-                base_property="source_id_to_name",
-                property_name=source_id,
-                value=source_name,
-            ),
-        ]
-
-    @classmethod
-    def code_to_value(cls, code: str) -> tuple[str, str]:
-        return code[:2], code[3:]
 
 
 class SystemMacAddress(CodeStrMap):
@@ -402,7 +419,7 @@ class SystemSoftwareVersion(CodeStrMap):
         return value
 
 
-class AudioParameterProhibition(CodeMapBase):
+class AudioParameterProhibition(CodeStrMap):
     """Audio parameter prohibition."""
 
     friendly_name = "audio parameter prohibition"
@@ -420,7 +437,7 @@ class AudioParameterProhibition(CodeMapBase):
         return [response]
 
 
-class AudioParameterWorking(CodeMapBase):
+class AudioParameterWorking(CodeStrMap):
     """Audio parameter working."""
 
     friendly_name = "audio parameter working"
@@ -436,3 +453,40 @@ class AudioParameterWorking(CodeMapBase):
             queue_commands=[CommandItem("_delayed_query_basic", 2.5, queue_id=3)]
         )
         return [response]
+
+
+RESPONSE_DATA_AMP = [
+    ("PWR", Power, Zone.Z1),  # power
+    ("APR", Power, Zone.Z2),  # power
+    ("BPR", Power, Zone.Z3),  # power
+    ("ZEP", Power, Zone.HDZ),  # power
+    ("VOL", Volume, Zone.Z1),  # volume
+    ("ZV", Volume, Zone.Z2),  # volume
+    ("YV", Volume, Zone.Z3),  # volume
+    ("XV", Volume, Zone.HDZ),  # volume
+    ("FN", SourceId, Zone.Z1),  # source_id
+    ("Z2F", SourceId, Zone.Z2),  # source_id
+    ("Z3F", SourceId, Zone.Z3),  # source_id
+    ("ZEA", SourceId, Zone.HDZ),  # source_id
+    ("RGB", SourceName, Zone.ALL),  # source_name_to_id, source_id_to_name
+    ("MUT", Mute, Zone.Z1),  # mute
+    ("Z2MUT", Mute, Zone.Z2),  # mute
+    ("Z3MUT", Mute, Zone.Z3),  # mute
+    ("HZMUT", Mute, Zone.HDZ),  # mute
+    ("SPK", SpeakerMode, Zone.ALL),  # amp.speaker_mode
+    ("HO", HdmiOut, Zone.ALL),  # amp.hdmi_out
+    ("HDO", Hdmi3Out, Zone.ALL),  # amp.hdmi3_out
+    ("HA", HdmiAudio, Zone.ALL),  # amp.hdmi_audio
+    ("PQ", Pqls, Zone.ALL),  # amp.pqls
+    ("FL", DisplayText, Zone.ALL),  # amp.display
+    ("SAA", Dimmer, Zone.ALL),  # amp.dimmer
+    ("SAB", SleepTime, Zone.ALL),  # amp.sleep_time
+    ("SAC", AmpMode, Zone.ALL),  # amp.mode
+    ("PKL", PanelLock, Zone.ALL),  # amp.panel_lock
+    ("RML", RemoteLock, Zone.ALL),  # amp.remote_lock
+    ("SVB", SystemMacAddress, Zone.ALL),  # amp.mac_addr
+    ("RGD", SystemAvrModel, Zone.ALL),  # amp.model
+    ("SSI", SystemSoftwareVersion, Zone.ALL),  # amp.software_version
+    ("AUA", AudioParameterProhibition, Zone.Z1),
+    ("AUB", AudioParameterWorking, Zone.Z1),
+]

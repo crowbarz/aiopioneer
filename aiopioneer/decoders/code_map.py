@@ -1,5 +1,7 @@
 """aiopioneer code map class."""
 
+import logging
+from abc import abstractmethod
 from typing import Any, Tuple
 
 from ..const import Zone
@@ -10,6 +12,8 @@ from .response import Response
 
 CODE_MAP_NDIGITS = 3
 CODE_MAP_EXP = pow(10, CODE_MAP_NDIGITS)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class CodeDefault:
@@ -29,8 +33,8 @@ class CodeMapBase:
     base_property = None
     property_name = None
 
-    def __new__(cls, value):
-        return cls.value_to_code(value)
+    def __new__(cls, value, **kwargs):
+        return cls.value_to_code(value, **kwargs)
 
     def __class_getitem__(cls, code: str):
         return cls.code_to_value(code)
@@ -41,9 +45,10 @@ class CodeMapBase:
         return cls.friendly_name if cls.friendly_name else cls.__name__
 
     @classmethod
+    @abstractmethod
     def get_len(cls) -> int:
         """Get class field length."""
-        raise ValueError(f"class length undefined for {cls.get_name()}")
+        raise NotImplementedError(f"class length undefined for {cls.get_name()}")
 
     @classmethod
     def get_nargs(cls) -> int:
@@ -54,7 +59,7 @@ class CodeMapBase:
     def check_args(cls, args: list, extra_args: bool = False) -> None:
         """Check sufficient arguments have been supplied."""
         if not isinstance(args, list):
-            raise ValueError(f"invalid argument list for {cls.get_name()}")
+            raise TypeError(f"invalid argument list for {cls.get_name()}")
         nargs = cls.get_nargs()
         if (not extra_args and nargs != len(args)) or (
             extra_args and nargs > len(args)
@@ -63,14 +68,24 @@ class CodeMapBase:
             raise ValueError(f"{nargs} argument{plural} expected for {cls.get_name()}")
 
     @classmethod
-    def value_to_code(cls, value) -> str:
-        """Convert value to code."""
-        return str(value)
+    def set_response_properties(cls, response: Response) -> None:
+        """Set response properties from code map class if defined."""
+        if cls.base_property is not None:
+            response.update(base_property=cls.base_property)
+        if cls.property_name is not None:
+            response.update(property_name=cls.property_name)
 
     @classmethod
+    @abstractmethod
+    def value_to_code(cls, value) -> str:
+        """Convert value to code."""
+        raise NotImplementedError(f"value_to_code unsupported for {cls.get_name()}")
+
+    @classmethod
+    @abstractmethod
     def code_to_value(cls, code: str) -> Any:
         """Convert code to value."""
-        return str(code)
+        raise NotImplementedError(f"code_to_value unsupported for {cls.get_name()}")
 
     @classmethod
     def parse_args(
@@ -81,7 +96,7 @@ class CodeMapBase:
         params: AVRParams,  # pylint: disable=unused-argument
         properties: AVRProperties,  # pylint: disable=unused-argument
     ) -> str:
-        """Convert and pop arg(s) to code."""
+        """Convert arg(s) to code."""
         cls.check_args(args)
         return cls.value_to_code(args[0])
 
@@ -92,79 +107,44 @@ class CodeMapBase:
         params: AVRParams,  # pylint: disable=unused-argument
     ) -> list[Response]:
         """Decode a response."""
-        if cls.base_property is not None:
-            response.update(base_property=cls.base_property)
-        if cls.property_name is not None:
-            response.update(property_name=cls.property_name)
+        cls.set_response_properties(response)
         response.update(value=cls.code_to_value(response.code))
         return [response]
 
 
-class CodeMapSequence(CodeMapBase):
-    """Map AVR codes to a sequence of code maps."""
-
-    code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int] = []
-    code_fillchar = "_"
-
-    @classmethod
-    def get_len(
-        cls,
-        code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int] = None,
-    ) -> int:
-
-        def get_len_item(
-            child_item: tuple[CodeMapBase, str] | CodeMapBase | int,
-        ) -> str:
-            if isinstance(child_item, int):  ## item is gap length
-                if child_item < 0:
-                    raise RuntimeError(f"len not available for {cls.get_name()}")
-                return child_item
-            if isinstance(child_item, tuple):  ## item is (code_map, property)
-                child_map, _ = child_item
-            elif issubclass(child_item, CodeMapBase):
-                child_map = child_item
-            else:
-                raise RuntimeError(
-                    f"invalid sequence item {child_item} for {cls.get_name()}"
-                )
-            return child_map.get_len()
-
-        if code_map_sequence is None:
-            code_map_sequence = cls.code_map_sequence
-        return sum(get_len_item(child_item) for child_item in code_map_sequence)
-
-    @classmethod
-    def get_nargs(
-        cls,
-        code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int] = None,
-    ) -> int:
-
-        def get_nargs_item(
-            child_item: tuple[CodeMapBase, str] | CodeMapBase | int,
-        ) -> str:
-            if isinstance(child_item, int):  ## item is gap length
-                return 0
-            if isinstance(child_item, tuple):  ## item is (code_map, property)
-                child_map, _ = child_item
-            elif issubclass(child_item, CodeMapBase):
-                child_map = child_item
-            else:
-                raise RuntimeError(
-                    f"invalid sequence item {child_item} for {cls.get_name()}"
-                )
-            return child_map.get_nargs()
-
-        if code_map_sequence is None:
-            code_map_sequence = cls.code_map_sequence
-        return sum(get_nargs_item(child_item) for child_item in code_map_sequence)
+# pylint: disable=abstract-method
+class CodeMapComplex(CodeMapBase):
+    """Mixin for complex code maps that do not support value_to_code and code_to_value."""
 
     @classmethod
     def value_to_code(cls, value) -> str:
-        raise ValueError(f"value_to_code unsupported for {cls.get_name()}")
+        """Unsupported method."""
+        raise RuntimeError(f"value_to_code unsupported for {cls.get_name()}")
 
     @classmethod
     def code_to_value(cls, code: str) -> Any:
-        raise ValueError(f"code_to_value unsupported for {cls.get_name()}")
+        """Unsupported method."""
+        raise RuntimeError(f"code_to_value unsupported for {cls.get_name()}")
+
+
+class CodeMapBlank(CodeMapComplex, CodeMapBase):
+    """Blank code map."""
+
+    code_len = None
+
+    def __new__(cls, code_len: int = None):
+        """Create a subclass for a code map of code_len characters."""
+        return type(f"CodeMapBlank_{code_len}", (CodeMapBlank,), {"code_len": code_len})
+
+    @classmethod
+    def get_len(cls):
+        if cls.code_len is None:
+            raise NotImplementedError(f"code_len not set for {cls.get_name()}")
+        return cls.code_len
+
+    @classmethod
+    def get_nargs(cls):
+        return 0
 
     @classmethod
     def parse_args(
@@ -174,10 +154,56 @@ class CodeMapSequence(CodeMapBase):
         zone: Zone,
         params: AVRParams,
         properties: AVRProperties,
-        code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int] = None,
     ) -> str:
+        return None
+
+    @classmethod
+    def decode_response(cls, response: Response, params: AVRParams) -> list[Response]:
+        return []
+
+
+# pylint: disable=abstract-method
+class CodeMapSequence(CodeMapComplex, CodeMapBase):
+    """Map AVR codes to a sequence of code maps."""
+
+    code_map_sequence: list[CodeMapBase] = []
+    code_fillchar = "_"
+
+    @classmethod
+    def get_len_sequence(cls, code_map_sequence: list[CodeMapBase] = None) -> int:
+        """Get length of sequence."""
+
         if code_map_sequence is None:
             code_map_sequence = cls.code_map_sequence
+        return sum(child_map.get_len() for child_map in code_map_sequence)
+
+    @classmethod
+    def get_nargs_sequence(cls, code_map_sequence: list[CodeMapBase] = None) -> int:
+        """Get number of args for sequence."""
+
+        if code_map_sequence is None:
+            code_map_sequence = cls.code_map_sequence
+        return sum(child_map.get_nargs() for child_map in code_map_sequence)
+
+    @classmethod
+    def get_len(cls):
+        cls.get_len_sequence(code_map_sequence=cls.code_map_sequence)
+
+    @classmethod
+    def get_nargs(cls):
+        cls.get_nargs_sequence(code_map_sequence=cls.code_map_sequence)
+
+    @classmethod
+    def parse_args_sequence(
+        cls,
+        command: str,  # pylint: disable=unused-argument
+        args: list,
+        zone: Zone,
+        params: AVRParams,
+        properties: AVRProperties,
+        code_map_sequence: list[CodeMapBase],
+    ) -> str:
+        """Convert arg to code with code map sequence."""
 
         def parse_child_map(child_map: CodeMapBase, args: list) -> str:
             child_map.check_args(args, extra_args=True)
@@ -189,17 +215,13 @@ class CodeMapSequence(CodeMapBase):
                 properties=properties,
             )
 
-        def parse_child_item(
-            child_item: tuple[CodeMapBase, str] | CodeMapBase | int,
-        ) -> str:
+        def parse_child_item(child_item: CodeMapBase) -> str:
             if isinstance(child_item, int):  ## item is gap length
                 if child_item < 0:
                     return ""
                 child_len = child_item
                 return "".ljust(child_len, cls.code_fillchar)
-            if isinstance(child_item, tuple):  ## item is (code_map, property)
-                child_map, _ = child_item
-            elif issubclass(child_item, CodeMapBase):
+            if issubclass(child_item, CodeMapBase):
                 child_map = child_item
             else:
                 raise RuntimeError(
@@ -215,37 +237,28 @@ class CodeMapSequence(CodeMapBase):
         )
 
     @classmethod
-    def decode_response(
+    def decode_response_sequence(
         cls,
         response: Response,
         params: AVRParams,  # pylint: disable=unused-argument
-        code_map_sequence: list[tuple[CodeMapBase, str] | CodeMapBase | int] = None,
+        code_map_sequence: list[CodeMapBase] = None,
     ) -> list[Response]:
+        """Decode a response with code map sequence."""
+        cls.set_response_properties(response)
         code_index = 0
         responses = []
         if code_map_sequence is None:
             code_map_sequence = cls.code_map_sequence
 
-        for child_item in code_map_sequence:
-            if isinstance(child_item, int):  ## item is gap length
-                if (child_len := child_item) < 0:
-                    code_index = len(response.code) + child_len
+        for child_map in code_map_sequence:
+            child_len = child_map.get_len()
+            if issubclass(child_map, CodeMapBlank):
+                if (child_len := child_map.get_len()) < 0:
+                    code_index = len(response.code)
                 code_index += child_len
                 continue
-            child_property_name = None
-            if isinstance(child_item, tuple):  ## item is (code_map, property)
-                child_map, child_property_name = child_item
-            if issubclass(child_item, CodeMapBase):  ## item is code_map
-                child_map = child_item
-            else:
-                raise RuntimeError(
-                    f"invalid sequence item {child_item} for {cls.get_name()}"
-                )
-            child_len = child_map.get_len()
             child_code = response.code[code_index : code_index + child_len]
-            child_response = response.clone(
-                code=child_code, property_name=child_property_name
-            )
+            child_response = response.clone(code=child_code)
             responses.extend(
                 child_map.decode_response(response=child_response, params=params)
             )
@@ -253,8 +266,69 @@ class CodeMapSequence(CodeMapBase):
 
         return responses
 
+    @classmethod
+    def parse_args(
+        cls,
+        command: str,  # pylint: disable=unused-argument
+        args: list,
+        zone: Zone,
+        params: AVRParams,
+        properties: AVRProperties,
+    ) -> str:
+        return cls.parse_args_sequence(
+            command=command,
+            args=args,
+            zone=zone,
+            params=params,
+            properties=properties,
+            code_map_sequence=cls.code_map_sequence,
+        )
 
-class CodeMapHasProperty(CodeMapBase):
+    @classmethod
+    def decode_response(cls, response: Response, params: AVRParams) -> list[Response]:
+        return cls.decode_response_sequence(
+            response=response, params=params, code_map_sequence=cls.code_map_sequence
+        )
+
+
+class CodeMapQuery(CodeMapBase):
+    """Query code map."""
+
+    def __new__(cls, code_map_class: type[CodeMapBase]) -> type[CodeMapSequence]:
+        """Create a query code map class for base code map class."""
+        return type(
+            f"CodeMapQuery_{code_map_class.__name__}",
+            (CodeMapSequence,),
+            {"code_map_sequence": [CodeMapQuery, code_map_class]},
+        )
+
+    @classmethod
+    def get_len(cls):
+        return 1
+
+    @classmethod
+    def get_nargs(cls):
+        return 0
+
+    # pylint: disable=unused-argument
+    @classmethod
+    def parse_args(
+        cls,
+        command: str,
+        args: list,
+        zone: Zone,
+        params: AVRParams,
+        properties: AVRProperties,
+    ) -> str:
+        return "?"
+
+    @classmethod
+    def decode_response(cls, response: Response, params: AVRParams) -> list[Response]:
+        return []
+
+
+# pylint: disable=abstract-method
+class CodeMapHasPropertyMixin(CodeMapBase):
     """
     Code map mixin that checks settable property is supported by AVR.
 
@@ -280,18 +354,24 @@ class CodeMapHasProperty(CodeMapBase):
 class CodeStrMap(CodeMapBase):
     """Map AVR codes to str values of fixed length."""
 
-    code_len = 0
+    code_len = None
     code_fillchar = "_"
 
     @classmethod
     def get_len(cls) -> int:
-        return cls.code_len if cls.code_len else super().get_len()
+        return cls.code_len if cls.code_len is not None else super().get_len()
 
     @classmethod
     def value_to_code(cls, value: str) -> str:
         if cls.code_len:
             return value.ljust(cls.code_len, cls.code_fillchar)
         return value
+
+    @classmethod
+    def code_to_value(cls, code: str) -> str:
+        if cls.code_len and cls.code_fillchar:
+            return str(code).rstrip(cls.code_fillchar)
+        return str(code)
 
 
 class CodeBoolMap(CodeMapBase):
@@ -307,7 +387,7 @@ class CodeBoolMap(CodeMapBase):
     @classmethod
     def value_to_code(cls, value: bool) -> str:
         if not isinstance(value, bool):
-            raise ValueError(f"boolean value expected for {cls.get_name()}")
+            raise TypeError(f"boolean value expected for {cls.get_name()}")
         return cls.code_true if value else cls.code_false
 
     @classmethod
@@ -322,11 +402,113 @@ class CodeInverseBoolMap(CodeBoolMap):
     code_false = "1"
 
 
-class CodeDictMap(CodeMapBase):
-    """Map AVR codes to generic map of values."""
+class CodeDynamicDictMap(CodeMapBase):
+    """Map AVR codes to dynamic map of values."""
+
+    code_len: int = None
+    index_map: type[CodeMapBase] = None
+
+    @classmethod
+    def get_len(cls) -> int:
+        return cls.code_len if cls.code_len is not None else super().get_len()
+
+    @classmethod
+    def match(cls, v, value):
+        """Default value match function."""
+        return v == value
+
+    @classmethod
+    def value_to_code_dynamic(cls, value: Any, code_map: dict[Any, Any]) -> str:
+        """Convert value to code for code map."""
+        for k, v in code_map.items():
+            if cls.match(v, value):
+                if cls.index_map:
+                    return cls.index_map.value_to_code(k)
+                return k
+        raise ValueError(f"value {value} not found for {cls.get_name()}")
+
+    @classmethod
+    def code_to_value_dynamic(cls, code: str, code_map: dict[Any, Any]) -> Any:
+        """Convert code to value for code map."""
+        index = code
+        if cls.index_map:
+            index = cls.index_map.code_to_value(code)
+        if index in code_map:
+            return code_map[index]
+        if CodeDefault() in code_map:
+            return code_map[CodeDefault()]
+        raise KeyError(f"key {code} not found for {cls.get_name()}")
+
+    @classmethod
+    def parse_args_dynamic(
+        cls,
+        command: str,  # pylint: disable=unused-argument
+        args: list,
+        zone: Zone,  # pylint: disable=unused-argument
+        params: AVRParams,  # pylint: disable=unused-argument
+        properties: AVRProperties,  # pylint: disable=unused-argument
+        code_map: dict[str, Any],
+    ) -> str:
+        """Convert arg to code for code map."""
+        cls.check_args(args)
+        return cls.value_to_code_dynamic(args[0], code_map=code_map)
+
+    @classmethod
+    def decode_response_dynamic(
+        cls,
+        response: Response,
+        params: AVRParams,  # pylint: disable=unused-argument
+        code_map: dict[str, Any],
+    ) -> list[Response]:
+        """Decode a response using a code map."""
+        cls.set_response_properties(response)
+        response.update(
+            value=cls.code_to_value_dynamic(response.code, code_map=code_map)
+        )
+        return [response]
+
+    # pylint: disable=unused-argument
+    @classmethod
+    @abstractmethod
+    def parse_args(
+        cls,
+        command: str,
+        args: list,
+        zone: Zone,
+        params: AVRParams,
+        properties: AVRProperties,
+    ) -> str:
+        raise NotImplementedError(f"parse_args unsupported for {cls.get_name()}")
+
+    # pylint: disable=unused-argument
+    @classmethod
+    @abstractmethod
+    def decode_response(cls, response: Response, params: AVRParams) -> list[Response]:
+        raise NotImplementedError(f"decode_response unsupported for {cls.get_name()}")
+
+
+class CodeDynamicDictStrMap(CodeDynamicDictMap):
+    """Map AVR codes to dynamic dict of str values."""
+
+
+class CodeDynamicDictListMap(CodeDynamicDictMap):
+    """Map AVR codes to dynamic dict of list items with value as first element."""
+
+    @classmethod
+    def code_to_value_dynamic(cls, code: str, code_map: dict[Any, Any]) -> Any:
+        value_list = super().code_to_value_dynamic(code, code_map=code_map)
+        return value_list[0]
+
+    @classmethod
+    def match(cls, v: list, value: str):
+        """Match value to first element of list."""
+        return v[0] == value
+
+
+class CodeDictMap(CodeDynamicDictMap):
+    """Map AVR codes to static code map."""
 
     code_map: dict[str, Any] = {}
-    code_len: int = None
 
     @classmethod
     def get_len(cls) -> int:
@@ -337,23 +519,35 @@ class CodeDictMap(CodeMapBase):
 
     @classmethod
     def value_to_code(cls, value: Any) -> str:
-        for k, v in cls.code_map.items():
-            if cls.match(v, value):
-                return k
-        raise ValueError(f"value {value} not found for {cls.get_name()}")
+        return cls.value_to_code_dynamic(value, code_map=cls.code_map)
 
     @classmethod
     def code_to_value(cls, code: str) -> Any:
-        if code in cls.code_map:
-            return cls.code_map[code]
-        if CodeDefault() in cls.code_map:
-            return cls.code_map[CodeDefault()]
-        raise ValueError(f"key {code} not found for {cls.get_name()}")
+        return cls.code_to_value_dynamic(code, code_map=cls.code_map)
 
     @classmethod
-    def match(cls, v, value):
-        """Default value match function."""
-        return v == value
+    def parse_args(
+        cls,
+        command: str,
+        args: list,
+        zone: Zone,
+        params: AVRParams,
+        properties: AVRProperties,
+    ) -> str:
+        return cls.parse_args_dynamic(
+            command=command,
+            args=args,
+            zone=zone,
+            params=params,
+            properties=properties,
+            code_map=cls.code_map,
+        )
+
+    @classmethod
+    def decode_response(cls, response: Response, params: AVRParams) -> list[Response]:
+        return cls.decode_response_dynamic(
+            response=response, params=params, code_map=cls.code_map
+        )
 
     @classmethod
     def keys(cls) -> list[str]:
@@ -384,7 +578,7 @@ class CodeDictListMap(CodeDictMap):
 
     @classmethod
     def code_to_value(cls, code: str) -> Tuple[str, list]:
-        value_list = super().code_to_value(code)
+        value_list = super().code_to_value(code=code)
         return value_list[0]
 
     @classmethod
@@ -421,7 +615,7 @@ class CodeFloatMap(CodeMapBase):
 
     @classmethod
     def get_len(cls) -> int:
-        return cls.code_zfill if cls.code_zfill else super().get_len()
+        return cls.code_zfill if cls.code_zfill is not None else super().get_len()
 
     @classmethod
     def value_to_code(cls, value: float | int):
@@ -435,10 +629,11 @@ class CodeFloatMap(CodeMapBase):
         value: float | int,
         value_min: float | int = None,
         value_max: float | int = None,
+        value_step: float | int = None,
     ) -> str:
         """Convert float or int value to code with bounds."""
         if not isinstance(value, (float, int)):
-            raise ValueError(f"{value} is not a float or int for {cls.get_name()}")
+            raise TypeError(f"{value} is not a float or int for {cls.get_name()}")
         if value_min is None:
             value_min = cls.value_min
         if value_max is None:
@@ -459,11 +654,13 @@ class CodeFloatMap(CodeMapBase):
                 raise ValueError(
                     f"{value} is above maximum {value_max} for {cls.get_name()}"
                 )
-        if cls.value_step != 1 and int(value * CODE_MAP_EXP) % int(
-            cls.value_step * CODE_MAP_EXP
+        if value_step is None:
+            value_step = cls.value_step
+        if value_step != 1 and int(value * CODE_MAP_EXP) % int(
+            value_step * CODE_MAP_EXP
         ):
             raise ValueError(
-                f"{value} is not a multiple of {cls.value_step} for {cls.get_name()}"
+                f"{value} is not a multiple of {value_step} for {cls.get_name()}"
             )
         code = str(
             int(
@@ -488,11 +685,9 @@ class CodeFloatMap(CodeMapBase):
 class CodeIntMap(CodeFloatMap):
     """Map AVR codes to integer values."""
 
+    code_offset: int = 0
     value_min: int = None
     value_max: int = None
-    value_step: int = 1
-    value_divider: int = 1
-    value_offset: int = 0
     value_step: int = 1
     value_divider: int = 1
     value_offset: int = 0
@@ -505,19 +700,23 @@ class CodeIntMap(CodeFloatMap):
 
     @classmethod
     def value_to_code_bounded(
-        cls, value: int, value_min: int = None, value_max: int = None
+        cls,
+        value: int,
+        value_min: int = None,
+        value_max: int = None,
+        value_step: int = None,
     ) -> str:
         """Convert int value to code with bounds."""
         if isinstance(value, float) and value.is_integer():
             value = int(value)
         elif not isinstance(value, int):
-            raise ValueError(f"{value} is not an int for {cls.get_name()}")
+            raise TypeError(f"{value} is not an int for {cls.get_name()}")
         return super().value_to_code_bounded(
-            value=value, value_min=value_min, value_max=value_max
+            value=value, value_min=value_min, value_max=value_max, value_step=value_step
         )
 
     ## NOTE: codes are not validated to value_min/value_max
 
     @classmethod
     def code_to_value(cls, code: str) -> int:
-        return int(code) * cls.value_divider - cls.value_offset
+        return (int(code) + cls.code_offset) * cls.value_divider - cls.value_offset
