@@ -86,7 +86,9 @@ from .decoders.video import (
     VideoSuperResolution,
 )
 
-PIONEER_COMMANDS: dict[str, dict[Zone | str, str | list[str] | list[CodeMapBase]]] = {
+PIONEER_COMMANDS: dict[
+    str, dict[Zone | str, str | list[str] | list[type[CodeMapBase]]]
+] = {
     "query_model": {Zone.Z1: ["?RGD", "RGD"]},
     "system_query_mac_addr": {Zone.Z1: ["?SVB", "SVB"]},
     "system_query_software_version": {Zone.Z1: ["?SSI", "SSI"]},
