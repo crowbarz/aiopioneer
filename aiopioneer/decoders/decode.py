@@ -10,7 +10,7 @@ from .audio import RESPONSE_DATA_AUDIO
 from .code_map import CodeMapBase
 from .dsp import RESPONSE_DATA_DSP
 from .response import Response
-from .settings import RESPONSE_DATA_SYSTEM
+from .system import RESPONSE_DATA_SYSTEM
 from .amp import RESPONSE_DATA_AMP
 from .tuner import RESPONSE_DATA_TUNER
 from .video import RESPONSE_DATA_VIDEO

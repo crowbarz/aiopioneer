@@ -62,7 +62,7 @@ from .decoders.dsp import (
     CenterSpread,
     RenderingMode,
 )
-from .decoders.settings import SpeakerSystem
+from .decoders.system import SpeakerSystem
 from .decoders.tuner import Preset
 from .decoders.video import (
     VideoResolution,
