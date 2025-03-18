@@ -18,13 +18,13 @@ from .decoders.amp import (
 )
 from .decoders.audio import (
     SpeakerChannelLevel,
-    QuerySpeakerChannel,
+    SpeakerChannel,
     AvailableListeningMode,
     ToneMode,
     ToneBass,
     ToneTreble,
 )
-from .decoders.code_map import CodeMapBase, CodeMapBlank
+from .decoders.code_map import CodeMapBase, CodeMapBlank, CodeMapQuery
 from .decoders.dsp import (
     McaccMemorySet,
     PhaseControl,
@@ -305,7 +305,7 @@ PIONEER_COMMANDS: dict[
         Zone.Z1: ["CLV", "CLV"],
         Zone.Z2: ["ZGE", "ZGE"],
         Zone.Z3: ["ZHE", "ZHE"],
-        "args": [QuerySpeakerChannel],
+        "args": [CodeMapQuery(SpeakerChannel)],
     },
     ## video
     "query_video_resolution": {Zone.Z1: ["?VTC", "VTC"]},

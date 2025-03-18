@@ -372,12 +372,6 @@ class SpeakerChannelLevel(CodeMapSequence):
         return [response]
 
 
-class QuerySpeakerChannel(CodeMapSequence):
-    """Query speaker channel."""
-
-    code_map_sequence = [CodeMapQuery, SpeakerChannel]
-
-
 class ListeningMode(CodeDynamicDictListMap):
     """Listening mode."""
 

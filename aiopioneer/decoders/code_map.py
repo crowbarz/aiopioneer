@@ -162,34 +162,6 @@ class CodeMapBlank(CodeMapComplex, CodeMapBase):
         return []
 
 
-class CodeMapQuery(CodeMapBase):
-    """Query code map."""
-
-    @classmethod
-    def get_len(cls):
-        return 1
-
-    @classmethod
-    def get_nargs(cls):
-        return 0
-
-    # pylint: disable=unused-argument
-    @classmethod
-    def parse_args(
-        cls,
-        command: str,
-        args: list,
-        zone: Zone,
-        params: AVRParams,
-        properties: AVRProperties,
-    ) -> str:
-        return "?"
-
-    @classmethod
-    def decode_response(cls, response: Response, params: AVRParams) -> list[Response]:
-        return []
-
-
 # pylint: disable=abstract-method
 class CodeMapSequence(CodeMapComplex, CodeMapBase):
     """Map AVR codes to a sequence of code maps."""
@@ -317,6 +289,42 @@ class CodeMapSequence(CodeMapComplex, CodeMapBase):
         return cls.decode_response_sequence(
             response=response, params=params, code_map_sequence=cls.code_map_sequence
         )
+
+
+class CodeMapQuery(CodeMapBase):
+    """Query code map."""
+
+    def __new__(cls, code_map_class: type[CodeMapBase]) -> type[CodeMapSequence]:
+        """Create a query code map class for base code map class."""
+        return type(
+            f"CodeMapQuery_{code_map_class.__name__}",
+            (CodeMapSequence,),
+            {"code_map_sequence": [CodeMapQuery, code_map_class]},
+        )
+
+    @classmethod
+    def get_len(cls):
+        return 1
+
+    @classmethod
+    def get_nargs(cls):
+        return 0
+
+    # pylint: disable=unused-argument
+    @classmethod
+    def parse_args(
+        cls,
+        command: str,
+        args: list,
+        zone: Zone,
+        params: AVRParams,
+        properties: AVRProperties,
+    ) -> str:
+        return "?"
+
+    @classmethod
+    def decode_response(cls, response: Response, params: AVRParams) -> list[Response]:
+        return []
 
 
 # pylint: disable=abstract-method
