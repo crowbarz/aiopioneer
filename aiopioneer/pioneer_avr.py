@@ -631,16 +631,9 @@ class PioneerAVR(AVRConnection):
         """Return dict of valid listening modes and names for Zone 1."""
         return self.properties.available_listening_modes.values()
 
-    async def select_listening_mode(
-        self, mode_name: str = None, mode_id: str = None
-    ) -> None:
+    async def select_listening_mode(self, mode: str | int) -> None:
         """Set the listening mode using the predefined list of options in params."""
-
-        if mode_name and mode_id is None:
-            mode_id = AvailableListeningMode(mode_name, properties=self.properties)
-        if mode_id not in self.properties.available_listening_modes:
-            raise ValueError(f"listening mode {mode_id} is not available")
-        await self.send_command("set_listening_mode", prefix=mode_id)
+        await self.send_command("set_listening_mode", mode)
 
     async def set_tone_settings(
         self,
