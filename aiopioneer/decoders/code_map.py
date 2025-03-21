@@ -423,7 +423,7 @@ class CodeDynamicDictMap(CodeMapBase):
         for k, v in code_map.items():
             if cls.match(v, value):
                 if cls.index_map_class:
-                    return cls.index_map_class.value_to_code(k)
+                    return cls.index_map_class.value_to_code(value=k)
                 return k
         raise ValueError(f"value {value} not found for {cls.get_name()}")
 
@@ -432,7 +432,7 @@ class CodeDynamicDictMap(CodeMapBase):
         """Convert code to value for code map."""
         index = code
         if cls.index_map_class:
-            index = cls.index_map_class.code_to_value(code)
+            index = cls.index_map_class.code_to_value(code=code)
         if index in code_map:
             return code_map[index]
         if CodeDefault() in code_map:
