@@ -194,21 +194,65 @@ If _source_name_ is **None**, reset source name to default.
 
 ### Command queue
 
-`PioneerAVR.queue_command(`_command_: **str** | **list**, _skip_if_queued_: **bool** = **True**, _insert_at_: **int** = -1`)` -> **None**
+`CommandQueue.enqueue(`_item_: **ComandItem**, _queue_id_: **int** = **None**, _skip_if_startup_: **bool** = **None**, _skip_if_queued_: **bool** = **None**, _skip_if_executing_: **bool** = **None**, _insert_at_: **int** = -1, _start_executing_: **bool** = **True**`)` -> **None**
 
-Add _command_ to the command queue, to to be sent in the background to the AVR or executed as a local command. Starts the command queue task if not already running. <br/>
-_command_ may be specified as a **str**, or a **list** whose first element is a **str** that is used as the command to execute. The list form is used for local commands that support arguments of arbitrary type.
+Add _item_ to the command queue, to be sent in the background to the AVR or executed as a local command. <br/>
+Use the queue _queue_id_ if specified, otherwise use the default queue. <br/>
+Insert at position _insert_at_ in the queue. If _insert_at_ is negative, then calculate the position relative to the end of the queue. If not specified, use the value specified in _item_. <br/>
+If _skip_if_startup_, _skip_if_queued_ and/or _skip_if_executing_ are provided, then override the values specified in _item_. <br/>
+If _skip_if_startup_ is **True**, then the command is not queued if the module is still connecting to the AVR. <br/>
+If _skip_if_queued_ is **True** and _item_ is already present in the command queue, then the command is not queued again. <br/>
+If _skip_if_executing_ is **True**, then the command is not queued if the command queue is currently executing. <br/>
+If _start_executing_ is **True**, then starts the command queue task if it is not already running. <br/>
+
 The following local commands are supported, these are mainly used by the command decoders for more complex actions:
 
 - `_full_refresh`: perform a full refresh on all AVR Zones
-- \[ `_refresh_zone`, _zone_: **Zone** \]: perform a refresh on the specified zone
-- \[ `_delayed_query_basic`, _delay_: **float** \]: schedule a basic AVR query if parameter `disable_auto_query` is not enabled
-- `_query_basic`: perform a basic AVR query if parameter `disable_auto_query` is not enabled
+- `_refresh_zone`(_zone_: **Zone**): perform a refresh on the specified zone
+- `_delayed_refresh_zone`(_zone_: **Zone**): perform a refresh on the specified zone after a 2.5s delay
+- `_delayed_query_basic`(_delay_: **float**): schedule a basic AVR query after waiting _delay_, if parameter `disable_auto_query` is not enabled
+- `_update_listening_modes`: recalculate the available listening modes
 - `_calculate_am_frequency_step`: calculate the tuner AM frequency step
-- \[ `_sleep`, _delay_: **float** \]: sleep for _delay_ before executing the next command in the queue
+- `_sleep`(_delay_: **float**): sleep for _delay_ before executing the next command in the queue
 
-If _skip_if_queued_ is **True** and _command_ is already present in the command queue, then the command is not queued again. Local command arguments are included in the match. <br\>
-Insert the command at queue position _insert_at_ if specified. Inserts by default at end of the queue.
+`CommandQueue.extend(`_items_: **list**\[**ComandItem**\]`)` -> **None**
+
+Add _items_ to the queue using the properties for each **CommandItem**. Start executing the commands if not already started.
+
+`CommandQueue.purge()` -> **None**
+
+Purge the command queues.
+
+`CommandQueue.active_queue()` -> **int** | **None**
+
+Return the ID of the currently active command queue.
+
+`CommandQueue.peek(`_queue_id: **int** = **None**, _queue_pos_: **int** = 0`)` -> **tuple**[**int**, **CommandItem**] | **None**
+
+Peek at the next item in the command queue. <br/>
+If _queue_id_ is specified, peek at the specified command queue. Otherwise, peek at the first non-empty command queue. <br/>
+If _queue_pos_ is specified, peek at the specified position in the command queue. Otherwise, peek at the first position. <br/>
+
+`CommandQueue.pop(`_queue_id: **int** = **None**, _queue_pos_: **int** = 0`)` -> **CommandItem** | **None**
+
+Pop the first item in the command queue. <br/>
+If _queue_id_ is specified, pop from the specified command queue. Otherwise, pop from the first non-empty command queue. <br/>
+
+`CommandQueue.schedule()` -> **int** | **None**
+
+Schedule the command queue task.
+
+`CommandQueue.cancel()` -> **int** | **None**
+
+Cancel the command queue task and purge the command queue.
+
+`CommandQueue.wait()` -> **int** | **None**
+
+Wait until command queue has finished executing.
+
+`CommandQueue.commands` -> **list**\[**str**\]
+
+Return a list of the queued command names.
 
 ### Low level AVR command methods (inherited by `PioneerAVR`)
 
