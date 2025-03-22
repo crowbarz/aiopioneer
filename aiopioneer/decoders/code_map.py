@@ -113,7 +113,7 @@ class CodeMapBase:
 
 
 # pylint: disable=abstract-method
-class CodeMapComplex(CodeMapBase):
+class CodeMapComplexMixin(CodeMapBase):
     """Mixin for complex code maps that do not support value_to_code and code_to_value."""
 
     @classmethod
@@ -127,7 +127,7 @@ class CodeMapComplex(CodeMapBase):
         raise RuntimeError(f"code_to_value unsupported for {cls.get_name()}")
 
 
-class CodeMapBlank(CodeMapComplex, CodeMapBase):
+class CodeMapBlank(CodeMapComplexMixin, CodeMapBase):
     """Blank code map."""
 
     code_len = None
@@ -163,7 +163,7 @@ class CodeMapBlank(CodeMapComplex, CodeMapBase):
 
 
 # pylint: disable=abstract-method
-class CodeMapSequence(CodeMapComplex, CodeMapBase):
+class CodeMapSequence(CodeMapComplexMixin, CodeMapBase):
     """Map AVR codes to a sequence of code maps."""
 
     code_map_sequence: list[CodeMapBase] = []
@@ -402,7 +402,7 @@ class CodeInverseBoolMap(CodeBoolMap):
     code_false = "1"
 
 
-class CodeDynamicDictMap(CodeMapBase):
+class CodeDynamicDictMap(CodeMapComplexMixin, CodeMapBase):
     """Map AVR codes to dynamic map of values."""
 
     code_len: int = None
