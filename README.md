@@ -192,10 +192,6 @@ _awaitable_ `PioneerAVR.set_source_name(`_source_id_: **str**, _source_name_: **
 Renames _source_id_ to _source_name_ on the AVR. <br/>
 If _source_name_ is **None**, reset source name to default.
 
-`AVRProperties.clear_source_id(`_source_id_: **str**`)`
-
-Clear the name mapping for _source_id_.
-
 ### Command queue
 
 `PioneerAVR.queue_command(`_command_: **str** | **list**, _skip_if_queued_: **bool** = **True**, _insert_at_: **int** = -1`)` -> **None**
