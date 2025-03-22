@@ -178,7 +178,7 @@ Manually set the available sources to the dict _sources_, where the keys are int
 
 Return the set of currently available source names for _zone_. The source names can be used with the `select_source` method.
 
-`AVRProperties.get_source_dict(`_zone_: Zone = **None**`)` -> **dict**[**str**, **str**]
+`AVRProperties.get_source_dict(`_zone_: Zone = **None**`)` -> **dict**[**int**, **str**]
 
 Return a dict of currently available source ID to source name mappings for _zone_. <br/>
 If _zone_ is **None**, then return the dict of all available source ID to source name mappings for the AVR.
