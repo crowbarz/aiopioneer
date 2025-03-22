@@ -556,16 +556,9 @@ class PioneerAVR(AVRConnection):
         """Turn off the Pioneer AVR zone."""
         await self.send_command("turn_off", zone=self._check_zone(zone))
 
-    async def select_source(
-        self, source: str = None, source_id: str = None, zone: Zone = Zone.Z1
-    ) -> None:
+    async def select_source(self, source: str | int, zone: Zone = Zone.Z1) -> None:
         """Select input source."""
-        zone = self._check_zone(zone)
-        if source_id is None and source is not None:
-            source_id = self.properties.source_name_to_id.get(source)
-        if source_id is None:
-            raise ValueError(f"invalid source {source} for {zone.full_name}")
-        await self.send_command("select_source", source_id, zone=zone)
+        await self.send_command("select_source", source, zone=self._check_zone(zone))
 
     async def volume_up(self, zone: Zone = Zone.Z1) -> None:
         """Volume up media player."""
@@ -879,7 +872,7 @@ class PioneerAVR(AVRConnection):
         # does not have unique commands
         await self.send_command(command)
 
-    async def set_source_name(self, source_id: str, source_name: str = None) -> None:
+    async def set_source_name(self, source_id: int, source_name: str = None) -> None:
         """Renames an input to source_name. Reset to default if source_name is None."""
         if source_name is None:
             await self.send_command("set_default_source_name", source_id)

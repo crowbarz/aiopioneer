@@ -38,7 +38,7 @@ class TunerBand(StrEnum):
     AM = "AM"
 
 
-SOURCE_TUNER = "02"
+SOURCE_TUNER = 2
 
 CHANNELS_ALL = [
     "L",
@@ -186,14 +186,14 @@ LISTENING_MODES = {
 }
 
 MEDIA_CONTROL_SOURCES = {
-    "26": "NETWORK",
-    "38": "NETWORK",
-    "44": "NETWORK",
-    "02": "TUNER",
-    "13": "ADAPTERPORT",
-    "41": "NETWORK",
-    "53": "NETWORK",
-    "17": "IPOD",
+    26: "NETWORK",
+    38: "NETWORK",
+    44: "NETWORK",
+    2: "TUNER",
+    13: "ADAPTERPORT",
+    41: "NETWORK",
+    53: "NETWORK",
+    17: "IPOD",
 }
 
 MEDIA_CONTROL_COMMANDS = {

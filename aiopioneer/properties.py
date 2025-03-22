@@ -1,13 +1,12 @@
 """Pioneer AVR properties."""
 
-import copy
 import logging
 
 from typing import Any
-from types import MappingProxyType
 
 from .command_queue import CommandQueue
 from .const import Zone, MEDIA_CONTROL_COMMANDS, LISTENING_MODES, SOURCE_TUNER
+from .exceptions import AVRLocalCommandError
 from .params import (
     AVRParams,
     PARAM_MODEL,
@@ -35,7 +34,7 @@ class AVRProperties:
         self.volume: dict[Zone, int] = {}
         self.max_volume: dict[Zone, int] = {}
         self.mute: dict[Zone, bool] = {}
-        self.source_id: dict[Zone, str] = {}
+        self.source_id: dict[Zone, int] = {}
         self.source_name: dict[Zone, str] = {}
         self.listening_mode: str = None
         self.listening_mode_raw: int = None
@@ -61,8 +60,8 @@ class AVRProperties:
 
         ## Source name mappings
         self.query_sources = None
-        self.source_name_to_id: dict[str, str] = {}
-        self.source_id_to_name: dict[str, str] = {}
+        self.source_name_to_id: dict[str, int] = {}
+        self.source_id_to_name: dict[int, str] = {}
 
     def reset(self) -> None:
         """Reset AVR properties."""
@@ -85,43 +84,50 @@ class AVRProperties:
         self.system = {}
         self.audio = {}
 
-    def set_source_dict(self, sources: dict[str, str]) -> None:
-        """Manually set source id<->name translation tables."""
+    def set_source_dict(self, sources: dict[int, str] | dict[str, str]) -> None:
+        """Set source ID to name mapping."""
         self.query_sources = False
-        self.source_name_to_id = copy.deepcopy(sources)
-        self.source_id_to_name = {v: k for k, v in sources.items()}
+        try:
+            if sources and isinstance(list(sources.keys())[0], str):
+                ## TODO: deprecate legacy (source_name, str(src_id)) format
+                _LOGGER.warning("converting legacy source dict format")
+                self.source_name_to_id = {k: int(v) for k, v in sources.items()}
+                self.source_id_to_name = {int(v): k for k, v in sources.items()}
+            else:
+                self.source_id_to_name = sources.copy()
+                self.source_name_to_id = {v: k for k, v in sources.items()}
+        except (ValueError, KeyError) as exc:
+            raise AVRLocalCommandError(command="set_source_dict", exc=exc) from exc
+
+        _LOGGER.warning(
+            "source_name_to_id=%s, source_id_to_name=%s",
+            self.source_name_to_id,
+            self.source_id_to_name,
+        )
 
     def get_source_list(self, zone: Zone = Zone.Z1) -> list[str]:
-        """Return list of available input sources."""
-        source_ids = self._params.get_param(PARAM_ZONE_SOURCES[zone], [])
-        return list(
-            self.source_name_to_id.keys()
-            if not source_ids
-            else [
-                self.source_id_to_name[s]
-                for s in source_ids
-                if s in self.source_id_to_name
-            ]
-        )
+        """Return list of available input sources for zone."""
+        source_ids: list[int] = None
+        if zone is not None:
+            source_ids = self._params.get_param(PARAM_ZONE_SOURCES[zone], [])
+        if not source_ids:
+            return list(self.source_id_to_name.values())
+        return list(v for k, v in self.source_id_to_name.items() if k in source_ids)
 
-    def get_source_dict(self, zone: Zone = None) -> dict[str, str]:
-        """Return source id<->name translation tables."""
-        if zone is None:
-            return MappingProxyType(self.source_name_to_id)
-        source_ids = self._params.get_param(PARAM_ZONE_SOURCES[zone], [])
-        return (
-            self.source_name_to_id
-            if not source_ids
-            else {k: v for k, v in self.source_name_to_id.items() if v in source_ids}
-        )
+    def get_source_dict(self, zone: Zone = None) -> dict[int, str]:
+        """Return source ID to name mapping for zone."""
+        source_ids: list[int] = None
+        if zone is not None:
+            source_ids = self._params.get_param(PARAM_ZONE_SOURCES[zone], [])
+        if not source_ids:
+            return self.source_id_to_name.copy()
+        return {k: v for k, v in self.source_id_to_name.items() if k in source_ids}
 
-    def get_source_name(self, source_id: str) -> str:
-        """Return name for given source ID."""
-        return (
-            self.source_id_to_name.get(source_id, source_id)
-            if self.source_name_to_id
-            else source_id
-        )
+    def get_source_name(self, source_id: int) -> str:
+        """Return source name for source ID."""
+        if self.source_name_to_id is None:
+            return str(source_id)
+        return self.source_id_to_name.get(source_id, str(source_id))
 
     def is_source_tuner(self, source: str = None) -> bool:
         """Return whether current source is tuner."""
