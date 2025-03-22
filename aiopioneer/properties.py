@@ -99,12 +99,6 @@ class AVRProperties:
         except (ValueError, KeyError) as exc:
             raise AVRLocalCommandError(command="set_source_dict", exc=exc) from exc
 
-        _LOGGER.warning(
-            "source_name_to_id=%s, source_id_to_name=%s",
-            self.source_name_to_id,
-            self.source_id_to_name,
-        )
-
     def get_source_list(self, zone: Zone = Zone.Z1) -> list[str]:
         """Return list of available input sources for zone."""
         source_ids: list[int] = None
