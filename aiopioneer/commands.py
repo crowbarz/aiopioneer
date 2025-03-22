@@ -5,6 +5,7 @@ from .decoders.amp import (
     Volume,
     SourceName,
     SourceId,
+    Source,
     SpeakerMode,
     HdmiOut,
     Hdmi3Out,
@@ -109,7 +110,7 @@ PIONEER_COMMANDS: dict[
         Zone.Z2: ["ZS", "Z2F"],
         Zone.Z3: ["ZT", "Z3F"],
         Zone.HDZ: ["ZEA", "ZEA"],
-        "args": [SourceId],
+        "args": [Source],
     },
     "volume_up": {
         Zone.Z1: ["VU", "VOL"],

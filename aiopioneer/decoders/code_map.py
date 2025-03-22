@@ -113,7 +113,7 @@ class CodeMapBase:
 
 
 # pylint: disable=abstract-method
-class CodeMapComplex(CodeMapBase):
+class CodeMapComplexMixin(CodeMapBase):
     """Mixin for complex code maps that do not support value_to_code and code_to_value."""
 
     @classmethod
@@ -127,7 +127,7 @@ class CodeMapComplex(CodeMapBase):
         raise RuntimeError(f"code_to_value unsupported for {cls.get_name()}")
 
 
-class CodeMapBlank(CodeMapComplex, CodeMapBase):
+class CodeMapBlank(CodeMapComplexMixin, CodeMapBase):
     """Blank code map."""
 
     code_len = None
@@ -163,7 +163,7 @@ class CodeMapBlank(CodeMapComplex, CodeMapBase):
 
 
 # pylint: disable=abstract-method
-class CodeMapSequence(CodeMapComplex, CodeMapBase):
+class CodeMapSequence(CodeMapComplexMixin, CodeMapBase):
     """Map AVR codes to a sequence of code maps."""
 
     code_map_sequence: list[CodeMapBase] = []
@@ -402,11 +402,11 @@ class CodeInverseBoolMap(CodeBoolMap):
     code_false = "1"
 
 
-class CodeDynamicDictMap(CodeMapBase):
+class CodeDynamicDictMap(CodeMapComplexMixin, CodeMapBase):
     """Map AVR codes to dynamic map of values."""
 
     code_len: int = None
-    index_map: type[CodeMapBase] = None
+    index_map_class: type[CodeMapBase] = None
 
     @classmethod
     def get_len(cls) -> int:
@@ -422,8 +422,8 @@ class CodeDynamicDictMap(CodeMapBase):
         """Convert value to code for code map."""
         for k, v in code_map.items():
             if cls.match(v, value):
-                if cls.index_map:
-                    return cls.index_map.value_to_code(k)
+                if cls.index_map_class:
+                    return cls.index_map_class.value_to_code(value=k)
                 return k
         raise ValueError(f"value {value} not found for {cls.get_name()}")
 
@@ -431,8 +431,8 @@ class CodeDynamicDictMap(CodeMapBase):
     def code_to_value_dynamic(cls, code: str, code_map: dict[Any, Any]) -> Any:
         """Convert code to value for code map."""
         index = code
-        if cls.index_map:
-            index = cls.index_map.code_to_value(code)
+        if cls.index_map_class:
+            index = cls.index_map_class.code_to_value(code=code)
         if index in code_map:
             return code_map[index]
         if CodeDefault() in code_map:

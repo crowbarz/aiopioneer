@@ -2,12 +2,14 @@
 
 from ..const import Zone
 from ..params import AVRParams, PARAM_SPEAKER_SYSTEM_MODES
+from ..properties import AVRProperties
 from .code_map import (
     CodeDefault,
     CodeMapSequence,
     CodeMapBlank,
     CodeBoolMap,
     CodeStrMap,
+    CodeDynamicDictStrMap,
     CodeDictMap,
     CodeDictStrMap,
     CodeIntMap,
@@ -16,12 +18,44 @@ from .code_map import (
 from .response import Response
 
 
-class SpeakerSystem(CodeDictStrMap):
+class SpeakerSystemIndex(CodeIntMap):
+    """Listening mode index."""
+
+    friendly_name = "speaker system"
+
+    value_min = 0
+    value_max = 99
+    code_zfill = 2
+
+
+class SpeakerSystem(CodeDynamicDictStrMap):
     """Speaker system."""
 
     friendly_name = "speaker system"
     base_property = "system"
     property_name = "speaker_system"
+
+    index_map_class = SpeakerSystemIndex
+
+    @classmethod
+    def parse_args(
+        cls,
+        command: str,
+        args: list,
+        zone: Zone,
+        params: AVRParams,
+        properties: AVRProperties,
+    ) -> str:
+        if isinstance(args[0], int):
+            return SpeakerSystemIndex.value_to_code(args[0])
+        return cls.parse_args_dynamic(
+            command=command,
+            args=args,
+            zone=zone,
+            params=params,
+            properties=properties,
+            code_map=params.get_param(PARAM_SPEAKER_SYSTEM_MODES, {}),
+        )
 
     @classmethod
     def decode_response(
@@ -30,11 +64,17 @@ class SpeakerSystem(CodeDictStrMap):
         params: AVRParams,
     ) -> list[Response]:
         """Response decoder for speaker system."""
-        cls.code_map = params.get_param(PARAM_SPEAKER_SYSTEM_MODES, {})
-        super().decode_response(response=response, params=params)
+        cls.decode_response_dynamic(
+            response=response,
+            params=params,
+            code_map=params.get_param(PARAM_SPEAKER_SYSTEM_MODES, {}),
+        )
         return [
             response,
-            response.clone(property_name="speaker_system_raw", value=response.code),
+            response.clone(
+                property_name="speaker_system_raw",
+                value=SpeakerSystemIndex.code_to_value(response.code),
+            ),
         ]
 
 

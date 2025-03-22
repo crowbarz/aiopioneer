@@ -50,7 +50,6 @@ from .params import (
     PARAM_INITIAL_REFRESH_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY,
 )
-from .decoders.audio import AvailableListeningMode
 from .decoders.code_map import CodeMapBase
 from .decoders.decode import process_raw_response
 from .decoders.amp import Volume
@@ -556,16 +555,9 @@ class PioneerAVR(AVRConnection):
         """Turn off the Pioneer AVR zone."""
         await self.send_command("turn_off", zone=self._check_zone(zone))
 
-    async def select_source(
-        self, source: str = None, source_id: str = None, zone: Zone = Zone.Z1
-    ) -> None:
+    async def select_source(self, source: str | int, zone: Zone = Zone.Z1) -> None:
         """Select input source."""
-        zone = self._check_zone(zone)
-        if source_id is None and source is not None:
-            source_id = self.properties.source_name_to_id.get(source)
-        if source_id is None:
-            raise ValueError(f"invalid source {source} for {zone.full_name}")
-        await self.send_command("select_source", source_id, zone=zone)
+        await self.send_command("select_source", source, zone=self._check_zone(zone))
 
     async def volume_up(self, zone: Zone = Zone.Z1) -> None:
         """Volume up media player."""
@@ -631,16 +623,9 @@ class PioneerAVR(AVRConnection):
         """Return dict of valid listening modes and names for Zone 1."""
         return self.properties.available_listening_modes.values()
 
-    async def select_listening_mode(
-        self, mode_name: str = None, mode_id: str = None
-    ) -> None:
+    async def select_listening_mode(self, mode: str | int) -> None:
         """Set the listening mode using the predefined list of options in params."""
-
-        if mode_name and mode_id is None:
-            mode_id = AvailableListeningMode(mode_name, properties=self.properties)
-        if mode_id not in self.properties.available_listening_modes:
-            raise ValueError(f"listening mode {mode_id} is not available")
-        await self.send_command("set_listening_mode", prefix=mode_id)
+        await self.send_command("set_listening_mode", mode)
 
     async def set_tone_settings(
         self,
@@ -886,7 +871,7 @@ class PioneerAVR(AVRConnection):
         # does not have unique commands
         await self.send_command(command)
 
-    async def set_source_name(self, source_id: str, source_name: str = None) -> None:
+    async def set_source_name(self, source_id: int, source_name: str = None) -> None:
         """Renames an input to source_name. Reset to default if source_name is None."""
         if source_name is None:
             await self.send_command("set_default_source_name", source_id)

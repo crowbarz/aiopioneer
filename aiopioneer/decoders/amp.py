@@ -16,6 +16,7 @@ from .code_map import (
     CodeBoolMap,
     CodeStrMap,
     CodeInverseBoolMap,
+    CodeDynamicDictStrMap,
     CodeDictStrMap,
     CodeIntMap,
 )
@@ -122,8 +123,8 @@ class Volume(CodeIntMap):
         return cls.value_to_code(value=args[0], zone=zone, properties=properties)
 
 
-class SourceId(CodeStrMap):
-    """Zone source ID."""
+class SourceId(CodeIntMap):
+    """Source ID."""
 
     friendly_name = "source ID"
     base_property = "source_id"  # unused
@@ -133,49 +134,9 @@ class SourceId(CodeStrMap):
     value_max = 99
 
     @classmethod
-    def decode_response(
-        cls,
-        response: Response,
-        params: AVRParams,
-    ) -> list[Response]:
-        """Response decoder for zone source ID."""
-        super().decode_response(response=response, params=params)
-        source = response.value
-        queue_commands = []
-        if response.properties.is_source_tuner(source):
-            queue_commands.extend(
-                [
-                    CommandItem("query_tuner_frequency"),
-                    CommandItem("query_tuner_preset"),
-                ]
-            )
-        queue_commands.append(CommandItem("_delayed_query_basic", 2.5, queue_id=3))
-        if source in MEDIA_CONTROL_SOURCES:
-            media_control_mode = MEDIA_CONTROL_SOURCES.get(source)
-        elif source == params.get_param(PARAM_MHL_SOURCE):
-            media_control_mode = "MHL"
-        else:
-            media_control_mode = None
-
-        return [
-            response.clone(
-                base_property="source_name",
-                value=response.properties.get_source_name(response.value),
-                update_zones={Zone.ALL},
-                queue_commands=queue_commands,
-            ),
-            response,
-            response.clone(
-                base_property="media_control_mode",
-                inherit_value=False,
-                value=media_control_mode,
-            ),
-        ]
-
-    @classmethod
     def value_to_code(cls, value: str | int):
-        if isinstance(value, int):
-            return str(value).zfill(2)
+        if isinstance(value, str):
+            value = int(value)
         return super().value_to_code(value=value)
 
 
@@ -183,6 +144,7 @@ class SourceName(CodeStrMap):
     """Source name."""
 
     friendly_name = "source name"
+    base_property = "source_name"  # unused
 
     @classmethod
     def decode_response(
@@ -231,7 +193,88 @@ class SourceName(CodeStrMap):
 
     @classmethod
     def code_to_value(cls, code: str) -> tuple[str, str]:
-        return code[:2], code[3:]
+        return SourceId.code_to_value(code[:2]), code[3:]  ## NOTE: [2] ignored
+
+
+class Source(CodeDynamicDictStrMap):
+    """Zone source."""
+
+    friendly_name = "source"
+    base_property = "source_name"
+
+    index_map_class = SourceId
+
+    @classmethod
+    def value_to_code(cls, value: str | int, properties: AVRProperties = None) -> str:
+        if not isinstance(properties, AVRProperties):
+            raise RuntimeError(f"AVRProperties required for {cls.get_name()}")
+        if isinstance(value, str) and value in properties.source_name_to_id:
+            return cls.index_map_class(value=properties.source_name_to_id[value])
+        if isinstance(value, int) and value in properties.source_id_to_name:
+            return cls.index_map_class(value=value)
+        raise ValueError(f"value {value} not found for {cls.get_name()}")
+
+    @classmethod
+    def code_to_value(cls, code: str, properties: AVRProperties = None) -> str:
+        if not isinstance(properties, AVRProperties):
+            raise RuntimeError(f"AVRProperties required for {cls.get_name()}")
+        return cls.code_to_value_dynamic(code, code_map=properties.source_id_to_name)
+
+    @classmethod
+    def parse_args(
+        cls,
+        command: str,
+        args: list,
+        zone: Zone,  # pylint: disable=unused-argument
+        params: AVRParams,  # pylint: disable=unused-argument
+        properties: AVRProperties,
+    ) -> str:
+        cls.check_args(args)
+        return cls.value_to_code(value=args[0], properties=properties)
+
+    @classmethod
+    def decode_response(
+        cls,
+        response: Response,
+        params: AVRParams,
+    ) -> list[Response]:
+        """Response decoder for listening mode."""
+        cls.decode_response_dynamic(
+            response=response,
+            params=params,
+            code_map=response.properties.source_id_to_name,
+        )
+        source_id = cls.index_map_class.code_to_value(code=response.code)
+        queue_commands = []
+        if response.properties.is_source_tuner(source_id):
+            queue_commands.extend(
+                [
+                    CommandItem("query_tuner_frequency"),
+                    CommandItem("query_tuner_preset"),
+                ]
+            )
+        queue_commands.append(CommandItem("_delayed_query_basic", 2.5, queue_id=3))
+        if source_id in MEDIA_CONTROL_SOURCES:
+            media_control_mode = MEDIA_CONTROL_SOURCES.get(source_id)
+        elif source_id == params.get_param(PARAM_MHL_SOURCE):
+            media_control_mode = "MHL"
+        else:
+            media_control_mode = None
+
+        return [
+            response,
+            response.clone(
+                base_property="source_id",
+                value=source_id,
+                update_zones={Zone.ALL},
+                queue_commands=queue_commands,
+            ),
+            response.clone(
+                base_property="media_control_mode",
+                inherit_value=False,
+                value=media_control_mode,
+            ),
+        ]
 
 
 class Mute(CodeInverseBoolMap):
@@ -464,10 +507,10 @@ RESPONSE_DATA_AMP = [
     ("ZV", Volume, Zone.Z2),  # volume
     ("YV", Volume, Zone.Z3),  # volume
     ("XV", Volume, Zone.HDZ),  # volume
-    ("FN", SourceId, Zone.Z1),  # source_id
-    ("Z2F", SourceId, Zone.Z2),  # source_id
-    ("Z3F", SourceId, Zone.Z3),  # source_id
-    ("ZEA", SourceId, Zone.HDZ),  # source_id
+    ("FN", Source, Zone.Z1),  # source_name, source_id
+    ("Z2F", Source, Zone.Z2),  # source_name, source_id
+    ("Z3F", Source, Zone.Z3),  # source_name, source_id
+    ("ZEA", Source, Zone.HDZ),  # source_name, source_id
     ("RGB", SourceName, Zone.ALL),  # source_name_to_id, source_id_to_name
     ("MUT", Mute, Zone.Z1),  # mute
     ("Z2MUT", Mute, Zone.Z2),  # mute

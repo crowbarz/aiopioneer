@@ -56,17 +56,17 @@ Where a parameter is specified at more than one level, the higher priority param
 | `power_on_volume_bounce` | bool | `false` | On some AVRs (eg. VSX-930) where a power-on is set, the initial volume is not reported by the AVR correctly until a volume change is made. This option enables a workaround that sends a volume up and down command to the AVR on power-on to correct the reported volume without affecting the power-on volume
 | `volume_step_only` | bool | `false` | On some AVRs (eg. VSX-S510), setting the volume level is not supported natively by the API. This option emulates setting the volume level using volume up and down commands.
 | `ignore_volume_check` | bool | `false` | Don't check volume when determining whether a zone exists on the AVR. Useful for AVRs with an HDZone that passes through audio
-| `zone_1_sources` | list | `[]` | (>0.4) Customises the available sources for use with Zone 1. Defaults to all available sources
-| `zone_2_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with Zone 2 (some AVRs do not support all sources)
-| `zone_3_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with Zone 3 (some AVRs do not support all sources)
-| `hdzone_sources` | list | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with HDZone (some AVRs do not support all sources)
-| `amp_speaker_system_modes` | dict | `....` | Customises the names of speaker system modes. Different generations of AVR will name zones slighty differently. For example, the SC-LX57 names speaker system mode `15` as `5.1ch Bi-Amp + ZONE2` however this can also be called `5.2ch Bi-Amp + HDZONE` on newer AVRs
-| `extra_amp_listening_modes` | dict | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/const.py#L24) | (>0.5) Additional listening modes that are added to the list of all possible listening modes for the AVR. This list is used to decode the listening mode ID returned by the AVR. See the source for the format for listening mode definition
-| `enabled_amp_listening_modes` | list | `[]` | (>0.5) A list of listening mode IDs to be made available for selection. If specified, then no listening mode IDs will be included by default. All enabled source names must be unique, and duplicated names are ignored. The additional listening modes must be actually supported by the AVR, and will return an error (usually `E02`) when an unsupported listening mode is selected. This list is predefined for some AVRs, and specifying this parameter manually will override the model specific default disable list
-| `disabled_amp_listening_modes` | list | `[]` | A list of listening mode IDs to be disabled. Listening mode IDs that are also specified in `enabled_amp_listening_modes` will be disabled. This list is predefined for some AVRs, and specifying this parameter manually will override the model specific default disable list
-| `video_resolution_modes` | list | `['0', '1', '3', '4', '5', '6', '7', '8', '9']` | Sets the available video resolutions. Not all AVRs support the same resolution settings. This defaults to all of the latest resolutions from FY16
+| `zone_1_sources` | list[int] | `[]` | (>0.4) Customises the available sources for use with Zone 1. Defaults to all available sources
+| `zone_2_sources` | list[int] | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with Zone 2 (some AVRs do not support all sources)
+| `zone_3_sources` | list[int] | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with Zone 3 (some AVRs do not support all sources)
+| `hdzone_sources` | list[int] | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/param.py#L61) | Customises the available sources for use with HDZone (some AVRs do not support all sources)
+| `amp_speaker_system_modes` | dict[int, str] | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/params.py#L198) | Customises the names of speaker system modes. Different generations of AVR will name zones slighty differently. For example, the SC-LX57 names speaker system mode `15` as `5.1ch Bi-Amp + ZONE2` however this can also be called `5.2ch Bi-Amp + HDZONE` on newer AVRs
+| `extra_amp_listening_modes` | dict[int, str] | [see source](https://github.com/crowbarz/aiopioneer/blob/dev/aiopioneer/const.py#L68) | (>0.5) Additional listening modes that are added to the list of all possible listening modes for the AVR. This list is used to decode the listening mode ID returned by the AVR. See the source for the format for listening mode definition
+| `enabled_amp_listening_modes` | list[int] | `[]` | (>0.5) A list of listening mode IDs to be made available for selection. If specified, then no listening mode IDs will be included by default. All enabled source names must be unique, and duplicated names are ignored. The additional listening modes must be actually supported by the AVR, and will return an error (usually `E02`) when an unsupported listening mode is selected. This list is predefined for some AVRs, and specifying this parameter manually will override the model specific default disable list
+| `disabled_amp_listening_modes` | list[int] | `[]` | A list of listening mode IDs to be disabled. Listening mode IDs that are also specified in `enabled_amp_listening_modes` will be disabled. This list is predefined for some AVRs, and specifying this parameter manually will override the model specific default disable list
+| `video_resolution_modes` | list[str] | `['0', '1', '3', '4', '5', '6', '7', '8', '9']` | Sets the available video resolutions. Not all AVRs support the same resolution settings. This defaults to all of the latest resolutions from FY16
 | `mhl_source` | string | `null` | Sets the MHL source ID. This is used for media controls. This information cannot be queried automatically
-| `enabled_functions` | list | `["basic", "audio", "amp", "dsp", "tone", "channels", "video", "tuner", "system", "display"]` | Change the functions that are enabled by the API, adding more functions will increase the amount of time it takes to complete a full init and update
+| `enabled_functions` | list[str] | `["basic", "audio", "amp", "dsp", "tone", "channel", "video", "tuner", "system", "display"]` | Change the functions that are enabled by the API, adding more functions will increase the amount of time it takes to complete a full init and update
 | `disable_auto_query` | bool | `false` | Set to `true` to disable auto queries on first zone power on for all functions apart from core functionality (power, source, volume and mute)
 | `am_frequency_step` | int | `null` | Optional setting to configure the tuner AM frequency step. If not specified, it will be queried from the AVR if supported by the AVR, otherwise it will be determined by stepping the frequency up and down when the AM tuner is first used
 | `always_poll` | bool | `false` | Always poll the AVR every _scan_interval_. If set to `false`, out of band status responses from the AVR will reset the polling interval
@@ -161,27 +161,27 @@ Set amplifier settings. Any `set_amp` command can be sent by specifying the comm
 
 ### AVR source methods
 
-_awaitable_ `PioneerAVR.select_source(`_source_: **str** = **None**, _source_id_: **str** = **None**, _zone_: Zone = Zone.Z1`)`:
+_awaitable_ `PioneerAVR.select_source(`_source_: **str** | **int**, _zone_: Zone = Zone.Z1`)`:
 
-Set the input source for _zone_ to name _source_name_ or ID _source_id_ (requires one argument.)
+Set the input source for _zone_ to _source_, which can be an integer source ID or a source name.
 
 _awaitable_ `PioneerAVR.build_source_dict()`
 
 Query the available sources names from the AVR. <br/>
 Parameter `max_source_id` determines the highest source ID that is queried.
 
-`AVRProperties.set_source_dict(`_sources_: **dict**[**str**, **str**]`)`
+`AVRProperties.set_source_dict(`_sources_: **dict**[**int**, **str**]`)`
 
-Manually set the available sources to the dict _sources_, where the keys are source IDs (padded to 2 chars) and the values are the corresponding source names.
+Manually set the available sources to the dict _sources_, where the keys are integer source IDs and the values are the corresponding source names.
 
 `AVRProperties.get_source_list(`_zone_: Zone = Zone.Z1`)` -> **list**[**str**]
 
 Return the set of currently available source names for _zone_. The source names can be used with the `select_source` method.
 
-`AVRProperties.get_source_dict(`_zone_: Zone = **None**`)` -> **dict**[**str**, **str**]
+`AVRProperties.get_source_dict(`_zone_: Zone = **None**`)` -> **dict**[**int**, **str**]
 
-Return a dict of currently available source names to source ID mappings for _zone_. <br/>
-If _zone_ is **None**, then return the dict of all available source names to source ID mappings.
+Return a dict of currently available source ID to source name mappings for _zone_. <br/>
+If _zone_ is **None**, then return the dict of all available source ID to source name mappings for the AVR.
 
 `AVRProperties.get_source_name(`_source_id_: **str**`)` -> **str**
 
@@ -191,10 +191,6 @@ _awaitable_ `PioneerAVR.set_source_name(`_source_id_: **str**, _source_name_: **
 
 Renames _source_id_ to _source_name_ on the AVR. <br/>
 If _source_name_ is **None**, reset source name to default.
-
-`AVRProperties.clear_source_id(`_source_id_: **str**`)`
-
-Clear the name mapping for _source_id_.
 
 ### Command queue
 

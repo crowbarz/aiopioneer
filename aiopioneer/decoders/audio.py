@@ -8,7 +8,6 @@ from ..properties import AVRProperties
 from .code_map import (
     CodeDefault,
     CodeMapBlank,
-    CodeMapQuery,
     CodeMapSequence,
     CodeDynamicDictStrMap,
     CodeDynamicDictListMap,
@@ -372,11 +371,23 @@ class SpeakerChannelLevel(CodeMapSequence):
         return [response]
 
 
+class ListeningModeIndex(CodeIntMap):
+    """Listening mode index."""
+
+    friendly_name = "listening mode"
+
+    value_min = 0
+    value_max = 9999
+    code_zfill = 4
+
+
 class ListeningMode(CodeDynamicDictListMap):
     """Listening mode."""
 
     friendly_name = "listening mode"
     base_property = "listening_mode"
+
+    index_map_class = ListeningModeIndex
 
     @classmethod
     def value_to_code(cls, value: str, properties: AVRProperties = None) -> str:
@@ -422,7 +433,10 @@ class ListeningMode(CodeDynamicDictListMap):
         )
         return [
             response,
-            response.clone(base_property="listening_mode_raw", value=response.code),
+            response.clone(
+                base_property="listening_mode_raw",
+                value=cls.index_map_class.code_to_value(code=response.code),
+            ),
         ]
 
 
@@ -430,10 +444,14 @@ class ListeningMode(CodeDynamicDictListMap):
 class AvailableListeningMode(CodeDynamicDictStrMap):
     """Available listening mode."""
 
+    index_map_class = ListeningModeIndex
+
     @classmethod
-    def value_to_code(cls, value: str, properties: AVRProperties = None) -> str:
+    def value_to_code(cls, value: str | int, properties: AVRProperties = None) -> str:
         if not isinstance(properties, AVRProperties):
             raise RuntimeError(f"AVRProperties required for {cls.get_name()}")
+        if isinstance(value, int):
+            return cls.index_map_class(value=value)
         return cls.value_to_code_dynamic(
             value, code_map=properties.available_listening_modes
         )
@@ -447,8 +465,14 @@ class AvailableListeningMode(CodeDynamicDictStrMap):
         params: AVRParams,  # pylint: disable=unused-argument
         properties: AVRProperties,
     ) -> str:
-        cls.check_args(args)
-        return cls.value_to_code(value=args[0], properties=properties)
+        return cls.parse_args_dynamic(
+            command=command,
+            args=args,
+            zone=zone,
+            params=params,
+            properties=properties,
+            code_map=properties.available_listening_modes,
+        )
 
     ## NOTE: code_to_value unimplemented
 
