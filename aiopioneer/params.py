@@ -51,7 +51,7 @@ PARAM_MHL_SOURCE = "mhl_source"
 
 ## Stores all the enabled high level categories for the AVR.
 PARAM_ENABLED_FUNCTIONS = "enabled_functions"
-PARAM_INITIAL_REFRESH_FUNCTIONS = "initial_update_functions"
+PARAM_INITIAL_REFRESH_FUNCTIONS = "initial_refresh_functions"
 
 ## If set to True, the AVR won't auto query additional attributes in high level
 ## categories, instead we rely on the AVR returning them as they are changed.
