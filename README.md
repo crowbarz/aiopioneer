@@ -333,14 +333,6 @@ Set the tone settings for zone _zone_ to _tone_. When _tone_ is set to `On`, _tr
 
 Return a list of all valid media control actions for a given zone. If the provided zone source is not currently compatible with media controls, **None** will be returned.
 
-_property_ `AVRProperties.ipod_control_commands`: **list**[**str**]
-
-Return a list of all valid iPod control modes.
-
-_property_ `AVRProperties.tuner_control_commands`: **list**[**str**]
-
-Return a list of all valid tuner control commands.
-
 _awaitable_ `PioneerAVR.set_channel_levels(`_channel_: **str**, _level_: **float**, _zone_: Zone = Zone.Z1`)` -> **bool**
 
 Set the level (gain) for amplifier channel in zone _zone_.
