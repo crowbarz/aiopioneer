@@ -373,10 +373,6 @@ Set user parameters and update current parameters.
 
 Set a user parameter.
 
-`AVRParams.set_runtime_param(`_param_: **str**, _value_: **Any**`)` -> **None**
-
-Set a run-time parameter.
-
 _property_ `AVRParams.zones_initial_refresh`: **set**[Zone]
 
 Return set of zones that have completed an initial refresh.
@@ -396,10 +392,6 @@ Get a copy of all current parameters.
 `AVRParams.get_param(`_param_name_: **str**`)` -> **Any**
 
 Get the value of the specified parameter.
-
-`AVRParams.get_runtime_param(`_param_name_: **str**`)` -> **Any**
-
-Get the value of the specified run-time parameter.
 
 ### AVR Properties
 
