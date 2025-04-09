@@ -184,7 +184,7 @@ class PioneerAVR(AVRConnection):
         if not self.properties.source_name_to_id:
             _LOGGER.warning("no input sources found on AVR")
 
-    async def query_device_model(self) -> bool | None:
+    async def query_device_model(self) -> str | bool:
         """Query device model from Pioneer AVR."""
         if (device_model := self.properties.amp.get("model")) is not None:
             return device_model
