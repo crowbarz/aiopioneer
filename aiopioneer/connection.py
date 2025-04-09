@@ -235,7 +235,7 @@ class AVRConnection:
 
     async def _reconnect_cancel(self, ignore_exception=False) -> None:
         """Cancel any active reconnect task."""
-        await cancel_task(self._reconnect_task, ignore_exception=ignore_exception)
+        await cancel_task(self._reconnect_task, ignore_exceptions=ignore_exception)
         self._reconnect_task = None
 
     async def _connection_listener(self) -> None:
@@ -327,7 +327,7 @@ class AVRConnection:
         await cancel_task(
             self._listener_task,
             debug=debug_listener,
-            ignore_exception=ignore_exception,
+            ignore_exceptions=ignore_exception,
         )
         self._listener_task = None
 

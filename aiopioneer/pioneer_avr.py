@@ -293,7 +293,7 @@ class PioneerAVR(AVRConnection):
         await cancel_task(
             self._updater_task,
             debug=debug_updater,
-            ignore_exception=ignore_exception,
+            ignore_exceptions=ignore_exception,
         )
         self._updater_task = None
 

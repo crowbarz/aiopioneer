@@ -1,4 +1,4 @@
-""" Pioneer AVR utils. """
+"""Pioneer AVR utils."""
 
 import asyncio
 import socket
@@ -75,7 +75,7 @@ def get_backoff_delay(retry_count):
     return delay
 
 
-async def cancel_task(task: asyncio.Task, debug=False, ignore_exception=False):
+async def cancel_task(task: asyncio.Task, debug=False, ignore_exceptions=False):
     """Cancels a task and waits for it to finish."""
     if not task:
         return
@@ -97,7 +97,7 @@ async def cancel_task(task: asyncio.Task, debug=False, ignore_exception=False):
             _LOGGER.debug(">> cancel_task(%s): cancelled exception", task_name)
         except Exception as exc:  # pylint: disable=broad-except
             log_except = ">> cancel_task(%s): exception: %s"
-            if not ignore_exception:
+            if not ignore_exceptions:
                 _LOGGER.error(log_except, task_name, repr(exc))
             else:
                 _LOGGER.debug(log_except, task_name, repr(exc))
@@ -109,7 +109,7 @@ async def cancel_task(task: asyncio.Task, debug=False, ignore_exception=False):
             _LOGGER.debug(">> cancel_task(%s): already completed", task_name)
         if exc := task.exception():
             log_task_except = ">> cancel_task(%s): task exception: %s"
-            if not ignore_exception:
+            if not ignore_exceptions:
                 _LOGGER.error(log_task_except, task_name, repr(exc))
             else:
                 _LOGGER.debug(log_task_except, task_name, repr(exc))

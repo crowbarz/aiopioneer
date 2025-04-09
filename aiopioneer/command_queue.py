@@ -235,7 +235,7 @@ class CommandQueue:
             await cancel_task(
                 self._task,
                 debug=self._debug,
-                ignore_exception=ignore_exceptions,
+                ignore_exceptions=ignore_exceptions,
             )
             self._task = None
         self.purge()
