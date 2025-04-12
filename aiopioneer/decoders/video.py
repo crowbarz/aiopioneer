@@ -586,6 +586,57 @@ class VideoSuperResolution(CodeIntMap):
     code_zfill = 1
 
 
+COMMANDS_VIDEO = {
+    "query_basic_video_information": {Zone.Z1: ["?VST", "VST"]},
+    "query_video_resolution": {Zone.Z1: ["?VTC", "VTC"]},
+    "set_video_resolution": {Zone.Z1: ["VTC", "VTC"], "args": [VideoResolution]},
+    "query_video_converter": {Zone.Z1: ["?VTB", "VTB"]},
+    "set_video_converter": {Zone.Z1: ["VTB", "VTB"], "args": [VideoConverter]},
+    "query_video_pure_cinema": {Zone.Z1: ["?VTD", "VTD"]},
+    "set_video_pure_cinema": {Zone.Z1: ["VTD", "VTD"], "args": [VideoPureCinema]},
+    "query_video_prog_motion": {Zone.Z1: ["?VTE", "VTE"]},
+    "set_video_prog_motion": {Zone.Z1: ["VTE", "VTE"], "args": [VideoProgMotion]},
+    "query_video_stream_smoother": {Zone.Z1: ["?VTF", "VTF"]},
+    "set_video_stream_smoother": {
+        Zone.Z1: ["VTF", "VTF"],
+        "args": [VideoStreamSmoother],
+    },
+    "query_video_advanced_video_adjust": {Zone.Z1: ["?VTG", "VTG"]},
+    "set_video_advanced_video_adjust": {
+        Zone.Z1: ["VTG", "VTG"],
+        "args": [AdvancedVideoAdjust],
+    },
+    "query_video_ynr": {Zone.Z1: ["?VTH", "VTH"]},
+    "set_video_ynr": {Zone.Z1: ["VTH", "VTH"], "args": [VideoYnr]},
+    "query_video_cnr": {Zone.Z1: ["?VTI", "VTI"]},
+    "set_video_cnr": {Zone.Z1: ["VTI", "VTI"], "args": [VideoCnr]},
+    "query_video_bnr": {Zone.Z1: ["?VTJ", "VTJ"]},
+    "set_video_bnr": {Zone.Z1: ["VTJ", "VTJ"], "args": [VideoBnr]},
+    "query_video_mnr": {Zone.Z1: ["?VTK", "VTK"]},
+    "set_video_mnr": {Zone.Z1: ["VTK", "VTK"], "args": [VideoMnr]},
+    "query_video_detail": {Zone.Z1: ["?VTL", "VTL"]},
+    "set_video_detail": {Zone.Z1: ["VTL", "VTL"], "args": [VideoDetail]},
+    "query_video_sharpness": {Zone.Z1: ["?VTM", "VTM"]},
+    "set_video_sharpness": {Zone.Z1: ["VTM", "VTM"], "args": [VideoSharpness]},
+    "query_video_brightness": {Zone.Z1: ["?VTN", "VTN"]},
+    "set_video_brightness": {Zone.Z1: ["VTN", "VTN"], "args": [VideoBrightness]},
+    "query_video_contrast": {Zone.Z1: ["?VTO", "VTO"]},
+    "set_video_contrast": {Zone.Z1: ["VTO", "VTO"], "args": [VideoContrast]},
+    "query_video_hue": {Zone.Z1: ["?VTP", "VTP"]},
+    "set_video_hue": {Zone.Z1: ["VTP", "VTP"], "args": [VideoHue]},
+    "query_video_chroma": {Zone.Z1: ["?VTQ", "VTQ"]},
+    "set_video_chroma": {Zone.Z1: ["VTQ", "VTQ"], "args": [VideoChroma]},
+    "query_video_black_setup": {Zone.Z1: ["?VTR", "VTR"]},
+    "set_video_black_setup": {Zone.Z1: ["VTR", "VTR"], "args": [VideoBlackSetup]},
+    "query_video_aspect": {Zone.Z1: ["?VTS", "VTS"]},
+    "set_video_aspect": {Zone.Z1: ["VTS", "VTS"], "args": [VideoAspect]},
+    "query_video_super_resolution": {Zone.Z1: ["?VTT", "VTT"]},
+    "set_video_super_resolution": {
+        Zone.Z1: ["VTT", "VTT"],
+        "args": [VideoSuperResolution],
+    },
+}
+
 RESPONSE_DATA_VIDEO = [
     ("VST", VideoInformation, Zone.ALL),  # video
     ("VTC", VideoResolution, Zone.Z1),  # video.resolution

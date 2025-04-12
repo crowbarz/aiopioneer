@@ -12,6 +12,7 @@ from ..params import (
 )
 from ..properties import AVRProperties
 from .code_map import (
+    CodeMapBlank,
     CodeMapHasPropertyMixin,
     CodeBoolMap,
     CodeStrMap,
@@ -497,6 +498,113 @@ class AudioParameterWorking(CodeStrMap):
         )
         return [response]
 
+
+COMMANDS_AMP = {
+    "turn_on": {
+        Zone.Z1: ["PO", "PWR"],
+        Zone.Z2: ["APO", "APR"],
+        Zone.Z3: ["BPO", "BPR"],
+        Zone.HDZ: ["ZEO", "ZEP"],
+    },
+    "turn_off": {
+        Zone.Z1: ["PF", "PWR"],
+        Zone.Z2: ["APF", "APR"],
+        Zone.Z3: ["BPF", "BPR"],
+        Zone.HDZ: ["ZEF", "ZEP"],
+    },
+    "select_source": {
+        Zone.Z1: ["FN", "FN"],
+        Zone.Z2: ["ZS", "Z2F"],
+        Zone.Z3: ["ZT", "Z3F"],
+        Zone.HDZ: ["ZEA", "ZEA"],
+        "args": [Source],
+    },
+    "volume_up": {
+        Zone.Z1: ["VU", "VOL"],
+        Zone.Z2: ["ZU", "ZV"],
+        Zone.Z3: ["YU", "YV"],
+        Zone.HDZ: ["HZU", "XV"],
+    },
+    "volume_down": {
+        Zone.Z1: ["VD", "VOL"],
+        Zone.Z2: ["ZD", "ZV"],
+        Zone.Z3: ["YD", "YV"],
+        Zone.HDZ: ["HZD", "XV"],
+    },
+    "set_volume_level": {
+        Zone.Z1: ["VL", "VOL"],
+        Zone.Z2: ["ZV", "ZV"],
+        Zone.Z3: ["YV", "YV"],
+        Zone.HDZ: ["HZV", "XV"],
+        "args": [Volume],
+    },
+    "mute_on": {
+        Zone.Z1: ["MO", "MUT"],
+        Zone.Z2: ["Z2MO", "Z2MUT"],
+        Zone.Z3: ["Z3MO", "Z3MUT"],
+        Zone.HDZ: ["HZMO", "HZMUT"],
+    },
+    "mute_off": {
+        Zone.Z1: ["MF", "MUT"],
+        Zone.Z2: ["Z2MF", "Z2MUT"],
+        Zone.Z3: ["Z3MF", "Z3MUT"],
+        Zone.HDZ: ["HZMF", "HZMUT"],
+    },
+    "query_power": {
+        Zone.Z1: ["?P", "PWR"],
+        Zone.Z2: ["?AP", "APR"],
+        Zone.Z3: ["?BP", "BPR"],
+        Zone.HDZ: ["?ZEP", "ZEP"],
+    },
+    "query_volume": {
+        Zone.Z1: ["?V", "VOL"],
+        Zone.Z2: ["?ZV", "ZV"],
+        Zone.Z3: ["?YV", "YV"],
+        Zone.HDZ: ["?HZV", "XV"],
+    },
+    "query_mute": {
+        Zone.Z1: ["?M", "MUT"],
+        Zone.Z2: ["?Z2M", "Z2MUT"],
+        Zone.Z3: ["?Z3M", "Z3MUT"],
+        Zone.HDZ: ["?HZM", "HZMUT"],
+    },
+    "query_source": {
+        Zone.Z1: ["?F", "FN"],
+        Zone.Z2: ["?ZS", "Z2F"],
+        Zone.Z3: ["?ZT", "Z3F"],
+        Zone.HDZ: ["?ZEA", "ZEA"],
+    },
+    "query_model": {Zone.Z1: ["?RGD", "RGD"]},
+    "system_query_mac_addr": {Zone.Z1: ["?SVB", "SVB"]},
+    "system_query_software_version": {Zone.Z1: ["?SSI", "SSI"]},
+    "query_source_name": {Zone.Z1: ["?RGB", "RGB"], "args": [CodeMapBlank(), SourceId]},
+    "set_source_name": {Zone.Z1: ["1RGB", "RGB"], "args": [SourceName, SourceId]},
+    "set_default_source_name": {
+        Zone.Z1: ["0RGB", "RGB"],
+        "args": [CodeMapBlank(), SourceId],
+    },
+    "query_amp_speaker_mode": {Zone.Z1: ["?SPK", "SPK"]},
+    "set_amp_speaker_mode": {Zone.Z1: ["SPK", "SPK"], "args": [SpeakerMode]},
+    "query_amp_hdmi_out": {Zone.Z1: ["?HO", "HO"]},
+    "set_amp_hdmi_out": {Zone.Z1: ["HO", "HO"], "args": [HdmiOut]},
+    "query_amp_hdmi3_out": {Zone.Z1: ["?HDO", "HDO"]},
+    "set_amp_hdmi3_out": {Zone.Z1: ["HDO", "HDO"], "args": [Hdmi3Out]},
+    "query_amp_hdmi_audio": {Zone.Z1: ["?HA", "HA"]},
+    "set_amp_hdmi_audio": {Zone.Z1: ["HA", "HA"], "args": [HdmiAudio]},
+    "query_amp_pqls": {Zone.Z1: ["?PQ", "PQ"]},
+    "set_amp_pqls": {Zone.Z1: ["PQ", "PQ"], "args": [Pqls]},
+    "set_amp_dimmer": {Zone.Z1: ["SAA", "SAA"], "args": [Dimmer]},
+    ## NOTE: no amp dimmer query command
+    "query_amp_sleep_time": {Zone.Z1: ["?SAB", "SAB"]},
+    "set_amp_sleep_time": {Zone.Z1: ["SAB", "SAB"], "args": [SleepTime]},
+    "query_amp_mode": {Zone.Z1: ["?SAC", "SAC"]},
+    "set_amp_mode": {Zone.Z1: ["SAC", "SAC"], "args": [AmpMode]},
+    "query_amp_panel_lock": {Zone.Z1: ["?PKL", "PKL"]},
+    "set_amp_panel_lock": {Zone.Z1: ["PKL", "PKL"], "args": [PanelLock]},
+    "query_amp_remote_lock": {Zone.Z1: ["?RML", "RML"]},
+    "set_amp_remote_lock": {Zone.Z1: ["RML", "RML"], "args": [RemoteLock]},
+    "query_display_information": {Zone.Z1: ["?FL", "FL"]},
+}
 
 RESPONSE_DATA_AMP = [
     ("PWR", Power, Zone.Z1),  # power

@@ -238,6 +238,19 @@ class Preset(CodeStrMap):
         return code[0], int(code[1:])
 
 
+COMMANDS_TUNER = {
+    "query_tuner_am_step": {Zone.Z1: ["?SUQ", "SUQ"]},
+    "query_tuner_preset": {Zone.Z1: ["?PR", "PR"]},
+    "query_tuner_frequency": {Zone.Z1: ["?FR", "FR"]},
+    "select_tuner_preset": {Zone.Z1: ["PR", "PR"], "args": [Preset]},
+    "increase_tuner_preset": {Zone.Z1: ["TPI", "PR"]},
+    "decrease_tuner_preset": {Zone.Z1: ["TPD", "PR"]},
+    "set_tuner_band_am": {Zone.Z1: ["01TN", "FR"]},
+    "set_tuner_band_fm": {Zone.Z1: ["00TN", "FR"]},
+    "increase_tuner_frequency": {Zone.Z1: ["TFI", "FR"]},
+    "decrease_tuner_frequency": {Zone.Z1: ["TFD", "FR"]},
+}
+
 RESPONSE_DATA_TUNER = [
     ("FRF", FrequencyFM, Zone.ALL),  # tuner.frequency
     ("FRA", FrequencyAM, Zone.ALL),  # tuner.frequency

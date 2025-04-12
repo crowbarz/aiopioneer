@@ -718,6 +718,46 @@ class UserLock(CodeBoolMap):
     property_name = "user_lock"
 
 
+COMMANDS_SYSTEM = {
+    "query_system_speaker_system": {Zone.Z1: ["?SSF", "SSF"]},
+    "set_system_speaker_system": {Zone.Z1: ["?SSF", "SSF"], "args": [SpeakerSystem]},
+    "query_system_home_menu_status": {Zone.Z1: ["?SSL", "SSL"]},
+    "query_system_mcacc_diagnostics": {Zone.Z1: ["?SSJ", "SSJ"]},
+    "query_system_standing_wave_status": {Zone.Z1: ["?SUU", "SUU"]},
+    "query_system_standing_wave_sw_trim": {Zone.Z1: ["?SUV", "SUV"]},
+    "query_system_surround_position": {Zone.Z1: ["?SSP", "SSP"]},
+    "query_system_x_over": {Zone.Z1: ["?SSQ", "SSQ"]},
+    "query_system_x_curve": {Zone.Z1: ["?SST", "SST"]},
+    "query_system_loudness_plus": {Zone.Z1: ["?SSU", "SSU"]},
+    "query_system_sbch_processing": {Zone.Z1: ["?SSV", "SSV"]},
+    "query_system_speaker_setting": {Zone.Z1: ["?SSG", "SSG"]},
+    "query_system_mcacc_channel_level": {Zone.Z1: ["?SSR", "SSR"]},
+    "query_system_mcacc_speaker_distance": {Zone.Z1: ["?SSS", "SSS"]},
+    "query_system_input_level": {Zone.Z1: ["?ILA", "ILA"]},
+    "query_system_thx_ultraselect2": {Zone.Z1: ["?SSW", "SSW"]},
+    "query_system_boundary_gain_compression": {Zone.Z1: ["?SSX", "SSX"]},
+    "query_system_re_equalization": {Zone.Z1: ["?SSB", "SSB"]},
+    "query_system_osd_language": {Zone.Z1: ["?SSE", "SSE"]},
+    "query_system_network_dhcp": {Zone.Z1: ["?STA", "STA"]},
+    "query_system_network_proxy_active": {Zone.Z1: ["?STG", "STG"]},
+    "query_system_network_standby": {Zone.Z1: ["?STJ", "STJ"]},
+    "query_system_friendly_name": {Zone.Z1: ["?SSO", "SSO"]},
+    "query_system_parental_lock": {Zone.Z1: ["?STK", "STK"]},
+    "query_system_parental_lock_password": {Zone.Z1: ["?STL", "STL"]},
+    "query_system_ip_control_port": {Zone.Z1: ["?SUM", "SUM"]},
+    "query_system_hdmi_control": {Zone.Z1: ["?STQ", "STQ"]},
+    "query_system_hdmi_control_mode": {Zone.Z1: ["?STR", "STR"]},
+    "query_system_hdmi_arc": {Zone.Z1: ["?STT", "STT"]},
+    "query_system_pqls_for_backup": {Zone.Z1: ["?SVL", "SVL"]},
+    "query_system_standby_passthrough": {Zone.Z1: ["?STU", "STU"]},
+    "query_system_external_hdmi_trigger_1": {Zone.Z1: ["?STV", "STV"]},
+    "query_system_external_hdmi_trigger_2": {Zone.Z2: ["?STW", "STW"]},
+    "query_system_speaker_b_link": {Zone.Z1: ["?STX", "STX"]},
+    "query_system_osd_overlay": {Zone.Z1: ["?SVA", "SVA"]},
+    "query_system_additional_service": {Zone.Z1: ["?ADS", "ADS"]},
+    "query_system_user_lock": {Zone.Z1: ["?SUT", "SUT"]},
+}
+
 RESPONSE_DATA_SYSTEM = [
     ("SSF", SpeakerSystem, Zone.ALL),  # system.speaker_system
     ("SSL", HomeMenuStatus, Zone.ALL),  # system.home_menu_status

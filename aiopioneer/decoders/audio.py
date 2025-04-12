@@ -9,6 +9,7 @@ from .code_map import (
     CodeDefault,
     CodeMapBlank,
     CodeMapSequence,
+    CodeMapQuery,
     CodeDynamicDictStrMap,
     CodeDynamicDictListMap,
     CodeDictStrMap,
@@ -512,6 +513,43 @@ class ToneTreble(ToneDb):
     base_property = "tone"
     property_name = "treble"
 
+
+COMMANDS_AUDIO = {
+    "query_basic_audio_information": {Zone.Z1: ["?AST", "AST"]},
+    "query_listening_mode": {Zone.Z1: ["?S", "SR"]},
+    "set_listening_mode": {Zone.Z1: ["SR", "SR"], "args": [AvailableListeningMode]},
+    "query_tone_status": {Zone.Z1: ["?TO", "TO"], Zone.Z2: ["?ZGA", "ZGA"]},
+    "query_tone_bass": {Zone.Z1: ["?BA", "BA"], Zone.Z2: ["?ZGB", "ZGB"]},
+    "query_tone_treble": {Zone.Z1: ["?TR", "TR"], Zone.Z2: ["?ZGC", "ZGC"]},
+    "set_tone_mode": {
+        Zone.Z1: ["TO", "TO"],
+        Zone.Z2: ["ZGA", "ZGA"],
+        "args": [ToneMode],
+    },
+    "set_tone_bass": {
+        Zone.Z1: ["BA", "BA"],
+        Zone.Z2: ["ZGB", "ZGB"],
+        "args": [ToneBass],
+    },
+    "set_tone_treble": {
+        Zone.Z1: ["TR", "TR"],
+        Zone.Z2: ["ZGC", "ZGC"],
+        "args": [ToneTreble],
+    },
+    ## channels
+    "set_channel_levels": {
+        Zone.Z1: ["CLV", "CLV"],
+        Zone.Z2: ["ZGE", "ZGE"],
+        Zone.Z3: ["ZHE", "ZHE"],
+        "args": [SpeakerChannelLevel],
+    },
+    "query_channel_levels": {
+        Zone.Z1: ["CLV", "CLV"],
+        Zone.Z2: ["ZGE", "ZGE"],
+        Zone.Z3: ["ZHE", "ZHE"],
+        "args": [CodeMapQuery(SpeakerChannel)],
+    },
+}
 
 RESPONSE_DATA_AUDIO = [
     ("AST", AudioInformation, Zone.ALL),  # audio
