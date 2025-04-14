@@ -517,7 +517,11 @@ class ToneTreble(ToneDb):
 COMMANDS_AUDIO = {
     "query_basic_audio_information": {Zone.Z1: ["?AST", "AST"]},
     "query_listening_mode": {Zone.Z1: ["?S", "SR"]},
-    "set_listening_mode": {Zone.Z1: ["SR", "SR"], "args": [AvailableListeningMode]},
+    "set_listening_mode": {
+        Zone.Z1: ["SR", "SR"],
+        "args": [AvailableListeningMode],
+        "retry_on_fail": True,
+    },
     "query_tone_status": {Zone.Z1: ["?TO", "TO"], Zone.Z2: ["?ZGA", "ZGA"]},
     "query_tone_bass": {Zone.Z1: ["?BA", "BA"], Zone.Z2: ["?ZGB", "ZGB"]},
     "query_tone_treble": {Zone.Z1: ["?TR", "TR"], Zone.Z2: ["?ZGC", "ZGC"]},
@@ -525,16 +529,19 @@ COMMANDS_AUDIO = {
         Zone.Z1: ["TO", "TO"],
         Zone.Z2: ["ZGA", "ZGA"],
         "args": [ToneMode],
+        "retry_on_fail": True,
     },
     "set_tone_bass": {
         Zone.Z1: ["BA", "BA"],
         Zone.Z2: ["ZGB", "ZGB"],
         "args": [ToneBass],
+        "retry_on_fail": True,
     },
     "set_tone_treble": {
         Zone.Z1: ["TR", "TR"],
         Zone.Z2: ["ZGC", "ZGC"],
         "args": [ToneTreble],
+        "retry_on_fail": True,
     },
     ## channels
     "set_channel_levels": {
@@ -542,6 +549,7 @@ COMMANDS_AUDIO = {
         Zone.Z2: ["ZGE", "ZGE"],
         Zone.Z3: ["ZHE", "ZHE"],
         "args": [SpeakerChannelLevel],
+        "retry_on_fail": True,
     },
     "query_channel_levels": {
         Zone.Z1: ["CLV", "CLV"],

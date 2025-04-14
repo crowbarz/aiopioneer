@@ -384,6 +384,7 @@ class AVRConnection:
         command: str,
         response_prefix: str,
         rate_limit: bool = True,
+        retry_count: int = 0,
     ) -> str:
         """Send a raw command to the AVR and return the response."""
         async with self._request_lock:  ## Only send one request at a time
@@ -391,15 +392,25 @@ class AVRConnection:
             ## Start queueing responses before sending command
             self._queue_responses = True
             self._response_event.clear()
-            await self.send_raw_command(command, rate_limit=rate_limit)
-            try:
-                response = await asyncio.wait_for(
-                    self._wait_for_response(command, response_prefix),
-                    timeout=self._timeout,
-                )
-                await asyncio.sleep(0)  # yield to listener task
-            except TimeoutError as exc:  # response timer expired
-                raise AVRResponseTimeoutError(command=command) from exc
+            send_count = 0
+            while True:
+                await self.send_raw_command(command, rate_limit=rate_limit)
+                try:
+                    response = await asyncio.wait_for(
+                        self._wait_for_response(command, response_prefix),
+                        timeout=self._timeout,
+                    )
+                    break
+                except TimeoutError as exc:  # response timer expired
+                    raise AVRResponseTimeoutError(command=command) from exc
+                except AVRCommandResponseError:
+                    send_count += 1
+                    if send_count > retry_count:
+                        raise
+                    _LOGGER.warning(
+                        "retrying failed command (%d): %s", send_count, command
+                    )
+                    await asyncio.sleep(1)
 
             self._queue_responses = False
             self._response_queue = []

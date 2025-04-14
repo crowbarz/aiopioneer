@@ -242,11 +242,21 @@ COMMANDS_TUNER = {
     "query_tuner_am_step": {Zone.Z1: ["?SUQ", "SUQ"]},
     "query_tuner_preset": {Zone.Z1: ["?PR", "PR"]},
     "query_tuner_frequency": {Zone.Z1: ["?FR", "FR"]},
-    "select_tuner_preset": {Zone.Z1: ["PR", "PR"], "args": [Preset]},
+    "select_tuner_preset": {
+        Zone.Z1: ["PR", "PR"],
+        "args": [Preset],
+        "retry_on_fail": True,
+    },
     "increase_tuner_preset": {Zone.Z1: ["TPI", "PR"]},
     "decrease_tuner_preset": {Zone.Z1: ["TPD", "PR"]},
-    "set_tuner_band_am": {Zone.Z1: ["01TN", "FR"]},
-    "set_tuner_band_fm": {Zone.Z1: ["00TN", "FR"]},
+    "set_tuner_band_am": {
+        Zone.Z1: ["01TN", "FR"],
+        "retry_on_fail": True,
+    },
+    "set_tuner_band_fm": {
+        Zone.Z1: ["00TN", "FR"],
+        "retry_on_fail": True,
+    },
     "increase_tuner_frequency": {Zone.Z1: ["TFI", "FR"]},
     "decrease_tuner_frequency": {Zone.Z1: ["TFD", "FR"]},
 }
