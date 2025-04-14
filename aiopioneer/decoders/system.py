@@ -720,7 +720,11 @@ class UserLock(CodeBoolMap):
 
 COMMANDS_SYSTEM = {
     "query_system_speaker_system": {Zone.Z1: ["?SSF", "SSF"]},
-    "set_system_speaker_system": {Zone.Z1: ["?SSF", "SSF"], "args": [SpeakerSystem]},
+    "set_system_speaker_system": {
+        Zone.Z1: ["?SSF", "SSF"],
+        "args": [SpeakerSystem],
+        "retry_on_fail": True,
+    },
     "query_system_home_menu_status": {Zone.Z1: ["?SSL", "SSL"]},
     "query_system_mcacc_diagnostics": {Zone.Z1: ["?SSJ", "SSJ"]},
     "query_system_standing_wave_status": {Zone.Z1: ["?SUU", "SUU"]},

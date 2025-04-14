@@ -43,6 +43,7 @@ from .params import (
     PARAM_MAX_VOLUME_ZONEX,
     PARAM_VOLUME_STEP_ONLY,
     PARAM_IGNORE_VOLUME_CHECK,
+    PARAM_RETRY_COUNT,
     PARAM_DEBUG_UPDATER,
     PARAM_DEBUG_COMMAND,
     PARAM_DEBUG_COMMAND_QUEUE,
@@ -406,6 +407,7 @@ class PioneerAVR(AVRConnection):
         suffix: str = None,
         ignore_error: bool | None = None,
         rate_limit: bool = True,
+        retry_on_fail: bool = None,
     ) -> str | bool | None:
         """Send a command or request to the device."""
         # pylint: disable=unidiomatic-typecheck disable=logging-not-lazy
@@ -454,11 +456,15 @@ class PioneerAVR(AVRConnection):
                 )
 
             if isinstance(command_list, list):
+                retry_count = 0
+                if retry_on_fail and command_info.get("retry_on_fail"):
+                    retry_count = self.params.get_param(PARAM_RETRY_COUNT)
                 ## Send raw command, then wait for response
                 response = await self.send_raw_request(
                     command=(prefix or "") + command_list[0] + (suffix or ""),
                     response_prefix=command_list[1],
                     rate_limit=rate_limit,
+                    retry_count=retry_count,
                 )
                 if debug_command:
                     _LOGGER.debug(
