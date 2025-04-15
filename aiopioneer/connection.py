@@ -375,8 +375,8 @@ class AVRConnection:
                             "AVR command %s returned response: %s", command, response
                         )
                     return response
-                if response.startswith("E"):
-                    raise AVRCommandResponseError(command=command, err=response)
+                if response.startswith("E") or response == "B00":
+                    raise AVRCommandResponseError(command=command, response=response)
             self._response_queue = []
 
     async def send_raw_request(
@@ -403,9 +403,9 @@ class AVRConnection:
                     break
                 except TimeoutError as exc:  # response timer expired
                     raise AVRResponseTimeoutError(command=command) from exc
-                except AVRCommandResponseError:
+                except AVRCommandResponseError as exc:
                     send_count += 1
-                    if send_count > retry_count:
+                    if send_count > retry_count or exc.response not in ["E02", "B00"]:
                         raise
                     _LOGGER.warning(
                         "retrying failed command (%d): %s", send_count, command

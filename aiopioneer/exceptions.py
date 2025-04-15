@@ -1,4 +1,4 @@
-""" Pioneer AVR exceptions. """
+"""Pioneer AVR exceptions."""
 
 from .const import Zone
 
@@ -112,7 +112,10 @@ class AVRCommandError(AVRError):
 class AVRCommandResponseError(AVRCommandError):
     """AVR responded with an error."""
 
-    def __init__(self, command: str, err: str, **kwargs):
+    def __init__(self, command: str, response: str, **kwargs):
+        self.response = err = response
+        if response in CommandResponseErrorFormatText:
+            err = self.format_err(CommandResponseErrorFormatText, response, **kwargs)
         super().__init__(command=command, err=err, **kwargs)
 
 
@@ -187,6 +190,14 @@ LocalCommandErrorFormatText = {
     "freq_step_unknown": "unknown AM tuner frequency step, parameter 'am_frequency_step' required",
     "freq_step_max_exceeded": "maximum tuner frequency step count exceeded",
     "freq_set_failed": "unable to set tuner frequency to {frequency}",
+}
+
+CommandResponseErrorFormatText = {
+    "B00": "AVR temporarily busy",
+    "E02": "command currently unavailable",
+    "E03": "unsupported command",
+    "E04": "unknown command",
+    "E06": "invalid parameter",
 }
 
 CommandUnavailableErrorFormatText = {
