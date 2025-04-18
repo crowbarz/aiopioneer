@@ -121,6 +121,10 @@ class PioneerAVR(AVRConnection):
     async def set_scan_interval(self, scan_interval: int) -> None:
         """Set scan interval and restart updater."""
         _LOGGER.debug(">> set_scan_interval(%d)", scan_interval)
+        if not (isinstance(scan_interval, (int, float)) and scan_interval >= 0):
+            raise ValueError(
+                f"scan_interval {scan_interval} is not a non-negative number"
+            )
         if self.scan_interval != scan_interval:
             await self._updater_cancel()
             self.scan_interval = scan_interval
