@@ -1,5 +1,6 @@
 """aiopioneer code map class."""
 
+import argparse
 import logging
 from abc import abstractmethod
 from typing import Any, Tuple
@@ -54,6 +55,10 @@ class CodeMapBase:
     def get_nargs(cls) -> int:
         """Get number of arguments consumed by code map."""
         return 1
+
+    @classmethod
+    def get_parser(cls, parser: argparse.ArgumentParser) -> None:
+        """Get argument parser for code map."""
 
     @classmethod
     def check_args(cls, args: list, extra_args: bool = False) -> None:
@@ -186,12 +191,28 @@ class CodeMapSequence(CodeMapComplexMixin, CodeMapBase):
         return sum(child_map.get_nargs() for child_map in code_map_sequence)
 
     @classmethod
+    def get_parser_sequence(
+        cls,
+        parser: argparse.ArgumentParser,
+        code_map_sequence: list[CodeMapBase] = None,
+    ) -> None:
+        """Get parsers for sequence."""
+
+        if code_map_sequence is None:
+            code_map_sequence = cls.code_map_sequence
+        for code_map in code_map_sequence:
+            code_map.get_parser(parser)
+
     def get_len(cls):
         cls.get_len_sequence(code_map_sequence=cls.code_map_sequence)
 
     @classmethod
     def get_nargs(cls):
         cls.get_nargs_sequence(code_map_sequence=cls.code_map_sequence)
+
+    @classmethod
+    def get_parser(cls, parser: argparse.ArgumentParser) -> None:
+        return cls.get_parser_sequence(parser, code_map_sequence=cls.code_map_sequence)
 
     @classmethod
     def parse_args_sequence(
@@ -362,6 +383,11 @@ class CodeStrMap(CodeMapBase):
         return cls.code_len if cls.code_len is not None else super().get_len()
 
     @classmethod
+    def get_parser(cls, parser: argparse.ArgumentParser) -> None:
+        if prop_name := cls.property_name or cls.base_property:
+            parser.add_argument(prop_name, help=cls.friendly_name, type=str)
+
+    @classmethod
     def value_to_code(cls, value: str) -> str:
         if cls.code_len:
             return value.ljust(cls.code_len, cls.code_fillchar)
@@ -385,7 +411,16 @@ class CodeBoolMap(CodeMapBase):
         return 1
 
     @classmethod
-    def value_to_code(cls, value: bool) -> str:
+    def get_parser(cls, parser: argparse.ArgumentParser) -> None:
+        if prop_name := cls.property_name or cls.base_property:
+            parser.add_argument(
+                prop_name, choices=["on", "off"], help=cls.friendly_name
+            )
+
+    @classmethod
+    def value_to_code(cls, value: bool | str) -> str:
+        if isinstance(value, str) and value in ["on", "off"]:
+            return cls.code_true if value == "on" else cls.code_false
         if not isinstance(value, bool):
             raise TypeError(f"boolean value expected for {cls.get_name()}")
         return cls.code_true if value else cls.code_false
@@ -411,6 +446,11 @@ class CodeDynamicDictMap(CodeMapComplexMixin, CodeMapBase):
     @classmethod
     def get_len(cls) -> int:
         return cls.code_len if cls.code_len is not None else super().get_len()
+
+    @classmethod
+    def get_parser(cls, parser: argparse.ArgumentParser) -> None:
+        if prop_name := cls.property_name or cls.base_property:
+            parser.add_argument(prop_name, help=cls.friendly_name, type=str)
 
     @classmethod
     def match(cls, v, value):
@@ -518,6 +558,16 @@ class CodeDictMap(CodeDynamicDictMap):
         return len(next(k for k in cls.code_map if k != CodeDefault()))
 
     @classmethod
+    def get_parser(cls, parser: argparse.ArgumentParser) -> None:
+        if prop_name := cls.property_name or cls.base_property:
+            parser.add_argument(
+                prop_name,
+                help=cls.friendly_name,
+                choices=list(cls.code_map.values()),
+                type=str,
+            )
+
+    @classmethod
     def value_to_code(cls, value: Any) -> str:
         return cls.value_to_code_dynamic(value, code_map=cls.code_map)
 
@@ -618,6 +668,11 @@ class CodeFloatMap(CodeMapBase):
         return cls.code_zfill if cls.code_zfill is not None else super().get_len()
 
     @classmethod
+    def get_parser(cls, parser: argparse.ArgumentParser) -> None:
+        if prop_name := cls.property_name or cls.base_property:
+            parser.add_argument(prop_name, help=cls.friendly_name, type=float)
+
+    @classmethod
     def value_to_code(cls, value: float | int):
         return cls.value_to_code_bounded(
             value=value, value_min=cls.value_min, value_max=cls.value_max
@@ -691,6 +746,11 @@ class CodeIntMap(CodeFloatMap):
     value_step: int = 1
     value_divider: int = 1
     value_offset: int = 0
+
+    @classmethod
+    def get_parser(cls, parser: argparse.ArgumentParser) -> None:
+        if prop_name := cls.property_name or cls.base_property:
+            parser.add_argument(prop_name, help=cls.friendly_name, type=int)
 
     @classmethod
     def value_to_code(cls, value: int):
