@@ -308,9 +308,9 @@ _awaitable_ `PioneerAVR.select_listening_mode(`_mode_name_: **str** = **None**, 
 Set the listening mode to name _mode_name_, or ID _mode_id_ (requires one argument.)
 Must be a listening mode valid for the current sound input as returned by `get_listening_modes`.
 
-`PioneerAVR.get_listening_modes()` -> **dict**[**str**, **str**] | **None**
+`PioneerAVR.get_listening_modes()` -> **list**[**str**] | **None**
 
-Return dict of valid listening mode mapping to names for the AVR.
+Return list of valid listening mode names for the AVR.
 
 _awaitable_ `PioneerAVR.set_volume_level(`_target_volume_: **int**, zone: Zones = Zones.Z1`)`
 
