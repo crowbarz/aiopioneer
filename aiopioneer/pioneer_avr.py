@@ -629,9 +629,9 @@ class PioneerAVR(AVRConnection):
         """Unmute AVR."""
         await self.send_command("mute_off", zone=self._check_zone(zone))
 
-    def get_listening_modes(self) -> dict[str, str] | None:
-        """Return dict of valid listening modes and names for Zone 1."""
-        return self.properties.available_listening_modes.values()
+    def get_listening_modes(self) -> list[str] | None:
+        """Return list of valid listening modes and names for Zone 1."""
+        return list(self.properties.available_listening_modes.values())
 
     async def select_listening_mode(self, mode: str | int) -> None:
         """Set the listening mode using the predefined list of options in params."""
