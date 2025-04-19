@@ -517,7 +517,7 @@ class ToneTreble(ToneDb):
 COMMANDS_AUDIO = {
     "query_basic_audio_information": {Zone.Z1: ["?AST", "AST"]},
     "query_listening_mode": {Zone.Z1: ["?S", "SR"]},
-    "set_listening_mode": {
+    "select_listening_mode": {
         Zone.Z1: ["SR", "SR"],
         "args": [AvailableListeningMode],
         "retry_on_fail": True,

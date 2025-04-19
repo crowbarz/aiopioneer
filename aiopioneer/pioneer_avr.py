@@ -635,7 +635,7 @@ class PioneerAVR(AVRConnection):
 
     async def select_listening_mode(self, mode: str | int) -> None:
         """Set the listening mode using the predefined list of options in params."""
-        await self.send_command("set_listening_mode", mode)
+        await self.send_command("select_listening_mode", mode)
 
     async def set_tone_settings(
         self,
