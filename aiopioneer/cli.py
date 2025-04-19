@@ -101,6 +101,10 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
         """Get user parameters."""
         return self.dump(self.pioneer.params.user_params)
 
+    async def set_user_params(self, reader, writer, params: dict) -> str:
+        """Set user parameters."""
+        return self.pioneer.params.set_user_params(params)
+
     async def get_properties(self, reader, writer, prop_show: list[str] = None) -> str:
         """Get cached properties."""
 
@@ -237,14 +241,32 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
                 parser = get_command_parser(method)
             return name, (method, parser)
 
-        def json_arg(arg: str) -> dict:
-            """Validate and convert a JSON argument (with str keys) to a dict."""
+        def json_arg(
+            arg: str, value_type: type, convert_func: Callable[[dict], dict] = None
+        ) -> dict:
+            """Validate and optionally convert a JSON argument to a dict."""
             try:
-                if isinstance(json_value := json.loads(arg), dict):
-                    ## convert dict keys to int as JSON does not allow int keys
-                    return {int(k): v for k, v in json_value.items()}
+                if not isinstance(value := json.loads(arg), value_type):
+                    raise ValueError
+                if convert_func:
+                    return convert_func(value)
+                return value
             except (json.decoder.JSONDecodeError, ValueError) as exc:
                 raise argparse.ArgumentTypeError from exc
+
+        def convert_int_key_dict(dictv: dict[str, Any]) -> dict[int, Any]:
+            """Convert dict keys to int."""
+            return {int(k): v for k, v in dictv.items()}
+
+        def params_json_arg(arg: str) -> dict:
+            """Validate and convert a parameters JSON object to a dict."""
+            value = json_arg(arg, dict)
+            ## TODO: convert int key params
+            return value
+
+        def source_json_arg(arg: str) -> dict:
+            """Validate and convert a source JSON map to a dict."""
+            return json_arg(arg, dict, convert_func=convert_int_key_dict)
 
         zone_parser = get_command_parser(self.set_zone)
         zone_parser.add_argument(
@@ -253,6 +275,10 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
         logging_level_parser = get_command_parser(self.set_logging_level)
         logging_level_parser.add_argument(
             "level", choices=list(LOGGING_LEVELS.keys()), help="new logging level"
+        )
+        user_params_parser = get_command_parser(self.set_user_params)
+        user_params_parser.add_argument(
+            "params", type=params_json_arg, help="user parameters"
         )
         properties_parser = get_command_parser(self.get_properties)
         for prop in PROPS_ALL:
@@ -271,7 +297,7 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
         update_parser.add_argument("--full", "-f", action="store_true")
         source_dict_parser = get_command_parser(self.set_source_dict)
         source_dict_parser.add_argument(
-            "source_dict", type=json_arg, help="source dict (JSON)"
+            "source_dict", type=source_json_arg, help="source dict (JSON)"
         )
         tuner_frequency_parser = get_command_parser(self.set_tuner_frequency)
         tuner_frequency_parser.add_argument(
@@ -326,6 +352,7 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
             ),
             get_command(self.get_params),
             get_command(self.get_user_params),
+            get_command(self.set_user_params, parser=user_params_parser),
             get_command(self.get_properties, parser=properties_parser),
             get_command(self.get_scan_interval),
             get_command(self.set_scan_interval, parser=scan_interval_parser),
