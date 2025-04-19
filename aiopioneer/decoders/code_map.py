@@ -142,13 +142,13 @@ class CodeMapBlank(CodeMapComplexMixin, CodeMapBase):
         return type(f"CodeMapBlank_{code_len}", (CodeMapBlank,), {"code_len": code_len})
 
     @classmethod
-    def get_len(cls):
+    def get_len(cls) -> int:
         if cls.code_len is None:
             raise NotImplementedError(f"code_len not set for {cls.get_name()}")
         return cls.code_len
 
     @classmethod
-    def get_nargs(cls):
+    def get_nargs(cls) -> int:
         return 0
 
     @classmethod
@@ -203,12 +203,13 @@ class CodeMapSequence(CodeMapComplexMixin, CodeMapBase):
         for code_map in code_map_sequence:
             code_map.get_parser(parser)
 
-    def get_len(cls):
-        cls.get_len_sequence(code_map_sequence=cls.code_map_sequence)
+    @classmethod
+    def get_len(cls) -> int:
+        return cls.get_len_sequence(code_map_sequence=cls.code_map_sequence)
 
     @classmethod
-    def get_nargs(cls):
-        cls.get_nargs_sequence(code_map_sequence=cls.code_map_sequence)
+    def get_nargs(cls) -> int:
+        return cls.get_nargs_sequence(code_map_sequence=cls.code_map_sequence)
 
     @classmethod
     def get_parser(cls, parser: argparse.ArgumentParser) -> None:
@@ -324,11 +325,11 @@ class CodeMapQuery(CodeMapBase):
         )
 
     @classmethod
-    def get_len(cls):
+    def get_len(cls) -> int:
         return 1
 
     @classmethod
-    def get_nargs(cls):
+    def get_nargs(cls) -> int:
         return 0
 
     # pylint: disable=unused-argument
