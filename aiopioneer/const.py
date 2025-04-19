@@ -220,10 +220,10 @@ MEDIA_CONTROL_COMMANDS = {
         "shuffle": "operation_ipod_shuffle",
     },
     "TUNER": {
-        "ff": "increase_tuner_frequency",
-        "rw": "decrease_tuner_frequency",
-        "next": "increase_tuner_preset",
-        "previous": "decrease_tuner_preset",
+        "ff": "tuner_increase_frequency",
+        "rw": "tuner_decrease_frequency",
+        "next": "tuner_next_preset",
+        "previous": "tuner_previous_preset",
     },
     "ADAPTERPORT": {
         "play": "operation_adapaterport_play",

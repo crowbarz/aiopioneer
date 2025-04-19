@@ -18,15 +18,6 @@ PIONEER_COMMANDS: dict[
     **COMMANDS_AUDIO,
     **COMMANDS_TUNER,
     **COMMANDS_VIDEO,
-    "operation_direct_access": {Zone.Z1: ["TAC", "TAC"]},
-    ## operation tuner
-    "operation_tuner_digit": {Zone.Z1: ["TP", "TP"]},
-    "operation_tuner_edit": {Zone.Z1: ["02TN", "TN"]},
-    "operation_tuner_enter": {Zone.Z1: ["03TN", "TN"]},
-    "operation_tuner_return": {Zone.Z1: ["04TN", "TN"]},
-    "operation_tuner_mpx_noise_cut": {Zone.Z1: ["05TN", "TN"]},
-    "operation_tuner_display": {Zone.Z1: ["06TN", "TN"]},
-    "operation_tuner_pty_search": {Zone.Z1: ["07TN", "TN"]},
     ## operation ipod
     "operation_ipod_play": {Zone.Z1: ["00IP", "IP"]},
     "operation_ipod_pause": {Zone.Z1: ["01IP", "IP"]},

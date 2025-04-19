@@ -247,8 +247,8 @@ COMMANDS_TUNER = {
         "args": [Preset],
         "retry_on_fail": True,
     },
-    "increase_tuner_preset": {Zone.Z1: ["TPI", "PR"]},
-    "decrease_tuner_preset": {Zone.Z1: ["TPD", "PR"]},
+    "tuner_next_preset": {Zone.Z1: ["TPI", "PR"]},
+    "tuner_previous_preset": {Zone.Z1: ["TPD", "PR"]},
     "set_tuner_band_am": {
         Zone.Z1: ["01TN", "FR"],
         "retry_on_fail": True,
@@ -257,8 +257,16 @@ COMMANDS_TUNER = {
         Zone.Z1: ["00TN", "FR"],
         "retry_on_fail": True,
     },
-    "increase_tuner_frequency": {Zone.Z1: ["TFI", "FR"]},
-    "decrease_tuner_frequency": {Zone.Z1: ["TFD", "FR"]},
+    "tuner_increase_frequency": {Zone.Z1: ["TFI", "FR"]},
+    "tuner_decrease_frequency": {Zone.Z1: ["TFD", "FR"]},
+    "tuner_direct_access": {Zone.Z1: ["TAC", "TAC"]},
+    "tuner_digit": {Zone.Z1: ["TP", "TP"]},
+    "tuner_edit": {Zone.Z1: ["02TN", "TN"]},
+    "tuner_enter": {Zone.Z1: ["03TN", "TN"]},
+    "tuner_return": {Zone.Z1: ["04TN", "TN"]},
+    "tuner_mpx_noise_cut": {Zone.Z1: ["05TN", "TN"]},
+    "tuner_display": {Zone.Z1: ["06TN", "TN"]},
+    "tuner_pty_search": {Zone.Z1: ["07TN", "TN"]},
 }
 
 RESPONSE_DATA_TUNER = [
