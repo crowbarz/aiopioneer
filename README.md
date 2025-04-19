@@ -20,16 +20,10 @@ Originally developed and tested on a VSX-930 (Main Zone and HDZone outputs) but 
 - Includes workaround for AVRs with an initial volume set on the Main Zone (eg. VSX-930)
 - Supports AVRs that do not support setting the volume level by emulating using up/down commands (eg. VSX-S510)
 - Command line client for sending commands and testing
-- Supports all listening mode functions
-- Supports all video related functions
-- Supports panel and remote locking
-- Supports most AMP related functions
-- Supports all tone functions
-- Supports most zone power functions
-- Supports all zone input functions
-- Supports all zone volume and mute functions
-- Supports setting of tuner band and preset
-- Supports setting tuner frequency directly for AVRs that support this via the API, and also by stepping the frequency up/down
+- Supports all known video related, AMP, DSP, listening mode, tuner and zone power, input, volume, tone, channel and mute functions
+- Supports commonly used setup functions
+- Supports iPod, network, Adapter Port/Bluetooth and MHL operational functions
+- Supports setting tuner frequency directly for AVRs that support numerical entry, and also by stepping the frequency up/down for AVRs that support frequency stepping
 
 ## Parameters
 
@@ -42,7 +36,7 @@ There are several types of parameters that modify the library's functionality. T
 Where a parameter is specified at more than one level, the higher priority parameter takes precedence. Thus, a user specified parameter will override any value that is determined by the AVR model.
 
 > [!NOTE]
-> YAML syntax is used to indicate values the table below. This syntax is used by the Home Assistant integration. Use Python equivalents (`false` -> `False`, `true` -> `True`, `null` -> `None` etc.) when calling the [Python API](#python-api) directly.
+> YAML syntax is used to indicate values the table below. This syntax is used when entering parameters manually in the Home Assistant integration. Use Python equivalents (`false` -> `False`, `true` -> `True`, `null` -> `None` etc.) when calling the [Python API](#python-api) directly.
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
