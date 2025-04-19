@@ -178,11 +178,6 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
         """Set tuner band and frequency."""
         return await self.pioneer.set_tuner_frequency(TunerBand(band), frequency)
 
-        # elif cmd == "tuner_previous_preset":
-        #     await pioneer.tuner_previous_preset()
-        # elif cmd == "tuner_next_preset":
-        #     await pioneer.tuner_next_preset()
-
     async def debug_listener(self, reader, writer, state: str) -> str:
         """Set debug_listener flag."""
         state_bool = self.convert_bool_arg(state)
