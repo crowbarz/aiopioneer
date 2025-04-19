@@ -5,9 +5,11 @@ import logging
 import sys
 import json
 import argparse
-import yaml
+from collections.abc import Callable
+from typing import Any
 
 import aioconsole
+import yaml
 
 from aiopioneer import PioneerAVR
 from aiopioneer.commands import PIONEER_COMMANDS
