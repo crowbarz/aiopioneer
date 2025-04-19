@@ -20,6 +20,7 @@ from aiopioneer.params import (
     PARAM_DEBUG_UPDATER,
     PARAM_DEBUG_COMMAND,
     PARAM_DEBUG_COMMAND_QUEUE,
+    PARAMS_DICT_INT_KEY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -261,7 +262,9 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
         def params_json_arg(arg: str) -> dict:
             """Validate and convert a parameters JSON object to a dict."""
             value = json_arg(arg, dict)
-            ## TODO: convert int key params
+            for param in PARAMS_DICT_INT_KEY:  ## Convert int key params
+                if param in value:
+                    value[param] = convert_int_key_dict(param)
             return value
 
         def source_json_arg(arg: str) -> dict:

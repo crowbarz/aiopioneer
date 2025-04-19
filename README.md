@@ -445,15 +445,15 @@ The CLI accepts all AVR commands, as well as the helper commands below. The `lis
 | `logging_level` | _log_level_ | Change debug level to _log_level_. Valid log levels are: `debug`, `info`, `warning`, `error`, `critical`
 | `get_params` | | Show the currently active set of parameters
 | `get_user_params` | | Show the currently active set of user parameters
-| `set_user_params` | _params_ (JSON) | Set the user parameters to _params_
+| `set_user_params` | _params_ (JSON) | Set the user parameters to _params_ (see [CLI JSON arguments](#cli-json-arguments) below)
 | `get_properties` | \[ `--zones` \]<br>\[ `--power` \]<br>\[ `--volume` \]<br>\[ `--max_volume` \]<br>\[ `--mute` \]<br>\[ `--source_id` \]<br>\[ `--source_name` \]<br>\[ `--media_control_mode` \]<br>\[ `--tone` \]<br>\[ `--amp` \]<br>\[ `--tuner` \]<br>\[ `--dsp` \]<br>\[ `--video` \]<br>\[ `--system` \]<br>\[ `--audio` \]<br>\[ `--channel_levels` \] | Show the current cached AVR properties for the specified property groups, or all property groups if none are specified
-| `set_scan_interval` | _scan_interval_ (float) | Set the scan interval to _scan_interval_.
+| `set_scan_interval` | _scan_interval_ (float) | Set the scan interval to _scan_interval_
 | `get_scan_interval` | | Show the current scan interval.
 | `update` | [`--full`] | Request update of AVR for the current zone, or all zones if `--full` is specified
 | `query_device_info` | | Query the AVR for device information
 | `query_zones` | | Query the AVR for available zones. Ignore zones specified in parameter `ignored_zones` (list)
 | `get_source_dict` | | Show the current set of available source names that can be used with the `select_source` command
-| `set_source_dict` | _sources_ (JSON) | Manually set the sources to _sources_
+| `set_source_dict` | _sources_ (JSON) | Manually set the sources to _sources_ (see [CLI JSON arguments](#cli-json-arguments) below)
 | `build_source_dict` | | Query the sources from the AVR
 | `get_listening_modes` | | Show the current set of available listening modes
 | `set_tuner_frequency` | _band_ _frequency_ | Set the tuner band and (optionally) frequency
@@ -464,6 +464,10 @@ The CLI accepts all AVR commands, as well as the helper commands below. The `lis
 | `send_raw_command` or `>` | _raw_command_ | Send the raw command _raw_command_ to the AVR
 
 **NOTE:** The CLI interface may change in the future, and should not be used in scripts. Use the Python API instead.
+
+### CLI JSON arguments
+
+Sources, listening modes and speaker system modes are specified as a **dict** with **int** keys. JSON does not support **int** for **dict** keys. For these parameters, keys should be specified as **str**. These will be converted to **int** automatically by the CLI.
 
 ## Source list
 
