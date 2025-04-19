@@ -1,5 +1,6 @@
 """aiopioneer response decoders for amp responses."""
 
+import argparse
 import logging
 import re
 
@@ -206,12 +207,31 @@ class Source(CodeDynamicDictStrMap):
     index_map_class = SourceId
 
     @classmethod
+    def get_parser(cls, parser: argparse.ArgumentParser) -> None:
+
+        def convert_source_arg(arg: str) -> int | str:
+            try:
+                SourceId.value_to_code(arg)  ## type and bounds check source ID
+                return int(arg)
+            except ValueError:
+                return arg
+
+        parser.add_argument("source", help=cls.friendly_name, type=convert_source_arg)
+
+    @classmethod
+    def code_to_value_dynamic(cls, code: str, code_map: dict[int, str]) -> str:
+        try:
+            return super().code_to_value_dynamic(code=code, code_map=code_map)
+        except KeyError:
+            return code  ## if no mapping
+
+    @classmethod
     def value_to_code(cls, value: str | int, properties: AVRProperties = None) -> str:
         if not isinstance(properties, AVRProperties):
             raise RuntimeError(f"AVRProperties required for {cls.get_name()}")
         if isinstance(value, str) and value in properties.source_name_to_id:
             return cls.index_map_class(value=properties.source_name_to_id[value])
-        if isinstance(value, int) and value in properties.source_id_to_name:
+        if isinstance(value, int):
             return cls.index_map_class(value=value)
         raise ValueError(f"value {value} not found for {cls.get_name()}")
 

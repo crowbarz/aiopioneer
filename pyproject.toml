@@ -12,15 +12,17 @@ description = "Asyncio Python library for controlling a Pioneer AVR via its API"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+  "pyyaml~=6.0",
+  "aioconsole~=0.8",
 ]
 classifiers = [
-    "Framework :: AsyncIO",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3.11",
-    "Topic :: Home Automation",
-    "Topic :: Software Development :: Libraries :: Python Modules",
+  "Framework :: AsyncIO",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Home Automation",
+  "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
 [project.urls]

@@ -426,7 +426,7 @@ Listed below are the public attributes of a `AVRProperties` object that contains
 
 A very simple command line interface `aiopioneer` is available to connect to the AVR, send commands and receive responses. It can be used to test the capabilities of the library against your specific AVR.
 
-On Home Assistant, you can run the CLI when the `pioneer_async` Home Assistant integration has been installed. On Home Assistant Supervised or Container, start the CLI from within the HA container: `docker exec -it homeassistant aiopioneer`.
+On Home Assistant, you can run the CLI within the Home Assistant container where the [`pioneer_async`](https://github.com/crowbarz/ha-pioneer_async) integration has been installed. Log into to the HA host via SSH, then run: `docker exec -it homeassistant aiopioneer <host>`.
 
 Invoke the CLI with the following arguments:
 
@@ -436,47 +436,38 @@ Invoke the CLI with the following arguments:
 | `-p`<br>`--port` | 8102 | port for AVR connection
 | `+Z`<br>`--no-query-zones` | None | skip AVR zone query
 
-The CLI accepts all API commands, as well as the following:
+The CLI accepts all AVR commands, as well as the helper commands below. The `list` command shows all accepted commands and their arguments.
 
 | Command | Argument | Description
 | --- | --- | ---
-| `exit` or `quit` | | Exit the CLI.
-| `zone` | _zone_ | Change current zone to _zone_.
-| `log_level` | _log_level_ | Change debug level to _log_level_. Valid log levels are: `debug`, `info`, `warning`, `error`, `critical`.
-| `update` | | Request update of AVR. An update is scheduled in the updater task if a scan interval is set, if it is not set then the update is performed synchronously.
-| `update_full` | | Request a full update of AVR irrespective of when the previous update was performed. An update is scheduled in the updater task if a scan interval is set, if it is not set then the update is performed synchronously.
-| `query_device_info` | | Query the AVR for device information.
-| `query_zones` | | Query the AVR for available zones. Ignore zones specified in parameter `ignored_zones` (list).
-| `build_source_dict` | | Query the sources from the AVR.
-| `set_source_dict` | _sources_ (JSON) | Manually set the sources to _sources_.
-| `get_source_list` | | Return the current set of available source names that can be used with the `select_source` command.
-| `get_zone_listening_modes` | | (>0.5) Return the current set of available listening modes.
-| `get_params` | | Return the currently active set of parameters.
-| `get_user_params` | | Return the currently active set of user parameters.
-| `set_user_params` | _params_ (JSON) | Set the user parameters to _params_.
-| `get_tone` | | Returns the current AVR tone attributes.
-| `get_amp` | | Returns the current AVR amp attributes.
-| `get_tuner` | | Returns the current AVR tuner attributes.
-| `get_channel_levels` | | Returns the current AVR channel levels.
-| `get_dsp` | | Returns the current AVR DSP attributes.
-| `get_video` | | Returns the current AVR video parameters.
-| `get_audio` | | Returns the current AVR audio parameters.
-| `get_system` | | Returns the AVR system attributes.
-| `debug_listener` | _state_ (bool) | Enable/disable the `debug_listener` parameter.
-| `debug_updater` | _state_ (bool) | Enable/disable the `debug_updater` parameter.
-| `debug_command` | _state_ (bool) | Enable/disable the `debug_command` parameter.
-| `debug_command_queue` | _state_ (bool) | Enable/disable the `debug_command_queue` parameter.
-| `set_scan_interval` | _scan_interval_ (float) | Set the scan interval to _scan_interval_.
-| `get_scan_interval` | | Return the current scan interval.
-| `set_volume_level` | _volume_level_ (int) | Set the volume level for the current zone.
-| `select_source` | _source_name_ | Set the input source for the current zone.
-| `select_listening_mode` | _listening_mode_ | (>0.5) Set the listening mode to the specified mode.
-| `set_tuner_frequency` | _band_ _frequency_ | Set the tuner band and (optionally) frequency.
-| `tuner_previous_preset` | | Select the previous tuner preset
-| `tuner_next_preset` | | Select the next tuner preset
-| `send_raw_command` or `>` | _raw_command_ | Send the raw command _raw_command_ to the AVR.
+| `exit` | | Exit the CLI
+| `zone` | _zone_ | Change current zone to _zone_
+| `logging_level` | _log_level_ | Change debug level to _log_level_. Valid log levels are: `debug`, `info`, `warning`, `error`, `critical`
+| `get_params` | | Show the currently active set of parameters
+| `get_user_params` | | Show the currently active set of user parameters
+| `set_user_params` | _params_ (JSON) | Set the user parameters to _params_ (see [CLI JSON arguments](#cli-json-arguments) below)
+| `get_properties` | \[ `--zones` \]<br>\[ `--power` \]<br>\[ `--volume` \]<br>\[ `--max_volume` \]<br>\[ `--mute` \]<br>\[ `--source_id` \]<br>\[ `--source_name` \]<br>\[ `--media_control_mode` \]<br>\[ `--tone` \]<br>\[ `--amp` \]<br>\[ `--tuner` \]<br>\[ `--dsp` \]<br>\[ `--video` \]<br>\[ `--system` \]<br>\[ `--audio` \]<br>\[ `--channel_levels` \] | Show the current cached AVR properties for the specified property groups, or all property groups if none are specified
+| `set_scan_interval` | _scan_interval_ (float) | Set the scan interval to _scan_interval_
+| `get_scan_interval` | | Show the current scan interval.
+| `update` | [`--full`] | Request update of AVR for the current zone, or all zones if `--full` is specified
+| `query_device_info` | | Query the AVR for device information
+| `query_zones` | | Query the AVR for available zones. Ignore zones specified in parameter `ignored_zones` (list)
+| `get_source_dict` | | Show the current set of available source names that can be used with the `select_source` command
+| `set_source_dict` | _sources_ (JSON) | Manually set the sources to _sources_ (see [CLI JSON arguments](#cli-json-arguments) below)
+| `build_source_dict` | | Query the sources from the AVR
+| `get_listening_modes` | | Show the current set of available listening modes
+| `set_tuner_frequency` | _band_ _frequency_ | Set the tuner band and (optionally) frequency
+| `debug_listener` | \[ `on` \| `off` \] | Enable/disable the `debug_listener` parameter
+| `debug_updater` | \[ `on` \| `off` \] | Enable/disable the `debug_updater` parameter
+| `debug_command` | \[ `on` \| `off` \] | Enable/disable the `debug_command` parameter
+| `debug_command_queue` | \[ `on` \| `off` \] | Enable/disable the `debug_command_queue` parameter
+| `send_raw_command` or `>` | _raw_command_ | Send the raw command _raw_command_ to the AVR
 
 **NOTE:** The CLI interface may change in the future, and should not be used in scripts. Use the Python API instead.
+
+### CLI JSON arguments
+
+Sources, listening modes and speaker system modes are specified as a **dict** with **int** keys. JSON does not support **int** for **dict** keys. For these parameters, keys should be specified as **str**. These will be converted to **int** automatically by the CLI.
 
 ## Source list
 

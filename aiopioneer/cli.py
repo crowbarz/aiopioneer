@@ -5,57 +5,406 @@ import logging
 import sys
 import json
 import argparse
+from collections.abc import Callable
+from typing import Any
+
+import aioconsole
+import yaml
 
 from aiopioneer import PioneerAVR
-from aiopioneer.const import Zone, DEFAULT_PORT
+from aiopioneer.commands import PIONEER_COMMANDS
+from aiopioneer.const import Zone, DEFAULT_PORT, TunerBand
+from aiopioneer.decoders.code_map import CodeMapBase
 from aiopioneer.params import (
     PARAM_DEBUG_LISTENER,
     PARAM_DEBUG_UPDATER,
     PARAM_DEBUG_COMMAND,
     PARAM_DEBUG_COMMAND_QUEUE,
+    PARAMS_DICT_INT_KEY,
 )
-from aiopioneer.pioneer_avr import PIONEER_COMMANDS
 
 _LOGGER = logging.getLogger(__name__)
 
+LOGGING_LEVELS = {
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warning": logging.WARNING,
+    "error": logging.ERROR,
+    "critical": logging.CRITICAL,
+}
 
-async def connect_stdin_stdout():
-    """Set up stdin/out for asyncio."""
-    loop = asyncio.get_event_loop()
-    reader = asyncio.StreamReader()
-    protocol = asyncio.StreamReaderProtocol(reader)
-    await loop.connect_read_pipe(lambda: protocol, sys.stdin)
-    w_transport, w_protocol = await loop.connect_write_pipe(
-        asyncio.streams.FlowControlMixin, sys.stdout
-    )
-    writer = asyncio.StreamWriter(w_transport, w_protocol, reader, loop)
-    return reader, writer
-
-
-def set_log_level(arg):
-    """Set root logging level."""
-    level = {
-        "debug": logging.DEBUG,
-        "info": logging.INFO,
-        "warning": logging.WARNING,
-        "error": logging.ERROR,
-        "critical": logging.CRITICAL,
-    }.get(arg)
-    if level:
-        print(f"Setting log level to {arg}")
-        logging.getLogger().setLevel(level)
-    else:
-        print(f"ERROR: Unknown log level {arg}")
-
-
-def get_bool_arg(arg):
-    """Parse boolean argument."""
-    return arg in ["true", "True", "TRUE", "on", "On", "ON", "1"]
+PROPS_ALL = [
+    "zones",
+    # "zones_initial_refresh",
+    "power",
+    "volume",
+    "max_volume",
+    "mute",
+    "source_id",
+    "source_name",
+    # "listening_mode",
+    # "listening_mode_raw",
+    # "listening_modes_all",
+    # "available_listening_modes",
+    "media_control_mode",
+    "tone",
+    "amp",
+    "tuner",
+    "dsp",
+    "video",
+    "system",
+    "audio",
+    "channel_levels",
+]
 
 
-async def cli_main(args: argparse.Namespace):
-    """Main async entrypoint."""
+# pylint: disable=unused-argument
+class PioneerAVRCli(aioconsole.AsynchronousCli):
+    """Pioneer AVR CLI class."""
+
+    def __init__(self, pioneer: PioneerAVR):
+        super().__init__(commands=self.get_commands(), prog="aiopioneer")
+
+        self.pioneer = pioneer
+        self.zone = Zone.Z1
+
+    def get_default_banner(self):
+        return ""
+
+    @staticmethod
+    def convert_bool_arg(arg: str) -> bool:
+        """Convert an arg to a bool."""
+        valid_args = (["on", "true"], ["off", "false"])
+        valid_args_all = [k for l in valid_args for k in l]
+        if (argl := arg.lower()) not in valid_args_all:
+            raise ValueError("")
+        return argl in valid_args[0]
+
+    @staticmethod
+    def dump(obj, flow_style: bool = False) -> str:
+        """Dump an object to YAML."""
+        return yaml.dump(obj, sort_keys=False, default_flow_style=flow_style)
+
+    async def set_zone(self, reader, writer, zone: Zone):
+        """Set AVR active zone."""
+        self.zone = zone
+
+    async def set_logging_level(self, reader=None, writer=None, level: str = "debug"):
+        """Set root logging level."""
+        logging.getLogger().setLevel(LOGGING_LEVELS.get(level))
+        return self.dump({"logging_level": level})
+
+    async def get_params(self, reader, writer) -> str:
+        """Get active parameters."""
+        return self.dump(self.pioneer.params.params_all)
+
+    async def get_user_params(self, reader, writer) -> str:
+        """Get user parameters."""
+        return self.dump(self.pioneer.params.user_params)
+
+    async def set_user_params(self, reader, writer, params: dict) -> str:
+        """Set user parameters."""
+        return self.pioneer.params.set_user_params(params)
+
+    async def get_properties(self, reader, writer, prop_show: list[str] = None) -> str:
+        """Get cached properties."""
+
+        def scrub_property(prop):
+            if isinstance(prop, (set, list)):
+                return list(scrub_property(v) for v in prop)
+            if isinstance(prop, dict):
+                return {scrub_property(k): v for k, v in prop.items()}
+            if isinstance(prop, Zone):
+                return prop.value
+            return prop
+
+        return self.dump(
+            {
+                prop: scrub_property(getattr(self.pioneer.properties, prop))
+                for prop in [p for p in PROPS_ALL if not prop_show or p in prop_show]
+            },
+            flow_style=None,
+        )
+
+    async def get_scan_interval(self, reader, writer):
+        """Get scan interval."""
+        return self.dump({"scan_interval": self.pioneer.scan_interval})
+
+    async def set_scan_interval(self, reader, writer, scan_interval: float):
+        """Set scan interval."""
+        await self.pioneer.set_scan_interval(scan_interval)
+        return await self.get_scan_interval(reader, writer)
+
+    async def avr_update(self, reader, writer, full: bool):
+        """Update zone."""
+        await self.pioneer.update(None if full else self.zone)
+
+    async def query_device_info(self, reader, writer) -> str:
+        """Query device info."""
+        await self.pioneer.query_device_info()
+        return self.dump(
+            {
+                k: self.pioneer.properties.amp.get(k)
+                for k in ["model", "mac_addr", "software_version"]
+            }
+        )
+
+    async def query_zones(self, reader, writer) -> str:
+        """Query zones."""
+        await self.pioneer.query_zones()
+        return await self.get_properties(reader, writer, prop_show=["zones"])
+
+    async def get_source_dict(self, reader, writer) -> str:
+        """Get source dict."""
+        return self.dump(self.pioneer.properties.get_source_dict())
+
+    async def set_source_dict(self, reader, writer, source_dict: dict) -> str:
+        """Set source dict."""
+        self.pioneer.properties.set_source_dict(source_dict)
+        return await self.get_source_dict(reader, writer)
+
+    async def build_source_dict(self, reader, writer) -> str:
+        """Build source dict."""
+        await self.pioneer.build_source_dict()
+        return await self.get_source_dict(reader, writer)
+
+    async def get_listening_modes(self, reader, writer) -> str:
+        """Get zone listening mode."""
+        return self.dump(self.pioneer.get_listening_modes())
+
+    async def set_tuner_frequency(
+        self, reader, writer, band: str, frequency: float
+    ) -> str:
+        """Set tuner band and frequency."""
+        return await self.pioneer.set_tuner_frequency(TunerBand(band), frequency)
+
+    async def debug_listener(self, reader, writer, state: str) -> str:
+        """Set debug_listener flag."""
+        state_bool = self.convert_bool_arg(state)
+        self.pioneer.params.set_user_param(PARAM_DEBUG_LISTENER, state_bool)
+        return self.dump({"debug_listener": state_bool})
+
+    async def debug_updater(self, reader, writer, state: str) -> str:
+        """Set debug_updater flag."""
+        state_bool = self.convert_bool_arg(state)
+        self.pioneer.params.set_user_param(PARAM_DEBUG_UPDATER, state_bool)
+        return self.dump({"debug_updater": state_bool})
+
+    async def debug_command(self, reader, writer, state: str) -> str:
+        """Set debug_command flag."""
+        state_bool = self.convert_bool_arg(state)
+        self.pioneer.params.set_user_param(PARAM_DEBUG_COMMAND, state_bool)
+        return self.dump({"debug_command": state_bool})
+
+    async def debug_command_queue(self, reader, writer, state: str) -> str:
+        """Set debug_command_queue flag."""
+        state_bool = self.convert_bool_arg(state)
+        self.pioneer.params.set_user_param(PARAM_DEBUG_COMMAND_QUEUE, state_bool)
+        return self.dump({"debug_command_queue": state_bool})
+
+    async def send_raw_command(self, reader, writer, command: str) -> str:
+        """Send a raw command."""
+        return await self.pioneer.send_raw_command(command)
+
+    def gen_avr_send_command(self, command: str):
+        """Generate a function for sending an AVR command."""
+
+        async def avr_send_command(reader, writer, **kwargs) -> str:
+            return await self.pioneer.send_command(
+                command, zone=self.zone, *kwargs.values()
+            )
+
+        return avr_send_command
+
+    def get_commands(
+        self,
+    ) -> dict[str, tuple[Callable[..., str], argparse.ArgumentParser]]:
+        """Get commands list for CLI."""
+
+        def get_command_parser(method: Callable[..., str]):
+            """Get parser for command method."""
+            return argparse.ArgumentParser(description=str(method.__doc__).rstrip("."))
+
+        def get_command(
+            method: Callable[..., str],
+            name: str = None,
+            parser: argparse.ArgumentParser = None,
+        ) -> tuple[str, tuple[Callable[..., str], argparse.ArgumentParser]]:
+            """Get command dictionary entry."""
+            if name is None:
+                name = method.__name__
+            if parser is None:
+                parser = get_command_parser(method)
+            return name, (method, parser)
+
+        def json_arg(
+            arg: str, value_type: type, convert_func: Callable[[dict], dict] = None
+        ) -> dict:
+            """Validate and optionally convert a JSON argument to a dict."""
+            try:
+                if not isinstance(value := json.loads(arg), value_type):
+                    raise ValueError
+                if convert_func:
+                    return convert_func(value)
+                return value
+            except (json.decoder.JSONDecodeError, ValueError) as exc:
+                raise argparse.ArgumentTypeError from exc
+
+        def convert_int_key_dict(dictv: dict[str, Any]) -> dict[int, Any]:
+            """Convert dict keys to int."""
+            return {int(k): v for k, v in dictv.items()}
+
+        def params_json_arg(arg: str) -> dict:
+            """Validate and convert a parameters JSON object to a dict."""
+            value = json_arg(arg, dict)
+            for param in PARAMS_DICT_INT_KEY:  ## Convert int key params
+                if param in value:
+                    value[param] = convert_int_key_dict(param)
+            return value
+
+        def source_json_arg(arg: str) -> dict:
+            """Validate and convert a source JSON map to a dict."""
+            return json_arg(arg, dict, convert_func=convert_int_key_dict)
+
+        zone_parser = get_command_parser(self.set_zone)
+        zone_parser.add_argument(
+            "zone", choices=[z.value for z in Zone], type=Zone, help="new zone"
+        )
+        logging_level_parser = get_command_parser(self.set_logging_level)
+        logging_level_parser.add_argument(
+            "level", choices=list(LOGGING_LEVELS.keys()), help="new logging level"
+        )
+        user_params_parser = get_command_parser(self.set_user_params)
+        user_params_parser.add_argument(
+            "params", type=params_json_arg, help="user parameters"
+        )
+        properties_parser = get_command_parser(self.get_properties)
+        for prop in PROPS_ALL:
+            properties_parser.add_argument(
+                f"--{prop}",
+                dest="prop_show",
+                action="append_const",
+                const=prop,
+                help=f"show {prop} properties",
+            )
+        scan_interval_parser = get_command_parser(self.set_scan_interval)
+        scan_interval_parser.add_argument(
+            "scan_interval", type=float, help="scan interval"
+        )
+        update_parser = get_command_parser(self.avr_update)
+        update_parser.add_argument("--full", "-f", action="store_true")
+        source_dict_parser = get_command_parser(self.set_source_dict)
+        source_dict_parser.add_argument(
+            "source_dict", type=source_json_arg, help="source dict (JSON)"
+        )
+        tuner_frequency_parser = get_command_parser(self.set_tuner_frequency)
+        tuner_frequency_parser.add_argument(
+            "band", choices=[v.value for v in TunerBand], help="tuner band"
+        )
+        tuner_frequency_parser.add_argument(
+            "frequency", type=float, help="tuner frequency"
+        )
+        debug_listener_parser = get_command_parser(self.debug_listener)
+        debug_listener_parser.add_argument(
+            "state",
+            choices=["on", "off"],
+            help="debug_listener state",
+        )
+        debug_updater_parser = get_command_parser(self.debug_updater)
+        debug_updater_parser.add_argument(
+            "state",
+            choices=["on", "off"],
+            help="debug_updater state",
+        )
+        debug_command_parser = get_command_parser(self.debug_command)
+        debug_command_parser.add_argument(
+            "state",
+            choices=["on", "off"],
+            help="debug_command state",
+        )
+        debug_command_queue_parser = get_command_parser(self.debug_command_queue)
+        debug_command_queue_parser.add_argument(
+            "state",
+            choices=["on", "off"],
+            help="debug_command_queue state",
+        )
+        raw_command_parser = get_command_parser(self.send_raw_command)
+        raw_command_parser.add_argument(
+            "command", type=str, help="raw command to send to AVR"
+        )
+        raw_command_parser_2 = get_command_parser(self.send_raw_command)
+        raw_command_parser_2.add_argument(
+            "command", type=str, help="raw command to send to AVR"
+        )
+
+        def get_avr_command(
+            command, args: list[CodeMapBase] | None
+        ) -> tuple[Callable[..., str], argparse.ArgumentParser]:
+            parser = argparse.ArgumentParser()
+            if args:
+                for code_map in args:
+                    code_map.get_parser(parser)
+
+            return self.gen_avr_send_command(command), parser
+
+        command_list = [
+            get_command(self.set_zone, "zone", parser=zone_parser),
+            get_command(
+                self.set_logging_level, "logging_level", parser=logging_level_parser
+            ),
+            get_command(self.get_params),
+            get_command(self.get_user_params),
+            get_command(self.set_user_params, parser=user_params_parser),
+            get_command(self.get_properties, parser=properties_parser),
+            get_command(self.get_scan_interval),
+            get_command(self.set_scan_interval, parser=scan_interval_parser),
+            get_command(self.avr_update, "update", update_parser),
+            get_command(self.query_device_info),
+            get_command(self.query_zones),
+            get_command(self.get_source_dict),
+            get_command(self.set_source_dict, parser=source_dict_parser),
+            get_command(self.build_source_dict),
+            get_command(self.get_listening_modes),
+            get_command(self.set_tuner_frequency, parser=tuner_frequency_parser),
+            get_command(self.debug_listener, parser=debug_listener_parser),
+            get_command(self.debug_updater, parser=debug_updater_parser),
+            get_command(self.debug_command, parser=debug_command_parser),
+            get_command(self.debug_command_queue, parser=debug_command_queue_parser),
+            get_command(self.send_raw_command, parser=raw_command_parser),
+            get_command(self.send_raw_command, ">", parser=raw_command_parser_2),
+        ]
+        return dict(command_list) | {
+            command: get_avr_command(command, supported_zones.get("args"))
+            for command, supported_zones in PIONEER_COMMANDS.items()
+        }
+
+
+class CliPrompt:
+    """CLI prompt."""
+
+    def __init__(self, cli: PioneerAVRCli):
+        self.cli = cli
+
+    def __str__(self):
+        zone = self.cli.zone
+        vol_ind = ""
+        if self.cli.pioneer.properties.power.get(zone):
+            vol_ind = " [X]"
+            if not self.cli.pioneer.properties.mute.get(zone):
+                vol_ind = f" [{self.cli.pioneer.properties.volume.get(zone)}]"
+        return f"{zone.full_name}{vol_ind} >>> "
+
+    def encode(self):
+        """Return the CLI prompt."""
+        return self.__str__()  # pylint: disable=unnecessary-dunder-call
+
+
+async def async_cli_main(args: argparse.Namespace):
+    """Async CLI entry point."""
     pioneer = PioneerAVR(args.hostname, args.port)
+    cli = PioneerAVRCli(pioneer)
+    await cli.set_logging_level()
+    sys.ps1 = CliPrompt(cli)
 
     try:
         await pioneer.connect(reconnect=False)
@@ -63,193 +412,17 @@ async def cli_main(args: argparse.Namespace):
         _LOGGER.error("could not connect to AVR: %s", repr(exc))
         return False
 
-    set_log_level("debug")
     print(f"Using default params: {pioneer.params.user_params}")
     pioneer.params.set_user_param(PARAM_DEBUG_LISTENER, True)
     if args.query_zones:
         await pioneer.query_zones()
         _LOGGER.info("AVR zones discovered: %s", pioneer.properties.zones)
 
-    reader, _writer = await connect_stdin_stdout()
-    zone = Zone.Z1
-    while True:
-        print(f"Current zone is {zone}")
-        res = await reader.readline()
-        if not res:
-            break
-        tokens = res.decode().strip().split(maxsplit=1)
-        num_tokens = len(tokens)
-        if num_tokens <= 0:
-            continue
-
-        cmd = tokens[0]
-        arg = None if num_tokens == 1 else tokens[1]
-        if cmd == "zone":
-            try:
-                zone_new = Zone(arg)
-                if zone_new in pioneer.properties.zones:
-                    zone = zone_new
-                    print(f"Setting current zone to {zone}")
-                else:
-                    print(f"ERROR: Zone {zone} not available")
-            except ValueError:
-                print(f"ERROR: Unknown zone {arg}")
-        elif cmd == "exit" or cmd == "quit":
-            print("Exiting")
-            break
-        elif cmd == "log_level":
-            set_log_level(arg)
-        elif cmd == "update":
-            await pioneer.update(zones=[zone])
-        elif cmd == "update_full":
-            await pioneer.update()
-        elif cmd == "query_device_info":
-            await pioneer.query_device_info()
-            print(
-                f"Device info: model={repr(pioneer.properties.amp.get("model"))}, "
-                f"mac_addr={repr(pioneer.properties.amp.get("mac_addr"))}, "
-                f"software_version={repr(pioneer.properties.amp.get("software_version"))}"
-            )
-        elif cmd == "query_zones":
-            await pioneer.query_zones()
-            print(f"Zones discovered: {pioneer.properties.zones}")
-        elif cmd == "build_source_dict":
-            await pioneer.build_source_dict()
-        elif cmd == "set_source_dict":
-            try:
-                source_dict = json.loads(arg)
-                print(f"Setting source dict to: {json.dumps(source_dict)}")
-                pioneer.properties.set_source_dict(source_dict)
-            except json.JSONDecodeError:
-                print(f'ERROR: Invalid JSON source dict: "{arg}""')
-        elif cmd == "get_source_list":
-            print(f"Source list: {json.dumps(pioneer.properties.get_source_list())}")
-        elif cmd == "get_zone_listening_modes":
-            print(
-                f"Available listening modes: {json.dumps(pioneer.get_listening_modes())}"
-            )
-        elif cmd == "get_params":
-            print(f"Params: {json.dumps(pioneer.params.params_all)}")
-        elif cmd == "get_user_params":
-            print(f"User Params: {json.dumps(pioneer.params.user_params)}")
-        elif cmd == "set_user_params":
-            try:
-                params = json.loads(arg)
-                print(f"Set user params: {json.dumps(params)}")
-                pioneer.params.set_user_params(params)
-            except json.JSONDecodeError:
-                print(f'ERROR: Invalid JSON params: "{arg}""')
-
-        elif cmd == "get_tone":
-            audio_attrs = {
-                "listening_mode": pioneer.properties.listening_mode,
-                "listening_mode_raw": pioneer.properties.listening_mode_raw,
-                "media_control_mode": pioneer.properties.media_control_mode,
-                "tone": pioneer.properties.tone,
-            }
-            print(json.dumps(audio_attrs))
-        elif cmd == "get_amp":
-            print(json.dumps(pioneer.properties.amp))
-        elif cmd == "get_tuner":
-            print(json.dumps(pioneer.properties.tuner))
-        elif cmd == "get_channel_levels":
-            print(json.dumps(pioneer.properties.channel_levels))
-        elif cmd == "get_dsp":
-            print(json.dumps(pioneer.properties.dsp))
-        elif cmd == "get_video":
-            print(json.dumps(pioneer.properties.video))
-        elif cmd == "get_audio":
-            print(json.dumps(pioneer.properties.audio))
-        elif cmd == "get_system":
-            print(json.dumps(pioneer.properties.system))
-
-        elif cmd == "debug_listener":
-            arg_bool = get_bool_arg(arg)
-            print(f"Setting debug_listener to: {arg_bool}")
-            pioneer.params.set_user_param(PARAM_DEBUG_LISTENER, arg_bool)
-        elif cmd == "debug_updater":
-            arg_bool = get_bool_arg(arg)
-            print(f"Setting debug_updater to: {arg_bool}")
-            pioneer.params.set_user_param(PARAM_DEBUG_UPDATER, arg_bool)
-        elif cmd == "debug_command":
-            arg_bool = get_bool_arg(arg)
-            print(f"Setting debug_command to: {arg_bool}")
-            pioneer.params.set_user_param(PARAM_DEBUG_COMMAND, arg_bool)
-        elif cmd == "debug_command_queue":
-            arg_bool = get_bool_arg(arg)
-            print(f"Setting debug_command_queue to: {arg_bool}")
-            pioneer.params.set_user_param(PARAM_DEBUG_COMMAND_QUEUE, arg_bool)
-        elif cmd == "set_scan_interval":
-            try:
-                scan_interval = float(arg)
-                print(f"Setting scan interval to {scan_interval}")
-                await pioneer.set_scan_interval(scan_interval)
-            except Exception:  # pylint: disable=broad-except
-                print(f'ERROR: Invalid scan interval "{arg}"')
-        elif cmd == "get_scan_interval":
-            print(f"Scan interval: {pioneer.scan_interval}")
-        elif cmd == "set_volume_level":
-            try:
-                volume_level = int(arg)
-                await pioneer.set_volume_level(volume_level, zone=zone)
-            except Exception as exc:  # pylint: disable=broad-except
-                print(f'ERROR: Invalid volume level "{arg}": {repr(exc)}')
-        elif cmd == "select_source":
-            source = arg if arg else ""
-            await pioneer.select_source(source, zone=zone)
-        elif cmd == "set_listening_mode":
-            listening_mode = arg if arg else ""
-            await pioneer.select_listening_mode(listening_mode)
-        elif cmd == "set_tuner_frequency":
-            subargs = arg.split(" ", maxsplit=1)
-            try:
-                band = subargs[0]
-                frequency = float(subargs[1]) if len(subargs) > 1 else None
-                await pioneer.set_tuner_frequency(band, frequency)
-            except Exception as exc:  # pylint: disable=broad-except
-                print(
-                    f'ERROR: Invalid parameters for set_tuner_frequency "{arg}": {repr(exc)}'
-                )
-        elif cmd == "tuner_previous_preset":
-            await pioneer.tuner_previous_preset()
-        elif cmd == "tuner_next_preset":
-            await pioneer.tuner_next_preset()
-        elif cmd in ["send_raw_command", ">"]:
-            if arg:
-                print(f"Sending raw command {arg}")
-                await pioneer.send_raw_command(arg)
-            else:
-                print("ERROR: No raw command specified")
-        elif cmd in PIONEER_COMMANDS:
-            print(f"Executing command {cmd}")
-            cur_zone = zone
-            if (
-                not isinstance(PIONEER_COMMANDS[cmd], dict)
-                or zone not in PIONEER_COMMANDS[cmd]
-            ):
-                cur_zone = "1"
-            prefix = (suffix := "")
-            if arg:
-                prefix, _, suffix = arg.partition("|")
-            print(
-                f"Sending command {cmd}"
-                + (f", prefix {prefix}" if prefix else "")
-                + (f", suffix {suffix}" if suffix else "")
-            )
-            await pioneer.send_command(
-                cmd, zone=cur_zone, prefix=prefix, suffix=suffix, ignore_error=True
-            )
-        else:
-            print(f"ERROR: Unknown command {cmd}")
-
-    await pioneer.shutdown()
-    return True
+    return await cli.interact()
 
 
 def main():
     """Main entry point."""
-    # import asyncio
-    # import logging
 
     debug_level = logging.WARNING
     log_format = "%(asctime)s %(levelname)s: %(message)s"
@@ -287,7 +460,7 @@ def main():
 
     rcode = False
     try:
-        rcode = asyncio.run(cli_main(args))
+        rcode = asyncio.run(async_cli_main(args))
     except KeyboardInterrupt:
         _LOGGER.info("KeyboardInterrupt")
     exit(0 if rcode else 1)
