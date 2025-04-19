@@ -334,6 +334,10 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
         raw_command_parser.add_argument(
             "command", type=str, help="raw command to send to AVR"
         )
+        raw_command_parser_2 = get_command_parser(self.send_raw_command)
+        raw_command_parser_2.add_argument(
+            "command", type=str, help="raw command to send to AVR"
+        )
 
         def get_avr_command(
             command, args: list[CodeMapBase] | None
@@ -368,7 +372,8 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
             get_command(self.debug_updater, parser=debug_updater_parser),
             get_command(self.debug_command, parser=debug_command_parser),
             get_command(self.debug_command_queue, parser=debug_command_queue_parser),
-            get_command(self.send_raw_command, ">", parser=raw_command_parser),
+            get_command(self.send_raw_command, parser=raw_command_parser),
+            get_command(self.send_raw_command, ">", parser=raw_command_parser_2),
         ]
         return dict(command_list) | {
             command: get_avr_command(command, supported_zones.get("args"))
