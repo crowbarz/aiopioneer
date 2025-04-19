@@ -214,16 +214,20 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
 
         return avr_send_command
 
-    def get_commands(self) -> dict[str, tuple[callable, argparse.ArgumentParser]]:
+    def get_commands(
+        self,
+    ) -> dict[str, tuple[Callable[..., str], argparse.ArgumentParser]]:
         """Get commands list for CLI."""
 
-        def get_command_parser(method: callable):
+        def get_command_parser(method: Callable[..., str]):
             """Get parser for command method."""
             return argparse.ArgumentParser(description=str(method.__doc__).rstrip("."))
 
         def get_command(
-            method: callable, name: str = None, parser: argparse.ArgumentParser = None
-        ) -> tuple[str, tuple[callable, argparse.ArgumentParser]]:
+            method: Callable[..., str],
+            name: str = None,
+            parser: argparse.ArgumentParser = None,
+        ) -> tuple[str, tuple[Callable[..., str], argparse.ArgumentParser]]:
             """Get command dictionary entry."""
             if name is None:
                 name = method.__name__
@@ -305,7 +309,7 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
 
         def get_avr_command(
             command, args: list[CodeMapBase] | None
-        ) -> tuple[callable, argparse.ArgumentParser]:
+        ) -> tuple[Callable[..., str], argparse.ArgumentParser]:
             parser = argparse.ArgumentParser()
             if args:
                 for code_map in args:
