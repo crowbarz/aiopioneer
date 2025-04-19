@@ -198,15 +198,15 @@ MEDIA_CONTROL_SOURCES = {
 
 MEDIA_CONTROL_COMMANDS = {
     "NETWORK": {
-        "play": "operation_network_play",
-        "pause": "operation_network_pause",
-        "stop": "operation_network_stop",
-        "ff": "operation_network_fastforward",
-        "rw": "operation_network_rewind",
-        "next": "operation_network_next",
-        "previous": "operation_network_previous",
-        "repeat": "operation_network_repeat",
-        "shuffle": "operation_network_random",
+        "play": "network_play",
+        "pause": "network_pause",
+        "stop": "network_stop",
+        "ff": "network_fastforward",
+        "rw": "network_rewind",
+        "next": "network_next",
+        "previous": "network_previous",
+        "repeat": "network_repeat",
+        "shuffle": "network_random",
     },
     "IPOD": {
         "play": "ipod_play",
