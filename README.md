@@ -14,7 +14,7 @@ Originally developed and tested on a VSX-930 (Main Zone and HDZone outputs) but 
 - Auto-detects Zones 1, 2, 3 and HDZone
 - Ignore specific zones, for AVRs that report phantom zones
 - Automatically polls AVR for source names - no longer need to manually code them in your config any more if your AVR supports their retrieval. Can also set source names manually
-- Queries device information from the AVR: MAC address, software version, model
+- Queries device information from the AVR where supported: MAC address, software version, model
 - Ability to set internal parameters to change the API functionality, eg. maximum volume, volume step change delta
 - Defaults for internal parameters set via custom profiles based on AVR model
 - Includes workaround for AVRs with an initial volume set on the Main Zone (eg. VSX-930)
@@ -27,7 +27,7 @@ Originally developed and tested on a VSX-930 (Main Zone and HDZone outputs) but 
 - Supports all tone functions
 - Supports most zone power functions
 - Supports all zone input functions
-- Supports all zone volumne and mute functions
+- Supports all zone volume and mute functions
 - Supports setting of tuner band and preset
 - Supports setting tuner frequency directly for AVRs that support this via the API, and also by stepping the frequency up/down
 
@@ -38,12 +38,11 @@ There are several types of parameters that modify the library's functionality. T
 - **Default parameters**: these are the defaults for all of the parameters
 - **Model parameters**: these parameters are determined by the AVR model as detected by the library. Custom profiles for specific AVR models are defined in [aiopioneer/param.py](https://github.com/crowbarz/aiopioneer/blob/main/aiopioneer/param.py)
 - **User parameters**: these parameters are provided by the user at instantiation, and can also be updated via the `set_user_params` method
-- **Run-time parameters**: these parameters are set by the library at run-time
 
 Where a parameter is specified at more than one level, the higher priority parameter takes precedence. Thus, a user specified parameter will override any value that is determined by the AVR model.
 
 > [!NOTE]
-> YAML syntax is used to indicate values the table below. Use Python equivalents (`false` -> `False`, `true` -> `True`, `null` -> `None` etc.) when calling the Python API directly, and JSON syntax if specifying parameters manually via the Home Assistant integration.
+> YAML syntax is used to indicate values the table below. This syntax is used by the Home Assistant integration. Use Python equivalents (`false` -> `False`, `true` -> `True`, `null` -> `None` etc.) when calling the Python API directly.
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
@@ -473,6 +472,9 @@ Sources, listening modes and speaker system modes are specified as a **dict** wi
 
 The list below shows the source ID that corresponds to each AVR source:
 
+> [!NOTE]
+> This list is not exhaustive. Some AVR models support sources additional to those listed below.
+
 | ID | Default Name
 | -- | ---
 | 25 | BD
@@ -507,6 +509,31 @@ The list below shows the source ID that corresponds to each AVR source:
 | 47 | DMR (Information only)
 
 ## Breaking changes
+
+### 0.9
+
+- The `query_device_model` method is now deprecated and no longer needs to be called on AVR connect. It will be invoked internally if param `model` is not set.
+- Some AVR commands have been renamed for consistency:
+  - Rename DSP commands: `digital_dialog_enhancement` -> `dialog_enhancement`, `analog_input_att` -> `input_attenuator`, `drc` -> `dynamic_range`, `lfe_att` -> `lfe_attenuator`
+  - Rename amp commands: `speaker_status` -> `speaker_mode`, `hdmi_out_status` -> `hdmi_out`, `hdmi_audio_status` -> `hdmi_audio`, `pqls_status` -> `pqls`, `sleep_remain_time` -> `sleep_time`
+  - Add `dsp` prefix to `center_spread` and `rendering_mode` commands
+  - Add `video` prefix to `super_resolution` command
+- `set_panel_lock`, `set_remote_lock` and `set_dimmer` methods have been deprecated as they can now be set via the `set_amp_settings` method
+- Cyclic code map values have been removed. Set the new value explicitly instead
+- `ipod_control_commands` and `tuner_control_commands` property methods have been removed as these were creating circular imports
+- `get_runtime_param` and `set_runtime_param` methods are removed. All runtime params have been migrated to AVRProperties
+- `Pioneer` have been dropped from `PioneerAVRConnection`, `PioneerAVRParams`, `PioneerAVRProperties`, and `PioneerError` class names for brevity
+- `PioneerAVR.update_listening_mode` has been removed, `AVRProperties.update_listening_mode` should be used instead
+- AVR command `query_source_name` now accepts a numeric source ID
+- AVR command `set_source_name` accepts *source_name*=**None** to reset name, and no longer accepts the *default* argument
+- Params `zone_1_sources`, `zone_2_sources`, `zone_3_sources` and `hdzone_sources` are now of type **list[int]**
+- Param `amp_speaker_system_modes` is now of type **dict[int, str]**
+- Param `enabled_functions` now accepts `channel` as an item instead of `channels`
+- `select_source` now accepts a single source, which can be a source name (**str**) or a source ID (**int**)
+- `set_source_dict` now accepts a `sources` argument of type **dict[int, str]**. The source ID is now the key of the dict and the value is the source name, previously the key was the source name
+- `get_source_dict` now returns a value of type **dict[int, str]**
+- `get_source_dict` now returns a value of type **dict[int, str]**
+- `get_listening_modes` now returns a value of type **list[str]**.
 
 ### 0.8
 
