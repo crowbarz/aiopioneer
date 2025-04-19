@@ -129,18 +129,4 @@ PIONEER_COMMANDS: dict[
     "mhl_pause_record_function": {Zone.Z1: ["35MHL", "MHL"]},
     "mhl_stop_function": {Zone.Z1: ["36MHL", "MHL"]},
     "mhl_show_information": {Zone.Z1: ["37MHL", "MHL"]},
-    ## operation amp
-    "operation_amp_status_display": {Zone.Z1: "STS"},
-    "operation_amp_cursor_up": {Zone.Z1: "CUP"},
-    "operation_amp_cursor_down": {Zone.Z1: "CDN"},
-    "operation_amp_cursor_right": {Zone.Z1: "CRI"},
-    "operation_amp_cursor_left": {Zone.Z1: "CLE"},
-    "operation_amp_cursor_enter": {Zone.Z1: "CEN"},
-    "operation_amp_cursor_return": {Zone.Z1: "CRT"},
-    "operation_amp_audio_parameter": {Zone.Z1: "ATA"},
-    "operation_amp_output_parameter": {Zone.Z1: "HPA"},
-    "operation_amp_video_parameter": {Zone.Z1: "VPA"},
-    "operation_amp_channel_select": {Zone.Z1: "CLC"},
-    "operation_amp_home_menu": {Zone.Z1: "HM"},
-    "operation_amp_key_off": {Zone.Z1: "KOF"},
 }
