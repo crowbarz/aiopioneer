@@ -36,9 +36,9 @@ Number of seconds between polls for AVR full updates.
 
 ## Update methods
 
-_awaitable_ `PioneerAVR.update(`_zones_: **list[Zone]** = **None**, _wait_: **bool** = **True**`)`
+_awaitable_ `PioneerAVR.refresh(`_zones_: **list[Zone]** = **None**, _wait_: **bool** = **True**`)`
 
-Update of the cached properties from the AVR via the command queue. <br/>
+Refresh the cached properties from the AVR via the command queue. <br/>
 Refresh the AVR zones _zones_, or all AVR zones if not specified. <br/>
 Wait for the update to be completed if _wait_ is **True**. <br/>
 
