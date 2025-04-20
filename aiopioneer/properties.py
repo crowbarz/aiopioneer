@@ -37,7 +37,7 @@ class AVRProperties:
         self.source_id: dict[Zone, int] = {}
         self.source_name: dict[Zone, str] = {}
         self.listening_mode: str = None
-        self.listening_mode_raw: int = None
+        self.listening_mode_id: int = None
         self.listening_modes_all: dict[int, list] = {}
         self.available_listening_modes: dict[int, str] = {}
         self.media_control_mode: dict[Zone, str] = {}
@@ -72,7 +72,7 @@ class AVRProperties:
         self.volume = {}
         self.mute = {}
         self.listening_mode = None
-        self.listening_mode_raw = None
+        self.listening_mode_id = None
         self.amp = {
             "model": self.amp.get("model"),
             "software_version": self.amp.get("software_version"),

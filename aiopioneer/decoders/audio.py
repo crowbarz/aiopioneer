@@ -435,7 +435,7 @@ class ListeningMode(CodeDynamicDictListMap):
         return [
             response,
             response.clone(
-                base_property="listening_mode_raw",
+                base_property="listening_mode_id",
                 value=cls.index_map_class.code_to_value(code=response.code),
             ),
         ]

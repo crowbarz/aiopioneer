@@ -43,7 +43,7 @@ PROPS_ALL = [
     "source_id",
     "source_name",
     # "listening_mode",
-    # "listening_mode_raw",
+    # "listening_mode_id",
     # "listening_modes_all",
     # "available_listening_modes",
     "media_control_mode",
