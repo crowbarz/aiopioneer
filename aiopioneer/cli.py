@@ -85,6 +85,14 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
         """Dump an object to YAML."""
         return yaml.dump(obj, sort_keys=False, default_flow_style=flow_style)
 
+    async def connect(self, reader, writer, reconnect: bool):
+        """Connect to AVR."""
+        return await self.pioneer.connect(reconnect=reconnect)
+
+    async def disconnect(self, reader, writer, reconnect: bool):
+        """Connect to AVR."""
+        return await self.pioneer.disconnect(reconnect=reconnect)
+
     async def set_zone(self, reader, writer, zone: Zone):
         """Set AVR active zone."""
         self.zone = zone
@@ -266,6 +274,22 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
             """Validate and convert a source JSON map to a dict."""
             return json_arg(arg, dict, convert_func=convert_int_key_dict)
 
+        connect_parser = get_command_parser(self.connect)
+        connect_parser.add_argument(
+            "--reconnect",
+            "-R",
+            action=argparse.BooleanOptionalAction,
+            default=False,
+            help="reconnect to the AVR on disconnect",
+        )
+        disconnect_parser = get_command_parser(self.connect)
+        disconnect_parser.add_argument(
+            "--reconnect",
+            "-R",
+            action=argparse.BooleanOptionalAction,
+            default=False,
+            help="attempt to reconnect to the AVR after disconnecting",
+        )
         zone_parser = get_command_parser(self.set_zone)
         zone_parser.add_argument(
             "zone", choices=[z.value for z in Zone], type=Zone, help="new zone"
@@ -348,6 +372,8 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
             return self.gen_avr_send_command(command), parser
 
         command_list = [
+            get_command(self.connect, parser=connect_parser),
+            get_command(self.disconnect, parser=disconnect_parser),
             get_command(self.set_zone, "zone", parser=zone_parser),
             get_command(
                 self.set_logging_level, "logging_level", parser=logging_level_parser
@@ -407,7 +433,7 @@ async def async_cli_main(args: argparse.Namespace):
     sys.ps1 = CliPrompt(cli)
 
     try:
-        await pioneer.connect(reconnect=False)
+        await pioneer.connect(reconnect=args.reconnect)
     except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.error("could not connect to AVR: %s", repr(exc))
         return False
@@ -443,18 +469,25 @@ def main():
         prefix_chars="-+",
     )
     parser.add_argument(
-        "hostname", help="hostname for AVR connection", default="avr.local"
+        "hostname", default="avr.local", help="hostname for AVR connection"
     )
     parser.add_argument(
-        "-p", "--port", type=int, help="port for AVR connection", default=DEFAULT_PORT
+        "--port", "-p", type=int, default=DEFAULT_PORT, help="port for AVR connection"
     )
     parser.add_argument(
-        "+Z",
         "--no-query-zones",
+        "+Z",
         dest="query_zones",
-        help="skip AVR zone query",
         action="store_false",
         default=True,
+        help="skip AVR zone query",
+    )
+    parser.add_argument(
+        "--reconnect",
+        "-R",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="reconnect to the AVR on disconnect",
     )
     args = parser.parse_args()
 
