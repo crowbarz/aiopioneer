@@ -116,8 +116,9 @@ Invoke the CLI with the following arguments:
 | Argument | Default | Description
 | --- | --- | ---
 | hostname | required | hostname for AVR connection
-| `-p`<br>`--port` | 8102 | port for AVR connection
-| `+Z`<br>`--no-query-zones` | None | skip AVR zone query
+| `--port`<br>`-p` | 8102 | port for AVR connection
+| `--no-query-zones`<br>`+Z` | None | skip AVR zone query
+| `--reconnect`\|`-R`<br>\| `--no-reconnect` | false | enable/disable AVR reconnection request
 
 The CLI accepts all AVR commands, as well as the helper commands below. The `list` command shows all accepted commands and their arguments.
 
