@@ -188,7 +188,7 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
 
     async def media_control(self, reader, writer, command: str) -> str:
         """Send media control command."""
-        return await self.pioneer.media_control(command)
+        return await self.pioneer.media_control(command, zone=self.zone)
 
     async def get_supported_media_controls(self, reader, writer) -> str:
         """Get currently available media controls."""
