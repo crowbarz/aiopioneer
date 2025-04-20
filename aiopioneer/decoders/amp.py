@@ -520,14 +520,14 @@ class AudioParameterWorking(CodeStrMap):
 
 
 COMMANDS_AMP = {
-    "turn_on": {
+    "power_on": {
         Zone.Z1: ["PO", "PWR"],
         Zone.Z2: ["APO", "APR"],
         Zone.Z3: ["BPO", "BPR"],
         Zone.HDZ: ["ZEO", "ZEP"],
         "retry_on_fail": True,
     },
-    "turn_off": {
+    "power_off": {
         Zone.Z1: ["PF", "PWR"],
         Zone.Z2: ["APF", "APR"],
         Zone.Z3: ["BPF", "BPR"],

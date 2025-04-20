@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-""" Pioneer AVR testing script. """
+"""Pioneer AVR testing script."""
 # pylint: disable=import-error,broad-except
 
 import asyncio
@@ -52,7 +52,7 @@ async def main(argv):
     await pioneer.update()
     await asyncio.sleep(15)
     ## Turn on main zone for tests
-    await pioneer.turn_on(zone=Zone.Z1)
+    await pioneer.power_on(zone=Zone.Z1)
 
     # await pioneer.select_source(source="TUNER", zone=Zone.Z1)
     # await pioneer.set_tuner_frequency(band=TunerBand.AM, frequency=580)

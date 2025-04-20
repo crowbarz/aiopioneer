@@ -557,13 +557,13 @@ class PioneerAVR(AVRConnection):
             raise ValueError(f"{zone.full_name} is not available on AVR")
         return zone
 
-    async def turn_on(self, zone: Zone = Zone.Z1) -> None:
-        """Turn on the Pioneer AVR zone."""
-        await self.send_command("turn_on", zone=self._check_zone(zone))
+    async def power_on(self, zone: Zone = Zone.Z1) -> None:
+        """Power on the Pioneer AVR zone."""
+        await self.send_command("power_on", zone=self._check_zone(zone))
 
-    async def turn_off(self, zone: Zone = Zone.Z1) -> None:
-        """Turn off the Pioneer AVR zone."""
-        await self.send_command("turn_off", zone=self._check_zone(zone))
+    async def power_off(self, zone: Zone = Zone.Z1) -> None:
+        """Power off the Pioneer AVR zone."""
+        await self.send_command("power_off", zone=self._check_zone(zone))
 
     async def select_source(self, source: str | int, zone: Zone = Zone.Z1) -> None:
         """Select input source."""
