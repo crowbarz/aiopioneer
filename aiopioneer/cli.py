@@ -13,7 +13,7 @@ import yaml
 
 from aiopioneer import PioneerAVR
 from aiopioneer.commands import PIONEER_COMMANDS
-from aiopioneer.const import Zone, DEFAULT_PORT, TunerBand
+from aiopioneer.const import Zone, DEFAULT_PORT, TunerBand, MEDIA_CONTROL_COMMANDS_ALL
 from aiopioneer.decoders.code_map import CodeMapBase
 from aiopioneer.params import (
     PARAM_DEBUG_LISTENER,
@@ -186,6 +186,14 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
         """Set tuner band and frequency."""
         return await self.pioneer.set_tuner_frequency(TunerBand(band), frequency)
 
+    async def media_control(self, reader, writer, command: str) -> str:
+        """Send media control command."""
+        return await self.pioneer.media_control(command)
+
+    async def get_supported_media_controls(self, reader, writer) -> str:
+        """Get currently available media controls."""
+        return self.pioneer.properties.get_supported_media_controls(self.zone)
+
     async def debug_listener(self, reader, writer, state: str) -> str:
         """Set debug_listener flag."""
         state_bool = self.convert_bool_arg(state)
@@ -328,6 +336,10 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
         tuner_frequency_parser.add_argument(
             "frequency", type=float, help="tuner frequency"
         )
+        media_control_parser = get_command_parser(self.media_control)
+        media_control_parser.add_argument(
+            "command", choices=MEDIA_CONTROL_COMMANDS_ALL, help="media control command"
+        )
         debug_listener_parser = get_command_parser(self.debug_listener)
         debug_listener_parser.add_argument(
             "state",
@@ -392,6 +404,8 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
             get_command(self.build_source_dict),
             get_command(self.get_listening_modes),
             get_command(self.set_tuner_frequency, parser=tuner_frequency_parser),
+            get_command(self.media_control, parser=media_control_parser),
+            get_command(self.get_supported_media_controls),
             get_command(self.debug_listener, parser=debug_listener_parser),
             get_command(self.debug_updater, parser=debug_updater_parser),
             get_command(self.debug_command, parser=debug_command_parser),
