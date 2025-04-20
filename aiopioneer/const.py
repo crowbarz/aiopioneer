@@ -194,6 +194,7 @@ MEDIA_CONTROL_SOURCES = {
     41: "NETWORK",
     53: "NETWORK",
     17: "IPOD",
+    33: "BLUETOOTH",
 }
 
 MEDIA_CONTROL_COMMANDS = {
@@ -226,15 +227,26 @@ MEDIA_CONTROL_COMMANDS = {
         "previous": "tuner_previous_preset",
     },
     "ADAPTERPORT": {
-        "play": "operation_adapaterport_play",
-        "pause": "operation_adapaterport_pause",
-        "stop": "operation_adapaterport_stop",
-        "previous": "operation_adapaterport_previous",
-        "next": "operation_adapaterport_next",
-        "rw": "operation_adapaterport_rewind",
-        "ff": "operation_adapaterport_fastforward",
-        "repeat": "operation_adapaterport_repeat",
-        "shuffle": "operation_adapaterport_random",
+        "play": "adapterport_play",
+        "pause": "adapterport_pause",
+        "stop": "adapterport_stop",
+        "previous": "adapterport_previous",
+        "next": "adapterport_next",
+        "rw": "adapterport_rewind",
+        "ff": "adapterport_fastforward",
+        "repeat": "adapterport_repeat",
+        "shuffle": "adapterport_random",
+    },
+    "BLUETOOTH": {
+        "play": "bluetooth_play",
+        "pause": "bluetooth_pause",
+        "stop": "bluetooth_stop",
+        "previous": "bluetooth_previous",
+        "next": "bluetooth_next",
+        "rw": "bluetooth_rewind",
+        "ff": "bluetooth_fastforward",
+        "repeat": "bluetooth_repeat",
+        "shuffle": "bluetooth_random",
     },
     "MHL": {
         "play": "mhl_play",
@@ -248,3 +260,6 @@ MEDIA_CONTROL_COMMANDS = {
         "previous": "mhl_previous",
     },
 }
+MEDIA_CONTROL_COMMANDS_ALL = set(
+    sum([list(v.keys()) for v in MEDIA_CONTROL_COMMANDS.values()], [])
+)
