@@ -435,7 +435,7 @@ class ListeningMode(CodeDynamicDictListMap):
         return [
             response,
             response.clone(
-                base_property="listening_mode_raw",
+                base_property="listening_mode_id",
                 value=cls.index_map_class.code_to_value(code=response.code),
             ),
         ]
@@ -517,7 +517,7 @@ class ToneTreble(ToneDb):
 COMMANDS_AUDIO = {
     "query_basic_audio_information": {Zone.Z1: ["?AST", "AST"]},
     "query_listening_mode": {Zone.Z1: ["?S", "SR"]},
-    "set_listening_mode": {
+    "select_listening_mode": {
         Zone.Z1: ["SR", "SR"],
         "args": [AvailableListeningMode],
         "retry_on_fail": True,

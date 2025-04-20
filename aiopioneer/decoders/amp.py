@@ -520,14 +520,14 @@ class AudioParameterWorking(CodeStrMap):
 
 
 COMMANDS_AMP = {
-    "turn_on": {
+    "power_on": {
         Zone.Z1: ["PO", "PWR"],
         Zone.Z2: ["APO", "APR"],
         Zone.Z3: ["BPO", "BPR"],
         Zone.HDZ: ["ZEO", "ZEP"],
         "retry_on_fail": True,
     },
-    "turn_off": {
+    "power_off": {
         Zone.Z1: ["PF", "PWR"],
         Zone.Z2: ["APF", "APR"],
         Zone.Z3: ["BPF", "BPR"],
@@ -663,6 +663,19 @@ COMMANDS_AMP = {
         "retry_on_fail": True,
     },
     "query_display_information": {Zone.Z1: ["?FL", "FL"]},
+    "amp_status_display": {Zone.Z1: "STS"},
+    "amp_cursor_up": {Zone.Z1: "CUP"},
+    "amp_cursor_down": {Zone.Z1: "CDN"},
+    "amp_cursor_right": {Zone.Z1: "CRI"},
+    "amp_cursor_left": {Zone.Z1: "CLE"},
+    "amp_cursor_enter": {Zone.Z1: "CEN"},
+    "amp_cursor_return": {Zone.Z1: "CRT"},
+    "amp_audio_parameter": {Zone.Z1: "ATA"},
+    "amp_output_parameter": {Zone.Z1: "HPA"},
+    "amp_video_parameter": {Zone.Z1: "VPA"},
+    "amp_channel_select": {Zone.Z1: "CLC"},
+    "amp_home_menu": {Zone.Z1: "HM"},
+    "amp_key_off": {Zone.Z1: "KOF"},
 }
 
 RESPONSE_DATA_AMP = [

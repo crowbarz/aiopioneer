@@ -93,7 +93,7 @@ Listed below are the public attributes of a `AVRProperties` object that contains
 | `source_id` | **dict**[Zone, **str**] | Active source ID for each detected zone
 | `source_name` | **dict**[Zone, **str**] | Active source name for each detected zone
 | `listening_mode` | **str** | Name of the currently active listening mode
-| `listening_mode_raw` | **str** | ID of the currently active listening mode
+| `listening_mode_id` | **str** | ID of the currently active listening mode
 | `media_control_mode` | **dict**[Zone, **str**] | Media control mode for each detected zone
 | `tone` | **dict**[Zone, **dict**] | Tone attributes for each detected zone
 | `amp` | **dict**[**str** \| Zone, **str**] | Current AVR amp attributes
@@ -116,8 +116,9 @@ Invoke the CLI with the following arguments:
 | Argument | Default | Description
 | --- | --- | ---
 | hostname | required | hostname for AVR connection
-| `-p`<br>`--port` | 8102 | port for AVR connection
-| `+Z`<br>`--no-query-zones` | None | skip AVR zone query
+| `--port`<br>`-p` | 8102 | port for AVR connection
+| `--no-query-zones`<br>`+Z` | None | skip AVR zone query
+| `--reconnect`\|`-R`<br>\| `--no-reconnect` | false | enable/disable AVR reconnection request
 
 The CLI accepts all AVR commands, as well as the helper commands below. The `list` command shows all accepted commands and their arguments.
 

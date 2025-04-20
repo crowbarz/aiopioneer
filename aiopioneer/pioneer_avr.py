@@ -557,13 +557,13 @@ class PioneerAVR(AVRConnection):
             raise ValueError(f"{zone.full_name} is not available on AVR")
         return zone
 
-    async def turn_on(self, zone: Zone = Zone.Z1) -> None:
-        """Turn on the Pioneer AVR zone."""
-        await self.send_command("turn_on", zone=self._check_zone(zone))
+    async def power_on(self, zone: Zone = Zone.Z1) -> None:
+        """Power on the Pioneer AVR zone."""
+        await self.send_command("power_on", zone=self._check_zone(zone))
 
-    async def turn_off(self, zone: Zone = Zone.Z1) -> None:
-        """Turn off the Pioneer AVR zone."""
-        await self.send_command("turn_off", zone=self._check_zone(zone))
+    async def power_off(self, zone: Zone = Zone.Z1) -> None:
+        """Power off the Pioneer AVR zone."""
+        await self.send_command("power_off", zone=self._check_zone(zone))
 
     async def select_source(self, source: str | int, zone: Zone = Zone.Z1) -> None:
         """Select input source."""
@@ -635,7 +635,7 @@ class PioneerAVR(AVRConnection):
 
     async def select_listening_mode(self, mode: str | int) -> None:
         """Set the listening mode using the predefined list of options in params."""
-        await self.send_command("set_listening_mode", mode)
+        await self.send_command("select_listening_mode", mode)
 
     async def set_tone_settings(
         self,
@@ -707,8 +707,8 @@ class PioneerAVR(AVRConnection):
             return
 
         ## Step frequency once and check whether difference was calculated
-        if await self.send_command("increase_tuner_frequency", ignore_error=True):
-            await self.send_command("decrease_tuner_frequency")
+        if await self.send_command("tuner_increase_frequency", ignore_error=True):
+            await self.send_command("tuner_decrease_frequency")
             if self.properties.tuner.get("am_frequency_step"):
                 return
 
@@ -738,7 +738,7 @@ class PioneerAVR(AVRConnection):
         if target_freq > current_freq:
             while current_freq < target_freq and count > 0 and rc:
                 rc = await self.send_command(
-                    "increase_tuner_frequency",
+                    "tuner_increase_frequency",
                     zone=zone,
                     ignore_error=False,
                     rate_limit=False,
@@ -750,7 +750,7 @@ class PioneerAVR(AVRConnection):
         elif target_freq < current_freq:
             while current_freq > target_freq and count > 0 and rc:
                 rc = await self.send_command(
-                    "decrease_tuner_frequency",
+                    "tuner_decrease_frequency",
                     zone=zone,
                     ignore_error=False,
                     rate_limit=False,
@@ -779,12 +779,12 @@ class PioneerAVR(AVRConnection):
         else:
             code = FrequencyFM(frequency)
 
-        if await self.send_command("operation_direct_access", ignore_error=True):
+        if await self.send_command("tuner_direct_access", ignore_error=True):
             ## Set tuner frequency directly if command is supported
             try:
                 for digit in code:
                     await self.send_command(
-                        "operation_tuner_digit", prefix=digit, rate_limit=False
+                        "tuner_digit", prefix=digit, rate_limit=False
                     )
             except AVRCommandError as exc:
                 raise AVRLocalCommandError(
@@ -799,11 +799,11 @@ class PioneerAVR(AVRConnection):
 
     async def tuner_previous_preset(self) -> None:
         """Select the previous tuner preset."""
-        await self.send_command("decrease_tuner_preset")
+        await self.send_command("tuner_previous_preset")
 
     async def tuner_next_preset(self) -> None:
         """Select the next tuner preset."""
-        await self.send_command("increase_tuner_preset")
+        await self.send_command("tuner_next_preset")
 
     async def set_channel_levels(
         self, channel: str, level: float, zone: Zone = Zone.Z1
