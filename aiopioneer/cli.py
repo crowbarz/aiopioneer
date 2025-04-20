@@ -86,36 +86,36 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
         return yaml.dump(obj, sort_keys=False, default_flow_style=flow_style)
 
     async def connect(self, reader, writer, reconnect: bool):
-        """Connect to AVR."""
+        """Connect to the AVR."""
         return await self.pioneer.connect(reconnect=reconnect)
 
     async def disconnect(self, reader, writer, reconnect: bool):
-        """Connect to AVR."""
+        """Disconnect from the AVR."""
         return await self.pioneer.disconnect(reconnect=reconnect)
 
     async def set_zone(self, reader, writer, zone: Zone):
-        """Set AVR active zone."""
+        """Set the active AVR zone."""
         self.zone = zone
 
     async def set_logging_level(self, reader=None, writer=None, level: str = "debug"):
-        """Set root logging level."""
+        """Set the root logging level."""
         logging.getLogger().setLevel(LOGGING_LEVELS.get(level))
         return self.dump({"logging_level": level})
 
     async def get_params(self, reader, writer) -> str:
-        """Get active parameters."""
+        """Show the currently active set of parameters."""
         return self.dump(self.pioneer.params.params_all)
 
     async def get_user_params(self, reader, writer) -> str:
-        """Get user parameters."""
+        """Show the currently active set of user parameters."""
         return self.dump(self.pioneer.params.user_params)
 
     async def set_user_params(self, reader, writer, params: dict) -> str:
-        """Set user parameters."""
+        """Set the user parameters."""
         return self.pioneer.params.set_user_params(params)
 
     async def get_properties(self, reader, writer, prop_show: list[str] = None) -> str:
-        """Get cached properties."""
+        """Show the current cached AVR properties."""
 
         def scrub_property(prop):
             if isinstance(prop, (set, list)):
@@ -135,20 +135,20 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
         )
 
     async def get_scan_interval(self, reader, writer):
-        """Get scan interval."""
+        """Show the current scan interval."""
         return self.dump({"scan_interval": self.pioneer.scan_interval})
 
     async def set_scan_interval(self, reader, writer, scan_interval: float):
-        """Set scan interval."""
+        """Set the scan interval."""
         await self.pioneer.set_scan_interval(scan_interval)
         return await self.get_scan_interval(reader, writer)
 
     async def avr_update(self, reader, writer, full: bool):
-        """Update zone."""
+        """Refresh the cached AVR properties."""
         await self.pioneer.update(None if full else self.zone)
 
     async def query_device_info(self, reader, writer) -> str:
-        """Query device info."""
+        """Query the AVR for device information."""
         await self.pioneer.query_device_info()
         return self.dump(
             {
@@ -158,62 +158,62 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
         )
 
     async def query_zones(self, reader, writer) -> str:
-        """Query zones."""
+        """Query the AVR for available zones."""
         await self.pioneer.query_zones()
         return await self.get_properties(reader, writer, prop_show=["zones"])
 
     async def get_source_dict(self, reader, writer) -> str:
-        """Get source dict."""
+        """Show the set of available source names and IDs."""
         return self.dump(self.pioneer.properties.get_source_dict())
 
     async def set_source_dict(self, reader, writer, source_dict: dict) -> str:
-        """Set source dict."""
+        """Set the sources mapping manually."""
         self.pioneer.properties.set_source_dict(source_dict)
         return await self.get_source_dict(reader, writer)
 
     async def build_source_dict(self, reader, writer) -> str:
-        """Build source dict."""
+        """Query the sources mapping from the AVR."""
         await self.pioneer.build_source_dict()
         return await self.get_source_dict(reader, writer)
 
     async def get_listening_modes(self, reader, writer) -> str:
-        """Get zone listening mode."""
+        """Show the set of available listening modes."""
         return self.dump(self.pioneer.get_listening_modes())
 
     async def set_tuner_frequency(
         self, reader, writer, band: str, frequency: float
     ) -> str:
-        """Set tuner band and frequency."""
+        """Set the tuner band and frequency."""
         return await self.pioneer.set_tuner_frequency(TunerBand(band), frequency)
 
     async def media_control(self, reader, writer, command: str) -> str:
-        """Send media control command."""
+        """Send media control command for active zone."""
         return await self.pioneer.media_control(command, zone=self.zone)
 
     async def get_supported_media_controls(self, reader, writer) -> str:
-        """Get currently available media controls."""
+        """Show the currently available media controls for the active zone."""
         return self.pioneer.properties.get_supported_media_controls(self.zone)
 
     async def debug_listener(self, reader, writer, state: str) -> str:
-        """Set debug_listener flag."""
+        """Enable/disable the debug_listener parameter."""
         state_bool = self.convert_bool_arg(state)
         self.pioneer.params.set_user_param(PARAM_DEBUG_LISTENER, state_bool)
         return self.dump({"debug_listener": state_bool})
 
     async def debug_updater(self, reader, writer, state: str) -> str:
-        """Set debug_updater flag."""
+        """Enable/disable the debug_updater parameter."""
         state_bool = self.convert_bool_arg(state)
         self.pioneer.params.set_user_param(PARAM_DEBUG_UPDATER, state_bool)
         return self.dump({"debug_updater": state_bool})
 
     async def debug_command(self, reader, writer, state: str) -> str:
-        """Set debug_command flag."""
+        """Enable/disable the debug_command parameter."""
         state_bool = self.convert_bool_arg(state)
         self.pioneer.params.set_user_param(PARAM_DEBUG_COMMAND, state_bool)
         return self.dump({"debug_command": state_bool})
 
     async def debug_command_queue(self, reader, writer, state: str) -> str:
-        """Set debug_command_queue flag."""
+        """Enable/disable the debug_command_queue parameter."""
         state_bool = self.convert_bool_arg(state)
         self.pioneer.params.set_user_param(PARAM_DEBUG_COMMAND_QUEUE, state_bool)
         return self.dump({"debug_command_queue": state_bool})

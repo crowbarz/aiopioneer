@@ -125,22 +125,26 @@ The CLI accepts all AVR commands, as well as the helper commands below. The `lis
 | Command | Argument | Description
 | --- | --- | ---
 | `exit` | | Exit the CLI
-| `zone` | _zone_ | Change current zone to _zone_
-| `logging_level` | _log_level_ | Change debug level to _log_level_. Valid log levels are: `debug`, `info`, `warning`, `error`, `critical`
+| `connect` | [`--reconnect`] | Connect to the AVR. If `--reconnect` is specified, reconnect to the AVR on disconnect
+| `disconnect` | [`--reconnect`] | Disconnect from the AVR. If `--reconnect` is specified, attempt to reconnect to the AVR after disconnecting
+| `zone` | _zone_ | Set the active AVR zone to _zone_
+| `logging_level` | _log_level_ | Set the root logging level to _log_level_. Valid log levels are: `debug`, `info`, `warning`, `error`, `critical`
 | `get_params` | | Show the currently active set of parameters
 | `get_user_params` | | Show the currently active set of user parameters
 | `set_user_params` | _params_ (JSON) | Set the user parameters to _params_ (see [CLI JSON arguments](#cli-json-arguments) below)
 | `get_properties` | \[ `--zones` \]<br>\[ `--power` \]<br>\[ `--volume` \]<br>\[ `--max_volume` \]<br>\[ `--mute` \]<br>\[ `--source_id` \]<br>\[ `--source_name` \]<br>\[ `--media_control_mode` \]<br>\[ `--tone` \]<br>\[ `--amp` \]<br>\[ `--tuner` \]<br>\[ `--dsp` \]<br>\[ `--video` \]<br>\[ `--system` \]<br>\[ `--audio` \]<br>\[ `--channel_levels` \] | Show the current cached AVR properties for the specified property groups, or all property groups if none are specified
-| `set_scan_interval` | _scan_interval_ (float) | Set the scan interval to _scan_interval_
 | `get_scan_interval` | | Show the current scan interval.
-| `update` | [`--full`] | Request update of AVR for the current zone, or all zones if `--full` is specified
+| `set_scan_interval` | _scan_interval_ (float) | Set the scan interval to _scan_interval_
+| `update` | [`--full`] | Refresh the cached AVR properties for the active zone, or all zones if `--full` is specified
 | `query_device_info` | | Query the AVR for device information
 | `query_zones` | | Query the AVR for available zones. Ignore zones specified in parameter `ignored_zones` (list)
-| `get_source_dict` | | Show the current set of available source names that can be used with the `select_source` command
-| `set_source_dict` | _sources_ (JSON) | Manually set the sources to _sources_ (see [CLI JSON arguments](#cli-json-arguments) below)
-| `build_source_dict` | | Query the sources from the AVR
-| `get_listening_modes` | | Show the current set of available listening modes
-| `set_tuner_frequency` | _band_ _frequency_ | Set the tuner band and (optionally) frequency
+| `get_source_dict` | | Show the set of available source names and IDs that can be used with the `select_source` command
+| `set_source_dict` | _sources_ (JSON) | Set the sources mapping manually to _sources_ (see [CLI JSON arguments](#cli-json-arguments) below)
+| `build_source_dict` | | Query the sources mapping from the AVR
+| `get_listening_modes` | | Show the set of available listening modes
+| `set_tuner_frequency` | _band_ _frequency_ | Set the tuner band and frequency. (Use `set_tuner_band_am` or `set_tuner_band_fm` to set the band only)
+| `media_control` | `play` \| `pause` \| `stop` \| `previous` \| `next` \| `rw` \| `ff` \| `repeat` \| `shuffle` | Send media control command for active zone
+| `get_supported_media_controls` | | Show the currently available media controls for the active zone
 | `debug_listener` | \[ `on` \| `off` \] | Enable/disable the `debug_listener` parameter
 | `debug_updater` | \[ `on` \| `off` \] | Enable/disable the `debug_updater` parameter
 | `debug_command` | \[ `on` \| `off` \] | Enable/disable the `debug_command` parameter
