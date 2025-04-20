@@ -135,7 +135,7 @@ The CLI accepts all AVR commands, as well as the helper commands below. The `lis
 | `get_properties` | \[ `--zones` \]<br>\[ `--power` \]<br>\[ `--volume` \]<br>\[ `--max_volume` \]<br>\[ `--mute` \]<br>\[ `--source_id` \]<br>\[ `--source_name` \]<br>\[ `--media_control_mode` \]<br>\[ `--tone` \]<br>\[ `--amp` \]<br>\[ `--tuner` \]<br>\[ `--dsp` \]<br>\[ `--video` \]<br>\[ `--system` \]<br>\[ `--audio` \]<br>\[ `--channel_levels` \] | Show the current cached AVR properties for the specified property groups, or all property groups if none are specified
 | `get_scan_interval` | | Show the current scan interval.
 | `set_scan_interval` | _scan_interval_ (float) | Set the scan interval to _scan_interval_
-| `update` | [`--full`] | Refresh the cached AVR properties for the active zone, or all zones if `--full` is specified
+| `refresh` | [`--full`] | Refresh the cached AVR properties for the active zone, or all zones if `--full` is specified
 | `query_device_info` | | Query the AVR for device information
 | `query_zones` | | Query the AVR for available zones. Ignore zones specified in parameter `ignored_zones` (list)
 | `get_source_dict` | | Show the set of available source names and IDs that can be used with the `select_source` command
