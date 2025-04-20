@@ -143,9 +143,9 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
         await self.pioneer.set_scan_interval(scan_interval)
         return await self.get_scan_interval(reader, writer)
 
-    async def avr_update(self, reader, writer, full: bool):
+    async def refresh(self, reader, writer, full: bool):
         """Refresh the cached AVR properties."""
-        await self.pioneer.update(None if full else self.zone)
+        await self.pioneer.refresh(None if full else self.zone)
 
     async def query_device_info(self, reader, writer) -> str:
         """Query the AVR for device information."""
@@ -323,8 +323,8 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
         scan_interval_parser.add_argument(
             "scan_interval", type=float, help="scan interval"
         )
-        update_parser = get_command_parser(self.avr_update)
-        update_parser.add_argument("--full", "-f", action="store_true")
+        refresh_parser = get_command_parser(self.refresh)
+        refresh_parser.add_argument("--full", "-f", action="store_true")
         source_dict_parser = get_command_parser(self.set_source_dict)
         source_dict_parser.add_argument(
             "source_dict", type=source_json_arg, help="source dict (JSON)"
@@ -396,7 +396,7 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
             get_command(self.get_properties, parser=properties_parser),
             get_command(self.get_scan_interval),
             get_command(self.set_scan_interval, parser=scan_interval_parser),
-            get_command(self.avr_update, "update", update_parser),
+            get_command(self.refresh, refresh_parser),
             get_command(self.query_device_info),
             get_command(self.query_zones),
             get_command(self.get_source_dict),
