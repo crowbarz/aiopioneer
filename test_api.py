@@ -49,7 +49,7 @@ async def main(argv):
     print("Discovering zones")
     await pioneer.build_source_dict()
 
-    await pioneer.update()
+    await pioneer.refresh()
     await asyncio.sleep(15)
     ## Turn on main zone for tests
     await pioneer.power_on(zone=Zone.Z1)
@@ -68,7 +68,7 @@ async def main(argv):
 
         await asyncio.sleep(60)
         print("Update ...")
-        await pioneer.update()
+        await pioneer.refresh()
 
     # await pioneer.send_raw_request("?RGD", "RGD", ignore_error=True)
     # print("...")

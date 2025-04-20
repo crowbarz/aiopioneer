@@ -107,7 +107,7 @@ class PioneerAVR(AVRConnection):
     async def on_reconnect(self) -> None:
         """Update AVR on reconnection."""
         await super().on_reconnect()
-        await self.update(wait=False)
+        await self.refresh(wait=False)
 
     async def on_disconnect(self) -> None:
         """Stop AVR tasks on disconnection."""
@@ -384,10 +384,10 @@ class PioneerAVR(AVRConnection):
         self._call_zone_callbacks(zones=set([Zone.ALL]))
         _LOGGER.debug(">> full refresh completed")
 
-    async def update(
+    async def refresh(
         self, zones: list[Zone] | set[Zone] | Zone = None, wait: bool = True
     ) -> None:
-        """Update AVR cached status."""
+        """Refresh AVR cached properties."""
         if isinstance(zones, Zone):
             zones = {zones}
         if isinstance(zones, list):

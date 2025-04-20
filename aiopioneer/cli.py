@@ -145,7 +145,7 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
 
     async def avr_update(self, reader, writer, full: bool):
         """Refresh the cached AVR properties."""
-        await self.pioneer.update(None if full else self.zone)
+        await self.pioneer.refresh(None if full else self.zone)
 
     async def query_device_info(self, reader, writer) -> str:
         """Query the AVR for device information."""
