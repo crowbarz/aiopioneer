@@ -51,8 +51,8 @@ from .params import (
     PARAM_INITIAL_REFRESH_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY,
 )
+from .decode import process_raw_response
 from .decoders.code_map import CodeMapBase
-from .decoders.decode import process_raw_response
 from .decoders.amp import Volume
 from .decoders.tuner import FrequencyAM, FrequencyFM
 from .properties import AVRProperties
