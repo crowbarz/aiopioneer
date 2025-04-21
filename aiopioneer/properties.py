@@ -131,20 +131,14 @@ class AVRProperties:
         return SOURCE_TUNER in sources
 
     def get_supported_media_controls(self, zone: Zone) -> list[str] | None:
-        """Return a list of all valid media control actions for a given zone.
-        If the provided zone source is not currently compatible with media controls,
-        null will be returned."""
-        if self.media_control_mode.get(zone) is not None:
-            return list(
-                [
-                    k
-                    for k in MEDIA_CONTROL_COMMANDS.get(
-                        self.media_control_mode.get(zone)
-                    ).keys()
-                ]
-            )
-        else:
-            return None
+        """
+        Return a list of all valid media control actions for a given zone.
+        If the provided zone source is not currently compatible with media
+        controls, None will be returned.
+        """
+        if (control_mode := self.media_control_mode.get(zone)) is not None:
+            return list(MEDIA_CONTROL_COMMANDS.get(control_mode).keys())
+        return None
 
     def update_listening_modes(self) -> None:
         """Update list of valid listening modes for current input source."""
