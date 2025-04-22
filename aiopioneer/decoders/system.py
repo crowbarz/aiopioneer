@@ -106,12 +106,12 @@ class McaccDiagnosticTotalMeasurement(CodeIntMap):
     code_zfill = 2
 
 
-class McaccDiagnosticStatus(CodeDictStrMap):
-    """MCACC diagnostic status."""
+class McaccDiagnosticMeasuring(CodeDictStrMap):
+    """MCACC diagnostic measuring."""
 
-    friendly_name = "MCACC diagnostic status"
+    friendly_name = "MCACC diagnostic measuring"
     base_property = "system"
-    property_name = "mcacc_diagnostic_status"
+    property_name = "mcacc_diagnostic_measuring"
 
     code_map = {"0": "inactive", "1": "measuring"}
 
@@ -134,18 +134,18 @@ class McaccDiagnosticError(CodeDictStrMap):
     }
 
 
-class McaccDiagnosticStatusSummary(CodeMapSequence):
-    """MCACC diagnostic status summary."""
+class McaccDiagnosticStatus(CodeMapSequence):
+    """MCACC diagnostic status."""
 
-    friendly_name = "MCACC diagnostic status summary"
+    friendly_name = "MCACC diagnostic status"
     base_property = "system"
-    property_name = "mcacc_diagnostic_status_summary"  # unused
+    property_name = "mcacc_diagnostic_status"
 
     code_map_sequence = [
         McaccDiagnosticCurrentMeasurement,  # [:2]
         McaccDiagnosticTotalMeasurement,  # [2:4]
         CodeMapBlank(1),
-        McaccDiagnosticStatus,  # [5]
+        McaccDiagnosticMeasuring,  # [5]
         CodeMapBlank(-1),
         McaccDiagnosticError,  # [-1]
     ]
@@ -734,7 +734,7 @@ COMMANDS_SYSTEM = {
         "retry_on_fail": True,
     },
     "query_system_home_menu_status": {Zone.Z1: ["?SSL", "SSL"]},
-    "query_system_mcacc_diagnostics": {Zone.Z1: ["?SSJ", "SSJ"]},
+    "query_system_mcacc_diagnostic_status": {Zone.Z1: ["?SSJ", "SSJ"]},
     "query_system_standing_wave_status": {Zone.Z1: ["?SUU", "SUU"]},
     "query_system_standing_wave_sw_trim": {Zone.Z1: ["?SUV", "SUV"]},
     "query_system_surround_position": {Zone.Z1: ["?SSP", "SSP"]},
@@ -773,7 +773,7 @@ COMMANDS_SYSTEM = {
 RESPONSE_DATA_SYSTEM = [
     ("SSF", SpeakerSystem, Zone.ALL),  # system.speaker_system
     ("SSL", HomeMenuStatus, Zone.ALL),  # system.home_menu_status
-    ("SSJ", McaccDiagnosticStatusSummary, Zone.ALL),  # system
+    ("SSJ", McaccDiagnosticStatus, Zone.ALL),  # system.mcacc_diagnostic_status
     ("SUU", StandingWaveStatus, Zone.ALL),  # system
     ("SUV", StandingWaveSwTrim, Zone.ALL),  # system
     ("SSP", SurroundPosition, Zone.ALL),  # system.surround_position
