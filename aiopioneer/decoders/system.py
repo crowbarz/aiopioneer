@@ -327,6 +327,14 @@ class XCurve(CodeFloatMap):
     value_divider = -0.5
 
 
+class LoudnessPlus(CodeBoolMap):
+    """Loudness plus."""
+
+    friendly_name = "loudness plus"
+    base_property = "system"
+    property_name = "loudness_plus"
+
+
 class SbchProcessing(CodeDictStrMap):
     """SBch processing (THX Audio)."""
 
@@ -721,7 +729,7 @@ class UserLock(CodeBoolMap):
 COMMANDS_SYSTEM = {
     "query_system_speaker_system": {Zone.Z1: ["?SSF", "SSF"]},
     "set_system_speaker_system": {
-        Zone.Z1: ["?SSF", "SSF"],
+        Zone.Z1: ["SSF", "SSF"],
         "args": [SpeakerSystem],
         "retry_on_fail": True,
     },
@@ -771,7 +779,7 @@ RESPONSE_DATA_SYSTEM = [
     ("SSP", SurroundPosition, Zone.ALL),  # system.surround_position
     ("SSQ", XOver, Zone.ALL),  # system.x_over
     ("SST", XCurve, Zone.ALL),  # system.x_curve
-    ("SSU", CodeBoolMap, Zone.ALL),  # system.loudness_plus
+    ("SSU", LoudnessPlus, Zone.ALL),  # system.loudness_plus
     ("SSV", SbchProcessing, Zone.ALL),  # system.sbch_processing
     ("SSG", SpeakerSettings, Zone.ALL),  # system.speaker_setting
     ("SSR", McaccChannelLevel, Zone.ALL),  # system.mcacc_channel_level
