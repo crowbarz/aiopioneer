@@ -275,7 +275,7 @@ class CodeMapSequence(CodeMapComplexMixin, CodeMapBase):
         for child_map in code_map_sequence:
             child_len = child_map.get_len()
             if issubclass(child_map, CodeMapBlank):
-                if (child_len := child_map.get_len()) < 0:
+                if child_len < 0:
                     code_index = len(response.code)
                 code_index += child_len
                 continue
