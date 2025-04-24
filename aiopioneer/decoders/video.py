@@ -569,17 +569,25 @@ class VideoBlackSetup(CodeBoolMap):
 
     friendly_name = "video black setup"
     base_property = "video"
-    property_name = "black setup"
+    property_name = "black_setup"
 
 
 class VideoAspect(CodeDictStrMap):
     """Video aspect."""
+
+    friendly_name = "video aspect"
+    base_property = "video"
+    property_name = "aspect"
 
     code_map = {"0": "passthrough", "1": "normal"}
 
 
 class VideoSuperResolution(CodeIntMap):
     """Video super resolution."""
+
+    friendly_name = "video super resolution"
+    base_property = "video"
+    property_name = "super_resolution"
 
     value_min = 0
     value_max = 3
