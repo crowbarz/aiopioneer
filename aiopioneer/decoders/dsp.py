@@ -112,7 +112,7 @@ class SignalSelect(CodeDictStrMap):
 
     friendly_name = "signal select"
     base_property = "dsp"
-    property_name = "mcacc_memory_set"
+    property_name = "signal_select"
 
     code_map = {"0": "auto", "1": "analog", "2": "digital", "3": "HDMI"}
 
@@ -146,7 +146,7 @@ class SoundDelay(CodeIntMap):
 
     friendly_name = "sound delay"
     base_property = "dsp"
-    property_name = "placeholder"
+    property_name = "sound_delay"
 
     value_min = 0
     value_max = 800
@@ -168,7 +168,7 @@ class DialogEnhancement(CodeDictStrMap):
 
     friendly_name = "dialog enhancement"
     base_property = "dsp"
-    property_name = "dialog_enchancement"
+    property_name = "dialog_enhancement"
 
     code_map = {"0": "off", "1": "flat", "2": "+1", "3": "+2", "4": "+3", "5": "+4"}
 
@@ -390,7 +390,7 @@ class RenderingMode(CodeDictStrMap):
 
 
 COMMANDS_DSP = {
-    "query_dsp_mcacc_memory_query": {Zone.Z1: ["?MC", "MC"]},
+    "query_dsp_mcacc_memory_set": {Zone.Z1: ["?MC", "MC"]},
     "set_dsp_mcacc_memory_set": {
         Zone.Z1: ["MC", "MC"],
         "args": [McaccMemorySet],
@@ -580,13 +580,13 @@ COMMANDS_DSP = {
         "args": [LoudnessManagement],
         "retry_on_fail": True,
     },
-    "query_center_spread": {Zone.Z1: ["?ARA", "ARA"]},
+    "query_dsp_center_spread": {Zone.Z1: ["?ARA", "ARA"]},
     "set_dsp_center_spread": {
         Zone.Z1: ["ARA", "ARA"],
         "args": [CenterSpread],
         "retry_on_fail": True,
     },
-    "query_rendering_mode": {Zone.Z1: ["?ARB", "ARB"]},
+    "query_dsp_rendering_mode": {Zone.Z1: ["?ARB", "ARB"]},
     "set_dsp_rendering_mode": {
         Zone.Z1: ["ARB", "ARB"],
         "args": [RenderingMode],
