@@ -109,7 +109,7 @@ def process_raw_response(
         match_resp = next((r for r in RESPONSE_DATA if raw_resp.startswith(r[0])), None)
         if not match_resp:
             ## No error handling as not all responses have been captured by aiopioneer.
-            if not raw_resp.startswith("E"):
+            if not (raw_resp.startswith("E") or raw_resp == "B00"):
                 _LOGGER.debug("undecoded response: %s", raw_resp)
             return []
 
