@@ -396,7 +396,7 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
             get_command(self.get_properties, parser=properties_parser),
             get_command(self.get_scan_interval),
             get_command(self.set_scan_interval, parser=scan_interval_parser),
-            get_command(self.refresh, refresh_parser),
+            get_command(self.refresh, parser=refresh_parser),
             get_command(self.query_device_info),
             get_command(self.query_zones),
             get_command(self.get_source_dict),
