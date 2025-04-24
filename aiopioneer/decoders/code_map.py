@@ -35,6 +35,7 @@ class CodeMapBase:
     property_name = None
 
     def __new__(cls, value, **kwargs):
+        _LOGGER.warning("deprecated __new__ method called for class %s", cls)
         return cls.value_to_code(value, **kwargs)
 
     def __class_getitem__(cls, code: str):
