@@ -249,14 +249,8 @@ COMMANDS_TUNER = {
     },
     "tuner_next_preset": {Zone.Z1: ["TPI", "PR"]},
     "tuner_previous_preset": {Zone.Z1: ["TPD", "PR"]},
-    "set_tuner_band_am": {
-        Zone.Z1: ["01TN", "FR"],
-        "retry_on_fail": True,
-    },
-    "set_tuner_band_fm": {
-        Zone.Z1: ["00TN", "FR"],
-        "retry_on_fail": True,
-    },
+    "tuner_band_am": {Zone.Z1: ["01TN", "FR"], "retry_on_fail": True},
+    "tuner_band_fm": {Zone.Z1: ["00TN", "FR"], "retry_on_fail": True},
     "tuner_increase_frequency": {Zone.Z1: ["TFI", "FR"]},
     "tuner_decrease_frequency": {Zone.Z1: ["TFD", "FR"]},
     "tuner_direct_access": {Zone.Z1: ["TAC", "TAC"]},

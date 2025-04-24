@@ -684,10 +684,7 @@ class PioneerAVR(AVRConnection):
         ## Set the tuner band
         if band == self.properties.tuner.get("band"):
             return
-        tuner_commands = {
-            TunerBand.AM: "set_tuner_band_am",
-            TunerBand.FM: "set_tuner_band_fm",
-        }
+        tuner_commands = {TunerBand.AM: "tuner_band_am", TunerBand.FM: "tuner_band_fm"}
         await self.send_command(tuner_commands[band])
 
     async def _calculate_am_frequency_step(self) -> None:
