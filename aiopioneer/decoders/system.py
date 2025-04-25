@@ -3,6 +3,7 @@
 from ..const import Zone
 from ..params import AVRParams, PARAM_SPEAKER_SYSTEM_MODES
 from ..properties import AVRProperties
+from ..property_entry import gen_query_property, gen_set_property
 from .code_map import (
     CodeDefault,
     CodeMapSequence,
@@ -807,4 +808,43 @@ RESPONSE_DATA_SYSTEM = [
     ("SVA", OsdOverlay, Zone.ALL),  # system.osd_overlay
     ("ADS", AdditionalService, Zone.ALL),  # system.additional_service
     ("SUT", UserLock, Zone.ALL),  # system.user_lock
+]
+
+PROPERTIES_SYSTEM = [
+    gen_set_property(SpeakerSystem, {Zone.ALL: "SSF"}),
+    gen_query_property(HomeMenuStatus, {Zone.ALL: "SSL"}),
+    gen_query_property(McaccDiagnosticStatus, {Zone.ALL: "SSJ"}),
+    gen_query_property(StandingWaveStatus, {Zone.ALL: "SUU"}),
+    gen_query_property(StandingWaveSwTrim, {Zone.ALL: "SUV"}),
+    gen_query_property(SurroundPosition, {Zone.ALL: "SSP"}),
+    gen_query_property(XOver, {Zone.ALL: "SSQ"}),
+    gen_query_property(XCurve, {Zone.ALL: "SST"}),
+    gen_query_property(LoudnessPlus, {Zone.ALL: "SSU"}),
+    gen_query_property(SbchProcessing, {Zone.ALL: "SSV"}),
+    gen_query_property(SpeakerSettings, {Zone.ALL: "SSG"}),
+    gen_query_property(McaccChannelLevel, {Zone.ALL: "SSR"}),
+    gen_query_property(McaccSpeakerDistance, {Zone.ALL: "SSS"}),
+    gen_query_property(InputLevel, {Zone.ALL: "ILA"}),
+    gen_query_property(ThxUltraselect2, {Zone.ALL: "SSW"}),
+    gen_query_property(BoundaryGainCompression, {Zone.ALL: "SSX"}),
+    gen_query_property(ReEqualization, {Zone.ALL: "SSB"}),
+    gen_query_property(OsdLanguage, {Zone.ALL: "SSE"}),
+    gen_query_property(NetworkDhcp, {Zone.ALL: "STA"}),
+    gen_query_property(NetworkProxyActive, {Zone.ALL: "STG"}),
+    gen_query_property(NetworkStandby, {Zone.ALL: "STJ"}),
+    gen_query_property(FriendlyName, {Zone.ALL: "SSO"}),
+    gen_query_property(ParentalLock, {Zone.ALL: "STK"}),
+    gen_query_property(ParentalLockPassword, {Zone.ALL: "STL"}),
+    gen_query_property(IpControlPorts, {Zone.ALL: "SUM"}),
+    gen_query_property(HdmiControl, {Zone.ALL: "STQ"}),
+    gen_query_property(HdmiControlMode, {Zone.ALL: "STR"}),
+    gen_query_property(HdmiArc, {Zone.ALL: "STT"}),
+    gen_query_property(PqlsForBackup, {Zone.ALL: "SVL"}),
+    gen_query_property(StandbyPassthrough, {Zone.ALL: "STU"}),
+    gen_query_property(ExternalHdmiTrigger1, {Zone.Z1: "STV"}),
+    gen_query_property(ExternalHdmiTrigger2, {Zone.Z2: "STW"}),
+    gen_query_property(SpeakerBLink, {Zone.ALL: "STX"}),
+    gen_query_property(OsdOverlay, {Zone.ALL: "SVA"}),
+    gen_query_property(AdditionalService, {Zone.ALL: "ADS"}),
+    gen_query_property(UserLock, {Zone.ALL: "SUT"}),
 ]

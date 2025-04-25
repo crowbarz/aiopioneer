@@ -1,6 +1,7 @@
 """aiopioneer response decoders for DSP functions. Most responses are only valid for Zone 1."""
 
 from ..const import Zone
+from ..property_entry import gen_set_property
 from .code_map import (
     CodeBoolMap,
     CodeIntMap,
@@ -630,4 +631,42 @@ RESPONSE_DATA_DSP = [
     ("ATW", LoudnessManagement, Zone.ALL),  # dsp.loudness_management
     ("ARA", CenterSpread, Zone.ALL),  # dsp.center_spread
     ("ARB", RenderingMode, Zone.ALL),  # dsp.rendering_mode
+]
+
+PROPERTIES_DSP = [
+    gen_set_property(McaccMemorySet, {Zone.ALL: "MC"}),
+    gen_set_property(PhaseControl, {Zone.ALL: "IS"}),
+    gen_set_property(PhaseControlPlus, {Zone.ALL: "ATE"}),
+    gen_set_property(VirtualSpeakers, {Zone.ALL: "VSP"}),
+    gen_set_property(VirtualSoundback, {Zone.ALL: "VSB"}),
+    gen_set_property(VirtualHeight, {Zone.ALL: "VHT"}),
+    gen_set_property(VirtualWide, {Zone.ALL: "VWD"}),
+    gen_set_property(VirtualDepth, {Zone.ALL: "VDP"}),
+    gen_set_property(SoundRetriever, {Zone.ALL: "ATA"}),
+    gen_set_property(SignalSelect, {Zone.ALL: "SDA"}),
+    gen_set_property(InputAttenuator, {Zone.ALL: "SDB"}),
+    gen_set_property(Equalizer, {Zone.ALL: "ATC"}),
+    gen_set_property(StandingWave, {Zone.ALL: "ATD"}),
+    gen_set_property(SoundDelay, {Zone.ALL: "ATF"}),
+    gen_set_property(DigitalNoiseReduction, {Zone.ALL: "ATG"}),
+    gen_set_property(DialogEnhancement, {Zone.ALL: "ATH"}),
+    gen_set_property(AudioScaler, {Zone.ALL: "ATY"}),
+    gen_set_property(HiBit, {Zone.ALL: "ATI"}),
+    gen_set_property(UpSampling, {Zone.ALL: "ATZ"}),
+    gen_set_property(DigitalFilter, {Zone.ALL: "ATV"}),
+    gen_set_property(DualMono, {Zone.ALL: "ATJ"}),
+    gen_set_property(FixedPcm, {Zone.ALL: "ATK"}),
+    gen_set_property(DynamicRange, {Zone.ALL: "ATL"}),
+    gen_set_property(LfeAttenuator, {Zone.ALL: "ATM"}),
+    gen_set_property(SacdGain, {Zone.ALL: "ATN"}),
+    gen_set_property(AutoDelay, {Zone.ALL: "ATO"}),
+    gen_set_property(CenterWidth, {Zone.ALL: "ATP"}),
+    gen_set_property(Panorama, {Zone.ALL: "ATQ"}),
+    gen_set_property(Dimension, {Zone.ALL: "ATR"}),
+    gen_set_property(CenterImage, {Zone.ALL: "ATS"}),
+    gen_set_property(Effect, {Zone.ALL: "ATT"}),
+    gen_set_property(HeightGain, {Zone.ALL: "ATU"}),
+    gen_set_property(LoudnessManagement, {Zone.ALL: "ATW"}),
+    gen_set_property(CenterSpread, {Zone.ALL: "ARA"}),
+    gen_set_property(RenderingMode, {Zone.ALL: "ARB"}),
 ]

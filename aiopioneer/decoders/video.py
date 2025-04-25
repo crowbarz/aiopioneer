@@ -4,6 +4,7 @@ from ..const import Zone
 from ..exceptions import AVRCommandUnavailableError
 from ..params import AVRParams, PARAM_VIDEO_RESOLUTION_MODES
 from ..properties import AVRProperties
+from ..property_entry import gen_set_property, gen_query_property
 from .code_map import (
     CodeDefault,
     CodeMapBlank,
@@ -733,4 +734,27 @@ RESPONSE_DATA_VIDEO = [
     ("VTR", VideoBlackSetup, Zone.Z1),  # video.black_setup
     ("VTS", VideoAspect, Zone.Z1),  # video.aspect
     ("VTT", VideoSuperResolution, Zone.Z1),  # video.super_resolution
+]
+
+PROPERTIES_VIDEO = [
+    gen_query_property(VideoInformation, {Zone.ALL: "VST"}, query_group="basic"),
+    gen_set_property(VideoResolution, {Zone.Z1: "VTC"}),
+    gen_set_property(VideoConverter, {Zone.Z1: "VTB"}),
+    gen_set_property(VideoPureCinema, {Zone.Z1: "VTD"}),
+    gen_set_property(VideoProgMotion, {Zone.Z1: "VTE"}),
+    gen_set_property(VideoStreamSmoother, {Zone.Z1: "VTF"}),
+    gen_set_property(AdvancedVideoAdjust, {Zone.Z1: "VTG"}),
+    gen_set_property(VideoYnr, {Zone.Z1: "VTH"}),
+    gen_set_property(VideoCnr, {Zone.Z1: "VTI"}),
+    gen_set_property(VideoBnr, {Zone.Z1: "VTJ"}),
+    gen_set_property(VideoMnr, {Zone.Z1: "VTK"}),
+    gen_set_property(VideoDetail, {Zone.Z1: "VTL"}),
+    gen_set_property(VideoSharpness, {Zone.Z1: "VTM"}),
+    gen_set_property(VideoBrightness, {Zone.Z1: "VTN"}),
+    gen_set_property(VideoContrast, {Zone.Z1: "VTO"}),
+    gen_set_property(VideoHue, {Zone.Z1: "VTP"}),
+    gen_set_property(VideoChroma, {Zone.Z1: "VTQ"}),
+    gen_set_property(VideoBlackSetup, {Zone.Z1: "VTR"}),
+    gen_set_property(VideoAspect, {Zone.Z1: "VTS"}),
+    gen_set_property(VideoSuperResolution, {Zone.Z1: "VTT"}),
 ]

@@ -6,6 +6,7 @@ from ..const import TunerBand
 from ..exceptions import AVRLocalCommandError
 from ..params import AVRParams
 from ..properties import AVRProperties
+from ..property_entry import AVRCommand, gen_query_property, gen_set_property
 from .code_map import (
     CodeMapBase,
     CodeMapSequence,
@@ -313,4 +314,34 @@ RESPONSE_DATA_TUNER = [
     ("FR", Frequency, Zone.ALL),  # tuner.frequency
     ("SUQ", FrequencyAMStep, Zone.ALL),  # tuner.am_frequency_step
     ("PR", Preset, Zone.ALL),  # tuner.preset
+]
+
+PROPERTIES_TUNER = [
+    gen_query_property(Frequency, {Zone.ALL: "FR"}),
+    gen_set_property(
+        Preset,
+        {Zone.ALL: "PR"},
+        set_command="select_tuner_preset",
+        retry_set_on_fail=True,
+    ),
+    gen_query_property(
+        FrequencyAMStep, {Zone.ALL: "SUQ"}, query_command="query_tuner_am_step"
+    ),
+]
+
+EXTRA_COMMANDS_TUNER = [
+    AVRCommand("tuner_next_preset", {Zone.Z1: ["TPI", "PR"]}),
+    AVRCommand("tuner_previous_preset", {Zone.Z1: ["TPD", "PR"]}),
+    AVRCommand("tuner_band_am", {Zone.Z1: ["01TN", "FR"], "retry_on_fail": True}),
+    AVRCommand("tuner_band_fm", {Zone.Z1: ["00TN", "FR"], "retry_on_fail": True}),
+    AVRCommand("tuner_increase_frequency", {Zone.Z1: ["TFI", "FR"]}),
+    AVRCommand("tuner_decrease_frequency", {Zone.Z1: ["TFD", "FR"]}),
+    AVRCommand("tuner_direct_access", {Zone.Z1: ["TAC", "TAC"]}),
+    AVRCommand("tuner_digit", {Zone.Z1: ["TP", "TP"]}),
+    AVRCommand("tuner_edit", {Zone.Z1: ["02TN", "TN"]}),
+    AVRCommand("tuner_enter", {Zone.Z1: ["03TN", "TN"]}),
+    AVRCommand("tuner_return", {Zone.Z1: ["04TN", "TN"]}),
+    AVRCommand("tuner_mpx_noise_cut", {Zone.Z1: ["05TN", "TN"]}),
+    AVRCommand("tuner_display", {Zone.Z1: ["06TN", "TN"]}),
+    AVRCommand("tuner_pty_search", {Zone.Z1: ["07TN", "TN"]}),
 ]

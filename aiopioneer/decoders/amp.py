@@ -12,6 +12,7 @@ from ..params import (
     PARAM_POWER_ON_VOLUME_BOUNCE,
 )
 from ..properties import AVRProperties
+from ..property_entry import AVRCommand, gen_query_property, gen_set_property
 from .code_map import (
     CodeMapBlank,
     CodeMapHasPropertyMixin,
@@ -714,4 +715,144 @@ RESPONSE_DATA_AMP = [
     ("SSI", SystemSoftwareVersion, Zone.ALL),  # amp.software_version
     ("AUA", AudioParameterProhibition, Zone.Z1),
     ("AUB", AudioParameterWorking, Zone.Z1),
+]
+
+PROPERTIES_AMP = [
+    gen_query_property(
+        Power,
+        {Zone.Z1: "P", Zone.Z2: "AP", Zone.Z3: "BP", Zone.HDZ: "ZEP"},
+        {Zone.Z1: "PWR", Zone.Z2: "APR", Zone.Z3: "BPR", Zone.HDZ: "ZEP"},
+        extra_commands=[
+            AVRCommand(
+                "power_on",
+                {Zone.Z1: "PO", Zone.Z2: "APO", Zone.Z3: "BPO", Zone.HDZ: "ZEO"},
+                wait_for_response=True,
+                retry_on_fail=True,
+            ),
+            AVRCommand(
+                "power_off",
+                {Zone.Z1: "PF", Zone.Z2: "APF", Zone.Z3: "BPF", Zone.HDZ: "ZEF"},
+                wait_for_response=True,
+                retry_on_fail=True,
+            ),
+        ],
+    ),
+    gen_set_property(
+        Volume,
+        {Zone.Z1: "V", Zone.Z2: "ZV", Zone.Z3: "YV", Zone.HDZ: "HZV"},
+        {Zone.Z1: "VOL", Zone.Z2: "ZV", Zone.Z3: "YV", Zone.HDZ: "XV"},
+        set_command=AVRCommand(
+            "set_volume_level",
+            {Zone.Z1: "VL", Zone.Z2: "ZV", Zone.Z3: "YV", Zone.HDZ: "HZV"},
+            wait_for_response=True,
+            retry_on_fail=True,
+        ),
+        extra_commands=[
+            AVRCommand(
+                "volume_up",
+                {Zone.Z1: "VU", Zone.Z2: "ZU", Zone.Z3: "YU", Zone.HDZ: "HZU"},
+                wait_for_response=True,
+            ),
+            AVRCommand(
+                "volume_down",
+                {Zone.Z1: "VD", Zone.Z2: "ZD", Zone.Z3: "YD", Zone.HDZ: "HZD"},
+                wait_for_response=True,
+            ),
+        ],
+    ),
+    gen_set_property(
+        Source,
+        {Zone.Z1: "F", Zone.Z2: "ZS", Zone.Z3: "ZT", Zone.HDZ: "ZEA"},
+        {Zone.Z1: "FN", Zone.Z2: "Z2F", Zone.Z3: "Z3F", Zone.HDZ: "ZEA"},
+        query_command="query_source",
+        set_command=AVRCommand(
+            "select_source",
+            {Zone.Z1: "FN", Zone.Z2: "ZS", Zone.Z3: "ZT", Zone.HDZ: "ZEA"},
+            wait_for_response=True,
+            retry_on_fail=True,
+        ),
+    ),
+    gen_query_property(
+        Mute,
+        {Zone.Z1: "M", Zone.Z2: "Z2M", Zone.Z3: "Z3M", Zone.HDZ: "HZM"},
+        {Zone.Z1: "MUT", Zone.Z2: "Z2MUT", Zone.Z3: "Z3MUT", Zone.HDZ: "HZMUT"},
+        extra_commands=[
+            AVRCommand(
+                "mute_on",
+                {Zone.Z1: "MO", Zone.Z2: "Z2MO", Zone.Z3: "Z3MO", Zone.HDZ: "HZMO"},
+                wait_for_response=True,
+                retry_on_fail=True,
+            ),
+            AVRCommand(
+                "mute_off",
+                {Zone.Z1: "MF", Zone.Z2: "Z2MF", Zone.Z3: "Z3MF", Zone.HDZ: "HZMF"},
+                wait_for_response=True,
+                retry_on_fail=True,
+            ),
+        ],
+    ),
+    gen_set_property(
+        SourceName,
+        {Zone.ALL: "RGB"},
+        query_command=AVRCommand(
+            avr_args=[CodeMapBlank(), SourceId],
+            is_query_command=True,
+            wait_for_response=True,
+        ),
+        set_command=AVRCommand(
+            avr_commands={Zone.Z1: "1RGB"},
+            avr_args=[SourceName, SourceId],
+            wait_for_response=True,
+        ),
+        extra_commands=[
+            AVRCommand(
+                "set_default_source_name",
+                {Zone.Z1: "0RGB"},
+                [CodeMapBlank(), SourceId],
+                wait_for_response=True,
+                retry_on_fail=True,
+            )
+        ],
+    ),
+    gen_set_property(SpeakerMode, {Zone.ALL: "SPK"}),
+    gen_set_property(HdmiOut, {Zone.ALL: "HO"}),
+    gen_set_property(Hdmi3Out, {Zone.ALL: "HDO"}),
+    gen_set_property(HdmiAudio, {Zone.ALL: "HA"}),
+    gen_set_property(Pqls, {Zone.ALL: "PQ"}),
+    gen_query_property(
+        DisplayText, {Zone.ALL: "FL"}, query_command="query_display_information"
+    ),
+    gen_set_property(Dimmer, {Zone.ALL: "SAA"}, query_command=None),
+    ## NOTE: no dimmer query
+    gen_set_property(SleepTime, {Zone.ALL: "SAB"}),
+    gen_set_property(AmpMode, {Zone.ALL: "SAC"}),
+    gen_set_property(PanelLock, {Zone.ALL: "PKL"}),
+    gen_set_property(RemoteLock, {Zone.ALL: "RML"}),
+    gen_query_property(
+        SystemMacAddress, {Zone.ALL: "SVB"}, query_command="system_query_mac_addr"
+    ),
+    gen_query_property(SystemAvrModel, {Zone.ALL: "RGD"}, query_command="query_model"),
+    gen_query_property(
+        SystemSoftwareVersion,
+        {Zone.ALL: "SSI"},
+        query_command="system_query_software_version",
+    ),
+    # gen_response_property(AudioParameterProhibition, {Zone.Z1: "AUA"}),
+    # gen_response_property(AudioParameterWorking, {Zone.Z1: "AUB"}),
+]
+
+EXTRA_COMMANDS_AMP = [
+    AVRCommand("amp_status_display", {Zone.Z1: "STS"}),
+    AVRCommand("amp_cursor_up", {Zone.Z1: "CUP"}),
+    AVRCommand("amp_cursor_down", {Zone.Z1: "CDN"}),
+    AVRCommand("amp_cursor_right", {Zone.Z1: "CRI"}),
+    AVRCommand("amp_cursor_left", {Zone.Z1: "CLE"}),
+    AVRCommand("amp_cursor_enter", {Zone.Z1: "CEN"}),
+    AVRCommand("amp_cursor_return", {Zone.Z1: "CRT"}),
+    AVRCommand("amp_audio_parameter", {Zone.Z1: "ATA"}),
+    AVRCommand("amp_output_parameter", {Zone.Z1: "HPA"}),
+    AVRCommand("amp_video_parameter", {Zone.Z1: "VPA"}),
+    AVRCommand("amp_channel_select", {Zone.Z1: "CLC"}),
+    AVRCommand("amp_home_menu", {Zone.Z1: "HM"}),
+    AVRCommand("amp_key_off", {Zone.Z1: "KOF"}),
 ]

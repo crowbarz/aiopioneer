@@ -5,6 +5,7 @@ from ..const import Zone, CHANNELS_ALL
 from ..exceptions import AVRCommandUnavailableError
 from ..params import AVRParams
 from ..properties import AVRProperties
+from ..property_entry import AVRCommand, gen_query_property, gen_set_property
 from .code_map import (
     CodeDefault,
     CodeMapBlank,
@@ -571,4 +572,36 @@ RESPONSE_DATA_AUDIO = [
     ("ZGA", ToneMode, Zone.Z2),  # tone.status
     ("ZGB", ToneBass, Zone.Z2),  # tone.bass
     ("ZGC", ToneTreble, Zone.Z2),  # tone.treble
+]
+
+PROPERTIES_AUDIO = [
+    gen_query_property(AudioInformation, {Zone.ALL: "AST"}, query_group="basic"),
+    gen_set_property(
+        SpeakerChannelLevel,
+        {Zone.Z1: "CLV", Zone.Z2: "ZGE", Zone.Z3: "ZHE"},
+        query_command=AVRCommand(
+            avr_args=[CodeMapQuery(SpeakerChannel)],
+            wait_for_response=True,
+        ),
+    ),
+    gen_set_property(
+        ListeningMode,
+        {Zone.ALL: "SR"},
+        query_command=AVRCommand(avr_commands={Zone.Z1: ["?S", "SR"]}),
+        set_command=AVRCommand(
+            name="select_listening_mode",
+            avr_args=[AvailableListeningMode],
+            wait_for_response=True,
+            retry_on_fail=True,
+        ),
+    ),
+    gen_set_property(
+        ToneMode,
+        {Zone.Z1: "TO", Zone.Z2: "ZGA"},
+        query_command="query_tone_status",
+        set_command="set_tone_mode",
+        retry_set_on_fail=True,
+    ),
+    gen_set_property(ToneBass, {Zone.Z1: "BA", Zone.Z2: "ZGB"}),
+    gen_set_property(ToneTreble, {Zone.Z1: "TR", Zone.Z2: "ZGC"}),
 ]
