@@ -6,7 +6,14 @@ from ..const import TunerBand
 from ..exceptions import AVRLocalCommandError
 from ..params import AVRParams
 from ..properties import AVRProperties
-from .code_map import CodeStrMap, CodeIntMap, CodeFloatMap
+from .code_map import (
+    CodeMapBase,
+    CodeMapSequence,
+    CodeStrMap,
+    CodeDictMap,
+    CodeIntMap,
+    CodeFloatMap,
+)
 from .response import Response
 
 
@@ -21,6 +28,7 @@ class FrequencyFM(CodeFloatMap):
     value_max = 108.0
     value_step = 0.05
     value_divider = 0.01
+    code_zfill = 5
 
     @classmethod
     def decode_response(
@@ -43,6 +51,7 @@ class FrequencyAM(CodeIntMap):
     friendly_name = "AM frequency"
     base_property = "tuner"
     property_name = "frequency"
+    code_zfill = 5
 
     value_bounds = {9: (531, 1701), 10: (530, 1700)}
 
@@ -126,6 +135,43 @@ class FrequencyAM(CodeIntMap):
             *Preset.update_preset(response),
             response,
         ]
+
+
+class FrequencyBand(CodeDictMap):
+    """Tuner frequency band."""
+
+    friendly_name = "tuner frequency band"
+    base_property = "tuner"
+    property_name = "band"
+
+    code_map = {"A": TunerBand.AM, "F": TunerBand.FM}
+
+
+class Frequency(CodeMapSequence):
+    """Tuner frequency."""
+
+    friendly_name = "frequency"
+    base_property = "tuner"
+    property_name = "frequency"
+
+    code_map_sequence = [FrequencyBand, FrequencyFM]  ## NOTE: placeholder
+
+    BAND_MAP: dict[TunerBand, CodeMapBase] = {
+        TunerBand.AM: FrequencyAM,
+        TunerBand.FM: FrequencyFM,
+    }
+
+    @classmethod
+    def decode_response(
+        cls,
+        response: Response,
+        params: AVRParams,
+    ) -> list[Response]:
+        """Response decoder for tuner frequency."""
+        band_code = response.code[0]
+        response.update(code=response.code[1:])
+        band = FrequencyBand.code_to_value(code=band_code)
+        return cls.BAND_MAP[band].decode_response(response, params=params)
 
 
 class FrequencyAMStep(CodeIntMap):
@@ -249,14 +295,8 @@ COMMANDS_TUNER = {
     },
     "tuner_next_preset": {Zone.Z1: ["TPI", "PR"]},
     "tuner_previous_preset": {Zone.Z1: ["TPD", "PR"]},
-    "set_tuner_band_am": {
-        Zone.Z1: ["01TN", "FR"],
-        "retry_on_fail": True,
-    },
-    "set_tuner_band_fm": {
-        Zone.Z1: ["00TN", "FR"],
-        "retry_on_fail": True,
-    },
+    "tuner_band_am": {Zone.Z1: ["01TN", "FR"], "retry_on_fail": True},
+    "tuner_band_fm": {Zone.Z1: ["00TN", "FR"], "retry_on_fail": True},
     "tuner_increase_frequency": {Zone.Z1: ["TFI", "FR"]},
     "tuner_decrease_frequency": {Zone.Z1: ["TFD", "FR"]},
     "tuner_direct_access": {Zone.Z1: ["TAC", "TAC"]},
@@ -270,8 +310,7 @@ COMMANDS_TUNER = {
 }
 
 RESPONSE_DATA_TUNER = [
-    ("FRF", FrequencyFM, Zone.ALL),  # tuner.frequency
-    ("FRA", FrequencyAM, Zone.ALL),  # tuner.frequency
+    ("FR", Frequency, Zone.ALL),  # tuner.frequency
     ("SUQ", FrequencyAMStep, Zone.ALL),  # tuner.am_frequency_step
     ("PR", Preset, Zone.ALL),  # tuner.preset
 ]
