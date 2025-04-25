@@ -12,7 +12,7 @@ import aioconsole
 import yaml
 
 from aiopioneer import PioneerAVR
-from aiopioneer.commands import PIONEER_COMMANDS
+from aiopioneer.property_registry import PIONEER_COMMANDS
 from aiopioneer.const import Zone, DEFAULT_PORT, TunerBand, MEDIA_CONTROL_COMMANDS_ALL
 from aiopioneer.decoders.code_map import CodeMapBase
 from aiopioneer.params import (

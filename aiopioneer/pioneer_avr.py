@@ -9,7 +9,6 @@ import traceback
 
 from collections.abc import Callable
 
-from .commands import PIONEER_COMMANDS
 from .command_queue import CommandItem
 from .connection import AVRConnection
 from .const import (
@@ -56,6 +55,7 @@ from .params import (
     PARAM_DISABLE_AUTO_QUERY,
 )
 from .properties import AVRProperties
+from .property_registry import PIONEER_COMMANDS
 from .util import cancel_task
 
 _LOGGER = logging.getLogger(__name__)

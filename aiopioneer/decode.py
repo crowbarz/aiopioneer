@@ -3,28 +3,14 @@
 import logging
 
 from .const import Zone
-from .decoders.audio import RESPONSE_DATA_AUDIO
 from .decoders.code_map import CodeMapBase
-from .decoders.dsp import RESPONSE_DATA_DSP
 from .decoders.response import Response
-from .decoders.system import RESPONSE_DATA_SYSTEM
-from .decoders.amp import RESPONSE_DATA_AMP
-from .decoders.tuner import RESPONSE_DATA_TUNER
-from .decoders.video import RESPONSE_DATA_VIDEO
 from .exceptions import AVRResponseDecodeError
 from .params import AVRParams
 from .properties import AVRProperties
+from .property_registry import RESPONSE_DATA
 
 _LOGGER = logging.getLogger(__name__)
-
-RESPONSE_DATA: list[tuple[str, type[CodeMapBase], Zone]] = [
-    *RESPONSE_DATA_AMP,
-    *RESPONSE_DATA_SYSTEM,
-    *RESPONSE_DATA_DSP,
-    *RESPONSE_DATA_AUDIO,
-    *RESPONSE_DATA_TUNER,
-    *RESPONSE_DATA_VIDEO,
-]
 
 
 def _commit_response(response: Response) -> None:
