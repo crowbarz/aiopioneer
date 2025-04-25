@@ -452,7 +452,7 @@ class AvailableListeningMode(CodeDynamicDictStrMap):
         if not isinstance(properties, AVRProperties):
             raise RuntimeError(f"AVRProperties required for {cls.get_name()}")
         if isinstance(value, int):
-            return cls.index_map_class(value=value)
+            return cls.index_map_class.value_to_code(value=value)
         return cls.value_to_code_dynamic(
             value, code_map=properties.available_listening_modes
         )

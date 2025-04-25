@@ -586,7 +586,7 @@ class PioneerAVR(AVRConnection):
             return
 
         ## Step volume to reach target volume
-        Volume(target_volume, zone=zone, properties=self.properties)
+        Volume.value_to_code(target_volume, zone=zone, properties=self.properties)
         start_volume = self.properties.volume.get(zone)
         current_volume = start_volume
         volume_step_count = 0
@@ -772,9 +772,9 @@ class PioneerAVR(AVRConnection):
             await self.properties.command_queue.wait()  ## for AM step calculation
 
         if band is TunerBand.AM:
-            code = FrequencyAM(frequency, properties=self.properties)
+            code = FrequencyAM.value_to_code(frequency, properties=self.properties)
         else:
-            code = FrequencyFM(frequency)
+            code = FrequencyFM.value_to_code(frequency)
 
         if await self.send_command("tuner_direct_access", ignore_error=True):
             ## Set tuner frequency directly if command is supported

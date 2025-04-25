@@ -230,9 +230,11 @@ class Source(CodeDynamicDictStrMap):
         if not isinstance(properties, AVRProperties):
             raise RuntimeError(f"AVRProperties required for {cls.get_name()}")
         if isinstance(value, str) and value in properties.source_name_to_id:
-            return cls.index_map_class(value=properties.source_name_to_id[value])
+            return cls.index_map_class.value_to_code(
+                value=properties.source_name_to_id[value]
+            )
         if isinstance(value, int):
-            return cls.index_map_class(value=value)
+            return cls.index_map_class.value_to_code(value=value)
         raise ValueError(f"value {value} not found for {cls.get_name()}")
 
     @classmethod
