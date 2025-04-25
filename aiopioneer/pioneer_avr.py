@@ -23,6 +23,10 @@ from .const import (
     MEDIA_CONTROL_COMMANDS,
     CHANNELS_ALL,
 )
+from .decode import process_raw_response
+from .decoders.code_map import CodeMapBase
+from .decoders.amp import Volume
+from .decoders.tuner import FrequencyAM, FrequencyFM
 from .exceptions import (
     AVRError,
     AVRResponseTimeoutError,
@@ -51,10 +55,6 @@ from .params import (
     PARAM_INITIAL_REFRESH_FUNCTIONS,
     PARAM_DISABLE_AUTO_QUERY,
 )
-from .decode import process_raw_response
-from .decoders.code_map import CodeMapBase
-from .decoders.amp import Volume
-from .decoders.tuner import FrequencyAM, FrequencyFM
 from .properties import AVRProperties
 from .util import cancel_task
 
