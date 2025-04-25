@@ -779,10 +779,8 @@ class PioneerAVR(AVRConnection):
         if await self.send_command("tuner_direct_access", ignore_error=True):
             ## Set tuner frequency directly if command is supported
             try:
-                for digit in code:
-                    await self.send_command(
-                        "tuner_digit", prefix=digit, rate_limit=False
-                    )
+                for digit in code.lstrip("0"):
+                    await self.send_command("tuner_digit", prefix=digit)
             except AVRCommandError as exc:
                 raise AVRLocalCommandError(
                     command=command, err_key="freq_set_failed", exc=exc
