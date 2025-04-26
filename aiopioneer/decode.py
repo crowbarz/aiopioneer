@@ -8,7 +8,7 @@ from .decoders.response import Response
 from .exceptions import AVRResponseDecodeError
 from .params import AVRParams
 from .properties import AVRProperties
-from .property_registry import RESPONSE_DATA
+from .property_registry import PROPERTY_REGISTRY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,8 +92,7 @@ def process_raw_response(
 ) -> set[Zone]:
     """Processes a raw response, decode and apply to properties."""
     try:
-        match_resp = next((r for r in RESPONSE_DATA if raw_resp.startswith(r[0])), None)
-        if not match_resp:
+        if not (match_resp := PROPERTY_REGISTRY.match_response(raw_resp=raw_resp)):
             ## No error handling as not all responses have been captured by aiopioneer.
             if not (raw_resp.startswith("E") or raw_resp == "B00"):
                 _LOGGER.debug("undecoded response: %s", raw_resp)

@@ -2,6 +2,7 @@
 
 from .const import Zone
 from .decoders.code_map import CodeMapBase
+from .exceptions import AVRUnknownCommandError
 
 
 class AVRCommand:
@@ -10,7 +11,7 @@ class AVRCommand:
     def __init__(
         self,
         name: str = None,
-        avr_commands: dict[Zone, str] = None,
+        avr_commands: dict[Zone, str | list[str]] = None,
         avr_args: list[CodeMapBase] = None,
         avr_responses: dict[Zone, str] = None,
         is_query_command: bool = False,
@@ -35,6 +36,49 @@ class AVRCommand:
             f"wait_for_response={self.wait_for_response}, "
             f"retry_on_fail={self.retry_on_fail})"
         )
+
+    def setdefault(
+        self,
+        name: str = None,
+        avr_commands: dict[Zone, str] = None,
+        avr_args: list[CodeMapBase] = None,
+        avr_responses: dict[Zone, str] = None,
+    ) -> None:
+        """Set defaults for a command if not already specified."""
+        if self.name is None:
+            self.name = name
+        if self.avr_args is None:
+            self.avr_args = avr_args
+        if self.avr_commands is None:
+            self.avr_commands = avr_commands
+        if self.avr_responses is None:
+            self.avr_responses = avr_responses
+
+    def get_avr_command(self, zone: Zone) -> str:
+        """Get AVR command."""
+        if self.avr_commands is None:
+            raise RuntimeError(f"AVR commands not defined for command {self.name}")
+        if zone not in self.avr_commands:
+            raise AVRUnknownCommandError(command=self.name, zone=zone)
+        if isinstance(command := self.avr_commands[zone], list):
+            command = command[0]
+        return f"?{command}" if self.is_query_command else command
+
+    def get_avr_response(self, zone: Zone) -> str | None:
+        """Get expected response from AVR for command."""
+        if isinstance(command := self.avr_commands[zone], list):
+            return command[1]
+        responses = self.avr_responses or self.avr_commands
+        if not (self.wait_for_response and responses):
+            return None
+        try:
+            if zone is Zone.Z1:
+                return responses[zone] if zone in responses else responses[Zone.ALL]
+            return responses[zone]
+        except KeyError as exc:
+            raise RuntimeError(
+                f"AVR response not defined for zone {zone} for command {self.name}"
+            ) from exc
 
     @property
     def command(self) -> tuple[str, dict]:
@@ -70,23 +114,6 @@ class AVRCommand:
             com_dict["retry_on_fail"] = True
         return self.name, com_dict
 
-    def setdefault(
-        self,
-        name: str = None,
-        avr_commands: dict[Zone, str] = None,
-        avr_args: list[CodeMapBase] = None,
-        avr_responses: dict[Zone, str] = None,
-    ) -> None:
-        """Set defaults for a command if not already specified."""
-        if self.name is None:
-            self.name = name
-        if self.avr_args is None:
-            self.avr_args = avr_args
-        if self.avr_commands is None:
-            self.avr_commands = avr_commands
-        if self.avr_responses is None:
-            self.avr_responses = avr_responses
-
 
 class AVRPropertyEntry:
     """AVR property entry class."""
@@ -113,7 +140,7 @@ class AVRPropertyEntry:
         self.avr_responses = avr_responses
         self.query_command: AVRCommand = None
         self.set_command: AVRCommand = None
-        self._commands: list[AVRCommand] = []
+        self.commands: list[AVRCommand] = []
 
         if (property_name_full := code_map.base_property) is None:
             raise ValueError(f"base property undefined for {code_map.__name__}")
@@ -140,7 +167,7 @@ class AVRPropertyEntry:
                 # avr_args=[CodeMapQuery(CodeMapBlank)],  ## TODO: update
             )
             self.query_command = query_command
-            self._commands.append(query_command)
+            self.commands.append(query_command)
         elif query_command is not None:
             raise RuntimeError(f"invalid query_command {query_command}")
 
@@ -161,27 +188,22 @@ class AVRPropertyEntry:
                 avr_args=[code_map],
             )
             self.set_command = set_command
-            self._commands.append(set_command)
+            self.commands.append(set_command)
         elif set_command is not None:
             raise RuntimeError(f"invalid set_command {set_command}")
 
         if extra_commands is not None:
             for command in extra_commands:
                 command.setdefault(avr_responses=avr_responses)
-            self._commands.extend(extra_commands)
+            self.commands.extend(extra_commands)
 
     def __repr__(self):
         return (
             f"AVRPropertyEntry(code_map={self.code_map.get_name()}), "
             f"avr_commands={repr(self.avr_commands)}, "
             f"avr_responses={repr(self.avr_responses)}, "
-            f"commands={repr(self._commands)}, "
+            f"commands={repr(self.commands)}, "
         )
-
-    @property
-    def commands(self) -> list[tuple[str, dict]]:
-        """Get commands for property entry."""
-        return list(c.command for c in self._commands)
 
     @property
     def responses(self) -> list[tuple[str, CodeMapBase, Zone]]:
@@ -191,26 +213,26 @@ class AVRPropertyEntry:
 
 def gen_response_property(
     code_map: CodeMapBase, commands: dict[Zone, str], *args, **kwargs
-) -> tuple[CodeMapBase, AVRPropertyEntry]:
+) -> AVRPropertyEntry:
     """Convenience function to create a response only AVRPropertyEntry."""
     if "query_command" not in kwargs:
         kwargs["query_command"] = None
     if "set_command" not in kwargs:
         kwargs["set_command"] = None
-    return code_map, AVRPropertyEntry(code_map, commands, *args, **kwargs)
+    return AVRPropertyEntry(code_map, commands, *args, **kwargs)
 
 
 def gen_query_property(
     code_map: CodeMapBase, commands: dict[Zone, str], *args, **kwargs
-) -> tuple[CodeMapBase, AVRPropertyEntry]:
+) -> AVRPropertyEntry:
     """Convenience function to create an AVRPropertyEntry with query command."""
-    return code_map, AVRPropertyEntry(code_map, commands, *args, **kwargs)
+    return AVRPropertyEntry(code_map, commands, *args, **kwargs)
 
 
 def gen_set_property(
     code_map: CodeMapBase, commands: dict[Zone, str], *args, **kwargs
-) -> tuple[CodeMapBase, AVRPropertyEntry]:
+) -> AVRPropertyEntry:
     """Convenience function to create an AVRPropertyEntry with set command."""
     if "set_command" not in kwargs:
         kwargs["set_command"] = True
-    return code_map, AVRPropertyEntry(code_map, commands, *args, **kwargs)
+    return AVRPropertyEntry(code_map, commands, *args, **kwargs)

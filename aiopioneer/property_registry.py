@@ -1,8 +1,7 @@
 """aiopioneer property registry."""
 
-from typing import Any
-
 from .const import Zone
+from .exceptions import AVRUnknownCommandError
 from .property_entry import AVRCommand, AVRPropertyEntry
 from .decoders.amp import PROPERTIES_AMP, EXTRA_COMMANDS_AMP
 from .decoders.audio import PROPERTIES_AUDIO
@@ -18,30 +17,36 @@ class AVRPropertyRegistry:
 
     def __init__(
         self,
-        property_dict: dict[CodeMapBase, AVRPropertyEntry],
+        property_entries: list[AVRPropertyEntry],
         extra_commands: list[AVRCommand] = None,
     ):
-        self.property_dict = property_dict
         if extra_commands is None:
             extra_commands = []
-        self.extra_commands = extra_commands
+        self.property_entries = property_entries
+        self.responses = sum((list(e.responses) for e in property_entries), [])
+        self.commands = sum((e.commands for e in property_entries), extra_commands)
+        self.command_dict = {command.name: command for command in self.commands}
 
-    def register_extra_commands(self, commands: list[AVRCommand]) -> None:
-        """Add extra commands to properties database."""
-        self.extra_commands.extend(commands)
+    def get_command(self, command: str, zone: Zone) -> AVRCommand:
+        """Return AVR command for zone."""
+        if command in self.command_dict:
+            command_item = self.command_dict[command]
+            if zone in command_item.avr_commands:
+                return command_item
+        raise AVRUnknownCommandError(command=command, zone=zone)
 
-    @property
-    def commands(self) -> dict[str, dict[str, Any]]:
-        """Get list of all handled commands."""
-        return dict(
-            sum((list(e.commands) for e in self.property_dict.values()), [])
-            + list(c.command for c in self.extra_commands)
+    def get_commands(self, prefix: str = None, zone: Zone = None) -> list[AVRCommand]:
+        """Return commands matching optional prefix and base_property."""
+        return (
+            c
+            for c in self.commands
+            if (not prefix or c.name.startswith(prefix))
+            and (zone is None or zone in c.avr_commands)
         )
 
-    @property
-    def responses(self) -> list[tuple[str, CodeMapBase, Zone]]:
-        """Get list of all handled responses."""
-        return sum((list(e.responses) for e in self.property_dict.values()), [])
+    def match_response(self, raw_resp: str) -> tuple[str, CodeMapBase, Zone]:
+        """Return code map for response."""
+        return next((r for r in self.responses if raw_resp.startswith(r[0])), None)
 
 
 EXTRA_COMMANDS_IPOD = [
@@ -182,14 +187,12 @@ EXTRA_COMMANDS_MHL = [
 ]
 
 PROPERTY_REGISTRY = AVRPropertyRegistry(
-    dict(
-        PROPERTIES_AMP
-        + PROPERTIES_SYSTEM
-        + PROPERTIES_DSP
-        + PROPERTIES_AUDIO
-        + PROPERTIES_TUNER
-        + PROPERTIES_VIDEO
-    ),
+    PROPERTIES_AMP
+    + PROPERTIES_SYSTEM
+    + PROPERTIES_DSP
+    + PROPERTIES_AUDIO
+    + PROPERTIES_TUNER
+    + PROPERTIES_VIDEO,
     extra_commands=EXTRA_COMMANDS_AMP
     + EXTRA_COMMANDS_TUNER
     + EXTRA_COMMANDS_IPOD
@@ -198,8 +201,3 @@ PROPERTY_REGISTRY = AVRPropertyRegistry(
     + EXTRA_COMMANDS_BLUETOOTH
     + EXTRA_COMMANDS_MHL,
 )
-
-PIONEER_COMMANDS: dict[
-    str, dict[Zone | str, str | list[str] | list[type[CodeMapBase]]]
-] = PROPERTY_REGISTRY.commands
-RESPONSE_DATA: list[tuple[str, type[CodeMapBase], Zone]] = PROPERTY_REGISTRY.responses
