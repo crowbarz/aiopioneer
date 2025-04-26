@@ -301,8 +301,8 @@ PROPERTIES_TUNER = [
 EXTRA_COMMANDS_TUNER = [
     AVRCommand("tuner_next_preset", {Zone.Z1: ["TPI", "PR"]}),
     AVRCommand("tuner_previous_preset", {Zone.Z1: ["TPD", "PR"]}),
-    AVRCommand("tuner_band_am", {Zone.Z1: ["01TN", "FR"], "retry_on_fail": True}),
-    AVRCommand("tuner_band_fm", {Zone.Z1: ["00TN", "FR"], "retry_on_fail": True}),
+    AVRCommand("tuner_band_am", {Zone.Z1: ["01TN", "FR"]}, retry_on_fail=True),
+    AVRCommand("tuner_band_fm", {Zone.Z1: ["00TN", "FR"]}, retry_on_fail=True),
     AVRCommand("tuner_increase_frequency", {Zone.Z1: ["TFI", "FR"]}),
     AVRCommand("tuner_decrease_frequency", {Zone.Z1: ["TFD", "FR"]}),
     AVRCommand("tuner_direct_access", {Zone.Z1: ["TAC", "TAC"]}),
