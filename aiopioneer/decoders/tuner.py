@@ -157,7 +157,7 @@ class Frequency(CodeMapSequence):
 
     code_map_sequence = [FrequencyBand, FrequencyFM]  ## NOTE: placeholder
 
-    BAND_MAP: dict[TunerBand, CodeMapBase] = {
+    BAND_MAP: dict[TunerBand, type[CodeMapBase]] = {
         TunerBand.AM: FrequencyAM,
         TunerBand.FM: FrequencyFM,
     }

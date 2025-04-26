@@ -172,11 +172,11 @@ class CodeMapBlank(CodeMapComplexMixin, CodeMapBase):
 class CodeMapSequence(CodeMapComplexMixin, CodeMapBase):
     """Map AVR codes to a sequence of code maps."""
 
-    code_map_sequence: list[CodeMapBase] = []
+    code_map_sequence: list[type[CodeMapBase]] = []
     code_fillchar = "_"
 
     @classmethod
-    def get_len_sequence(cls, code_map_sequence: list[CodeMapBase] = None) -> int:
+    def get_len_sequence(cls, code_map_sequence: list[type[CodeMapBase]] = None) -> int:
         """Get length of sequence."""
 
         if code_map_sequence is None:
@@ -184,7 +184,9 @@ class CodeMapSequence(CodeMapComplexMixin, CodeMapBase):
         return sum(child_map.get_len() for child_map in code_map_sequence)
 
     @classmethod
-    def get_nargs_sequence(cls, code_map_sequence: list[CodeMapBase] = None) -> int:
+    def get_nargs_sequence(
+        cls, code_map_sequence: list[type[CodeMapBase]] = None
+    ) -> int:
         """Get number of args for sequence."""
 
         if code_map_sequence is None:
@@ -195,7 +197,7 @@ class CodeMapSequence(CodeMapComplexMixin, CodeMapBase):
     def get_parser_sequence(
         cls,
         parser: argparse.ArgumentParser,
-        code_map_sequence: list[CodeMapBase] = None,
+        code_map_sequence: list[type[CodeMapBase]] = None,
     ) -> None:
         """Get parsers for sequence."""
 
@@ -224,7 +226,7 @@ class CodeMapSequence(CodeMapComplexMixin, CodeMapBase):
         zone: Zone,
         params: AVRParams,
         properties: AVRProperties,
-        code_map_sequence: list[CodeMapBase],
+        code_map_sequence: list[type[CodeMapBase]],
     ) -> str:
         """Convert arg to code with code map sequence."""
 
@@ -264,7 +266,7 @@ class CodeMapSequence(CodeMapComplexMixin, CodeMapBase):
         cls,
         response: Response,
         params: AVRParams,  # pylint: disable=unused-argument
-        code_map_sequence: list[CodeMapBase] = None,
+        code_map_sequence: list[type[CodeMapBase]] = None,
     ) -> list[Response]:
         """Decode a response with code map sequence."""
         cls.set_response_properties(response)
