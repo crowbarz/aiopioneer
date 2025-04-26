@@ -19,6 +19,9 @@ class Zone(StrEnum):
     Z3 = "3"
     HDZ = "Z"
 
+    def __repr__(self) -> str:
+        return f"Zone.{self.name}"
+
     @property
     def full_name(self) -> str:
         """Get zone full name."""
