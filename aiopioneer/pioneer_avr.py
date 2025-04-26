@@ -74,7 +74,9 @@ class PioneerAVR(AVRConnection):
         _LOGGER.info("Starting aiopioneer %s", VERSION)
         self.params = AVRParams(params)
         self.properties = AVRProperties(self.params)
-        self.properties.command_queue.register_execute_callback(self._execute_command)
+        self.properties.command_queue.register_execute_callback(
+            self._execute_avr_command
+        )
         super().__init__(
             params=self.params,
             host=host,
@@ -297,11 +299,15 @@ class PioneerAVR(AVRConnection):
         self._updater_task = None
 
     async def _refresh_zone(self, zone: Zone) -> None:
-        """Refresh an AVR zone."""
+        """Queue refresh for AVR zone."""
         if not self.available:
             _LOGGER.debug("AVR not connected, skipping refresh")
         if zone not in self.properties.zones:
             _LOGGER.debug("zone %s not discovered, skipping refresh", zone.full_name)
+        if zone in self.properties.command_queue.zones_pending_refresh:
+            _LOGGER.debug(
+                "zone %s already refreshing, skipping refresh", zone.full_name
+            )
 
         _LOGGER.info("refreshing %s", zone.full_name)
 
@@ -317,43 +323,43 @@ class PioneerAVR(AVRConnection):
                 raise AVRResponseTimeoutError(command=command)
 
         ## Zone-specific updates, if enabled
-        if not self.params.get_param(PARAM_DISABLE_AUTO_QUERY):
-            enabled_functions = set(self.params.get_param(PARAM_ENABLED_FUNCTIONS))
-            if zone in self.properties.zones_initial_refresh:
-                enabled_functions -= set(
-                    self.params.get_param(PARAM_INITIAL_REFRESH_FUNCTIONS)
-                )
+        if self.params.get_param(PARAM_DISABLE_AUTO_QUERY):
+            return
+        enabled_functions = set(self.params.get_param(PARAM_ENABLED_FUNCTIONS))
+        if zone in self.properties.zones_initial_refresh:
+            enabled_functions -= set(
+                self.params.get_param(PARAM_INITIAL_REFRESH_FUNCTIONS)
+            )
 
-            ## Loop through PIONEER_COMMANDS to allow us to add query commands
-            ## without needing to add it here
-            for func in enabled_functions:
-                for command in PROPERTY_REGISTRY.get_commands(
-                    prefix=f"query_{func}", zone=zone
-                ):
-                    if command.name == "query_channel_levels":
-                        for channel in CHANNELS_ALL:
-                            await self.send_command(
+        ## Loop through PIONEER_COMMANDS to allow us to add query commands
+        ## without needing to add it here
+        command_queue = self.properties.command_queue
+        self.properties.command_queue.zones_pending_refresh.add(zone)
+        for func in enabled_functions:
+            for command in PROPERTY_REGISTRY.get_commands(
+                prefix=f"query_{func}", zone=zone
+            ):
+                if command.name == "query_channel_levels":
+                    channels = CHANNELS_ALL
+                    if zone in self.properties.zones_initial_refresh:
+                        channels = self.properties.channel_levels.get(zone, {}).keys()
+                    for channel in channels:
+                        command_queue.enqueue(
+                            CommandItem(
                                 command.name,
                                 channel,
                                 zone=zone,
                                 ignore_error=True,
                                 rate_limit=False,
-                            )
-                    else:
-                        await self.send_command(
-                            command.name, zone=zone, ignore_error=True, rate_limit=False
+                            ),
+                            queue_id=2,
                         )
-
-        ## Mark zone as completed initial refresh
-        zones_initial_refresh = self.properties.zones_initial_refresh
-        if zone not in zones_initial_refresh:
-            if zone is Zone.Z1:
-                await self.query_device_info()
-            _LOGGER.info("completed initial refresh for %s", zone.full_name)
-            self.properties.zones_initial_refresh.add(zone)
-
-        self._call_zone_callbacks(zones=set([zone]))
-        _LOGGER.debug(">> refresh zone %s completed", zone.full_name)
+                else:
+                    command_queue.enqueue(
+                        CommandItem(command.name, ignore_error=True, rate_limit=False),
+                        queue_id=2,
+                    )
+        command_queue.enqueue(CommandItem("_end_refresh", zone, queue_id=2))
 
     async def _refresh_all_zones(self) -> None:
         """Refresh all AVR zones."""
@@ -366,7 +372,6 @@ class PioneerAVR(AVRConnection):
             last_updated_str = f"{(now - self.last_updated):.3f}s ago"
         _LOGGER.info("refreshing all zones (last updated %s)", last_updated_str)
         self.last_updated = time.time()
-        self.properties.zones_initial_refresh = set()
 
         for zone in Zone:  ## refresh zones in enum order
             if zone in self.properties.zones:
@@ -508,6 +513,18 @@ class PioneerAVR(AVRConnection):
             case "_delayed_refresh_zone":
                 await asyncio.sleep(2.5)  ## TODO: parameterise
                 await self._refresh_zone(zone=Zone(args[0]))
+            case "_end_refresh":
+                check_args(command, args, 1)
+                zone = Zone(args[0])
+                self.properties.command_queue.zones_pending_refresh.remove(zone)
+                zones_initial_refresh = self.properties.zones_initial_refresh
+                if zone not in zones_initial_refresh:
+                    if zone is Zone.Z1:
+                        await self.query_device_info()
+                    _LOGGER.info("completed initial refresh for %s", zone.full_name)
+                    self.properties.zones_initial_refresh.add(zone)
+                self._call_zone_callbacks(zones=set([zone]))
+                _LOGGER.debug(">> refresh zone %s completed", zone.full_name)
             case "_delayed_query_basic":
                 check_args(command, args, 1)
                 if self.params.get_param(PARAM_DISABLE_AUTO_QUERY):
@@ -530,14 +547,18 @@ class PioneerAVR(AVRConnection):
             case _:
                 raise AVRUnknownLocalCommandError(command=command)
 
-    async def _execute_command(self, command_item: CommandItem) -> None:
-        """Execute a command from the command queue."""
-        command = command_item.command
-        args = command_item.args
-        if command.startswith("_"):
-            await self._execute_local_command(command=command, args=args)
+    async def _execute_avr_command(self, command_item: CommandItem) -> None:
+        """Execute an AVR command from the command queue."""
+        if (command := command_item.command).startswith("_"):
+            await self._execute_local_command(command=command, args=command_item.args)
         else:
-            await self.send_command(command=command, *args, ignore_error=False)
+            await self.send_command(
+                command,
+                *command_item.args,
+                zone=command_item.zone,
+                ignore_error=command_item.ignore_error,
+                rate_limit=command_item.rate_limit,
+            )
 
     ## AVR methods
     def _check_zone(self, zone: Zone) -> Zone:
@@ -691,7 +712,7 @@ class PioneerAVR(AVRConnection):
             return
 
         ## Try sending the query_tuner_am_step command first
-        if await self.send_command(command="query_tuner_am_step", ignore_error=True):
+        if await self.send_command("query_tuner_am_step", ignore_error=True):
             return
 
         ## Step frequency once and check whether difference was calculated

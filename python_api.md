@@ -1,3 +1,4 @@
+<!-- markdownlint-disable no-inline-html -->
 # Python API
 
 The library exposes a Python API through the **PioneerAVR** class. The class methods are listed below:
@@ -113,15 +114,15 @@ If _source_name_ is **None**, reset source name to default.
 
 ## Command queue methods
 
-`CommandQueue.enqueue(`_item_: **ComandItem**, _queue_id_: **int** = **None**, _skip_if_startup_: **bool** = **None**, _skip_if_queued_: **bool** = **None**, _skip_if_executing_: **bool** = **None**, _insert_at_: **int** = -1, _start_executing_: **bool** = **True**`)` -> **None**
+`CommandQueue.enqueue(`_item_: **ComandItem**, _queue_id_: **int** = **None**, _skip_if_startup_: **bool** = **None**, _skip_if_queued_: **bool** = **None**, _skip_if_refreshing_: **bool** = **None**, _insert_at_: **int** = -1, _start_executing_: **bool** = **True**`)` -> **None**
 
 Add _item_ to the command queue, to be sent in the background to the AVR or executed as a local command. <br/>
 Use the queue _queue_id_ if specified, otherwise use the default queue. <br/>
 Insert at position _insert_at_ in the queue. If _insert_at_ is negative, then calculate the position relative to the end of the queue. If not specified, use the value specified in _item_. <br/>
-If _skip_if_startup_, _skip_if_queued_ and/or _skip_if_executing_ are provided, then override the values specified in _item_. <br/>
+If _skip_if_startup_, _skip_if_queued_ and/or _skip_if_refreshing_ are provided, then override the values specified in _item_. <br/>
 If _skip_if_startup_ is **True**, then the command is not queued if the module is still connecting to the AVR. <br/>
 If _skip_if_queued_ is **True** and _item_ is already present in the command queue, then the command is not queued again. <br/>
-If _skip_if_executing_ is **True**, then the command is not queued if the command queue is currently executing. <br/>
+If _skip_if_refreshing_ is **True**, then the command is not queued if the zone is scheduled for a refresh. <br/>
 If _start_executing_ is **True**, then starts the command queue task if it is not already running. <br/>
 
 The following local commands are supported, these are mainly used by the command decoders for more complex actions:
