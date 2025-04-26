@@ -12,7 +12,7 @@ class AVRCommand:
         self,
         name: str = None,
         avr_commands: dict[Zone, str | list[str]] = None,
-        avr_args: list[CodeMapBase] = None,
+        avr_args: list[type[CodeMapBase]] = None,
         avr_responses: dict[Zone, str] = None,
         is_query_command: bool = False,
         wait_for_response: bool = False,
@@ -41,7 +41,7 @@ class AVRCommand:
         self,
         name: str = None,
         avr_commands: dict[Zone, str] = None,
-        avr_args: list[CodeMapBase] = None,
+        avr_args: list[type[CodeMapBase]] = None,
         avr_responses: dict[Zone, str] = None,
     ) -> None:
         """Set defaults for a command if not already specified."""
@@ -79,40 +79,6 @@ class AVRCommand:
             raise RuntimeError(
                 f"AVR response not defined for zone {zone} for command {self.name}"
             ) from exc
-
-    @property
-    def command(self) -> tuple[str, dict]:
-        """Get definition for command."""
-
-        def get_command(zone: Zone) -> tuple[Zone, str | list[str]]:
-            if not isinstance(command := self.avr_commands.get(zone), str):
-                raise RuntimeError(f"invalid AVR command {command} for {self.name}")
-            if not self.wait_for_response:
-                return Zone.Z1 if zone is Zone.ALL else zone, command
-            responses = self.avr_responses or self.avr_commands
-            if zone is Zone.Z1:
-                response = responses.get(zone, responses.get(Zone.ALL, command))
-            else:
-                response = responses.get(zone, command)
-            return (
-                Zone.Z1 if zone is Zone.ALL else zone,
-                [
-                    f"?{command}" if self.is_query_command else command,
-                    response,
-                ],
-            )
-
-        if (com_dict := self.avr_commands.copy()) is None:
-            raise RuntimeError(f"command {self.name} has empty commands dict")
-        if self.wait_for_response:
-            if self.avr_responses is None:
-                raise RuntimeError(f"no responses provided for command {self.name}")
-            com_dict = dict(get_command(z) for z in self.avr_commands)
-        if self.avr_args:
-            com_dict["args"] = self.avr_args
-        if self.retry_on_fail:
-            com_dict["retry_on_fail"] = True
-        return self.name, com_dict
 
 
 class AVRPropertyEntry:
@@ -199,20 +165,20 @@ class AVRPropertyEntry:
 
     def __repr__(self):
         return (
-            f"AVRPropertyEntry(code_map={self.code_map.get_name()}), "
+            f"AVRPropertyEntry(code_map={self.code_map.__name__}), "
             f"avr_commands={repr(self.avr_commands)}, "
             f"avr_responses={repr(self.avr_responses)}, "
             f"commands={repr(self.commands)}, "
         )
 
     @property
-    def responses(self) -> list[tuple[str, CodeMapBase, Zone]]:
+    def responses(self) -> list[tuple[str, type[CodeMapBase], Zone]]:
         """Get handled responses for property entry."""
         return ((r, self.code_map, z) for z, r in self.avr_responses.items())
 
 
 def gen_response_property(
-    code_map: CodeMapBase, commands: dict[Zone, str], *args, **kwargs
+    code_map: type[CodeMapBase], commands: dict[Zone, str], *args, **kwargs
 ) -> AVRPropertyEntry:
     """Convenience function to create a response only AVRPropertyEntry."""
     if "query_command" not in kwargs:
@@ -223,14 +189,14 @@ def gen_response_property(
 
 
 def gen_query_property(
-    code_map: CodeMapBase, commands: dict[Zone, str], *args, **kwargs
+    code_map: type[CodeMapBase], commands: dict[Zone, str], *args, **kwargs
 ) -> AVRPropertyEntry:
     """Convenience function to create an AVRPropertyEntry with query command."""
     return AVRPropertyEntry(code_map, commands, *args, **kwargs)
 
 
 def gen_set_property(
-    code_map: CodeMapBase, commands: dict[Zone, str], *args, **kwargs
+    code_map: type[CodeMapBase], commands: dict[Zone, str], *args, **kwargs
 ) -> AVRPropertyEntry:
     """Convenience function to create an AVRPropertyEntry with set command."""
     if "set_command" not in kwargs:

@@ -1,5 +1,7 @@
 """aiopioneer property registry."""
 
+import logging
+
 from .const import Zone
 from .exceptions import AVRUnknownCommandError
 from .property_entry import AVRCommand, AVRPropertyEntry
@@ -10,6 +12,8 @@ from .decoders.dsp import PROPERTIES_DSP
 from .decoders.system import PROPERTIES_SYSTEM
 from .decoders.tuner import PROPERTIES_TUNER, EXTRA_COMMANDS_TUNER
 from .decoders.video import PROPERTIES_VIDEO
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class AVRPropertyRegistry:
@@ -23,14 +27,34 @@ class AVRPropertyRegistry:
         if extra_commands is None:
             extra_commands = []
         self.property_entries = property_entries
-        self.responses = sum((list(e.responses) for e in property_entries), [])
-        self.commands = sum((e.commands for e in property_entries), extra_commands)
-        self.command_dict = {command.name: command for command in self.commands}
+        self.responses: list[tuple[str, type[CodeMapBase], Zone]] = []
+        self.commands: list[AVRCommand] = extra_commands or []
+        self.code_map_index: dict[type[CodeMapBase], AVRPropertyEntry] = {}
+        self.command_index: dict[str, AVRCommand] = {c.name: c for c in extra_commands}
+
+        for property_entry in property_entries:
+            self.responses += list(property_entry.responses)
+            self.commands += property_entry.commands
+            if code_map := property_entry.code_map:
+                if code_map in self.code_map_index:
+                    _LOGGER.warning(
+                        "duplicate property entry for code map %s detected",
+                        code_map.get_name(),
+                    )
+                self.code_map_index[code_map] = property_entry
+            for command in property_entry.commands:
+                if command.name in self.command_index:
+                    _LOGGER.warning(
+                        "duplicate command %s for code map %s detected",
+                        command.name,
+                        code_map.get_name(),
+                    )
+                self.command_index[command.name] = command
 
     def get_command(self, command: str, zone: Zone) -> AVRCommand:
         """Return AVR command for zone."""
-        if command in self.command_dict:
-            command_item = self.command_dict[command]
+        if command in self.command_index:
+            command_item = self.command_index[command]
             if zone in command_item.avr_commands:
                 return command_item
         raise AVRUnknownCommandError(command=command, zone=zone)
@@ -44,7 +68,7 @@ class AVRPropertyRegistry:
             and (zone is None or zone in c.avr_commands)
         )
 
-    def match_response(self, raw_resp: str) -> tuple[str, CodeMapBase, Zone]:
+    def match_response(self, raw_resp: str) -> tuple[str, type[CodeMapBase], Zone]:
         """Return code map for response."""
         return next((r for r in self.responses if raw_resp.startswith(r[0])), None)
 
