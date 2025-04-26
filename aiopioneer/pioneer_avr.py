@@ -88,9 +88,6 @@ class PioneerAVR(AVRConnection):
         self._updater_task = None
         self._zone_callback: dict[Zone, Callable[[None], None]] = {}
 
-        # Register params update callbacks
-        self.params.register_update_callback(self.properties.update_listening_modes)
-
     ## Connection/disconnection
     async def on_connect(self) -> None:
         """Start AVR tasks on connection."""

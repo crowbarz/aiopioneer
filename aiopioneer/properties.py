@@ -63,6 +63,12 @@ class AVRProperties:
         self.source_name_to_id: dict[str, int] = {}
         self.source_id_to_name: dict[int, str] = {}
 
+        # Register params update callbacks
+        def update_params(params: AVRParams):  # pylint: disable=unused-argument
+            self.update_listening_modes()
+
+        params.register_update_callback(update_params)
+
     def reset(self) -> None:
         """Reset AVR properties."""
         _LOGGER.info("resetting cached AVR properties")

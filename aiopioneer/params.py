@@ -7,7 +7,7 @@ import logging
 import re
 
 from collections import OrderedDict
-from typing import Any, Callable
+from typing import Any, Callable, Self
 
 from .const import Zone
 from .util import merge
@@ -600,13 +600,13 @@ class AVRParams:
         self._default_params = PARAM_DEFAULTS
         self._user_params: dict[str, Any] = {}
         self._params: dict[str, Any] = {}
-        self._update_callbacks: list[Callable[[], None]] = []
+        self._update_callbacks: list[Callable[[Self], None]] = []
         if model := params.get(PARAM_MODEL):
             self.set_default_params_model(model)
         self.set_user_params(params)
 
     ## Parameter management functions
-    def register_update_callback(self, callback: Callable[[], None]) -> None:
+    def register_update_callback(self, callback: Callable[[Self], None]) -> None:
         """Set parameter update callback."""
         self._update_callbacks.append(callback)
 
@@ -616,7 +616,7 @@ class AVRParams:
         merge(self._params, self._default_params)
         merge(self._params, self._user_params, force_overwrite=True)
         for callback in self._update_callbacks:
-            callback()
+            callback(self)
 
     def set_default_params_model(self, model: str) -> None:
         """Set default parameters based on device model."""
