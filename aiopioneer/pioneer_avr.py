@@ -9,7 +9,6 @@ import traceback
 
 from collections.abc import Callable
 
-from .commands import PIONEER_COMMANDS
 from .command_queue import CommandItem
 from .connection import AVRConnection
 from .const import (
@@ -24,14 +23,12 @@ from .const import (
     CHANNELS_ALL,
 )
 from .decode import process_raw_response
-from .decoders.code_map import CodeMapBase
 from .decoders.amp import Volume
 from .decoders.tuner import FrequencyAM, FrequencyFM
 from .exceptions import (
     AVRError,
     AVRResponseTimeoutError,
     AVRCommandError,
-    AVRUnknownCommandError,
     AVRUnknownLocalCommandError,
     AVRTunerUnavailableError,
     AVRConnectProtocolError,
@@ -56,6 +53,7 @@ from .params import (
     PARAM_DISABLE_AUTO_QUERY,
 )
 from .properties import AVRProperties
+from .property_registry import PROPERTY_REGISTRY
 from .util import cancel_task
 
 _LOGGER = logging.getLogger(__name__)
@@ -205,9 +203,8 @@ class PioneerAVR(AVRConnection):
     async def query_device_info(self) -> None:
         """Query device information from Pioneer AVR."""
         _LOGGER.info("querying device information")
-        commands = [k for k in PIONEER_COMMANDS if k.startswith("system_query_")]
-        for command in commands:
-            await self.send_command(command, ignore_error=True)
+        for command in PROPERTY_REGISTRY.get_commands("system_query_"):
+            await self.send_command(command.name, ignore_error=True)
 
         ## It is possible to query via HTML page if all info is not available
         ## via API commands: http://avr/1000/system_information.asp
@@ -322,23 +319,6 @@ class PioneerAVR(AVRConnection):
             if await self.send_command(command, zone=zone, ignore_error=True) is None:
                 raise AVRResponseTimeoutError(command=command)
 
-        async def send_query_command(command: str, enabled_functions: set[str]):
-            comm_parts = command.split("_")
-            if comm_parts[0] == "query" and comm_parts[1] in enabled_functions:
-                if comm_parts[1] == "channel":
-                    for channel in CHANNELS_ALL:
-                        await self.send_command(
-                            command,
-                            channel,
-                            zone=zone,
-                            ignore_error=True,
-                            rate_limit=False,
-                        )
-                else:
-                    await self.send_command(
-                        command, zone=zone, ignore_error=True, rate_limit=False
-                    )
-
         ## Zone-specific updates, if enabled
         if not self.params.get_param(PARAM_DISABLE_AUTO_QUERY):
             enabled_functions = set(self.params.get_param(PARAM_ENABLED_FUNCTIONS))
@@ -349,9 +329,23 @@ class PioneerAVR(AVRConnection):
 
             ## Loop through PIONEER_COMMANDS to allow us to add query commands
             ## without needing to add it here
-            for command, supported_zones in PIONEER_COMMANDS.items():
-                if zone in supported_zones:
-                    await send_query_command(command, enabled_functions)
+            for func in enabled_functions:
+                for command in PROPERTY_REGISTRY.get_commands(
+                    prefix=f"query_{func}", zone=zone
+                ):
+                    if command.name == "query_channel_levels":
+                        for channel in CHANNELS_ALL:
+                            await self.send_command(
+                                command.name,
+                                channel,
+                                zone=zone,
+                                ignore_error=True,
+                                rate_limit=False,
+                            )
+                    else:
+                        await self.send_command(
+                            command.name, zone=zone, ignore_error=True, rate_limit=False
+                        )
 
         ## Mark zone as completed initial refresh
         zones_initial_refresh = self.properties.zones_initial_refresh
@@ -430,9 +424,9 @@ class PioneerAVR(AVRConnection):
             )
 
         try:
-            command_info = PIONEER_COMMANDS.get(command, {})
-            command_list: list[str] | str = command_info.get(zone)
-            arg_code_maps: list[CodeMapBase] = command_info.get("args", [])
+            command_item = PROPERTY_REGISTRY.get_command(command, zone)
+            command = command_item.get_avr_command(zone)
+            arg_code_maps = command_item.avr_args
             if arg_code_maps and prefix is None and suffix is None:
                 ## Convert command_args to prefix and suffix
                 prefix_map = arg_code_maps[0]
@@ -459,30 +453,30 @@ class PioneerAVR(AVRConnection):
                     properties=self.properties,
                 )
 
-            if isinstance(command_list, list):
-                retry_count = 0
-                if retry_on_fail and command_info.get("retry_on_fail"):
-                    retry_count = self.params.get_param(PARAM_RETRY_COUNT)
-                ## Send raw command, then wait for response
-                response = await self.send_raw_request(
-                    command=(prefix or "") + command_list[0] + (suffix or ""),
-                    response_prefix=command_list[1],
-                    rate_limit=rate_limit,
-                    retry_count=retry_count,
-                )
-                if debug_command:
-                    _LOGGER.debug(
-                        "send_command %s received response: %s", command, response
-                    )
-                return response
-            elif isinstance(command_list, str):
+            if (response := command_item.get_avr_response(zone)) is None:
                 ## Send raw command only
                 await self.send_raw_command(
-                    command=(prefix or "") + command_list + (suffix or ""),
+                    command=(prefix or "") + command + (suffix or ""),
                     rate_limit=rate_limit,
                 )
                 return True
-            raise AVRUnknownCommandError(command=command, zone=zone)
+
+            retry_count = 0
+            if retry_on_fail or (retry_on_fail is None and command_item.retry_on_fail):
+                retry_count = self.params.get_param(PARAM_RETRY_COUNT)
+
+            ## Send raw command, then wait for response
+            response = await self.send_raw_request(
+                command=(prefix or "") + command + (suffix or ""),
+                response_prefix=command_item.get_avr_response(zone),
+                rate_limit=rate_limit,
+                retry_count=retry_count,
+            )
+            if debug_command:
+                _LOGGER.debug(
+                    "send_command %s received response: %s", command, response
+                )
+            return response
 
         except AVRUnavailableError:  ## always raise even if ignoring errors
             raise

@@ -3,28 +3,14 @@
 import logging
 
 from .const import Zone
-from .decoders.audio import RESPONSE_DATA_AUDIO
 from .decoders.code_map import CodeMapBase
-from .decoders.dsp import RESPONSE_DATA_DSP
 from .decoders.response import Response
-from .decoders.system import RESPONSE_DATA_SYSTEM
-from .decoders.amp import RESPONSE_DATA_AMP
-from .decoders.tuner import RESPONSE_DATA_TUNER
-from .decoders.video import RESPONSE_DATA_VIDEO
 from .exceptions import AVRResponseDecodeError
 from .params import AVRParams
 from .properties import AVRProperties
+from .property_registry import PROPERTY_REGISTRY
 
 _LOGGER = logging.getLogger(__name__)
-
-RESPONSE_DATA: list[tuple[str, type[CodeMapBase], Zone]] = [
-    *RESPONSE_DATA_AMP,
-    *RESPONSE_DATA_SYSTEM,
-    *RESPONSE_DATA_DSP,
-    *RESPONSE_DATA_AUDIO,
-    *RESPONSE_DATA_TUNER,
-    *RESPONSE_DATA_VIDEO,
-]
 
 
 def _commit_response(response: Response) -> None:
@@ -106,8 +92,7 @@ def process_raw_response(
 ) -> set[Zone]:
     """Processes a raw response, decode and apply to properties."""
     try:
-        match_resp = next((r for r in RESPONSE_DATA if raw_resp.startswith(r[0])), None)
-        if not match_resp:
+        if not (match_resp := PROPERTY_REGISTRY.match_response(raw_resp=raw_resp)):
             ## No error handling as not all responses have been captured by aiopioneer.
             if not (raw_resp.startswith("E") or raw_resp == "B00"):
                 _LOGGER.debug("undecoded response: %s", raw_resp)

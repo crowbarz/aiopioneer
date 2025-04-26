@@ -5,16 +5,15 @@ import logging
 import sys
 import json
 import argparse
-from collections.abc import Callable
+from collections.abc import Callable, Awaitable
 from typing import Any
 
 import aioconsole
 import yaml
 
 from aiopioneer import PioneerAVR
-from aiopioneer.commands import PIONEER_COMMANDS
+from aiopioneer.property_registry import PROPERTY_REGISTRY
 from aiopioneer.const import Zone, DEFAULT_PORT, TunerBand, MEDIA_CONTROL_COMMANDS_ALL
-from aiopioneer.decoders.code_map import CodeMapBase
 from aiopioneer.params import (
     PARAM_DEBUG_LISTENER,
     PARAM_DEBUG_UPDATER,
@@ -22,6 +21,7 @@ from aiopioneer.params import (
     PARAM_DEBUG_COMMAND_QUEUE,
     PARAMS_DICT_INT_KEY,
 )
+from aiopioneer.property_entry import AVRCommand
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -222,12 +222,12 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
         """Send a raw command."""
         return await self.pioneer.send_raw_command(command)
 
-    def gen_avr_send_command(self, command: str):
+    def gen_avr_send_command(self, command: AVRCommand):
         """Generate a function for sending an AVR command."""
 
         async def avr_send_command(reader, writer, **kwargs) -> str:
             return await self.pioneer.send_command(
-                command, zone=self.zone, *kwargs.values()
+                command.name, zone=self.zone, *kwargs.values()
             )
 
         return avr_send_command
@@ -374,11 +374,11 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
         )
 
         def get_avr_command(
-            command, args: list[CodeMapBase] | None
-        ) -> tuple[Callable[..., str], argparse.ArgumentParser]:
+            command: AVRCommand,
+        ) -> tuple[Callable[..., Awaitable[str]], argparse.ArgumentParser]:
             parser = argparse.ArgumentParser()
-            if args:
-                for code_map in args:
+            if command.avr_args:
+                for code_map in command.avr_args:
                     code_map.get_parser(parser)
 
             return self.gen_avr_send_command(command), parser
@@ -414,8 +414,8 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
             get_command(self.send_raw_command, ">", parser=raw_command_parser_2),
         ]
         return dict(command_list) | {
-            command: get_avr_command(command, supported_zones.get("args"))
-            for command, supported_zones in PIONEER_COMMANDS.items()
+            command.name: get_avr_command(command)
+            for command in PROPERTY_REGISTRY.commands
         }
 
 

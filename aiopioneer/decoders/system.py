@@ -3,6 +3,7 @@
 from ..const import Zone
 from ..params import AVRParams, PARAM_SPEAKER_SYSTEM_MODES
 from ..properties import AVRProperties
+from ..property_entry import gen_query_property, gen_set_property
 from .code_map import (
     CodeDefault,
     CodeMapSequence,
@@ -726,85 +727,41 @@ class UserLock(CodeBoolMap):
     property_name = "user_lock"
 
 
-COMMANDS_SYSTEM = {
-    "query_system_speaker_system": {Zone.Z1: ["?SSF", "SSF"]},
-    "set_system_speaker_system": {
-        Zone.Z1: ["SSF", "SSF"],
-        "args": [SpeakerSystem],
-        "retry_on_fail": True,
-    },
-    "query_system_home_menu_status": {Zone.Z1: ["?SSL", "SSL"]},
-    "query_system_mcacc_diagnostic_status": {Zone.Z1: ["?SSJ", "SSJ"]},
-    "query_system_standing_wave_status": {Zone.Z1: ["?SUU", "SUU"]},
-    "query_system_standing_wave_sw_trim": {Zone.Z1: ["?SUV", "SUV"]},
-    "query_system_surround_position": {Zone.Z1: ["?SSP", "SSP"]},
-    "query_system_x_over": {Zone.Z1: ["?SSQ", "SSQ"]},
-    "query_system_x_curve": {Zone.Z1: ["?SST", "SST"]},
-    "query_system_loudness_plus": {Zone.Z1: ["?SSU", "SSU"]},
-    "query_system_sbch_processing": {Zone.Z1: ["?SSV", "SSV"]},
-    "query_system_speaker_setting": {Zone.Z1: ["?SSG", "SSG"]},
-    "query_system_mcacc_channel_level": {Zone.Z1: ["?SSR", "SSR"]},
-    "query_system_mcacc_speaker_distance": {Zone.Z1: ["?SSS", "SSS"]},
-    "query_system_input_level": {Zone.Z1: ["?ILA", "ILA"]},
-    "query_system_thx_ultraselect2": {Zone.Z1: ["?SSW", "SSW"]},
-    "query_system_boundary_gain_compression": {Zone.Z1: ["?SSX", "SSX"]},
-    "query_system_re_equalization": {Zone.Z1: ["?SSB", "SSB"]},
-    "query_system_osd_language": {Zone.Z1: ["?SSE", "SSE"]},
-    "query_system_network_dhcp": {Zone.Z1: ["?STA", "STA"]},
-    "query_system_network_proxy_active": {Zone.Z1: ["?STG", "STG"]},
-    "query_system_network_standby": {Zone.Z1: ["?STJ", "STJ"]},
-    "query_system_friendly_name": {Zone.Z1: ["?SSO", "SSO"]},
-    "query_system_parental_lock": {Zone.Z1: ["?STK", "STK"]},
-    "query_system_parental_lock_password": {Zone.Z1: ["?STL", "STL"]},
-    "query_system_ip_control_port": {Zone.Z1: ["?SUM", "SUM"]},
-    "query_system_hdmi_control": {Zone.Z1: ["?STQ", "STQ"]},
-    "query_system_hdmi_control_mode": {Zone.Z1: ["?STR", "STR"]},
-    "query_system_hdmi_arc": {Zone.Z1: ["?STT", "STT"]},
-    "query_system_pqls_for_backup": {Zone.Z1: ["?SVL", "SVL"]},
-    "query_system_standby_passthrough": {Zone.Z1: ["?STU", "STU"]},
-    "query_system_external_hdmi_trigger_1": {Zone.Z1: ["?STV", "STV"]},
-    "query_system_external_hdmi_trigger_2": {Zone.Z2: ["?STW", "STW"]},
-    "query_system_speaker_b_link": {Zone.Z1: ["?STX", "STX"]},
-    "query_system_osd_overlay": {Zone.Z1: ["?SVA", "SVA"]},
-    "query_system_additional_service": {Zone.Z1: ["?ADS", "ADS"]},
-    "query_system_user_lock": {Zone.Z1: ["?SUT", "SUT"]},
-}
-
-RESPONSE_DATA_SYSTEM = [
-    ("SSF", SpeakerSystem, Zone.ALL),  # system.speaker_system
-    ("SSL", HomeMenuStatus, Zone.ALL),  # system.home_menu_status
-    ("SSJ", McaccDiagnosticStatus, Zone.ALL),  # system.mcacc_diagnostic_status
-    ("SUU", StandingWaveStatus, Zone.ALL),  # system
-    ("SUV", StandingWaveSwTrim, Zone.ALL),  # system
-    ("SSP", SurroundPosition, Zone.ALL),  # system.surround_position
-    ("SSQ", XOver, Zone.ALL),  # system.x_over
-    ("SST", XCurve, Zone.ALL),  # system.x_curve
-    ("SSU", LoudnessPlus, Zone.ALL),  # system.loudness_plus
-    ("SSV", SbchProcessing, Zone.ALL),  # system.sbch_processing
-    ("SSG", SpeakerSettings, Zone.ALL),  # system.speaker_setting
-    ("SSR", McaccChannelLevel, Zone.ALL),  # system.mcacc_channel_level
-    ("SSS", McaccSpeakerDistance, Zone.ALL),  # system.mcacc_speaker_distance
-    ("ILA", InputLevel, Zone.ALL),  # system.input_level
-    ("SSW", ThxUltraselect2, Zone.ALL),  # system.thx_ultraselect2
-    ("SSX", BoundaryGainCompression, Zone.ALL),  # system.boundary_gain_compression
-    ("SSB", ReEqualization, Zone.ALL),  # system.re_equalization
-    ("SSE", OsdLanguage, Zone.ALL),  # system.osd_language
-    ("STA", NetworkDhcp, Zone.ALL),  # system.network_dhcp
-    ("STG", NetworkProxyActive, Zone.ALL),  # system.network_proxy_active
-    ("STJ", NetworkStandby, Zone.ALL),  # system.network_standby
-    ("SSO", FriendlyName, Zone.ALL),  # system.friendly_name
-    ("STK", ParentalLock, Zone.ALL),  # system.parental_lock
-    ("STL", ParentalLockPassword, Zone.ALL),  # system.parental_lock_password
-    ("SUM", IpControlPorts, Zone.ALL),  # system.ip_control_port
-    ("STQ", HdmiControl, Zone.ALL),  # system.hdmi_control
-    ("STR", HdmiControlMode, Zone.ALL),  # system.hdmi_control_mode
-    ("STT", HdmiArc, Zone.ALL),  # system.hdmi_arc
-    ("SVL", PqlsForBackup, Zone.ALL),  # system.pqls_for_backup
-    ("STU", StandbyPassthrough, Zone.ALL),  # system.standby_passthrough
-    ("STV", ExternalHdmiTrigger1, Zone.Z1),  # system.external_hdmi_trigger_1
-    ("STW", ExternalHdmiTrigger2, Zone.Z2),  # system.external_hdmi_trigger_2
-    ("STX", SpeakerBLink, Zone.ALL),  # system.speaker_b_link
-    ("SVA", OsdOverlay, Zone.ALL),  # system.osd_overlay
-    ("ADS", AdditionalService, Zone.ALL),  # system.additional_service
-    ("SUT", UserLock, Zone.ALL),  # system.user_lock
+PROPERTIES_SYSTEM = [
+    gen_set_property(SpeakerSystem, {Zone.ALL: "SSF"}),
+    gen_query_property(HomeMenuStatus, {Zone.ALL: "SSL"}),
+    gen_query_property(McaccDiagnosticStatus, {Zone.ALL: "SSJ"}),
+    gen_query_property(StandingWaveStatus, {Zone.ALL: "SUU"}),
+    gen_query_property(StandingWaveSwTrim, {Zone.ALL: "SUV"}),
+    gen_query_property(SurroundPosition, {Zone.ALL: "SSP"}),
+    gen_query_property(XOver, {Zone.ALL: "SSQ"}),
+    gen_query_property(XCurve, {Zone.ALL: "SST"}),
+    gen_query_property(LoudnessPlus, {Zone.ALL: "SSU"}),
+    gen_query_property(SbchProcessing, {Zone.ALL: "SSV"}),
+    gen_query_property(SpeakerSettings, {Zone.ALL: "SSG"}),
+    gen_query_property(McaccChannelLevel, {Zone.ALL: "SSR"}),
+    gen_query_property(McaccSpeakerDistance, {Zone.ALL: "SSS"}),
+    gen_query_property(InputLevel, {Zone.ALL: "ILA"}),
+    gen_query_property(ThxUltraselect2, {Zone.ALL: "SSW"}),
+    gen_query_property(BoundaryGainCompression, {Zone.ALL: "SSX"}),
+    gen_query_property(ReEqualization, {Zone.ALL: "SSB"}),
+    gen_query_property(OsdLanguage, {Zone.ALL: "SSE"}),
+    gen_query_property(NetworkDhcp, {Zone.ALL: "STA"}),
+    gen_query_property(NetworkProxyActive, {Zone.ALL: "STG"}),
+    gen_query_property(NetworkStandby, {Zone.ALL: "STJ"}),
+    gen_query_property(FriendlyName, {Zone.ALL: "SSO"}),
+    gen_query_property(ParentalLock, {Zone.ALL: "STK"}),
+    gen_query_property(ParentalLockPassword, {Zone.ALL: "STL"}),
+    gen_query_property(IpControlPorts, {Zone.ALL: "SUM"}),
+    gen_query_property(HdmiControl, {Zone.ALL: "STQ"}),
+    gen_query_property(HdmiControlMode, {Zone.ALL: "STR"}),
+    gen_query_property(HdmiArc, {Zone.ALL: "STT"}),
+    gen_query_property(PqlsForBackup, {Zone.ALL: "SVL"}),
+    gen_query_property(StandbyPassthrough, {Zone.ALL: "STU"}),
+    gen_query_property(ExternalHdmiTrigger1, {Zone.Z1: "STV"}),
+    gen_query_property(ExternalHdmiTrigger2, {Zone.Z2: "STW"}),
+    gen_query_property(SpeakerBLink, {Zone.ALL: "STX"}),
+    gen_query_property(OsdOverlay, {Zone.ALL: "SVA"}),
+    gen_query_property(AdditionalService, {Zone.ALL: "ADS"}),
+    gen_query_property(UserLock, {Zone.ALL: "SUT"}),
 ]
