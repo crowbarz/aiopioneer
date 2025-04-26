@@ -262,8 +262,8 @@ class AVRConnection:
                     self.last_updated = time.time()  # consider responses as refresh
                 if response is not None and not response:
                     ## Skip processing empty responses (keepalives)
-                    if debug_listener:
-                        _LOGGER.debug("ignoring empty response")
+                    # if debug_listener:
+                    #     _LOGGER.debug("ignoring empty response")
                     continue
                 if debug_listener:
                     _LOGGER.debug("received AVR response: %s", response)
