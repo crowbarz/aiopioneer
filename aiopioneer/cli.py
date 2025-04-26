@@ -123,7 +123,7 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
             if isinstance(prop, dict):
                 return {scrub_property(k): v for k, v in prop.items()}
             if isinstance(prop, Zone):
-                return prop.value
+                return prop.name
             return prop
 
         return self.dump(
