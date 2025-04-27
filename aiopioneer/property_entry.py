@@ -106,6 +106,7 @@ class AVRPropertyEntry:
         self.avr_responses = avr_responses
         self.query_command: AVRCommand = None
         self.set_command: AVRCommand = None
+        self.extra_commands: list[AVRCommand] = []
         self.commands: list[AVRCommand] = []
 
         if (property_name_full := code_map.base_property) is None:
@@ -161,6 +162,7 @@ class AVRPropertyEntry:
         if extra_commands is not None:
             for command in extra_commands:
                 command.setdefault(avr_responses=avr_responses)
+            self.extra_commands = extra_commands
             self.commands.extend(extra_commands)
 
     def __repr__(self):
