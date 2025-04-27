@@ -222,7 +222,9 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
         """Send a raw command."""
         return await self.pioneer.send_raw_command(command)
 
-    def gen_avr_send_command(self, command: AVRCommand):
+    def gen_avr_send_command(
+        self, command: AVRCommand
+    ) -> Callable[..., Awaitable[str]]:
         """Generate a function for sending an AVR command."""
 
         async def avr_send_command(reader, writer, **kwargs) -> str:
@@ -234,18 +236,18 @@ class PioneerAVRCli(aioconsole.AsynchronousCli):
 
     def get_commands(
         self,
-    ) -> dict[str, tuple[Callable[..., str], argparse.ArgumentParser]]:
+    ) -> dict[str, tuple[Callable[..., Awaitable[str]], argparse.ArgumentParser]]:
         """Get commands list for CLI."""
 
-        def get_command_parser(method: Callable[..., str]):
+        def get_command_parser(method: Callable[..., Awaitable[str]]):
             """Get parser for command method."""
             return argparse.ArgumentParser(description=str(method.__doc__).rstrip("."))
 
         def get_command(
-            method: Callable[..., str],
+            method: Callable[..., Awaitable[str]],
             name: str = None,
             parser: argparse.ArgumentParser = None,
-        ) -> tuple[str, tuple[Callable[..., str], argparse.ArgumentParser]]:
+        ) -> tuple[str, tuple[Callable[..., Awaitable[str]], argparse.ArgumentParser]]:
             """Get command dictionary entry."""
             if name is None:
                 name = method.__name__
