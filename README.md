@@ -38,6 +38,11 @@ Where a parameter is specified at more than one level, the higher priority param
 > [!NOTE]
 > YAML syntax is used to indicate values the table below. This syntax is used when entering parameters manually in the Home Assistant integration. Use Python equivalents (`false` -> `False`, `true` -> `True`, `null` -> `None` etc.) when calling the [Python API](#python-api) directly.
 
+> [!CAUTION]
+> Sources, listening modes and speaker system modes are specified as a **dict** with **int** keys. JSON does not support **int** for **dict** keys. For such parameters, keys should be specified as **str**. Note that Python will [silently coerce **int** keys for **dict** to **str**](https://docs.python.org/3/library/json.html#basic-usage) when serialising such dictionaries to JSON.
+>
+> The Home Assistant integration automatically converts keys for impacted parameters back to **int** keys, however other users of this module may also need to implement this conversion.
+
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
 | `model` | str | | Device model of AVR. Queried from AVR on connect if not specified
@@ -155,7 +160,8 @@ The CLI accepts all AVR commands, as well as the helper commands below. The `lis
 
 ### CLI JSON arguments
 
-Sources, listening modes and speaker system modes are specified as a **dict** with **int** keys. JSON does not support **int** for **dict** keys. For these parameters, keys should be specified as **str**. These will be converted to **int** automatically by the CLI.
+> [!CAUTION]
+> Sources, listening modes and speaker system modes are specified as a **dict** with **int** keys. JSON does not support **int** for **dict** keys. Where these parameters are provided as CLI arguments, keys should be specified as **str**. These will be converted to **int** automatically.
 
 ## Source list
 
