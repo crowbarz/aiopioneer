@@ -173,7 +173,7 @@ class CodeMapBlank(CodeMapComplexMixin, CodeMapBase):
         params: AVRParams,
         properties: AVRProperties,
     ) -> str:
-        return None
+        return ""
 
     @classmethod
     def decode_response(cls, response: Response, params: AVRParams) -> list[Response]:
