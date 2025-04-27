@@ -45,13 +45,18 @@ class CodeMapBase:
 
     @classmethod
     def get_ss_class_name(cls) -> str:
-        """Get space separated class name."""
+        """Get space separated code map name."""
         return re.sub(r"((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))", r" \1", cls.__name__)
 
     @classmethod
     def get_name(cls) -> str:
-        """Get class name, using friendly name if defined."""
+        """Get code map name, using friendly name if defined."""
         return cls.friendly_name if cls.friendly_name else cls.get_ss_class_name()
+
+    @classmethod
+    def get_helptext(cls) -> str:
+        """Get code map help text."""
+        return str(cls.__doc__).rstrip(".")
 
     @classmethod
     @abstractmethod
@@ -396,7 +401,7 @@ class CodeStrMap(CodeMapBase):
     @classmethod
     def get_parser(cls, parser: argparse.ArgumentParser) -> None:
         if prop_name := cls.property_name or cls.base_property:
-            parser.add_argument(prop_name, help=cls.friendly_name, type=str)
+            parser.add_argument(prop_name, help=cls.get_helptext(), type=str)
 
     @classmethod
     def value_to_code(cls, value: str) -> str:
@@ -425,7 +430,7 @@ class CodeBoolMap(CodeMapBase):
     def get_parser(cls, parser: argparse.ArgumentParser) -> None:
         if prop_name := cls.property_name or cls.base_property:
             parser.add_argument(
-                prop_name, choices=["on", "off"], help=cls.friendly_name
+                prop_name, choices=["on", "off"], help=cls.get_helptext()
             )
 
     @classmethod
@@ -461,7 +466,7 @@ class CodeDynamicDictMap(CodeMapComplexMixin, CodeMapBase):
     @classmethod
     def get_parser(cls, parser: argparse.ArgumentParser) -> None:
         if prop_name := cls.property_name or cls.base_property:
-            parser.add_argument(prop_name, help=cls.friendly_name, type=str)
+            parser.add_argument(prop_name, help=cls.get_helptext(), type=str)
 
     @classmethod
     def match(cls, v, value):
@@ -573,7 +578,7 @@ class CodeDictMap(CodeDynamicDictMap):
         if prop_name := cls.property_name or cls.base_property:
             parser.add_argument(
                 prop_name,
-                help=cls.friendly_name,
+                help=cls.get_helptext(),
                 choices=list(cls.code_map.values()),
                 type=str,
             )
@@ -681,7 +686,7 @@ class CodeFloatMap(CodeMapBase):
     @classmethod
     def get_parser(cls, parser: argparse.ArgumentParser) -> None:
         if prop_name := cls.property_name or cls.base_property:
-            parser.add_argument(prop_name, help=cls.friendly_name, type=float)
+            parser.add_argument(prop_name, help=cls.get_helptext(), type=float)
 
     @classmethod
     def value_to_code(cls, value: float | int):
@@ -761,7 +766,7 @@ class CodeIntMap(CodeFloatMap):
     @classmethod
     def get_parser(cls, parser: argparse.ArgumentParser) -> None:
         if prop_name := cls.property_name or cls.base_property:
-            parser.add_argument(prop_name, help=cls.friendly_name, type=int)
+            parser.add_argument(prop_name, help=cls.get_helptext(), type=int)
 
     @classmethod
     def value_to_code(cls, value: int):

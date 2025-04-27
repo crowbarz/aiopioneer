@@ -222,7 +222,7 @@ class Source(CodeDynamicDictStrMap):
             except ValueError:
                 return arg
 
-        parser.add_argument("source", help=cls.friendly_name, type=convert_source_arg)
+        parser.add_argument("source", help=cls.get_helptext(), type=convert_source_arg)
 
     @classmethod
     def code_to_value_dynamic(cls, code: str, code_map: dict[int, str]) -> str:
