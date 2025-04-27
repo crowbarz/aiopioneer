@@ -68,6 +68,22 @@ class AVRPropertyRegistry:
             and (zone is None or zone in c.avr_commands)
         )
 
+    def get_code_maps(
+        self,
+        base_class: type[CodeMapBase],
+        zone: Zone = None,
+        is_ha_auto_entity: bool = False,
+    ) -> list[type[CodeMapBase]]:
+        """Return property entries matching a CodeMapBase subclass."""
+        classes: list[type[CodeMapBase]] = []
+        for code_map in self.code_map_index:
+            if issubclass(code_map, base_class):
+                if (zone is None or zone in code_map.supported_zones) and (
+                    not is_ha_auto_entity or code_map.ha_auto_entity
+                ):
+                    classes.append(code_map)
+        return classes
+
     def match_response(self, raw_resp: str) -> tuple[str, type[CodeMapBase], Zone]:
         """Return code map for response."""
         return next((r for r in self.responses if raw_resp.startswith(r[0])), None)
@@ -225,3 +241,17 @@ PROPERTY_REGISTRY = AVRPropertyRegistry(
     + EXTRA_COMMANDS_BLUETOOTH
     + EXTRA_COMMANDS_MHL,
 )
+
+
+def get_property_entry(code_map: type[CodeMapBase]) -> AVRPropertyEntry:
+    """Return property entry for code map."""
+    return PROPERTY_REGISTRY.code_map_index[code_map]
+
+
+def get_code_maps(
+    base_class: type[CodeMapBase], zone: Zone = None, is_ha_auto_entity: bool = False
+) -> list[type[CodeMapBase]]:
+    """Convenience function to return property entries matching a CodeMapBase subclass."""
+    return PROPERTY_REGISTRY.get_code_maps(
+        base_class=base_class, zone=zone, is_ha_auto_entity=is_ha_auto_entity
+    )
