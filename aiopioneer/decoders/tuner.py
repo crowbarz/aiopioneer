@@ -231,9 +231,7 @@ class Preset(CodeStrMap):
         super().decode_response(response=response, params=params)
         response.update(
             clear_property=True,
-            queue_commands=[
-                CommandItem("query_tuner_frequency", skip_if_executing=True)
-            ],
+            queue_commands=[CommandItem("query_tuner_frequency")],
             callback=cache_preset,
         )
         return [response]

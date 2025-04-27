@@ -3,8 +3,9 @@
 import asyncio
 import itertools
 import logging
-from typing import Self, Callable
+from typing import Self, Callable, Awaitable
 
+from .const import Zone
 from .exceptions import AVRUnavailableError
 from .params import AVRParams, PARAM_DEBUG_COMMAND_QUEUE
 from .util import cancel_task
@@ -19,18 +20,24 @@ class CommandItem:
         self,
         command: str,
         *args,
-        queue_id: int = 1,
-        skip_if_startup: bool = False,
-        skip_if_executing: bool = False,
+        zone: Zone = Zone.Z1,
+        ignore_error: bool = False,
+        rate_limit: bool = True,
+        skip_if_starting: bool = False,
+        skip_if_refreshing: bool = False,
         skip_if_queued: bool = True,
+        queue_id: int = 1,
         insert_at: int = -1,
     ):
         self.command = command
         self.args = args
-        self.queue_id = queue_id
-        self.skip_if_startup = skip_if_startup
-        self.skip_if_executing = skip_if_executing
+        self.zone = zone
+        self.ignore_error = ignore_error
+        self.rate_limit = rate_limit
+        self.skip_if_starting = skip_if_starting
+        self.skip_if_refreshing = skip_if_refreshing
         self.skip_if_queued = skip_if_queued
+        self.queue_id = queue_id
         self.insert_at = insert_at
 
     def __eq__(self, value: Self):
@@ -45,7 +52,19 @@ class CommandItem:
         return self.command == value.command and self.args == value.args
 
     def __repr__(self) -> str:
-        return f"Item({repr(self.command)}, args={repr(self.args)})"
+        flags_str = ", ".join(
+            (["ignore_error"] if self.ignore_error else [])
+            + (["rate_limit"] if self.rate_limit else [])
+            + (["skip_if_starting"] if self.skip_if_starting else [])
+            + (["skip_if_refreshing"] if self.skip_if_refreshing else [])
+            + (["skip_if_queued"] if self.skip_if_queued else [])
+        )
+        return (
+            f"Item({repr(self.command)}, args={repr(self.args)}, "
+            + f"zone={self.zone.name}"
+            + (", " + flags_str if flags_str else "")
+            + ")"
+        )
 
 
 class CommandQueue:
@@ -63,10 +82,11 @@ class CommandQueue:
         self._num_queues = num_queues
         self._queue: list[list[CommandItem]] = [[] for _ in range(num_queues)]
         self._task = None
-        self._execute_callback: Callable[[CommandItem], None] = None
+        self._execute_callback: Callable[[CommandItem], Awaitable[None]] = None
         self._command_exceptions: list[Exception] = []
         self._execute_lock = asyncio.Lock()
         self.startup_lock = asyncio.Lock()
+        self.zones_pending_refresh: set[Zone] = set()
 
     def __iter__(self):
         return itertools.chain.from_iterable(self._queue)
@@ -85,31 +105,32 @@ class CommandQueue:
     def purge(self):
         """Purge the command queues."""
         self._queue = [[] for _ in range(self._num_queues)]
+        self.zones_pending_refresh = set()
 
     def enqueue(
         self,
         item: CommandItem,
         queue_id: int = None,
-        skip_if_startup: bool = None,
+        skip_if_starting: bool = None,
         skip_if_queued: bool = None,
-        skip_if_executing: bool = None,
+        skip_if_refreshing: bool = None,
         insert_at: int = None,
         start_executing=True,
     ) -> None:
         """Enqueue a CommandItem in the specified command queue."""
         if not isinstance(item, CommandItem):
             raise ValueError(f"queuing invalid command: {item}")
-        if skip_if_startup is None:
-            skip_if_startup = item.skip_if_startup
-        if skip_if_startup and self.is_starting():
+        if skip_if_starting is None:
+            skip_if_starting = item.skip_if_starting
+        if skip_if_starting and self.is_starting():
             if self._debug:
                 _LOGGER.debug("not queuing %s: module is starting", item)
             return
-        if skip_if_executing is None:
-            skip_if_executing = item.skip_if_executing
-        if skip_if_executing and self.is_executing():
+        if skip_if_refreshing is None:
+            skip_if_refreshing = item.skip_if_refreshing
+        if skip_if_refreshing and self.is_refreshing(item.zone):
             if self._debug:
-                _LOGGER.debug("not queuing %s: queue is executing", item)
+                _LOGGER.debug("not queuing %s: zone is refreshing", item)
             return
         if skip_if_queued is None:
             skip_if_queued = item.skip_if_queued
@@ -180,6 +201,12 @@ class CommandQueue:
         """Return whether AVR is starting."""
         return self.startup_lock.locked()
 
+    def is_refreshing(self, zone: Zone) -> bool:
+        """Return whether a zone is refreshing."""
+        if zone is Zone.ALL:
+            return bool(self.zones_pending_refresh)
+        return zone in self.zones_pending_refresh
+
     async def _execute(self) -> None:
         """Execute commands from the command queue."""
         _LOGGER.debug(">> command queue started")
@@ -189,7 +216,7 @@ class CommandQueue:
                 queue_id, command_item = command_peek
                 command = command_item.command
                 if self._debug:
-                    _LOGGER.debug("command queue executing %s", command)
+                    _LOGGER.debug("command queue executing %s", command_item)
                 try:
                     await self._execute_callback(command_item)
                 except AVRUnavailableError:
