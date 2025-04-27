@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import re
 from abc import abstractmethod
 from typing import Any, Tuple
 
@@ -33,6 +34,7 @@ class CodeMapBase:
     friendly_name = None
     base_property = None
     property_name = None
+    icon = "mdi:audio-video"
 
     def __new__(cls, value, **kwargs):
         _LOGGER.warning("deprecated __new__ method called for class %s", cls)
@@ -42,9 +44,14 @@ class CodeMapBase:
         return cls.code_to_value(code)
 
     @classmethod
+    def get_ss_class_name(cls) -> str:
+        """Get space separated class name."""
+        return re.sub(r"((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))", r" \1", cls.__name__)
+
+    @classmethod
     def get_name(cls) -> str:
         """Get class name, using friendly name if defined."""
-        return cls.friendly_name if cls.friendly_name else cls.__name__
+        return cls.friendly_name if cls.friendly_name else cls.get_ss_class_name()
 
     @classmethod
     @abstractmethod
