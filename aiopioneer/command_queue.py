@@ -78,7 +78,7 @@ class CommandQueue:
     """
 
     def __init__(self, params: AVRParams, num_queues: int = 4):
-        self._debug = bool(params.get_param(PARAM_DEBUG_COMMAND_QUEUE))
+        self._params = params
         self._num_queues = num_queues
         self._queue: list[list[CommandItem]] = [[] for _ in range(num_queues)]
         self._task = None
@@ -123,13 +123,13 @@ class CommandQueue:
         if skip_if_starting is None:
             skip_if_starting = item.skip_if_starting
         if skip_if_starting and self.is_starting():
-            if self._debug:
+            if self._params.get_param(PARAM_DEBUG_COMMAND_QUEUE):
                 _LOGGER.debug("not queuing %s: module is starting", item)
             return
         if skip_if_refreshing is None:
             skip_if_refreshing = item.skip_if_refreshing
         if skip_if_refreshing and self.is_refreshing(item.zone):
-            if self._debug:
+            if self._params.get_param(PARAM_DEBUG_COMMAND_QUEUE):
                 _LOGGER.debug("not queuing %s: zone is refreshing", item)
             return
         if skip_if_queued is None:
@@ -144,10 +144,13 @@ class CommandQueue:
             ## skip executing command at front of active queue
             insert_at += 1
         if skip_if_queued and item in self:
-            if self._debug:
+            if self._params.get_param(PARAM_DEBUG_COMMAND_QUEUE):
                 _LOGGER.debug("not queuing %s: already queued", item)
             return
-        _LOGGER.debug("queuing %s at pos %d in queue #%d", item, insert_at, queue_id)
+        if self._params.get_param(PARAM_DEBUG_COMMAND_QUEUE):
+            _LOGGER.debug(
+                "queuing %s at pos %d in queue #%d", item, insert_at, queue_id
+            )
         self._queue[queue_id].insert(insert_at, item)
         if start_executing:
             self.schedule()
@@ -181,14 +184,14 @@ class CommandQueue:
         if queue_id is not None:
             if self._queue[queue_id]:
                 item = self._queue[queue_id].pop(0)
-                if self._debug:
+                if self._params.get_param(PARAM_DEBUG_COMMAND_QUEUE):
                     _LOGGER.debug("popping %s from queue #%d", item, queue_id)
                 return item
             return None
         for queue in self._queue:
             if queue:
                 item = queue.pop(0)
-                if self._debug:
+                if self._params.get_param(PARAM_DEBUG_COMMAND_QUEUE):
                     _LOGGER.debug("popping %s", item)
                 return item
         return None
@@ -215,7 +218,7 @@ class CommandQueue:
             while (command_peek := self.peek()) is not None:
                 queue_id, command_item = command_peek
                 command = command_item.command
-                if self._debug:
+                if self._params.get_param(PARAM_DEBUG_COMMAND_QUEUE):
                     _LOGGER.debug("command queue executing %s", command_item)
                 try:
                     await self._execute_callback(command_item)
@@ -251,7 +254,7 @@ class CommandQueue:
                     _LOGGER.error("command queue task exception: %s", repr(exc))
                 self._task = None
         if self._task is None:
-            if self._debug:
+            if self._params.get_param(PARAM_DEBUG_COMMAND_QUEUE):
                 _LOGGER.debug("creating command queue task")
             self._task = asyncio.create_task(self._execute(), name="avr_command_queue")
             self._command_exceptions = []
@@ -261,7 +264,7 @@ class CommandQueue:
         if self._task:
             await cancel_task(
                 self._task,
-                debug=self._debug,
+                debug=self._params.get_param(PARAM_DEBUG_COMMAND_QUEUE),
                 ignore_exceptions=ignore_exceptions,
             )
             self._task = None
@@ -273,7 +276,7 @@ class CommandQueue:
         if self._task is None:
             return
 
-        if self._debug:
+        if self._params.get_param(PARAM_DEBUG_COMMAND_QUEUE):
             _LOGGER.debug("waiting for command queue to be flushed")
         await asyncio.wait([self._task])
         if self._task is None:  ## task cancelled due to shutdown
@@ -285,7 +288,7 @@ class CommandQueue:
 
         self._task = None
         if excs := self._command_exceptions:
-            if self._debug:
+            if self._params.get_param(PARAM_DEBUG_COMMAND_QUEUE):
                 _LOGGER.debug("command queue exceptions: %s", repr(excs))
 
             ## Re-raise command exceptions during command queue execution
