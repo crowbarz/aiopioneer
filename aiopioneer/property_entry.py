@@ -62,7 +62,7 @@ class AVRCommand:
             raise AVRUnknownCommandError(command=self.name, zone=zone)
         if isinstance(command := self.avr_commands[zone], list):
             command = command[0]
-        return f"?{command}" if self.is_query_command else command
+        return f"?{command}" if self.is_query_command and not self.avr_args else command
 
     def get_avr_response(self, zone: Zone) -> str | None:
         """Get expected response from AVR for command."""
