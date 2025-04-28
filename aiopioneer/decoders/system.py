@@ -328,8 +328,8 @@ class XCurve(CodeFloatMap):
     ha_device_class = "signal_strength"
     ha_number_mode = "box"
 
-    code_zfill = 2
-    value_min = -49.5
+    code_zfill = 1
+    value_min = -3.0
     value_max = 0
     value_step = 0.5
     value_divider = -0.5
