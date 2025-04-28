@@ -681,6 +681,9 @@ class CodeFloatMap(CodeMapBase):
     value_step: float | int = 1
     value_divider: float | int = 1
     value_offset: float | int = 0
+    unit_of_measurement: str = None
+    ha_device_class: str = None  ## integration default
+    ha_number_mode: str = None  ## integration default
 
     @classmethod
     def get_len(cls) -> int:
