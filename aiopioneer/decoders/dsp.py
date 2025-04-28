@@ -332,6 +332,9 @@ class SACDGain(CodeIntMap):
     ha_device_class = "signal_strength"
     ha_number_mode = "slider"
 
+    value_min = 0
+    value_max = 6
+    value_step = 6
     code_zfill = 1
 
     @classmethod
