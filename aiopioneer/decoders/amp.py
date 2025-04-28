@@ -635,7 +635,7 @@ PROPERTIES_AMP = [
         SourceName,
         {Zone.ALL: "RGB"},
         query_command=AVRCommand(
-            avr_args=[CodeMapBlank(), SourceId],
+            avr_args=[CodeMapQuery(CodeMapBlank), SourceId],
             is_query_command=True,
             wait_for_response=True,
         ),
