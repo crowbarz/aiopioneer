@@ -19,7 +19,7 @@ from .response import Response
 
 
 class FrequencyFM(CodeFloatMap):
-    """Tuner FM frequency. (1step = 0.01MHz)"""
+    """Tuner FM frequency (1step = 0.01MHz)."""
 
     friendly_name = "FM frequency"
     base_property = "tuner"
@@ -47,7 +47,7 @@ class FrequencyFM(CodeFloatMap):
 
 
 class FrequencyAM(CodeIntMap):
-    """Tuner AM frequency. (1step = 1kHz)"""
+    """Tuner AM frequency (1step = 1kHz)."""
 
     friendly_name = "AM frequency"
     base_property = "tuner"
@@ -176,7 +176,7 @@ class Frequency(CodeMapSequence):
 
 
 class FrequencyAMStep(CodeIntMap):
-    """AM frequency step. (Supported on very few AVRs)"""
+    """AM frequency step (Supported on very few AVRs)."""
 
     friendly_name = "AM frequency step"
     base_property = "tuner"
