@@ -308,58 +308,73 @@ class PioneerAVR(AVRConnection):
             _LOGGER.debug(
                 "zone %s already refreshing, skipping refresh", zone.full_name
             )
-
-        _LOGGER.info("refreshing %s", zone.full_name)
-
-        ## Refresh only if zone is powered on
-        await self.send_command("query_power", zone=zone)
-        if not bool(self.properties.power.get(zone)):
             return
 
-        ## Check for timeouts, but ignore errors (eg. ?V will
-        ## return E02 immediately after power on)
-        for command in ["query_volume", "query_mute", "query_source"]:
-            if await self.send_command(command, zone=zone, ignore_error=True) is None:
-                raise AVRResponseTimeoutError(command=command)
+        command_queue = None
+        try:
+            if zone in self.properties.zones_initial_refresh:
+                _LOGGER.info("refreshing %s", zone.full_name)
+            else:
+                _LOGGER.info("attempting initial refresh for %s", zone.full_name)
+            self.properties.command_queue.zones_pending_refresh.add(zone)
 
-        ## Zone-specific updates, if enabled
-        if self.params.get_param(PARAM_DISABLE_AUTO_QUERY):
-            return
-        enabled_functions = set(self.params.get_param(PARAM_ENABLED_FUNCTIONS))
-        if zone in self.properties.zones_initial_refresh:
-            enabled_functions -= set(
-                self.params.get_param(PARAM_INITIAL_REFRESH_FUNCTIONS)
-            )
+            ## Refresh only if zone is powered on
+            await self.send_command("query_power", zone=zone)
+            if not bool(self.properties.power.get(zone)):
+                return
 
-        ## Loop through PIONEER_COMMANDS to allow us to add query commands
-        ## without needing to add it here
-        command_queue = self.properties.command_queue
-        self.properties.command_queue.zones_pending_refresh.add(zone)
-        for func in enabled_functions:
-            for command in PROPERTY_REGISTRY.get_commands(
-                prefix=f"query_{func}", zone=zone
-            ):
-                if command.name == "query_channel_levels":
-                    channels = CHANNELS_ALL
-                    if zone in self.properties.zones_initial_refresh:
-                        channels = self.properties.channel_levels.get(zone, {}).keys()
-                    for channel in channels:
+            ## Check for timeouts, but ignore errors (eg. ?V will
+            ## return E02 immediately after power on)
+            for command in ["query_volume", "query_mute", "query_source"]:
+                if (
+                    await self.send_command(command, zone=zone, ignore_error=True)
+                    is None
+                ):
+                    raise AVRResponseTimeoutError(command=command)
+
+            ## Auto query zone-specific enabled functions on refresh
+            if self.params.get_param(PARAM_DISABLE_AUTO_QUERY):
+                return
+            enabled_functions = set(self.params.get_param(PARAM_ENABLED_FUNCTIONS))
+            if zone in self.properties.zones_initial_refresh:
+                enabled_functions -= set(
+                    self.params.get_param(PARAM_INITIAL_REFRESH_FUNCTIONS)
+                )
+
+            ## Add query commands for each domain from property registry
+            command_queue = self.properties.command_queue
+            for func in enabled_functions:
+                for command in PROPERTY_REGISTRY.get_commands(
+                    prefix=f"query_{func}", zone=zone
+                ):
+                    if command.name == "query_channel_levels":
+                        channels = CHANNELS_ALL
+                        if zone in self.properties.zones_initial_refresh:
+                            channels = self.properties.channel_levels.get(
+                                zone, {}
+                            ).keys()
+                        for channel in channels:
+                            command_queue.enqueue(
+                                CommandItem(
+                                    command.name,
+                                    channel,
+                                    zone=zone,
+                                    ignore_error=True,
+                                    rate_limit=False,
+                                ),
+                                queue_id=2,
+                            )
+                    else:
                         command_queue.enqueue(
                             CommandItem(
-                                command.name,
-                                channel,
-                                zone=zone,
-                                ignore_error=True,
-                                rate_limit=False,
+                                command.name, ignore_error=True, rate_limit=False
                             ),
                             queue_id=2,
                         )
-                else:
-                    command_queue.enqueue(
-                        CommandItem(command.name, ignore_error=True, rate_limit=False),
-                        queue_id=2,
-                    )
-        command_queue.enqueue(CommandItem("_end_refresh", zone, queue_id=2))
+            command_queue.enqueue(CommandItem("_end_refresh", zone, queue_id=2))
+        finally:
+            if not command_queue:
+                self.properties.command_queue.zones_pending_refresh.remove(zone)
 
     async def _refresh_all_zones(self) -> None:
         """Refresh all AVR zones."""
@@ -517,8 +532,7 @@ class PioneerAVR(AVRConnection):
                 check_args(command, args, 1)
                 zone = Zone(args[0])
                 self.properties.command_queue.zones_pending_refresh.remove(zone)
-                zones_initial_refresh = self.properties.zones_initial_refresh
-                if zone not in zones_initial_refresh:
+                if zone not in self.properties.zones_initial_refresh:
                     if zone is Zone.Z1:
                         await self.query_device_info()
                     _LOGGER.info("completed initial refresh for %s", zone.full_name)

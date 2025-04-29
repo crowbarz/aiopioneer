@@ -52,7 +52,7 @@ class Power(CodeInverseBoolMap):
                 CommandItem("_delayed_query_basic", 2.5, queue_id=3),
             ]
             if zone not in properties.zones_initial_refresh:
-                _LOGGER.info("queueing initial refresh for %s", zone.full_name)
+                _LOGGER.debug("queue initial refresh for zone %s", zone.full_name)
                 queue_commands.append(
                     CommandItem(
                         "_delayed_refresh_zone",
