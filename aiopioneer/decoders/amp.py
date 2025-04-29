@@ -403,6 +403,7 @@ class Dimmer(CodeDictStrMap):
     property_name = "dimmer"
     supported_zones = (Zone.ALL,)
     icon = "mdi:white-balance-iridescent"
+    ha_auto_entity = False
     ha_enable_default = True
 
     code_map = {
