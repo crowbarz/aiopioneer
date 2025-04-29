@@ -319,7 +319,6 @@ PARAM_MODEL_DEFAULTS = OrderedDict(
                     151,
                     212,
                 ],
-                PARAM_ENABLED_FUNCTIONS: DEFAULT_ENABLED_FUNCTIONS_NO_VIDEO,
             },
         ),
         (
