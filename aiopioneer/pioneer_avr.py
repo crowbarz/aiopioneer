@@ -24,7 +24,7 @@ from .const import (
 )
 from .decode import process_raw_response
 from .decoders.amp import Volume
-from .decoders.tuner import FrequencyAM, FrequencyFM
+from .decoders.tuner import TunerAMFrequency, TunerFMFrequency
 from .exceptions import (
     AVRError,
     AVRResponseTimeoutError,
@@ -711,8 +711,8 @@ class PioneerAVR(AVRConnection):
         if self.properties.tuner.get("am_frequency_step"):
             return
 
-        ## Try sending the query_tuner_am_step command first
-        if await self.send_command("query_tuner_am_step", ignore_error=True):
+        ## Try sending the query_tuner_am_frequency_step command first
+        if await self.send_command("query_tuner_am_frequency_step", ignore_error=True):
             return
 
         ## Step frequency once and check whether difference was calculated
@@ -784,9 +784,9 @@ class PioneerAVR(AVRConnection):
             await self.properties.command_queue.wait()  ## for AM step calculation
 
         if band is TunerBand.AM:
-            code = FrequencyAM.value_to_code(frequency, properties=self.properties)
+            code = TunerAMFrequency.value_to_code(frequency, properties=self.properties)
         else:
-            code = FrequencyFM.value_to_code(frequency)
+            code = TunerFMFrequency.value_to_code(frequency)
 
         if await self.send_command("tuner_direct_access", ignore_error=True):
             ## Set tuner frequency directly if command is supported

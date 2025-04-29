@@ -14,6 +14,7 @@ from ..params import (
 from ..properties import AVRProperties
 from ..property_entry import AVRCommand, gen_query_property, gen_set_property
 from .code_map import (
+    CodeMapQuery,
     CodeMapBlank,
     CodeMapHasPropertyMixin,
     CodeBoolMap,
@@ -98,7 +99,7 @@ class Power(CodeInverseBoolMap):
 
 
 class Volume(CodeIntMap):
-    """Zone volume. (1step = 0.5dB for Main Zone, 1step = 1.0dB for other zones)"""
+    """Zone volume (1step = 0.5dB for Main Zone, 1step = 1.0dB for other zones)."""
 
     friendly_name = "volume"
     base_property = "volume"
@@ -319,47 +320,58 @@ class SpeakerMode(CodeMapHasPropertyMixin, CodeDictStrMap):
     friendly_name = "speaker mode"
     base_property = "amp"
     property_name = "speaker_mode"
+    supported_zones = (Zone.ALL,)
+    icon = "mdi:speaker-multiple"
+    ha_enable_default = True
 
     code_map = {"0": "off", "1": "A", "2": "B", "3": "A+B"}
 
 
-class HdmiOut(CodeMapHasPropertyMixin, CodeDictStrMap):
+class HDMIOut(CodeMapHasPropertyMixin, CodeDictStrMap):
     """HDMI out."""
 
     friendly_name = "HDMI out"
     base_property = "amp"
     property_name = "hdmi_out"
+    supported_zones = (Zone.ALL,)
+    icon = "mdi:monitor-share"
 
     code_map = {"0": "all", "1": "HDMI 1", "2": "HDMI 2"}
 
 
-class Hdmi3Out(CodeMapHasPropertyMixin, CodeBoolMap):
+class HDMI3Out(CodeMapHasPropertyMixin, CodeBoolMap):
     """HDMI3 out."""
 
     friendly_name = "HDMI3 out"
     base_property = "amp"
     property_name = "hdmi3_out"
+    supported_zones = (Zone.ALL,)
+    icon = "mdi:monitor-share"
 
     code_true = "1"
     code_false = "3"
 
 
-class HdmiAudio(CodeMapHasPropertyMixin, CodeDictStrMap):
+class HDMIAudio(CodeMapHasPropertyMixin, CodeDictStrMap):
     """HDMI audio."""
 
     friendly_name = "HDMI audio"
     base_property = "amp"
     property_name = "hdmi_audio"
+    supported_zones = (Zone.ALL,)
+    icon = "mdi:television-speaker"
 
     code_map = {"0": "amp", "1": "passthrough"}
 
 
-class Pqls(CodeMapHasPropertyMixin, CodeDictStrMap):
+class PQLS(CodeMapHasPropertyMixin, CodeDictStrMap):
     """PQLS."""
 
     friendly_name = "PQLS"
     base_property = "amp"
     property_name = "pqls"
+    supported_zones = (Zone.ALL,)
+    icon = "mdi:surround-sound"
 
     code_map = {"0": "off", "1": "auto"}
 
@@ -389,6 +401,9 @@ class Dimmer(CodeDictStrMap):
     friendly_name = "dimmer"
     base_property = "amp"
     property_name = "dimmer"
+    supported_zones = (Zone.ALL,)
+    icon = "mdi:white-balance-iridescent"
+    ha_enable_default = True
 
     code_map = {
         "0": "brightest",
@@ -404,6 +419,12 @@ class SleepTime(CodeIntMap):
     friendly_name = "sleep time"
     base_property = "amp"
     property_name = "sleep_time"
+    supported_zones = (Zone.ALL,)
+    icon = "mdi:timer-pause-outline"
+    unit_of_measurement = "s"
+    ha_enable_default = True
+    ha_device_class = "duration"
+    ha_number_mode = "slider"
 
     value_min = 0
     value_max = 90
@@ -417,6 +438,9 @@ class AmpMode(CodeMapHasPropertyMixin, CodeDictStrMap):
     friendly_name = "AMP status"
     base_property = "amp"
     property_name = "mode"
+    supported_zones = (Zone.ALL,)
+    icon = "mdi:audio-video"
+    ha_enable_default = True
 
     code_map = {
         "0": "amp on",
@@ -432,6 +456,9 @@ class PanelLock(CodeDictStrMap):
     friendly_name = "panel lock"
     base_property = "amp"
     property_name = "panel_lock"
+    supported_zones = (Zone.ALL,)
+    icon = "mdi:monitor-lock"
+    ha_enable_default = True
 
     code_map = {"0": "off", "1": "panel only", "2": "panel + volume"}
 
@@ -442,6 +469,9 @@ class RemoteLock(CodeBoolMap):
     friendly_name = "remote lock"
     base_property = "amp"
     property_name = "remote_lock"
+    supported_zones = (Zone.ALL,)
+    icon = "mdi:lan-disconnect"
+    ha_enable_default = True
 
 
 class SystemMacAddress(CodeStrMap):
@@ -605,7 +635,7 @@ PROPERTIES_AMP = [
         SourceName,
         {Zone.ALL: "RGB"},
         query_command=AVRCommand(
-            avr_args=[CodeMapBlank(), SourceId],
+            avr_args=[CodeMapQuery(CodeMapBlank), SourceId],
             is_query_command=True,
             wait_for_response=True,
         ),
@@ -625,10 +655,10 @@ PROPERTIES_AMP = [
         ],
     ),
     gen_set_property(SpeakerMode, {Zone.ALL: "SPK"}),
-    gen_set_property(HdmiOut, {Zone.ALL: "HO"}),
-    gen_set_property(Hdmi3Out, {Zone.ALL: "HDO"}),
-    gen_set_property(HdmiAudio, {Zone.ALL: "HA"}),
-    gen_set_property(Pqls, {Zone.ALL: "PQ"}),
+    gen_set_property(HDMIOut, {Zone.ALL: "HO"}),
+    gen_set_property(HDMI3Out, {Zone.ALL: "HDO"}),
+    gen_set_property(HDMIAudio, {Zone.ALL: "HA"}),
+    gen_set_property(PQLS, {Zone.ALL: "PQ"}),
     gen_query_property(
         DisplayText, {Zone.ALL: "FL"}, query_command="query_display_information"
     ),

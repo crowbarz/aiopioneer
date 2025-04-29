@@ -4,7 +4,7 @@ import argparse
 import logging
 import re
 from abc import abstractmethod
-from typing import Any, Tuple
+from typing import Any
 
 from ..const import Zone
 from ..exceptions import AVRCommandUnavailableError
@@ -31,10 +31,13 @@ class CodeDefault:
 class CodeMapBase:
     """Map AVR codes to values."""
 
-    friendly_name = None
-    base_property = None
-    property_name = None
-    icon = "mdi:audio-video"
+    friendly_name: str = None
+    base_property: str = None
+    property_name: str = None
+    supported_zones: tuple[Zone, ...] = ()
+    icon: str = "mdi:audio-video"
+    ha_auto_entity: bool = True  ## add as HA entity automatically
+    ha_enable_default: bool = False  ## enable entity by default
 
     def __new__(cls, value, **kwargs):
         _LOGGER.warning("deprecated __new__ method called for class %s", cls)
@@ -643,7 +646,7 @@ class CodeDictListMap(CodeDictMap):
     code_map: dict[str, list] = {}
 
     @classmethod
-    def code_to_value(cls, code: str) -> Tuple[str, list]:
+    def code_to_value(cls, code: str) -> tuple[str, list]:
         value_list = super().code_to_value(code=code)
         return value_list[0]
 
@@ -678,6 +681,9 @@ class CodeFloatMap(CodeMapBase):
     value_step: float | int = 1
     value_divider: float | int = 1
     value_offset: float | int = 0
+    unit_of_measurement: str = None
+    ha_device_class: str = None  ## integration default
+    ha_number_mode: str = None  ## integration default
 
     @classmethod
     def get_len(cls) -> int:

@@ -18,12 +18,13 @@ from .code_map import (
 from .response import Response
 
 
-class FrequencyFM(CodeFloatMap):
-    """Tuner FM frequency. (1step = 0.01MHz)"""
+class TunerFMFrequency(CodeFloatMap):
+    """Tuner FM frequency (1step = 0.01MHz)."""
 
-    friendly_name = "FM frequency"
+    friendly_name = "tuner FM frequency"
     base_property = "tuner"
     property_name = "frequency"
+    unit_of_measurement = "MHz"
 
     value_min = 87.5
     value_max = 108.0
@@ -41,20 +42,21 @@ class FrequencyFM(CodeFloatMap):
         super().decode_response(response=response, params=params)
         return [
             response.clone(property_name="band", value=TunerBand.FM),
-            *Preset.update_preset(response),
+            *TunerPreset.update_preset(response),
             response,
         ]
 
 
-class FrequencyAM(CodeIntMap):
-    """Tuner AM frequency. (1step = 1kHz)"""
+class TunerAMFrequency(CodeIntMap):
+    """Tuner AM frequency (1step = 1kHz)."""
 
-    friendly_name = "AM frequency"
+    friendly_name = "tuner AM frequency"
     base_property = "tuner"
     property_name = "frequency"
+    unit_of_measurement = "kHz"
     code_zfill = 5
 
-    value_bounds = {9: (531, 1701), 10: (530, 1700)}
+    value_bounds = {9: (531, 1701), 10: (530, 1700), None: (530, 1701)}
 
     @classmethod
     def get_frequency_bounds(cls, am_frequency_step: int) -> tuple[int, int]:
@@ -114,7 +116,7 @@ class FrequencyAM(CodeIntMap):
             elif not freq_div9 and freq_div10:
                 frequency_step = 10
             if frequency_step:
-                return FrequencyAMStep.update_frequency_step(
+                return TunerAMFrequencyStep.update_frequency_step(
                     response=response.clone(), frequency_step=frequency_step
                 )
 
@@ -133,12 +135,12 @@ class FrequencyAM(CodeIntMap):
         return [
             response.clone(inherit_property=False, callback=glean_frequency_step),
             response.clone(property_name="band", value=TunerBand.AM),
-            *Preset.update_preset(response),
+            *TunerPreset.update_preset(response),
             response,
         ]
 
 
-class FrequencyBand(CodeDictMap):
+class TunerFrequencyBand(CodeDictMap):
     """Tuner frequency band."""
 
     friendly_name = "tuner frequency band"
@@ -148,18 +150,18 @@ class FrequencyBand(CodeDictMap):
     code_map = {"A": TunerBand.AM, "F": TunerBand.FM}
 
 
-class Frequency(CodeMapSequence):
+class TunerFrequency(CodeMapSequence):
     """Tuner frequency."""
 
-    friendly_name = "frequency"
+    friendly_name = "tuner frequency"
     base_property = "tuner"
     property_name = "frequency"
 
-    code_map_sequence = [FrequencyBand, FrequencyFM]  ## NOTE: placeholder
+    code_map_sequence = [TunerFrequencyBand, TunerFMFrequency]  ## NOTE: placeholder
 
     BAND_MAP: dict[TunerBand, type[CodeMapBase]] = {
-        TunerBand.AM: FrequencyAM,
-        TunerBand.FM: FrequencyFM,
+        TunerBand.AM: TunerAMFrequency,
+        TunerBand.FM: TunerFMFrequency,
     }
 
     @classmethod
@@ -171,14 +173,14 @@ class Frequency(CodeMapSequence):
         """Response decoder for tuner frequency."""
         band_code = response.code[0]
         response.update(code=response.code[1:])
-        band = FrequencyBand.code_to_value(code=band_code)
+        band = TunerFrequencyBand.code_to_value(code=band_code)
         return cls.BAND_MAP[band].decode_response(response, params=params)
 
 
-class FrequencyAMStep(CodeIntMap):
-    """AM frequency step. (Supported on very few AVRs)"""
+class TunerAMFrequencyStep(CodeIntMap):
+    """AM frequency step (Supported on very few AVRs)."""
 
-    friendly_name = "AM frequency step"
+    friendly_name = "tuner AM frequency step"
     base_property = "tuner"
     property_name = "am_frequency_step"
 
@@ -208,12 +210,16 @@ class FrequencyAMStep(CodeIntMap):
         return [response]
 
 
-class Preset(CodeStrMap):
+class TunerPreset(CodeStrMap):
     """Tuner preset."""
 
     friendly_name = "tuner preset"
     base_property = "tuner"
     property_name = "preset"
+    supported_zones = (Zone.ALL,)
+    icon = "mdi:radio"
+    ha_auto_entity = False
+    ha_enable_default = True
 
     @classmethod
     def decode_response(
@@ -284,16 +290,14 @@ class Preset(CodeStrMap):
 
 
 PROPERTIES_TUNER = [
-    gen_query_property(Frequency, {Zone.ALL: "FR"}),
+    gen_query_property(TunerFrequency, {Zone.ALL: "FR"}),
     gen_set_property(
-        Preset,
+        TunerPreset,
         {Zone.ALL: "PR"},
         set_command="select_tuner_preset",
         retry_set_on_fail=True,
     ),
-    gen_query_property(
-        FrequencyAMStep, {Zone.ALL: "SUQ"}, query_command="query_tuner_am_step"
-    ),
+    gen_query_property(TunerAMFrequencyStep, {Zone.ALL: "SUQ"}),
 ]
 
 EXTRA_COMMANDS_TUNER = [

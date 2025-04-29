@@ -80,7 +80,7 @@ class VideoSignalOutputResolution(VideoSignalFormat):
     property_name = "signal_output_resolution"
 
 
-class VideoSignalHdmi1RecommendedResolution(VideoSignalFormat):
+class VideoSignalHDMI1RecommendedResolution(VideoSignalFormat):
     """Video signal HDMI1 recommended resolution."""
 
     friendly_name = "video signal HDMI1 recommended resolution"
@@ -88,7 +88,7 @@ class VideoSignalHdmi1RecommendedResolution(VideoSignalFormat):
     property_name = "signal_hdmi1_recommended_resolution"
 
 
-class VideoSignalHdmi2RecommendedResolution(VideoSignalFormat):
+class VideoSignalHDMI2RecommendedResolution(VideoSignalFormat):
     """Video signal HDMI2 recommended resolution."""
 
     friendly_name = "video signal HDMI2 recommended resolution"
@@ -96,7 +96,7 @@ class VideoSignalHdmi2RecommendedResolution(VideoSignalFormat):
     property_name = "signal_hdmi2_recommended_resolution"
 
 
-class VideoSignalHdmi3RecommendedResolution(VideoSignalFormat):
+class VideoSignalHDMI3RecommendedResolution(VideoSignalFormat):
     """Video signal HDMI3 recommended resolution."""
 
     friendly_name = "video signal HDMI3 recommended resolution"
@@ -104,7 +104,7 @@ class VideoSignalHdmi3RecommendedResolution(VideoSignalFormat):
     property_name = "signal_hdmi3_recommended_resolution"
 
 
-class VideoSignalHdmi4RecommendedResolution(VideoSignalFormat):
+class VideoSignalHDMI4RecommendedResolution(VideoSignalFormat):
     """Video signal HDMI4 recommended resolution."""
 
     friendly_name = "video signal HDMI4 recommended resolution"
@@ -211,7 +211,7 @@ class VideoSignalOutputBits(VideoSignalBits):
     property_name = "signal_output_bit"  # NOTE: inconsistent
 
 
-class VideoSignalHdmi1Deepcolor(VideoSignalBits):
+class VideoSignalHDMI1Deepcolor(VideoSignalBits):
     """Video signal HDMI1 deepcolor."""
 
     friendly_name = "video signal HDMI1 deepcolor"
@@ -219,7 +219,7 @@ class VideoSignalHdmi1Deepcolor(VideoSignalBits):
     property_name = "signal_hdmi1_deepcolor"  # NOTE: inconsistent
 
 
-class VideoSignalHdmi2Deepcolor(VideoSignalBits):
+class VideoSignalHDMI2Deepcolor(VideoSignalBits):
     """Video signal HDMI2 deepcolor."""
 
     friendly_name = "video signal HDMI2 deepcolor"
@@ -227,7 +227,7 @@ class VideoSignalHdmi2Deepcolor(VideoSignalBits):
     property_name = "signal_hdmi2_deepcolor"  # NOTE: inconsistent
 
 
-class VideoSignalHdmi3Deepcolor(VideoSignalBits):
+class VideoSignalHDMI3Deepcolor(VideoSignalBits):
     """Video signal HDMI3 deepcolor."""
 
     friendly_name = "video signal HDMI3 deepcolor"
@@ -235,7 +235,7 @@ class VideoSignalHdmi3Deepcolor(VideoSignalBits):
     property_name = "signal_hdmi3_deepcolor"  # NOTE: inconsistent
 
 
-class VideoSignalHdmi4Deepcolor(VideoSignalBits):
+class VideoSignalHDMI4Deepcolor(VideoSignalBits):
     """Video signal HDMI4 deepcolor."""
 
     friendly_name = "video signal HDMI4 deepcolor"
@@ -334,23 +334,23 @@ class VideoInformation(CodeMapSequence):
         VideoSignalOutputColorspace,  # [10] signal_output_color_format
         VideoSignalOutputBits,  # [11] signal_output_bit
         VideoSignalOutputExtendedColorspace,  # [12] signal_output_extended_colorspace
-        VideoSignalHdmi1RecommendedResolution,  # [13:15] signal_hdmi1_recommended_resolution
-        VideoSignalHdmi1Deepcolor,  # [15] signal_hdmi1_deepcolor
+        VideoSignalHDMI1RecommendedResolution,  # [13:15] signal_hdmi1_recommended_resolution
+        VideoSignalHDMI1Deepcolor,  # [15] signal_hdmi1_deepcolor
         CodeMapBlank(5),
-        VideoSignalHdmi2RecommendedResolution,  # [21:23] signal_hdmi2_recommended_resolution
-        VideoSignalHdmi2Deepcolor,  # [23] signal_hdmi2_deepcolor
+        VideoSignalHDMI2RecommendedResolution,  # [21:23] signal_hdmi2_recommended_resolution
+        VideoSignalHDMI2Deepcolor,  # [23] signal_hdmi2_deepcolor
     ]
 
     code_map_sequence_extra = [
         *code_map_sequence,
         CodeMapBlank(5),
-        VideoSignalHdmi3RecommendedResolution,  # [29:31] signal_hdmi3_recommended_resolution
-        VideoSignalHdmi3Deepcolor,  # [31] signal_hdmi3_deepcolor
+        VideoSignalHDMI3RecommendedResolution,  # [29:31] signal_hdmi3_recommended_resolution
+        VideoSignalHDMI3Deepcolor,  # [31] signal_hdmi3_deepcolor
         CodeMapBlank(5),
         VideoSignalInput3DFormat,  # [37:39] input_3d_format
         VideoSignalOutput3DFormat,  # [39:41] output_3d_format
-        VideoSignalHdmi4RecommendedResolution,  # [41:43] signal_hdmi4_recommended_resolution
-        VideoSignalHdmi4Deepcolor,  # [44] signal_hdmi4_deepcolor
+        VideoSignalHDMI4RecommendedResolution,  # [41:43] signal_hdmi4_recommended_resolution
+        VideoSignalHDMI4Deepcolor,  # [44] signal_hdmi4_deepcolor
     ]
 
     @classmethod
@@ -377,17 +377,19 @@ class VideoResolution(CodeDictStrMap):
     friendly_name = "video resolution"
     base_property = "video"
     property_name = "resolution"
+    supported_zones = (Zone.Z1,)
+    icon = "mdi:monitor-screenshot"
 
     code_map = {
-        "0": "auto",
-        "1": "pure",
-        "3": "480/576p",
-        "4": "720p",
-        "5": "1080i",
-        "6": "1080p",
-        "7": "1080/24p",
-        "8": "4K",
-        "9": "4K/24p",
+        "00": "auto",
+        "01": "pure",
+        "03": "480/576p",
+        "04": "720p",
+        "05": "1080i",
+        "06": "1080p",
+        "07": "1080/24p",
+        "08": "4K",
+        "09": "4K/24p",
     }
 
     @classmethod
@@ -429,11 +431,14 @@ class VideoPureCinema(CodeDictStrMap):
 
 
 class VideoProgMotion(CodeIntMap):
-    """Video prog motion."""
+    """Video progressive motion."""
 
-    friendly_name = "video prog motion"
+    friendly_name = "video progressive motion"
     base_property = "video"
     property_name = "prog_motion"
+    supported_zones = (Zone.ALL,)
+    icon = "mdi:monitor-shimmer"
+    ha_number_mode = "slider"
 
     value_min = -4
     value_max = 4
@@ -447,6 +452,8 @@ class VideoStreamSmoother(CodeDictStrMap):
     friendly_name = "video stream smoother"
     base_property = "video"
     property_name = "stream_smoother"
+    supported_zones = (Zone.Z1,)
+    icon = "mdi:monitor-shimmer"
 
     code_map = {"0": "off", "1": "on", "2": "auto"}
 
@@ -457,6 +464,8 @@ class AdvancedVideoAdjust(CodeDictStrMap):
     friendly_name = "advanced video adjust"
     base_property = "video"
     property_name = "advanced_video_adjust"
+    supported_zones = (Zone.Z1,)
+    icon = "mdi:monitor-shimmer"
 
     code_map = {"0": "PDP", "1": "LCD", "2": "FPJ", "3": "professional", "4": "memory"}
 
@@ -485,36 +494,48 @@ class VideoInt66Map(CodeIntMap):
     code_zfill = 2
 
 
-class VideoYnr(VideoInt08Map):
-    """Video YNR."""
+class VideoYNR(VideoInt08Map):
+    """Video YNR (brightness noise reduction)."""
 
     friendly_name = "video YNR"
     base_property = "video"
     property_name = "ynr"
+    supported_zones = (Zone.Z1,)
+    icon = "mdi:monitor-shimmer"
+    ha_number_mode = "slider"
 
 
-class VideoCnr(VideoInt08Map):
-    """Video CNR."""
+class VideoCNR(VideoInt08Map):
+    """Video CNR (colour noise reduction)."""
 
     friendly_name = "video CNR"
     base_property = "video"
     property_name = "cnr"
+    supported_zones = (Zone.Z1,)
+    icon = "mdi:monitor-shimmer"
+    ha_number_mode = "slider"
 
 
-class VideoBnr(VideoInt08Map):
-    """Video BNR."""
+class VideoBNR(VideoInt08Map):
+    """Video BNR (block noise reduction)."""
 
     friendly_name = "video BNR"
     base_property = "video"
     property_name = "bnr"
+    supported_zones = (Zone.Z1,)
+    icon = "mdi:monitor-shimmer"
+    ha_number_mode = "slider"
 
 
-class VideoMnr(VideoInt08Map):
-    """Video MNR."""
+class VideoMNR(VideoInt08Map):
+    """Video MNR (mosquito noise reduction)."""
 
     friendly_name = "video MNR"
     base_property = "video"
     property_name = "mnr"
+    supported_zones = (Zone.Z1,)
+    icon = "mdi:monitor-shimmer"
+    ha_number_mode = "slider"
 
 
 class VideoDetail(VideoInt08Map):
@@ -523,6 +544,9 @@ class VideoDetail(VideoInt08Map):
     friendly_name = "video detail"
     base_property = "video"
     property_name = "detail"
+    supported_zones = (Zone.Z1,)
+    icon = "mdi:monitor-shimmer"
+    ha_number_mode = "slider"
 
 
 class VideoSharpness(VideoInt08Map):
@@ -531,6 +555,9 @@ class VideoSharpness(VideoInt08Map):
     friendly_name = "video sharpness"
     base_property = "video"
     property_name = "sharpness"
+    supported_zones = (Zone.Z1,)
+    icon = "mdi:monitor-shimmer"
+    ha_number_mode = "slider"
 
 
 class VideoBrightness(VideoInt66Map):
@@ -539,6 +566,9 @@ class VideoBrightness(VideoInt66Map):
     friendly_name = "video brightness"
     base_property = "video"
     property_name = "brightness"
+    supported_zones = (Zone.Z1,)
+    icon = "mdi:monitor-shimmer"
+    ha_number_mode = "slider"
 
 
 class VideoContrast(VideoInt66Map):
@@ -547,6 +577,9 @@ class VideoContrast(VideoInt66Map):
     friendly_name = "video contrast"
     base_property = "video"
     property_name = "contrast"
+    supported_zones = (Zone.Z1,)
+    icon = "mdi:monitor-shimmer"
+    ha_number_mode = "slider"
 
 
 class VideoHue(VideoInt66Map):
@@ -555,6 +588,9 @@ class VideoHue(VideoInt66Map):
     friendly_name = "video hue"
     base_property = "video"
     property_name = "hue"
+    supported_zones = (Zone.Z1,)
+    icon = "mdi:monitor-shimmer"
+    ha_number_mode = "slider"
 
 
 class VideoChroma(VideoInt66Map):
@@ -563,6 +599,9 @@ class VideoChroma(VideoInt66Map):
     friendly_name = "video chroma"
     base_property = "video"
     property_name = "chroma"
+    supported_zones = (Zone.Z1,)
+    icon = "mdi:monitor-shimmer"
+    ha_number_mode = "slider"
 
 
 class VideoBlackSetup(CodeBoolMap):
@@ -579,6 +618,8 @@ class VideoAspect(CodeDictStrMap):
     friendly_name = "video aspect"
     base_property = "video"
     property_name = "aspect"
+    supported_zones = (Zone.Z1,)
+    icon = "mdi:monitor-screenshot"
 
     code_map = {"0": "passthrough", "1": "normal"}
 
@@ -589,6 +630,9 @@ class VideoSuperResolution(CodeIntMap):
     friendly_name = "video super resolution"
     base_property = "video"
     property_name = "super_resolution"
+    supported_zones = (Zone.Z1,)
+    icon = "mdi:monitor-shimmer"
+    ha_number_mode = "slider"
 
     value_min = 0
     value_max = 3
@@ -603,10 +647,10 @@ PROPERTIES_VIDEO = [
     gen_set_property(VideoProgMotion, {Zone.Z1: "VTE"}),
     gen_set_property(VideoStreamSmoother, {Zone.Z1: "VTF"}),
     gen_set_property(AdvancedVideoAdjust, {Zone.Z1: "VTG"}),
-    gen_set_property(VideoYnr, {Zone.Z1: "VTH"}),
-    gen_set_property(VideoCnr, {Zone.Z1: "VTI"}),
-    gen_set_property(VideoBnr, {Zone.Z1: "VTJ"}),
-    gen_set_property(VideoMnr, {Zone.Z1: "VTK"}),
+    gen_set_property(VideoYNR, {Zone.Z1: "VTH"}),
+    gen_set_property(VideoCNR, {Zone.Z1: "VTI"}),
+    gen_set_property(VideoBNR, {Zone.Z1: "VTJ"}),
+    gen_set_property(VideoMNR, {Zone.Z1: "VTK"}),
     gen_set_property(VideoDetail, {Zone.Z1: "VTL"}),
     gen_set_property(VideoSharpness, {Zone.Z1: "VTM"}),
     gen_set_property(VideoBrightness, {Zone.Z1: "VTN"}),

@@ -35,6 +35,8 @@ class SpeakerSystem(CodeDynamicDictStrMap):
     friendly_name = "speaker system"
     base_property = "system"
     property_name = "speaker_system"
+    supported_zones = (Zone.ALL,)
+    icon = "mdi:speaker-multiple"
 
     index_map_class = SpeakerSystemIndex
 
@@ -73,7 +75,7 @@ class SpeakerSystem(CodeDynamicDictStrMap):
         return [
             response,
             response.clone(
-                property_name="speaker_system_raw",
+                property_name="speaker_system_id",
                 value=SpeakerSystemIndex.code_to_value(response.code),
             ),
         ]
@@ -315,14 +317,19 @@ class XOver(CodeDictStrMap):
 
 
 class XCurve(CodeFloatMap):
-    """X curve (1step=0.5)"""
+    """X curve (1step = 0.5)"""
 
     friendly_name = "X curve"
     base_property = "system"
     property_name = "x_curve"
+    supported_zones = (Zone.ALL,)
+    icon = "mdi:tune-vertical"
+    unit_of_measurement = "dB"
+    ha_device_class = "signal_strength"
+    ha_number_mode = "box"
 
-    code_zfill = 2
-    value_min = -49.5
+    code_zfill = 1
+    value_min = -3.0
     value_max = 0
     value_step = 0.5
     value_divider = -0.5
@@ -457,6 +464,11 @@ class InputLevel(CodeFloatMap):
     friendly_name = "input level"
     base_property = "system"
     property_name = "input_level"  # unused
+    supported_zones = (Zone.ALL,)
+    icon = "mdi:tune-vertical"
+    unit_of_measurement = "dB"
+    ha_device_class = "signal_strength"
+    ha_number_mode = "slider"
 
     code_zfill = 2
     code_offset = -50

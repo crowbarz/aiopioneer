@@ -293,7 +293,7 @@ class AudioInformation(CodeMapSequence):
 
 
 class ChannelLevel(CodeFloatMap):
-    """Channel level. (1step=0.5dB)"""
+    """Channel level (1step = 0.5dB)."""
 
     friendly_name = "channel level"
 
@@ -303,6 +303,13 @@ class ChannelLevel(CodeFloatMap):
     value_divider = 0.5
     value_offset = 25
     code_zfill = 2
+    icon = "mdi:tune-vertical-variant"
+    supported_zones = (Zone.Z1, Zone.Z2, Zone.Z3)
+    unit_of_measurement = "dB"
+    ha_auto_entity = False
+    ha_enable_default = True
+    ha_device_class = "signal_strength"
+    ha_number_mode = "slider"
 
 
 class SpeakerChannel(CodeStrMap):
@@ -485,6 +492,9 @@ class ToneMode(CodeDictStrMap):
     friendly_name = "channel level"
     base_property = "tone"
     property_name = "status"
+    supported_zones = (Zone.Z1, Zone.Z2)
+    icon = "mdi:music-box-outline"
+    ha_enable_default = True
 
     code_map = {"0": "bypass", "1": "on"}
 
@@ -497,6 +507,12 @@ class ToneDb(CodeIntMap):
     value_divider = -1
     value_offset = -6
     code_zfill = 2
+    supported_zones = (Zone.Z1, Zone.Z2)
+    unit_of_measurement = "dB"
+    ha_auto_entity = False
+    ha_enable_default = True
+    ha_device_class = "signal_strength"
+    ha_number_mode = "slider"
 
 
 class ToneBass(ToneDb):
@@ -505,6 +521,7 @@ class ToneBass(ToneDb):
     friendly_name = "tone bass"
     base_property = "tone"
     property_name = "bass"
+    icon = "mdi:music-clef-bass"
 
 
 class ToneTreble(ToneDb):
@@ -513,6 +530,7 @@ class ToneTreble(ToneDb):
     friendly_name = "tone treble"
     base_property = "tone"
     property_name = "treble"
+    icon = "mdi:music-clef-treble"
 
 
 PROPERTIES_AUDIO = [
