@@ -107,7 +107,7 @@ Listed below are the public attributes of a `AVRProperties` object that contains
 | `video` | **dict**[**str** \| Zone, **str**] | Current AVR video parameters
 | `audio` | **dict**[**str** \| Zone, **str**] | Current AVR audio parameters
 | `system` | **dict**[**str** \| Zone, **str**]| AVR system attributes
-| `channel_levels` | **dict**[**str**, **Any**] | Current AVR channel levels, indexed by channel name
+| `channel_level` | **dict**[**str**, dict[Zone, **Any**]] | Current AVR channel level, indexed by zone and channel name
 | `ip_control_port_n` | **str** | IP control ports configured on the AVR (where `n` is the port index)
 
 ## Command line interface (CLI)
@@ -137,7 +137,7 @@ The CLI accepts all AVR commands, as well as the helper commands below. The `lis
 | `get_params` | | Show the currently active set of parameters
 | `get_user_params` | | Show the currently active set of user parameters
 | `set_user_params` | _params_ (JSON) | Set the user parameters to _params_ (see [CLI JSON arguments](#cli-json-arguments) below)
-| `get_properties` | \[ `--zones` \]<br>\[ `--power` \]<br>\[ `--volume` \]<br>\[ `--max_volume` \]<br>\[ `--mute` \]<br>\[ `--source_id` \]<br>\[ `--source_name` \]<br>\[ `--media_control_mode` \]<br>\[ `--tone` \]<br>\[ `--amp` \]<br>\[ `--tuner` \]<br>\[ `--dsp` \]<br>\[ `--video` \]<br>\[ `--system` \]<br>\[ `--audio` \]<br>\[ `--channel_levels` \] | Show the current cached AVR properties for the specified property groups, or all property groups if none are specified
+| `get_properties` | \[ `--zones` \]<br>\[ `--power` \]<br>\[ `--volume` \]<br>\[ `--max_volume` \]<br>\[ `--mute` \]<br>\[ `--source_id` \]<br>\[ `--source_name` \]<br>\[ `--media_control_mode` \]<br>\[ `--tone` \]<br>\[ `--amp` \]<br>\[ `--tuner` \]<br>\[ `--dsp` \]<br>\[ `--video` \]<br>\[ `--system` \]<br>\[ `--audio` \]<br>\[ `--channel_level` \] | Show the current cached AVR properties for the specified property groups, or all property groups if none are specified
 | `get_scan_interval` | | Show the current scan interval.
 | `set_scan_interval` | _scan_interval_ (float) | Set the scan interval to _scan_interval_
 | `refresh` | [`--full`] | Refresh the cached AVR properties for the active zone, or all zones if `--full` is specified

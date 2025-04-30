@@ -347,10 +347,10 @@ class PioneerAVR(AVRConnection):
                 for command in PROPERTY_REGISTRY.get_commands(
                     prefix=f"query_{func}", zone=zone
                 ):
-                    if command.name == "query_channel_levels":
+                    if command.name == "query_channel_level":
                         channels = CHANNELS_ALL
                         if zone in self.properties.zones_initial_refresh:
-                            channels = self.properties.channel_levels.get(
+                            channels = self.properties.channel_level.get(
                                 zone, {}
                             ).keys()
                         for channel in channels:
@@ -826,12 +826,12 @@ class PioneerAVR(AVRConnection):
         """Select the next tuner preset."""
         await self.send_command("tuner_next_preset")
 
-    async def set_channel_levels(
+    async def set_channel_level(
         self, channel: str, level: float, zone: Zone = Zone.Z1
     ) -> None:
         """Set the level (gain) for amplifier channel in zone."""
         zone = self._check_zone(zone)
-        await self.send_command("set_channel_levels", channel, level, zone=zone)
+        await self.send_command("set_channel_level", channel, level, zone=zone)
 
     async def set_video_settings(self, zone: Zone, **arguments) -> None:
         """Set video settings for a given zone."""
