@@ -54,7 +54,7 @@ PROPS_ALL = [
     "video",
     "system",
     "audio",
-    "channel_levels",
+    "channel_level",
 ]
 
 

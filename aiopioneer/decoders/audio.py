@@ -296,7 +296,7 @@ class ChannelLevel(CodeFloatMap):
     """Channel level (1step = 0.5dB)."""
 
     friendly_name = "channel level"
-    base_property = "channel_levels"
+    base_property = "channel_level"
 
     value_min = -12
     value_max = 12
@@ -343,9 +343,9 @@ class SpeakerChannel(CodeStrMap):
     ) -> str:
         channel: str = args[0]
         if channel != "all" and zone in properties.zones_initial_refresh:
-            if (channel_levels := properties.channel_levels.get(zone)) is None:
+            if (channel_levels := properties.channel_level.get(zone)) is None:
                 raise AVRCommandUnavailableError(
-                    command=command, err_key="channel_levels", zone=zone
+                    command=command, err_key="channel_level", zone=zone
                 )
             if channel_levels.get(channel) is None:
                 raise AVRCommandUnavailableError(
@@ -360,7 +360,7 @@ class SpeakerChannelLevel(CodeMapSequence):
     """Speaker channel level."""
 
     friendly_name = "speaker channel level"
-    base_property = "channel_levels"
+    base_property = "channel_level"
     code_map_sequence = [SpeakerChannel, ChannelLevel]
 
     @classmethod
@@ -371,7 +371,7 @@ class SpeakerChannelLevel(CodeMapSequence):
         level_code = responses[1].code
         if speaker == "ALL":
             responses = []
-            channel_levels = response.properties.channel_levels.get(response.zone, {})
+            channel_levels = response.properties.channel_level.get(response.zone, {})
             for channel in channel_levels.keys():
                 responses.append(
                     response.clone(code=level_code, property_name=channel, value=level)

@@ -203,7 +203,7 @@ CommandResponseErrorFormatText = {
 CommandUnavailableErrorFormatText = {
     "tuner": "AVR tuner is unavailable",
     "tone": "tone controls not supported for {zone.full_name}",
-    "channel_levels": "channel levels not supported for {zone.full_name}",
+    "channel_level": "channel levels not supported for {zone.full_name}",
     "channel": "channel {channel} unavailable for {zone.full_name}",
     "video_settings": "video settings not supported for {zone.full_name}",
     "dsp_settings": "DSP settings not supported for {zone.full_name}",
