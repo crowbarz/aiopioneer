@@ -20,10 +20,10 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     MIN_RESCAN_INTERVAL,
     MEDIA_CONTROL_COMMANDS,
-    CHANNELS_ALL,
 )
 from .decode import process_raw_response
 from .decoders.amp import Volume
+from .decoders.audio import SpeakerChannel
 from .decoders.tuner import TunerAMFrequency, TunerFMFrequency
 from .exceptions import (
     AVRError,
@@ -348,11 +348,9 @@ class PioneerAVR(AVRConnection):
                     prefix=f"query_{func}", zone=zone
                 ):
                     if command.name == "query_channel_level":
-                        channels = CHANNELS_ALL
+                        channels = SpeakerChannel.CHANNELS_ALL
                         if zone in self.properties.zones_initial_refresh:
-                            channels = self.properties.channel_level.get(
-                                zone, {}
-                            ).keys()
+                            channels = self.properties.channel_level.get(zone, {})
                         for channel in channels:
                             command_queue.enqueue(
                                 CommandItem(

@@ -43,29 +43,6 @@ class TunerBand(StrEnum):
 
 SOURCE_TUNER = 2
 
-CHANNELS_ALL = [
-    "L",
-    "C",
-    "R",
-    "SL",
-    "SR",
-    "SBL",
-    "SBR",
-    "SW",
-    "LH",
-    "RH",
-    "LW",
-    "RW",
-    "TML",
-    "TMR",
-    "TFL",
-    "TFR",
-    "TRL",
-    "TRR",
-    "SW1",
-    "SW2",
-]
-
 # Listening modes is a dict with a nested array for the following structure:
 # key: [display_name, 2ch_source_bool, multichannel_source_bool]
 LISTENING_MODES = {

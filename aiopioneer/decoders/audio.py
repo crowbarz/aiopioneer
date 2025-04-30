@@ -1,7 +1,7 @@
 """aiopioneer response decoders for audio responses."""
 
 from ..command_queue import CommandItem
-from ..const import Zone, CHANNELS_ALL
+from ..const import Zone
 from ..exceptions import AVRCommandUnavailableError
 from ..params import AVRParams
 from ..properties import AVRProperties
@@ -317,14 +317,37 @@ class SpeakerChannel(CodeStrMap):
     """Speaker channel."""
 
     friendly_name = "speaker channel"
-
     code_len = 3
+
+    CHANNELS_ALL = {
+        "L": "front left",
+        "C": "center",
+        "R": "front right",
+        "SL": "surround left",
+        "SR": "surround right",
+        "SBL": "surround back left",
+        "SBC": "surround back center",
+        "SBR": "surround back right",
+        "LFE": "low freqeuency effects",
+        "LH": "front height left",
+        "RH": "front height right",
+        "LW": "front wide left",
+        "RW": "front wide right",
+        "TML": "top middle left",
+        "TMR": "top middle right",
+        "TFL": "top forward left",
+        "TFR": "top forward right",
+        "TRL": "top backward left",
+        "TRR": "top backward right",
+        "SW1": "subwoofer 1",
+        "SW2": "subwoofer 2",
+    }
 
     @classmethod
     def value_to_code(cls, value: str) -> str:
         if value == "all":
             value = value.upper()
-        elif value not in CHANNELS_ALL:
+        elif value not in cls.CHANNELS_ALL:
             raise ValueError(f"unknown channel {value} for {cls.get_name()}")
         return super().value_to_code(value=value)
 
