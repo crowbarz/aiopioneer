@@ -296,6 +296,7 @@ class ChannelLevel(CodeFloatMap):
     """Channel level (1step = 0.5dB)."""
 
     friendly_name = "channel level"
+    base_property = "channel_levels"
 
     value_min = -12
     value_max = 12
@@ -304,7 +305,7 @@ class ChannelLevel(CodeFloatMap):
     value_offset = 25
     code_zfill = 2
     icon = "mdi:tune-vertical-variant"
-    supported_zones = (Zone.Z1, Zone.Z2, Zone.Z3)
+    supported_zones = {Zone.Z1, Zone.Z2, Zone.Z3}
     unit_of_measurement = "dB"
     ha_auto_entity = False
     ha_enable_default = True
@@ -492,7 +493,7 @@ class ToneMode(CodeDictStrMap):
     friendly_name = "channel level"
     base_property = "tone"
     property_name = "status"
-    supported_zones = (Zone.Z1, Zone.Z2)
+    supported_zones = {Zone.Z1, Zone.Z2}
     icon = "mdi:music-box-outline"
     ha_enable_default = True
 
@@ -507,7 +508,7 @@ class ToneDb(CodeIntMap):
     value_divider = -1
     value_offset = -6
     code_zfill = 2
-    supported_zones = (Zone.Z1, Zone.Z2)
+    supported_zones = {Zone.Z1, Zone.Z2}
     unit_of_measurement = "dB"
     ha_auto_entity = False
     ha_enable_default = True

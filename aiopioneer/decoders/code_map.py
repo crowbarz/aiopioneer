@@ -34,7 +34,7 @@ class CodeMapBase:
     friendly_name: str = None
     base_property: str = None
     property_name: str = None
-    supported_zones: tuple[Zone, ...] = ()
+    supported_zones: set[Zone] = {}
     icon: str = "mdi:audio-video"
     ha_auto_entity: bool = True  ## add as HA entity automatically
     ha_enable_default: bool = False  ## enable entity by default

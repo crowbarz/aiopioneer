@@ -377,7 +377,7 @@ class VideoResolution(CodeDictStrMap):
     friendly_name = "video resolution"
     base_property = "video"
     property_name = "resolution"
-    supported_zones = (Zone.Z1,)
+    supported_zones = {Zone.Z1}
     icon = "mdi:monitor-screenshot"
 
     code_map = {
@@ -436,7 +436,7 @@ class VideoProgMotion(CodeIntMap):
     friendly_name = "video progressive motion"
     base_property = "video"
     property_name = "prog_motion"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:monitor-shimmer"
     ha_number_mode = "slider"
 
@@ -452,7 +452,7 @@ class VideoStreamSmoother(CodeDictStrMap):
     friendly_name = "video stream smoother"
     base_property = "video"
     property_name = "stream_smoother"
-    supported_zones = (Zone.Z1,)
+    supported_zones = {Zone.Z1}
     icon = "mdi:monitor-shimmer"
 
     code_map = {"0": "off", "1": "on", "2": "auto"}
@@ -464,7 +464,7 @@ class AdvancedVideoAdjust(CodeDictStrMap):
     friendly_name = "advanced video adjust"
     base_property = "video"
     property_name = "advanced_video_adjust"
-    supported_zones = (Zone.Z1,)
+    supported_zones = {Zone.Z1}
     icon = "mdi:monitor-shimmer"
 
     code_map = {"0": "PDP", "1": "LCD", "2": "FPJ", "3": "professional", "4": "memory"}
@@ -500,7 +500,7 @@ class VideoYNR(VideoInt08Map):
     friendly_name = "video YNR"
     base_property = "video"
     property_name = "ynr"
-    supported_zones = (Zone.Z1,)
+    supported_zones = {Zone.Z1}
     icon = "mdi:monitor-shimmer"
     ha_number_mode = "slider"
 
@@ -511,7 +511,7 @@ class VideoCNR(VideoInt08Map):
     friendly_name = "video CNR"
     base_property = "video"
     property_name = "cnr"
-    supported_zones = (Zone.Z1,)
+    supported_zones = {Zone.Z1}
     icon = "mdi:monitor-shimmer"
     ha_number_mode = "slider"
 
@@ -522,7 +522,7 @@ class VideoBNR(VideoInt08Map):
     friendly_name = "video BNR"
     base_property = "video"
     property_name = "bnr"
-    supported_zones = (Zone.Z1,)
+    supported_zones = {Zone.Z1}
     icon = "mdi:monitor-shimmer"
     ha_number_mode = "slider"
 
@@ -533,7 +533,7 @@ class VideoMNR(VideoInt08Map):
     friendly_name = "video MNR"
     base_property = "video"
     property_name = "mnr"
-    supported_zones = (Zone.Z1,)
+    supported_zones = {Zone.Z1}
     icon = "mdi:monitor-shimmer"
     ha_number_mode = "slider"
 
@@ -544,7 +544,7 @@ class VideoDetail(VideoInt08Map):
     friendly_name = "video detail"
     base_property = "video"
     property_name = "detail"
-    supported_zones = (Zone.Z1,)
+    supported_zones = {Zone.Z1}
     icon = "mdi:monitor-shimmer"
     ha_number_mode = "slider"
 
@@ -555,7 +555,7 @@ class VideoSharpness(VideoInt08Map):
     friendly_name = "video sharpness"
     base_property = "video"
     property_name = "sharpness"
-    supported_zones = (Zone.Z1,)
+    supported_zones = {Zone.Z1}
     icon = "mdi:monitor-shimmer"
     ha_number_mode = "slider"
 
@@ -566,7 +566,7 @@ class VideoBrightness(VideoInt66Map):
     friendly_name = "video brightness"
     base_property = "video"
     property_name = "brightness"
-    supported_zones = (Zone.Z1,)
+    supported_zones = {Zone.Z1}
     icon = "mdi:monitor-shimmer"
     ha_number_mode = "slider"
 
@@ -577,7 +577,7 @@ class VideoContrast(VideoInt66Map):
     friendly_name = "video contrast"
     base_property = "video"
     property_name = "contrast"
-    supported_zones = (Zone.Z1,)
+    supported_zones = {Zone.Z1}
     icon = "mdi:monitor-shimmer"
     ha_number_mode = "slider"
 
@@ -588,7 +588,7 @@ class VideoHue(VideoInt66Map):
     friendly_name = "video hue"
     base_property = "video"
     property_name = "hue"
-    supported_zones = (Zone.Z1,)
+    supported_zones = {Zone.Z1}
     icon = "mdi:monitor-shimmer"
     ha_number_mode = "slider"
 
@@ -599,7 +599,7 @@ class VideoChroma(VideoInt66Map):
     friendly_name = "video chroma"
     base_property = "video"
     property_name = "chroma"
-    supported_zones = (Zone.Z1,)
+    supported_zones = {Zone.Z1}
     icon = "mdi:monitor-shimmer"
     ha_number_mode = "slider"
 
@@ -618,7 +618,7 @@ class VideoAspect(CodeDictStrMap):
     friendly_name = "video aspect"
     base_property = "video"
     property_name = "aspect"
-    supported_zones = (Zone.Z1,)
+    supported_zones = {Zone.Z1}
     icon = "mdi:monitor-screenshot"
 
     code_map = {"0": "passthrough", "1": "normal"}
@@ -630,7 +630,7 @@ class VideoSuperResolution(CodeIntMap):
     friendly_name = "video super resolution"
     base_property = "video"
     property_name = "super_resolution"
-    supported_zones = (Zone.Z1,)
+    supported_zones = {Zone.Z1}
     icon = "mdi:monitor-shimmer"
     ha_number_mode = "slider"
 

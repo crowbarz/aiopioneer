@@ -216,7 +216,7 @@ class TunerPreset(CodeStrMap):
     friendly_name = "tuner preset"
     base_property = "tuner"
     property_name = "preset"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:radio"
     ha_auto_entity = False
     ha_enable_default = True

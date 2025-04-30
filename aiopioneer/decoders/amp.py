@@ -320,7 +320,7 @@ class SpeakerMode(CodeMapHasPropertyMixin, CodeDictStrMap):
     friendly_name = "speaker mode"
     base_property = "amp"
     property_name = "speaker_mode"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:speaker-multiple"
     ha_enable_default = True
 
@@ -333,7 +333,7 @@ class HDMIOut(CodeMapHasPropertyMixin, CodeDictStrMap):
     friendly_name = "HDMI out"
     base_property = "amp"
     property_name = "hdmi_out"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:monitor-share"
 
     code_map = {"0": "all", "1": "HDMI 1", "2": "HDMI 2"}
@@ -345,7 +345,7 @@ class HDMI3Out(CodeMapHasPropertyMixin, CodeBoolMap):
     friendly_name = "HDMI3 out"
     base_property = "amp"
     property_name = "hdmi3_out"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:monitor-share"
 
     code_true = "1"
@@ -358,7 +358,7 @@ class HDMIAudio(CodeMapHasPropertyMixin, CodeDictStrMap):
     friendly_name = "HDMI audio"
     base_property = "amp"
     property_name = "hdmi_audio"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:television-speaker"
 
     code_map = {"0": "amp", "1": "passthrough"}
@@ -370,7 +370,7 @@ class PQLS(CodeMapHasPropertyMixin, CodeDictStrMap):
     friendly_name = "PQLS"
     base_property = "amp"
     property_name = "pqls"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:surround-sound"
 
     code_map = {"0": "off", "1": "auto"}
@@ -401,7 +401,7 @@ class Dimmer(CodeDictStrMap):
     friendly_name = "dimmer"
     base_property = "amp"
     property_name = "dimmer"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:white-balance-iridescent"
     ha_auto_entity = False
     ha_enable_default = True
@@ -420,7 +420,7 @@ class SleepTime(CodeIntMap):
     friendly_name = "sleep time"
     base_property = "amp"
     property_name = "sleep_time"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:timer-pause-outline"
     unit_of_measurement = "s"
     ha_enable_default = True
@@ -439,7 +439,7 @@ class AmpMode(CodeMapHasPropertyMixin, CodeDictStrMap):
     friendly_name = "AMP status"
     base_property = "amp"
     property_name = "mode"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:audio-video"
     ha_enable_default = True
 
@@ -457,7 +457,7 @@ class PanelLock(CodeDictStrMap):
     friendly_name = "panel lock"
     base_property = "amp"
     property_name = "panel_lock"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:monitor-lock"
     ha_enable_default = True
 
@@ -470,7 +470,7 @@ class RemoteLock(CodeBoolMap):
     friendly_name = "remote lock"
     base_property = "amp"
     property_name = "remote_lock"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:lan-disconnect"
     ha_enable_default = True
 

@@ -35,7 +35,7 @@ class SpeakerSystem(CodeDynamicDictStrMap):
     friendly_name = "speaker system"
     base_property = "system"
     property_name = "speaker_system"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:speaker-multiple"
 
     index_map_class = SpeakerSystemIndex
@@ -322,7 +322,7 @@ class XCurve(CodeFloatMap):
     friendly_name = "X curve"
     base_property = "system"
     property_name = "x_curve"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:tune-vertical"
     unit_of_measurement = "dB"
     ha_device_class = "signal_strength"
@@ -464,7 +464,7 @@ class InputLevel(CodeFloatMap):
     friendly_name = "input level"
     base_property = "system"
     property_name = "input_level"  # unused
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:tune-vertical"
     unit_of_measurement = "dB"
     ha_device_class = "signal_strength"

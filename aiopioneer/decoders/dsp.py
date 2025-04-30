@@ -28,7 +28,7 @@ class PhaseControl(CodeDictStrMap):
     friendly_name = "phase control"
     base_property = "dsp"
     property_name = "phase_control"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
     code_map = {"0": "off", "1": "on", "2": "full band on"}
@@ -40,7 +40,7 @@ class PhaseControlPlus(CodeIntMap):
     friendly_name = "phase control plus"
     base_property = "dsp"
     property_name = "phase_control_plus"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
     unit_of_measurement = "ms"
     ha_device_class = "duration"
@@ -69,7 +69,7 @@ class VirtualSpeakers(CodeDictStrMap):
     friendly_name = "virtual speakers"
     base_property = "dsp"
     property_name = "virtual_speakers"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:speaker-multiple"
 
     code_map = {"0": "auto", "1": "manual"}
@@ -81,7 +81,7 @@ class VirtualSoundback(CodeBoolMap):
     friendly_name = "virtual soundback"
     base_property = "dsp"
     property_name = "virtual_sb"  # NOTE: inconsistent
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
 
@@ -91,7 +91,7 @@ class VirtualHeight(CodeBoolMap):
     friendly_name = "virtual height"
     base_property = "dsp"
     property_name = "virtual_height"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
 
@@ -101,7 +101,7 @@ class VirtualWide(CodeBoolMap):
     friendly_name = "virtual wide"
     base_property = "dsp"
     property_name = "virtual_wide"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
 
@@ -111,7 +111,7 @@ class VirtualDepth(CodeDictStrMap):
     friendly_name = "virtual depth"
     base_property = "dsp"
     property_name = "virtual_depth"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
     code_map = {"0": "off", "1": "min", "2": "mid", "3": "max"}
@@ -123,7 +123,7 @@ class SoundRetriever(CodeBoolMap):
     friendly_name = "sound retriever"
     base_property = "dsp"
     property_name = "sound_retriever"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
 
@@ -133,7 +133,7 @@ class SignalSelect(CodeDictStrMap):
     friendly_name = "signal select"
     base_property = "dsp"
     property_name = "signal_select"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
     code_map = {"0": "auto", "1": "analog", "2": "digital", "3": "HDMI"}
@@ -145,7 +145,7 @@ class InputAttenuator(CodeBoolMap):
     friendly_name = "input attenuator"
     base_property = "dsp"
     property_name = "input_attenuator"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
 
@@ -155,7 +155,7 @@ class Equalizer(CodeBoolMap):
     friendly_name = "equalizer"
     base_property = "dsp"
     property_name = "eq"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
 
@@ -165,7 +165,7 @@ class StandingWave(CodeBoolMap):
     friendly_name = "standing wave"
     base_property = "dsp"
     property_name = "standing_wave"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
 
@@ -175,7 +175,7 @@ class SoundDelay(CodeIntMap):
     friendly_name = "sound delay"
     base_property = "dsp"
     property_name = "sound_delay"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
     unit_of_measurement = "ms"
     ha_device_class = "duration"
@@ -194,7 +194,7 @@ class DigitalNoiseReduction(CodeBoolMap):
     friendly_name = "digital noise reduction"
     base_property = "dsp"
     property_name = "digital_noise_reduction"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
 
@@ -204,7 +204,7 @@ class DialogEnhancement(CodeDictStrMap):
     friendly_name = "dialog enhancement"
     base_property = "dsp"
     property_name = "dialog_enhancement"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
     code_map = {"0": "off", "1": "flat", "2": "+1", "3": "+2", "4": "+3", "5": "+4"}
@@ -216,7 +216,7 @@ class AudioScaler(CodeDictStrMap):
     friendly_name = "audio scaler"
     base_property = "dsp"
     property_name = "audio_scaler"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
     code_map = {"0": "auto", "1": "manual"}
@@ -228,7 +228,7 @@ class HiBit(CodeBoolMap):
     friendly_name = "hi-bit"
     base_property = "dsp"
     property_name = "hi_bit"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
 
@@ -238,7 +238,7 @@ class UpSampling(CodeDictStrMap):
     friendly_name = "up sampling"
     base_property = "dsp"
     property_name = "up_sampling"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
     code_map = {"0": "off", "1": "2 times", "2": "4 times"}
@@ -250,7 +250,7 @@ class DigitalFilter(CodeDictStrMap):
     friendly_name = "digital filter"
     base_property = "dsp"
     property_name = "digital_filter"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
     code_map = {"0": "slow", "1": "sharp", "2": "short"}
@@ -262,7 +262,7 @@ class DualMono(CodeDictStrMap):
     friendly_name = "dual mono"
     base_property = "dsp"
     property_name = "dual_mono"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
     code_map = {"0": "CH1+CH2", "1": "CH1", "2": "CH2"}
@@ -274,7 +274,7 @@ class FixedPCM(CodeBoolMap):
     friendly_name = "fixed PCM"
     base_property = "dsp"
     property_name = "fixed_pcm"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
 
@@ -284,7 +284,7 @@ class DynamicRange(CodeDictStrMap):
     friendly_name = "dynamic range"
     base_property = "dsp"
     property_name = "dynamic_range"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
     code_map = {"0": "off", "1": "auto", "2": "mid", "3": "max"}
@@ -296,7 +296,7 @@ class LFEAttenuator(CodeIntMap):
     friendly_name = "LFE attenuator"
     base_property = "dsp"
     property_name = "lfe_attenuator"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
     unit_of_measurement = "dB"
     ha_device_class = "signal_strength"
@@ -326,7 +326,7 @@ class SACDGain(CodeIntMap):
     friendly_name = "SACD gain"
     base_property = "dsp"
     property_name = "sacd_gain"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
     unit_of_measurement = "dB"
     ha_device_class = "signal_strength"
@@ -354,7 +354,7 @@ class AutoDelay(CodeBoolMap):
     friendly_name = "auto delay"
     base_property = "dsp"
     property_name = "auto_delay"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
 
@@ -364,7 +364,7 @@ class CenterWidth(CodeIntMap):
     friendly_name = "center width"
     base_property = "dsp"
     property_name = "center_width"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
     ha_number_mode = "slider"
 
@@ -379,7 +379,7 @@ class Panorama(CodeBoolMap):
     friendly_name = "panorama"
     base_property = "dsp"
     property_name = "panorama"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
 
@@ -389,7 +389,7 @@ class Dimension(CodeIntMap):
     friendly_name = "dimension"
     base_property = "dsp"
     property_name = "dimension"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
     ha_number_mode = "slider"
 
@@ -405,7 +405,7 @@ class CenterImage(CodeFloatMap):
     friendly_name = "center image"
     base_property = "dsp"
     property_name = "center_image"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
     ha_number_mode = "slider"
 
@@ -422,7 +422,7 @@ class Effect(CodeIntMap):
     friendly_name = "effect"
     base_property = "dsp"
     property_name = "effect"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
     ha_number_mode = "slider"
 
@@ -439,7 +439,7 @@ class HeightGain(CodeDictStrMap):
     friendly_name = "height gain"
     base_property = "dsp"
     property_name = "height_gain"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
     code_map = {"0": "low", "1": "mid", "2": "high"}
@@ -451,7 +451,7 @@ class LoudnessManagement(CodeBoolMap):
     friendly_name = "loudness management"
     base_property = "dsp"
     property_name = "loudness_management"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
 
@@ -461,7 +461,7 @@ class CenterSpread(CodeBoolMap):
     friendly_name = "center spread"
     base_property = "dsp"
     property_name = "center_spread"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
 
@@ -471,7 +471,7 @@ class RenderingMode(CodeDictStrMap):
     friendly_name = "rendering mode"
     base_property = "dsp"
     property_name = "rendering_mode"
-    supported_zones = (Zone.ALL,)
+    supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
 
     code_map = {"0": "object base", "1": "channel base"}
