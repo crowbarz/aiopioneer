@@ -297,6 +297,7 @@ class ChannelLevel(CodeFloatMap):
 
     friendly_name = "channel level"
     base_property = "channel_level"
+    property_name = "level"  # unused for decode
 
     value_min = -12
     value_max = 12
@@ -317,6 +318,8 @@ class SpeakerChannel(CodeStrMap):
     """Speaker channel."""
 
     friendly_name = "speaker channel"
+    base_property = "channel_level"
+    property_name = "channel"  # unused for decode
     code_len = 3
 
     CHANNELS_ALL = {
@@ -474,10 +477,11 @@ class ListeningMode(CodeDynamicDictListMap):
 
 
 # pylint: disable=abstract-method
-class AvailableListeningMode(CodeDynamicDictStrMap):
+class AvailableListeningMode(CodeDynamicDictStrMap):  # encode only
     """Available listening mode."""
 
     index_map_class = ListeningModeIndex
+    base_property = "listening_mode"
 
     @classmethod
     def value_to_code(cls, value: str | int, properties: AVRProperties = None) -> str:
