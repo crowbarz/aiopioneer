@@ -517,7 +517,7 @@ class AvailableListeningMode(CodeDynamicDictStrMap):  # encode only
 class ToneMode(CodeDictStrMap):
     """Tone mode."""
 
-    friendly_name = "channel level"
+    friendly_name = "tone mode"
     base_property = "tone"
     property_name = "status"
     supported_zones = {Zone.Z1, Zone.Z2}
