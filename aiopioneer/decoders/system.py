@@ -89,7 +89,7 @@ class HomeMenuStatus(CodeBoolMap):
     property_name = "home_menu_status"
 
 
-class McaccDiagnosticCurrentMeasurement(CodeIntMap):
+class MCACCDiagnosticCurrentMeasurement(CodeIntMap):
     """MCACC diagnostic current measurement."""
 
     friendly_name = "MCACC diagnostic current measurement"
@@ -99,7 +99,7 @@ class McaccDiagnosticCurrentMeasurement(CodeIntMap):
     code_zfill = 2
 
 
-class McaccDiagnosticTotalMeasurement(CodeIntMap):
+class MCACCDiagnosticTotalMeasurement(CodeIntMap):
     """MCACC diagnostic total measurement."""
 
     friendly_name = "MCACC diagnostic total measurement"
@@ -109,7 +109,7 @@ class McaccDiagnosticTotalMeasurement(CodeIntMap):
     code_zfill = 2
 
 
-class McaccDiagnosticMeasuring(CodeDictStrMap):
+class MCACCDiagnosticMeasuring(CodeDictStrMap):
     """MCACC diagnostic measuring."""
 
     friendly_name = "MCACC diagnostic measuring"
@@ -119,7 +119,7 @@ class McaccDiagnosticMeasuring(CodeDictStrMap):
     code_map = {"0": "inactive", "1": "measuring"}
 
 
-class McaccDiagnosticError(CodeDictStrMap):
+class MCACCDiagnosticError(CodeDictStrMap):
     """MCACC measurement error."""
 
     friendly_name = "MCACC diagnostic error"
@@ -137,7 +137,7 @@ class McaccDiagnosticError(CodeDictStrMap):
     }
 
 
-class McaccDiagnosticStatus(CodeMapSequence):
+class MCACCDiagnosticStatus(CodeMapSequence):
     """MCACC diagnostic status."""
 
     friendly_name = "MCACC diagnostic status"
@@ -145,12 +145,12 @@ class McaccDiagnosticStatus(CodeMapSequence):
     property_name = "mcacc_diagnostic_status"
 
     code_map_sequence = [
-        McaccDiagnosticCurrentMeasurement,  # [:2]
-        McaccDiagnosticTotalMeasurement,  # [2:4]
+        MCACCDiagnosticCurrentMeasurement,  # [:2]
+        MCACCDiagnosticTotalMeasurement,  # [2:4]
         CodeMapBlank(1),
-        McaccDiagnosticMeasuring,  # [5]
+        MCACCDiagnosticMeasuring,  # [5]
         CodeMapBlank(-1),
-        McaccDiagnosticError,  # [-1]
+        MCACCDiagnosticError,  # [-1]
     ]
 
 
@@ -394,7 +394,7 @@ class SpeakerSettings(CodeDictMap):
     ## NOTE: value_to_code unimplemented
 
 
-class McaccChannelLevel(CodeFloatMap):
+class MCACCChannelLevel(CodeFloatMap):
     """MCACC channel level."""
 
     friendly_name = "MCACC channel level"
@@ -421,7 +421,7 @@ class McaccChannelLevel(CodeFloatMap):
     ## NOTE: value_to_code unimplemented
 
 
-class McaccSpeakerDistance(CodeFloatMap):
+class MCACCSpeakerDistance(CodeFloatMap):
     """MCACC speaker distance."""
 
     friendly_name = "MCACC speaker distance"
@@ -772,7 +772,7 @@ class UserLock(CodeBoolMap):
 PROPERTIES_SYSTEM = [
     gen_set_property(SpeakerSystem, {Zone.ALL: "SSF"}),
     gen_query_property(HomeMenuStatus, {Zone.ALL: "SSL"}),
-    gen_query_property(McaccDiagnosticStatus, {Zone.ALL: "SSJ"}),
+    gen_query_property(MCACCDiagnosticStatus, {Zone.ALL: "SSJ"}),
     gen_query_property(StandingWaveStatus, {Zone.ALL: "SUU"}),
     gen_query_property(StandingWaveSwTrim, {Zone.ALL: "SUV"}),
     gen_set_property(SurroundPosition, {Zone.ALL: "SSP"}),
@@ -781,8 +781,8 @@ PROPERTIES_SYSTEM = [
     gen_query_property(LoudnessPlus, {Zone.ALL: "SSU"}),
     gen_query_property(SbchProcessing, {Zone.ALL: "SSV"}),
     gen_query_property(SpeakerSettings, {Zone.ALL: "SSG"}),
-    gen_query_property(McaccChannelLevel, {Zone.ALL: "SSR"}),
-    gen_query_property(McaccSpeakerDistance, {Zone.ALL: "SSS"}),
+    gen_query_property(MCACCChannelLevel, {Zone.ALL: "SSR"}),
+    gen_query_property(MCACCSpeakerDistance, {Zone.ALL: "SSS"}),
     gen_query_property(InputLevel, {Zone.ALL: "ILA"}),
     gen_query_property(ThxUltraselect2, {Zone.ALL: "SSW"}),
     gen_query_property(BoundaryGainCompression, {Zone.ALL: "SSX"}),
