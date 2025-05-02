@@ -302,6 +302,8 @@ class SurroundPosition(CodeDictStrMap):
     friendly_name = "surround position"
     base_property = "system"
     property_name = "surround_position"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:tune-vertical"
 
     code_map = {"0": "side", "1": "rear"}
 
@@ -312,6 +314,8 @@ class XOver(CodeDictStrMap):
     friendly_name = "X over"
     base_property = "system"
     property_name = "x_over"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:tune-vertical"
 
     code_map = {"0": "50Hz", "1": "80Hz", "2": "100Hz", "3": "150Hz", "4": "200Hz"}
 
@@ -515,12 +519,14 @@ class ReEqualization(CodeBoolMap):
     property_name = "re_equalization"
 
 
-class OsdLanguage(CodeDictStrMap):
+class OSDLanguage(CodeDictStrMap):
     """OSD language."""
 
     friendly_name = "OSD language"
     base_property = "system"
     property_name = "osd_language"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:translate"
 
     code_map = {
         "00": "English",
@@ -536,7 +542,7 @@ class OsdLanguage(CodeDictStrMap):
     }
 
 
-class NetworkDhcp(CodeBoolMap):
+class NetworkDHCP(CodeBoolMap):
     """Network DHCP."""
 
     friendly_name = "network dhcp"
@@ -558,6 +564,8 @@ class NetworkStandby(CodeBoolMap):
     friendly_name = "network standby"
     base_property = "system"
     property_name = "network_standby"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:leaf-circle-outline"
 
 
 class FriendlyName(CodeStrMap):
@@ -574,6 +582,8 @@ class ParentalLock(CodeBoolMap):
     friendly_name = "parental lock"
     base_property = "system"
     property_name = "parental_lock"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:tune-vertical"
 
 
 class ParentalLockPassword(CodeStrMap):
@@ -582,9 +592,11 @@ class ParentalLockPassword(CodeStrMap):
     friendly_name = "parental lock password"
     base_property = "system"
     property_name = "parental_lock_password"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:account-lock-outline"
 
 
-class IpControlPorts(CodeStrMap):
+class IPControlPorts(CodeStrMap):
     """Enabled IP control ports."""
 
     friendly_name = "enabled IP control ports"
@@ -614,36 +626,44 @@ class IpControlPorts(CodeStrMap):
     ## NOTE: value_to_code unimplemented
 
 
-class HdmiControl(CodeBoolMap):
+class HDMIControl(CodeBoolMap):
     """HDMI control."""
 
     friendly_name = "HDMI control"
     base_property = "system"
     property_name = "hdmi_control"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:hdmi-port"
 
 
-class HdmiControlMode(CodeBoolMap):
+class HDMIControlMode(CodeBoolMap):
     """HDMI control mode."""
 
     friendly_name = "HDMI control mode"
     base_property = "system"
     property_name = "hdmi_control_mode"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:hdmi-port"
 
 
-class HdmiArc(CodeBoolMap):
+class HDMIArc(CodeBoolMap):
     """HDMI arc."""
 
     friendly_name = "HDMI arc"
     base_property = "system"
     property_name = "hdmi_arc"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:monitor-speaker"
 
 
-class PqlsForBackup(CodeBoolMap):
+class PQLSForBackup(CodeBoolMap):
     """PQLS for backup."""
 
     friendly_name = "PQLS for backup"
     base_property = "system"
     property_name = "pqls_for_backup"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:surround-sound"
 
 
 class StandbyPassthrough(CodeDictStrMap):
@@ -652,6 +672,8 @@ class StandbyPassthrough(CodeDictStrMap):
     friendly_name = "standby passthrough"
     base_property = "system"
     property_name = "standby_passthrough"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:tune-vertical"
 
     code_map = {
         "00": "off",
@@ -668,12 +690,14 @@ class StandbyPassthrough(CodeDictStrMap):
     }
 
 
-class ExternalHdmiTrigger(CodeDictStrMap):
+class ExternalHDMITrigger(CodeDictStrMap):
     """External HDMI trigger."""
 
     friendly_name = "external HDMI trigger"
     base_property = "system"
     property_name = "external_hdmi_trigger"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:hdmi-port"
 
     code_map = {
         "0": "off",
@@ -695,13 +719,13 @@ class ExternalHdmiTrigger(CodeDictStrMap):
         return super().decode_response(response=response, params=params)
 
 
-class ExternalHdmiTrigger1(ExternalHdmiTrigger):
+class ExternalHDMITrigger1(ExternalHDMITrigger):
     """External HDMI trigger 1."""
 
     property_name = "external_hdmi_trigger_1"
 
 
-class ExternalHdmiTrigger2(ExternalHdmiTrigger):
+class ExternalHDMITrigger2(ExternalHDMITrigger):
     """External HDMI trigger 2."""
 
     property_name = "external_hdmi_trigger_2"
@@ -713,14 +737,18 @@ class SpeakerBLink(CodeBoolMap):
     friendly_name = "speaker B link"
     base_property = "system"
     property_name = "speaker_b_link"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:speaker-multiple"
 
 
-class OsdOverlay(CodeBoolMap):
+class OSDOverlay(CodeBoolMap):
     """OSD overlay."""
 
     friendly_name = "OSD overlay"
     base_property = "system"
     property_name = "osd_overlay"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:subtitles-outline"
 
 
 class AdditionalService(CodeBoolMap):
@@ -737,6 +765,8 @@ class UserLock(CodeBoolMap):
     friendly_name = "user lock"
     base_property = "system"
     property_name = "user_lock"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:account-lock-outline"
 
 
 PROPERTIES_SYSTEM = [
@@ -745,9 +775,9 @@ PROPERTIES_SYSTEM = [
     gen_query_property(McaccDiagnosticStatus, {Zone.ALL: "SSJ"}),
     gen_query_property(StandingWaveStatus, {Zone.ALL: "SUU"}),
     gen_query_property(StandingWaveSwTrim, {Zone.ALL: "SUV"}),
-    gen_query_property(SurroundPosition, {Zone.ALL: "SSP"}),
-    gen_query_property(XOver, {Zone.ALL: "SSQ"}),
-    gen_query_property(XCurve, {Zone.ALL: "SST"}),
+    gen_set_property(SurroundPosition, {Zone.ALL: "SSP"}),
+    gen_set_property(XOver, {Zone.ALL: "SSQ"}),
+    gen_set_property(XCurve, {Zone.ALL: "SST"}),
     gen_query_property(LoudnessPlus, {Zone.ALL: "SSU"}),
     gen_query_property(SbchProcessing, {Zone.ALL: "SSV"}),
     gen_query_property(SpeakerSettings, {Zone.ALL: "SSG"}),
@@ -757,23 +787,23 @@ PROPERTIES_SYSTEM = [
     gen_query_property(ThxUltraselect2, {Zone.ALL: "SSW"}),
     gen_query_property(BoundaryGainCompression, {Zone.ALL: "SSX"}),
     gen_query_property(ReEqualization, {Zone.ALL: "SSB"}),
-    gen_query_property(OsdLanguage, {Zone.ALL: "SSE"}),
-    gen_query_property(NetworkDhcp, {Zone.ALL: "STA"}),
+    gen_set_property(OSDLanguage, {Zone.ALL: "SSE"}),
+    gen_query_property(NetworkDHCP, {Zone.ALL: "STA"}),
     gen_query_property(NetworkProxyActive, {Zone.ALL: "STG"}),
-    gen_query_property(NetworkStandby, {Zone.ALL: "STJ"}),
+    gen_set_property(NetworkStandby, {Zone.ALL: "STJ"}),
     gen_query_property(FriendlyName, {Zone.ALL: "SSO"}),
-    gen_query_property(ParentalLock, {Zone.ALL: "STK"}),
-    gen_query_property(ParentalLockPassword, {Zone.ALL: "STL"}),
-    gen_query_property(IpControlPorts, {Zone.ALL: "SUM"}),
-    gen_query_property(HdmiControl, {Zone.ALL: "STQ"}),
-    gen_query_property(HdmiControlMode, {Zone.ALL: "STR"}),
-    gen_query_property(HdmiArc, {Zone.ALL: "STT"}),
-    gen_query_property(PqlsForBackup, {Zone.ALL: "SVL"}),
-    gen_query_property(StandbyPassthrough, {Zone.ALL: "STU"}),
-    gen_query_property(ExternalHdmiTrigger1, {Zone.Z1: "STV"}),
-    gen_query_property(ExternalHdmiTrigger2, {Zone.Z2: "STW"}),
-    gen_query_property(SpeakerBLink, {Zone.ALL: "STX"}),
-    gen_query_property(OsdOverlay, {Zone.ALL: "SVA"}),
+    gen_set_property(ParentalLock, {Zone.ALL: "STK"}),
+    gen_set_property(ParentalLockPassword, {Zone.ALL: "STL"}),  ## TODO: password
+    gen_query_property(IPControlPorts, {Zone.ALL: "SUM"}),
+    gen_set_property(HDMIControl, {Zone.ALL: "STQ"}),
+    gen_set_property(HDMIControlMode, {Zone.ALL: "STR"}),
+    gen_set_property(HDMIArc, {Zone.ALL: "STT"}),
+    gen_set_property(PQLSForBackup, {Zone.ALL: "SVL"}),
+    gen_set_property(StandbyPassthrough, {Zone.ALL: "STU"}),
+    gen_set_property(ExternalHDMITrigger1, {Zone.Z1: "STV"}),
+    gen_set_property(ExternalHDMITrigger2, {Zone.Z2: "STW"}),
+    gen_set_property(SpeakerBLink, {Zone.ALL: "STX"}),
+    gen_set_property(OSDOverlay, {Zone.ALL: "SVA"}),
     gen_query_property(AdditionalService, {Zone.ALL: "ADS"}),
-    gen_query_property(UserLock, {Zone.ALL: "SUT"}),
+    gen_set_property(UserLock, {Zone.ALL: "SUT"}),
 ]
