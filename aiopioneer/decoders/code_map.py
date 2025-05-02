@@ -79,6 +79,16 @@ class CodeMapBase:
         """Get argument parser for code map."""
 
     @classmethod
+    def get_property_value(cls, properties: AVRProperties, zone: Zone) -> Any:
+        """Get current property value for code map."""
+        base_value = getattr(properties, cls.base_property, {})
+        if zone is not None:
+            base_value = base_value.get(zone, {})
+        if cls.property_name is None:
+            return base_value or None
+        return base_value.get(cls.property_name)
+
+    @classmethod
     def check_args(cls, args: list, extra_args: bool = False) -> None:
         """Check sufficient arguments have been supplied."""
         if not isinstance(args, list):
