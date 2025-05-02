@@ -434,7 +434,7 @@ class VideoPureCinema(CodeDictStrMap):
     code_map = {"0": "auto", "1": "on", "2": "off"}
 
 
-class VideoProgMotion(CodeIntMap):
+class VideoProgressiveMotion(CodeIntMap):
     """Video progressive motion."""
 
     friendly_name = "video progressive motion"
@@ -650,7 +650,7 @@ PROPERTIES_VIDEO = [
     gen_set_property(VideoResolution, {Zone.Z1: "VTC"}),
     gen_set_property(VideoConverter, {Zone.Z1: "VTB"}),
     gen_set_property(VideoPureCinema, {Zone.Z1: "VTD"}),
-    gen_set_property(VideoProgMotion, {Zone.Z1: "VTE"}),
+    gen_set_property(VideoProgressiveMotion, {Zone.Z1: "VTE"}),
     gen_set_property(VideoStreamSmoother, {Zone.Z1: "VTF"}),
     gen_set_property(AdvancedVideoAdjust, {Zone.Z1: "VTG"}),
     gen_set_property(VideoYNR, {Zone.Z1: "VTH"}),
