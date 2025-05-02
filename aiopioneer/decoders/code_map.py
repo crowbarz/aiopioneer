@@ -49,6 +49,8 @@ class CodeMapBase:
     @classmethod
     def get_ss_class_name(cls) -> str:
         """Get space separated code map name."""
+        if cls.friendly_name:
+            return " ".join(s[0].upper() + s[1:] for s in cls.friendly_name.split(" "))
         return re.sub(r"((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z]))", r" \1", cls.__name__)
 
     @classmethod
