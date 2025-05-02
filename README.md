@@ -177,13 +177,13 @@ The list below shows the source ID that corresponds to each AVR source:
 | 06 | SAT/CBL
 | 10 | VIDEO
 | 15 | DVR/BDR
-| 19 | HDMI 1
-| 20 | HDMI 2
-| 21 | HDMI 3
-| 22 | HDMI 4
-| 23 | HDMI 5
-| 24 | HDMI 6
-| 34 | HDMI 7
+| 19 | HDMI1
+| 20 | HDMI2
+| 21 | HDMI3
+| 22 | HDMI4
+| 23 | HDMI5
+| 24 | HDMI6
+| 34 | HDMI7
 | 49 | GAME
 | 26 | NETWORK (cyclic)
 | 38 | INTERNET RADIO

@@ -336,7 +336,7 @@ class HDMIOut(CodeMapHasPropertyMixin, CodeDictStrMap):
     supported_zones = {Zone.ALL}
     icon = "mdi:monitor-share"
 
-    code_map = {"0": "all", "1": "HDMI 1", "2": "HDMI 2"}
+    code_map = {"0": "all", "1": "HDMI1", "2": "HDMI2"}
 
 
 class HDMI3Out(CodeMapHasPropertyMixin, CodeBoolMap):
