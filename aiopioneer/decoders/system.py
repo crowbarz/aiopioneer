@@ -722,12 +722,14 @@ class ExternalHDMITrigger(CodeDictStrMap):
 class ExternalHDMITrigger1(ExternalHDMITrigger):
     """External HDMI trigger 1."""
 
+    friendly_name = "external HDMI trigger 1"
     property_name = "external_hdmi_trigger_1"
 
 
 class ExternalHDMITrigger2(ExternalHDMITrigger):
     """External HDMI trigger 2."""
 
+    friendly_name = "external HDMI trigger 2"
     property_name = "external_hdmi_trigger_2"
 
 
