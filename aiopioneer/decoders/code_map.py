@@ -398,6 +398,10 @@ class CodeStrMap(CodeMapBase):
 
     code_len = None
     code_fillchar = "_"
+    value_min_len = None
+    value_max_len = None
+    ha_text_mode = None
+    ha_pattern = None
 
     @classmethod
     def get_len(cls) -> int:

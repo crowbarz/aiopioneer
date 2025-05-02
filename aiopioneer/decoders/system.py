@@ -594,6 +594,10 @@ class ParentalLockPassword(CodeStrMap):
     property_name = "parental_lock_password"
     supported_zones = {Zone.ALL}
     icon = "mdi:account-lock-outline"
+    value_max_len = 4
+    value_min_len = 4
+    ha_text_mode = "password"
+    ha_pattern = "[0-9]*"
 
 
 class IPControlPorts(CodeStrMap):
