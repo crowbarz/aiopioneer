@@ -677,10 +677,10 @@ class ExternalHdmiTrigger(CodeDictStrMap):
 
     code_map = {
         "0": "off",
-        "1": "HDMI OUT 1",
-        "2": "HDMI OUT 2",
-        "3": "HDMI OUT 3",
-        "4": "HDMI OUT 4/HDBaseT",
+        "1": "HDMI1 out",
+        "2": "HDMI2 out",
+        "3": "HDMI3 out",
+        "4": "HDMI4 out/HDBaseT",
     }
 
     @classmethod
