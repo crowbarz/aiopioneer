@@ -418,6 +418,8 @@ class VideoConverter(CodeBoolMap):
     friendly_name = "video converter"
     base_property = "video"
     property_name = "converter"
+    supported_zones = {Zone.Z1}
+    icon = "mdi:mdi:monitor-shimmer"
 
 
 class VideoPureCinema(CodeDictStrMap):
@@ -426,6 +428,8 @@ class VideoPureCinema(CodeDictStrMap):
     friendly_name = "video pure cinema"
     base_property = "video"
     property_name = "pure_cinema"
+    supported_zones = {Zone.Z1}
+    icon = "mdi:mdi:monitor-shimmer"
 
     code_map = {"0": "auto", "1": "on", "2": "off"}
 
@@ -436,7 +440,7 @@ class VideoProgMotion(CodeIntMap):
     friendly_name = "video progressive motion"
     base_property = "video"
     property_name = "prog_motion"
-    supported_zones = {Zone.ALL}
+    supported_zones = {Zone.Z1}
     icon = "mdi:monitor-shimmer"
     ha_number_mode = "slider"
 
@@ -610,6 +614,8 @@ class VideoBlackSetup(CodeBoolMap):
     friendly_name = "video black setup"
     base_property = "video"
     property_name = "black_setup"
+    supported_zones = {Zone.Z1}
+    icon = "mdi:monitor-shimmer"
 
 
 class VideoAspect(CodeDictStrMap):
