@@ -20,8 +20,9 @@ Originally developed and tested on a VSX-930 (Main Zone and HDZone outputs) but 
 - Includes workaround for AVRs with an initial volume set on the Main Zone (eg. VSX-930)
 - Supports AVRs that do not support setting the volume level by emulating using up/down commands (eg. VSX-S510)
 - Command line client for sending commands and testing
-- Supports all known video related, AMP, DSP, listening mode, tuner and zone power, input, volume, tone, channel and mute functions
-- Supports commonly used setup functions
+- Supports all known video related, amp, DSP, listening mode, tuner and zone power, input, volume, tone, channel and mute functions
+- Supports many commonly used system setup functions
+- Supports setting active MCACC memory set
 - Supports iPod, network, Adapter Port/Bluetooth and MHL operational functions
 - Supports setting tuner frequency directly for AVRs that support numerical entry, and also by stepping the frequency up/down for AVRs that support frequency stepping
 

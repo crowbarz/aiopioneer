@@ -434,9 +434,9 @@ class SleepTime(CodeIntMap):
 
 
 class AmpMode(CodeMapHasPropertyMixin, CodeDictStrMap):
-    """AMP status."""
+    """amp mode."""
 
-    friendly_name = "AMP status"
+    friendly_name = "amp mode"
     base_property = "amp"
     property_name = "mode"
     supported_zones = {Zone.ALL}
