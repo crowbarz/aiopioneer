@@ -10,12 +10,14 @@ from .code_map import (
 )
 
 
-class McaccMemorySet(CodeIntMap):
+class MCACCMemorySet(CodeIntMap):
     """DSP MCACC memory set."""
 
     friendly_name = "MCACC memory set"
     base_property = "dsp"
     property_name = "mcacc_memory_set"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:book-cog-outline"
 
     value_min = 1
     value_max = 6
@@ -478,7 +480,7 @@ class RenderingMode(CodeDictStrMap):
 
 
 PROPERTIES_DSP = [
-    gen_set_property(McaccMemorySet, {Zone.ALL: "MC"}),
+    gen_set_property(MCACCMemorySet, {Zone.ALL: "MC"}),
     gen_set_property(PhaseControl, {Zone.ALL: "IS"}),
     gen_set_property(PhaseControlPlus, {Zone.ALL: "ATE"}),
     gen_set_property(VirtualSpeakers, {Zone.ALL: "VSP"}),
