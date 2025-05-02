@@ -696,8 +696,6 @@ class ExternalHDMITrigger(CodeDictStrMap):
     friendly_name = "external HDMI trigger"
     base_property = "system"
     property_name = "external_hdmi_trigger"
-    supported_zones = {Zone.ALL}
-    icon = "mdi:hdmi-port"
 
     code_map = {
         "0": "off",
@@ -724,6 +722,8 @@ class ExternalHDMITrigger1(ExternalHDMITrigger):
 
     friendly_name = "external HDMI trigger 1"
     property_name = "external_hdmi_trigger_1"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:hdmi-port"
 
 
 class ExternalHDMITrigger2(ExternalHDMITrigger):
@@ -731,6 +731,8 @@ class ExternalHDMITrigger2(ExternalHDMITrigger):
 
     friendly_name = "external HDMI trigger 2"
     property_name = "external_hdmi_trigger_2"
+    supported_zones = {Zone.ALL}
+    icon = "mdi:hdmi-port"
 
 
 class SpeakerBLink(CodeBoolMap):
