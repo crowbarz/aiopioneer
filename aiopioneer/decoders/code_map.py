@@ -82,7 +82,7 @@ class CodeMapBase:
     def get_property_value(cls, properties: AVRProperties, zone: Zone) -> Any:
         """Get current property value for code map."""
         base_value = getattr(properties, cls.base_property, {})
-        if zone is not None:
+        if zone is not Zone.ALL:
             base_value = base_value.get(zone, {})
         if cls.property_name is None:
             return base_value or None
