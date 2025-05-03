@@ -94,10 +94,6 @@ Parameter `max_source_id` determines the highest source ID that is queried.
 
 Manually set the available sources to the dict _sources_, where the keys are integer source IDs and the values are the corresponding source names.
 
-`AVRProperties.get_source_list(`_zone_: Zone = Zone.Z1`)` -> **list**[**str**]
-
-Return the set of currently available source names for _zone_. The source names can be used with the `select_source` method.
-
 `AVRProperties.get_source_dict(`_zone_: Zone = **None**`)` -> **dict**[**int**, **str**]
 
 Return a dict of currently available source ID to source name mappings for _zone_. <br/>
