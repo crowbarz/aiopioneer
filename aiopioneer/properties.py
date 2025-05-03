@@ -105,15 +105,6 @@ class AVRProperties:
         except (ValueError, KeyError) as exc:
             raise AVRLocalCommandError(command="set_source_dict", exc=exc) from exc
 
-    def get_source_list(self, zone: Zone = Zone.Z1) -> list[str]:
-        """Return list of available input sources for zone."""
-        source_ids: list[int] = None
-        if zone is not None:
-            source_ids = self._params.get_param(PARAM_ZONE_SOURCES[zone], [])
-        if not source_ids:
-            return list(self.source_id_to_name.values())
-        return list(v for k, v in self.source_id_to_name.items() if k in source_ids)
-
     def get_source_dict(self, zone: Zone = None) -> dict[int, str]:
         """Return source ID to name mapping for zone."""
         source_ids: list[int] = None
