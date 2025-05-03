@@ -493,7 +493,7 @@ class CodeDynamicDictMap(CodeMapComplexMixin, CodeMapBase):
         return v == value
 
     @classmethod
-    def value_to_code_dynamic(cls, value: Any, code_map: dict[Any, Any]) -> str:
+    def value_to_code_dynamic(cls, value: Any, code_map: dict) -> str:
         """Convert value to code for code map."""
         for k, v in code_map.items():
             if cls.match(v, value):
@@ -503,7 +503,7 @@ class CodeDynamicDictMap(CodeMapComplexMixin, CodeMapBase):
         raise ValueError(f"value {value} not found for {cls.get_name()}")
 
     @classmethod
-    def code_to_value_dynamic(cls, code: str, code_map: dict[Any, Any]) -> Any:
+    def code_to_value_dynamic(cls, code: str, code_map: dict) -> Any:
         """Convert code to value for code map."""
         index = code
         if cls.index_map_class:
@@ -570,7 +570,7 @@ class CodeDynamicDictListMap(CodeDynamicDictMap):
     """Map AVR codes to dynamic dict of list items with value as first element."""
 
     @classmethod
-    def code_to_value_dynamic(cls, code: str, code_map: dict[Any, Any]) -> Any:
+    def code_to_value_dynamic(cls, code: str, code_map: dict) -> Any:
         value_list = super().code_to_value_dynamic(code, code_map=code_map)
         return value_list[0]
 
