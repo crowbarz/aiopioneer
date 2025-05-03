@@ -36,6 +36,7 @@ class CodeMapBase:
     property_name: str = None
     supported_zones: set[Zone] = {}
     icon: str = "mdi:audio-video"
+    unit_of_measurement: str = None
     ha_auto_entity: bool = True  ## add as HA entity automatically
     ha_enable_default: bool = False  ## enable entity by default
 
@@ -697,7 +698,6 @@ class CodeFloatMap(CodeMapBase):
     value_step: float | int = 1
     value_divider: float | int = 1
     value_offset: float | int = 0
-    unit_of_measurement: str = None
     ha_device_class: str = None  ## integration default
     ha_number_mode: str = None  ## integration default
 
