@@ -109,6 +109,12 @@ class AVRCommandError(AVRError):
         super().__init__(command=command, err=err, exc=exc, **kwargs)
 
 
+class AVRCommandArgumentError(AVRCommandError):
+    """AVR command arguments are invalid."""
+
+    base_err_key = "invalid_arguments"
+
+
 class AVRCommandResponseError(AVRCommandError):
     """AVR responded with an error."""
 
@@ -178,6 +184,7 @@ ErrorFormatText = {
     "command_unavailable": "AVR command {command} is unavailable: {err}",
     "response_timeout": "AVR command {command} timed out",
     "command_error": "AVR command {command} returned error: {err}",
+    "invalid_arguments": "invalid arguments for AVR command {command}: {err}",
     "response_decode_error": "exception decoding response: {response}: {err}",
     "local_command_error": "command {command} error: {err}",
 }

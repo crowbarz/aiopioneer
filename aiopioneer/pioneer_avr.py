@@ -29,6 +29,7 @@ from .exceptions import (
     AVRError,
     AVRResponseTimeoutError,
     AVRCommandError,
+    AVRCommandArgumentError,
     AVRUnknownLocalCommandError,
     AVRTunerUnavailableError,
     AVRConnectProtocolError,
@@ -440,7 +441,7 @@ class PioneerAVR(AVRConnection):
 
         try:
             command_item = PROPERTY_REGISTRY.get_command(command, zone)
-            command = command_item.get_avr_command(zone)
+            avr_command = command_item.get_avr_command(zone)
             arg_code_maps = command_item.avr_args
             if arg_code_maps and prefix is None and suffix is None:
                 ## Convert command_args to prefix and suffix
@@ -471,7 +472,7 @@ class PioneerAVR(AVRConnection):
             if (response := command_item.get_avr_response(zone)) is None:
                 ## Send raw command only
                 await self.send_raw_command(
-                    command=(prefix or "") + command + (suffix or ""),
+                    command=(prefix or "") + avr_command + (suffix or ""),
                     rate_limit=rate_limit,
                 )
                 return True
@@ -482,7 +483,7 @@ class PioneerAVR(AVRConnection):
 
             ## Send raw command, then wait for response
             response = await self.send_raw_request(
-                command=(prefix or "") + command + (suffix or ""),
+                command=(prefix or "") + avr_command + (suffix or ""),
                 response_prefix=command_item.get_avr_response(zone),
                 rate_limit=rate_limit,
                 retry_count=retry_count,
@@ -495,6 +496,13 @@ class PioneerAVR(AVRConnection):
 
         except AVRUnavailableError:  ## always raise even if ignoring errors
             raise
+        except (ValueError, KeyError) as exc:
+            if ignore_error is None:
+                raise AVRCommandArgumentError(command=command, exc=exc) from exc
+            _LOGGER.error(
+                "invalid arugments for AVR command %s: %s", command, repr(exc)
+            )
+            return False
         except AVRError as exc:
             if ignore_error is None:
                 _LOGGER.debug("send_command raised exception: %s", str(exc))
@@ -507,6 +515,8 @@ class PioneerAVR(AVRConnection):
         except Exception as exc:  # pylint: disable=broad-except
             _LOGGER.error("send_command exception: %s: %s", command, repr(exc))
             _LOGGER.error(traceback.format_exc())
+            if ignore_error is None:
+                raise exc
 
     async def _execute_local_command(self, command: str, args: list) -> None:
         """Execute local command."""
