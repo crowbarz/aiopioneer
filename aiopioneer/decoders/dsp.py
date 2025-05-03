@@ -293,7 +293,7 @@ class DynamicRange(CodeDictStrMap):
     code_map = {"0": "off", "1": "auto", "2": "mid", "3": "max"}
 
 
-class LFEAttenuator(CodeIntMap):
+class LFEAttenuator(CodeDictStrMap):
     """LFE attenuator."""
 
     friendly_name = "LFE attenuator"
@@ -302,25 +302,25 @@ class LFEAttenuator(CodeIntMap):
     supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
     unit_of_measurement = "dB"
-    ha_device_class = "signal_strength"
-    ha_number_mode = "slider"
 
-    value_min = -20
-    value_max = 0
-    code_zfill = 2
-    value_divider = -1
+    code_map = {
+        "50": "off",
+        "00": "0",
+        "01": "-1",
+        "02": "-2",
+        "03": "-3",
+        "04": "-4",
+        "05": "-5",
+        "10": "-10",
+        "15": "-15",
+        "20": "-20",
+    }
 
     @classmethod
-    def value_to_code(cls, value: int | str) -> str:
-        if value == "off":
-            return "50"
-        return super().value_to_code(value=value)
-
-    @classmethod
-    def code_to_value(cls, code: str) -> int | str:
-        if code == "50":
-            return "off"
-        return super().code_to_value(code=code)
+    def value_to_code_dynamic(cls, value: int | str, code_map: dict) -> str:
+        if isinstance(value, int):
+            value = str(value)
+        return super().value_to_code_dynamic(value=value, code_map=code_map)
 
 
 class SACDGain(CodeIntMap):
