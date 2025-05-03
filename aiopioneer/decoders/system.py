@@ -37,6 +37,7 @@ class SpeakerSystem(CodeDynamicDictStrMap):
     property_name = "speaker_system"
     supported_zones = {Zone.ALL}
     icon = "mdi:speaker-multiple"
+    ha_enable_default = True
 
     index_map_class = SpeakerSystemIndex
 
@@ -566,6 +567,7 @@ class NetworkStandby(CodeBoolMap):
     property_name = "network_standby"
     supported_zones = {Zone.ALL}
     icon = "mdi:leaf-circle-outline"
+    ha_enable_default = True
 
 
 class FriendlyName(CodeStrMap):
