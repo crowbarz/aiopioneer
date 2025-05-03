@@ -469,11 +469,6 @@ class InputLevel(CodeFloatMap):
     friendly_name = "input level"
     base_property = "system"
     property_name = "input_level"  # unused
-    supported_zones = {Zone.ALL}
-    icon = "mdi:tune-vertical"
-    unit_of_measurement = "dB"
-    ha_device_class = "signal_strength"
-    ha_number_mode = "slider"
 
     code_zfill = 2
     code_offset = -50
