@@ -45,6 +45,7 @@ class PhaseControlPlus(CodeIntMap):
     supported_zones = {Zone.ALL}
     icon = "mdi:equalizer"
     unit_of_measurement = "ms"
+    ha_auto_entity = False
     ha_device_class = "duration"
     ha_number_mode = "slider"
 
