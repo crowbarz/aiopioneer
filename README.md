@@ -206,6 +206,43 @@ The list below shows the source ID that corresponds to each AVR source:
 
 ## Breaking changes
 
+### 0.10
+
+- `PioneerAVR.get_listening_modes` now returns **list**[**str**]. This was changed in 0.9.0 but inadvertently omitted from the list of breaking changes
+- Several AVR properties have been renamed:
+  - `listening_mode_raw` property has been renamed `listening_mode_id` for consistency with `source_id`
+  - `channel_levels` has been renamed to `channel_level`
+  - System property `speaker_system_raw` has been renamed to `speaker_system_id` for consistency
+- The values for the `amp.hdmi_out` and `system.external_hdmi_trigger_[12]` properties have been revised to harmonise HDMI port names
+- Many AVR commands have been renamed for improved consistency:
+  - `set_listening_mode` has been renamed to `select_listening_mode`
+  - `operation_ipod_*` has been renamed to `ipod_*`
+  - `operation_network` has been renamed to `network_*`
+  - `operation_adapaterport_*` has been renamed to `adapterport_*` (with spelling correction)
+  - `operation_mhl_*` has been renamed to `mhl_*`
+  - `operation_amp_*` has been renamed to `amp_*`
+  - `increase_tuner_preset` has been renamed to `tuner_next_preset`
+  - `decrease_tuner_preset` has been renamed to `tuner_previous_preset`
+  - `increase_tuner_frequency` has been renamed to `tuner_increase_frequency`
+  - `decrease_tuner_frequency` has been renamed to `tuner_decrease_frequency`
+  - `turn_on/off`has been renamed to `power_on/off` (to align with AVR API documentation)
+  - `query_system_mcacc_diagnostics` has been renamed to `query_system_mcacc_diagnostic_status`
+  - `query_dsp_mcacc_memory_query` has been renamed to `query_dsp_mcacc_memory_set`
+  - `query_center_spread` has been renamed to `query_dsp_center_spread`
+  - `query_rendering_mode` has been renamed to `query_dsp_rendering_mode`
+  - `query_tuner_am_step` has been renamed to `query_tuner_am_frequency_step` to match the property and code map class name
+  - `set/query_channel_levels` have been renamed to `set/query_channel_level`
+- Several `PioneerAVR` methods have been renamed:
+  - `update` has been renamed to `refresh` to better reflect what it does
+  - `set_channel_levels` has been renamed to `set_channel_level`
+- The `PioneerAVR.properties.get_source_list` method has been removed. Use `PioneerAVR.properties.get_source_dict().values()` to retrieve the list of valid sources for a zone
+- The `update` CLI command has also been renamed to `refresh` to match the `PioneerAVR` method
+- `CommandItem` constructor arguments have been renamed:
+  - `skip_if_startup` has been renamed `skip_if_starting`
+  - `skip_if_executing` has been repurposed as `skip_if_refreshing` and skips queuing the command if a pending refresh has been set for the zone
+- `CHANNELS_ALL` has moved from `aiopioneer.const` to the `aiopioneer.decoders.audio.SpeakerChannel` class
+
+
 ### 0.9
 
 - The `query_device_model` method is now deprecated and no longer needs to be called on AVR connect. It will be invoked internally if param `model` is not set.
