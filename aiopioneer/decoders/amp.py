@@ -423,7 +423,6 @@ class SleepTime(CodeIntMap):
     supported_zones = {Zone.ALL}
     icon = "mdi:timer-pause-outline"
     unit_of_measurement = "s"
-    ha_enable_default = True
     ha_device_class = "duration"
     ha_number_mode = "slider"
 
@@ -459,7 +458,6 @@ class PanelLock(CodeDictStrMap):
     property_name = "panel_lock"
     supported_zones = {Zone.ALL}
     icon = "mdi:monitor-lock"
-    ha_enable_default = True
 
     code_map = {"0": "off", "1": "panel only", "2": "panel + volume"}
 
@@ -472,7 +470,6 @@ class RemoteLock(CodeBoolMap):
     property_name = "remote_lock"
     supported_zones = {Zone.ALL}
     icon = "mdi:lan-disconnect"
-    ha_enable_default = True
 
 
 class SystemMacAddress(CodeStrMap):
