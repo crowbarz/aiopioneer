@@ -40,9 +40,9 @@ Where a parameter is specified at more than one level, the higher priority param
 > YAML syntax is used to indicate values the table below. This syntax is used when entering parameters manually in the Home Assistant integration. Use Python equivalents (`false` -> `False`, `true` -> `True`, `null` -> `None` etc.) when calling the [Python API](#python-api) directly.
 
 > [!CAUTION]
-> Sources, listening modes and speaker system modes are specified as a **dict** with **int** keys. JSON does not support **int** for **dict** keys. For such parameters, keys should be specified as **str**. Note that Python will [silently coerce **int** keys for **dict** to **str**](https://docs.python.org/3/library/json.html#basic-usage) when serialising such dictionaries to JSON.
+> Sources, listening modes and speaker system modes are specified as a **dict*- with **int*- keys. JSON does not support **int*- for **dict*- keys. For such parameters, keys should be specified as **str**. Note that Python will [silently coerce **int*- keys for **dict*- to **str**](https://docs.python.org/3/library/json.html#basic-usage) when serialising such dictionaries to JSON.
 >
-> The Home Assistant integration automatically converts keys for impacted parameters back to **int** keys, however other users of this module may also need to implement this conversion.
+> The Home Assistant integration automatically converts keys for impacted parameters back to **int*- keys, however other users of this module may also need to implement this conversion.
 
 | Name | Type | Default | Description
 | ---- | ---- | ------- | -----------
@@ -88,9 +88,9 @@ Listed below are the public attributes of a `AVRProperties` object that contains
 
 | Attribute | Type | Description
 | --- | --- | ---
-| `model` | **str** \| **None** | Model number returned by the AVR
-| `software_version` | **str** \| **None** | Software version returned by the AVR
-| `mac_addr` | **str** \| **None** | System MAC address returned by the AVR
+| `model` | **str*- \| **None*- | Model number returned by the AVR
+| `software_version` | **str*- \| **None*- | Software version returned by the AVR
+| `mac_addr` | **str*- \| **None*- | System MAC address returned by the AVR
 | `zones` | **list**[Zone] | List of all zones detected on the AVR
 | `power` | **dict**[Zone, **bool**] | Power status for each detected zone
 | `volume` | **dict**[Zone, **int**] | Volume status for each detected zone
@@ -98,18 +98,18 @@ Listed below are the public attributes of a `AVRProperties` object that contains
 | `mute` | **dict**[Zone, **bool**] | Mute status for each detected zone
 | `source_id` | **dict**[Zone, **str**] | Active source ID for each detected zone
 | `source_name` | **dict**[Zone, **str**] | Active source name for each detected zone
-| `listening_mode` | **str** | Name of the currently active listening mode
-| `listening_mode_id` | **str** | ID of the currently active listening mode
+| `listening_mode` | **str*- | Name of the currently active listening mode
+| `listening_mode_id` | **str*- | ID of the currently active listening mode
 | `media_control_mode` | **dict**[Zone, **str**] | Media control mode for each detected zone
 | `tone` | **dict**[Zone, **dict**] | Tone attributes for each detected zone
-| `amp` | **dict**[**str** \| Zone, **str**] | Current AVR amp attributes
-| `tuner` | **dict**[**str** \| Zone, **str**] | Current AVR tuner attributes
-| `dsp` | **dict**[**str** \| Zone, **str**] | Current AVR DSP attributes
-| `video` | **dict**[**str** \| Zone, **str**] | Current AVR video parameters
-| `audio` | **dict**[**str** \| Zone, **str**] | Current AVR audio parameters
-| `system` | **dict**[**str** \| Zone, **str**]| AVR system attributes
+| `amp` | **dict**[**str*- \| Zone, **str**] | Current AVR amp attributes
+| `tuner` | **dict**[**str*- \| Zone, **str**] | Current AVR tuner attributes
+| `dsp` | **dict**[**str*- \| Zone, **str**] | Current AVR DSP attributes
+| `video` | **dict**[**str*- \| Zone, **str**] | Current AVR video parameters
+| `audio` | **dict**[**str*- \| Zone, **str**] | Current AVR audio parameters
+| `system` | **dict**[**str*- \| Zone, **str**]| AVR system attributes
 | `channel_level` | **dict**[**str**, dict[Zone, **Any**]] | Current AVR channel level, indexed by zone and channel name
-| `ip_control_port_n` | **str** | IP control ports configured on the AVR (where `n` is the port index)
+| `ip_control_port_n` | **str*- | IP control ports configured on the AVR (where `n` is the port index)
 
 ## Command line interface (CLI)
 
@@ -157,12 +157,12 @@ The CLI accepts all AVR commands, as well as the helper commands below. The `lis
 | `debug_command_queue` | \[ `on` \| `off` \] | Enable/disable the `debug_command_queue` parameter
 | `send_raw_command` or `>` | _raw_command_ | Send the raw command _raw_command_ to the AVR
 
-**NOTE:** The CLI interface may change in the future, and should not be used in scripts. Use the [Python API](#python-api) instead.
+**NOTE:*- The CLI interface may change in the future, and should not be used in scripts. Use the [Python API](#python-api) instead.
 
 ### CLI JSON arguments
 
 > [!CAUTION]
-> Sources, listening modes and speaker system modes are specified as a **dict** with **int** keys. JSON does not support **int** for **dict** keys. Where these parameters are provided as CLI arguments, keys should be specified as **str**. These will be converted to **int** automatically.
+> Sources, listening modes and speaker system modes are specified as a **dict*- with **int*- keys. JSON does not support **int*- for **dict*- keys. Where these parameters are provided as CLI arguments, keys should be specified as **str**. These will be converted to **int*- automatically.
 
 ## Source list
 
@@ -210,7 +210,7 @@ The list below shows the source ID that corresponds to each AVR source:
 
 - `PioneerAVR.get_listening_modes` now returns **list**[**str**]. This was changed in 0.9.0 but inadvertently omitted from the list of breaking changes
 - Several AVR properties have been renamed:
-  - `listening_mode_raw` property has been renamed `listening_mode_id` for consistency with `source_id`
+  - `listening_mode_raw` has been renamed `listening_mode_id` for consistency with `source_id`
   - `channel_levels` has been renamed to `channel_level`
   - System property `speaker_system_raw` has been renamed to `speaker_system_id` for consistency
 - The values for the `amp.hdmi_out` and `system.external_hdmi_trigger_[12]` properties have been revised to harmonise HDMI port names
@@ -225,15 +225,15 @@ The list below shows the source ID that corresponds to each AVR source:
   - `decrease_tuner_preset` has been renamed to `tuner_previous_preset`
   - `increase_tuner_frequency` has been renamed to `tuner_increase_frequency`
   - `decrease_tuner_frequency` has been renamed to `tuner_decrease_frequency`
-  - `turn_on/off`has been renamed to `power_on/off` (to align with AVR API documentation)
+  - `turn_on/off`has been renamed to `power_on/off` to align with AVR API documentation
   - `query_system_mcacc_diagnostics` has been renamed to `query_system_mcacc_diagnostic_status`
   - `query_dsp_mcacc_memory_query` has been renamed to `query_dsp_mcacc_memory_set`
   - `query_center_spread` has been renamed to `query_dsp_center_spread`
   - `query_rendering_mode` has been renamed to `query_dsp_rendering_mode`
   - `query_tuner_am_step` has been renamed to `query_tuner_am_frequency_step` to match the property and code map class name
-  - `set/query_channel_levels` have been renamed to `set/query_channel_level`
+  - `set/query_channel_levels` have been renamed to `set/query_channel_level` (singular)
 - Several `PioneerAVR` methods have been renamed:
-  - `update` has been renamed to `refresh` to better reflect what it does
+  - `update` has been renamed to `refresh` to better reflect what this method actually does
   - `set_channel_levels` has been renamed to `set_channel_level`
 - The `PioneerAVR.properties.get_source_list` method has been removed. Use `PioneerAVR.properties.get_source_dict().values()` to retrieve the list of valid sources for a zone
 - The `update` CLI command has also been renamed to `refresh` to match the `PioneerAVR` method
@@ -258,7 +258,7 @@ The list below shows the source ID that corresponds to each AVR source:
 - `Pioneer` have been dropped from `PioneerAVRConnection`, `PioneerAVRParams`, `PioneerAVRProperties`, and `PioneerError` class names for brevity
 - `PioneerAVR.update_listening_mode` has been removed, `AVRProperties.update_listening_mode` should be used instead
 - AVR command `query_source_name` now accepts a numeric source ID
-- AVR command `set_source_name` accepts *source_name*=**None** to reset name, and no longer accepts the *default* argument
+- AVR command `set_source_name` accepts *source_name*=**None*- to reset name, and no longer accepts the *default- argument
 - Params `zone_1_sources`, `zone_2_sources`, `zone_3_sources` and `hdzone_sources` are now of type **list[int]**
 - Param `amp_speaker_system_modes` is now of type **dict[int, str]**
 - Param `enabled_functions` now accepts `channel` as an item instead of `channels`
@@ -341,4 +341,4 @@ The list below shows the source ID that corresponds to each AVR source:
 - Pioneer commands references: [https://github.com/rwifall/pioneer-receiver-notes](https://github.com/rwifall/pioneer-receiver-notes)
 - Another asyncio Pioneer HA component: [https://github.com/realthk/asyncpioneer](https://github.com/realthk/asyncpioneer)
 - Pioneer IP and serial IO control documentation: [https://www.pioneerelectronics.com/PUSA/Support/Home-Entertainment-Custom-Install/RS-232+&+IP+Codes/A+V+Receivers](https://www.pioneerelectronics.com/PUSA/Support/Home-Entertainment-Custom-Install/RS-232+&+IP+Codes/A+V+Receivers)
-  - This library supports many of the commands listed in the **2015 Pioneer & Elite AVR External Command** document
+  - This library supports many of the commands listed in the **2015 Pioneer & Elite AVR External Command*- document
