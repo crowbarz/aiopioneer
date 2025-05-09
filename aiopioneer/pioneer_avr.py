@@ -137,7 +137,7 @@ class PioneerAVR(AVRConnection):
 
         async def query_zone(zone: Zone, max_volume: int) -> bool | None:
             if await self.send_command(
-                "query_power", zone=zone, ignore_error=True
+                "query_power", zone=zone, ignore_error=True, retry_on_fail=True
             ) and (
                 ignore_volume_check
                 or await self.send_command("query_volume", zone=zone, ignore_error=True)
@@ -320,7 +320,7 @@ class PioneerAVR(AVRConnection):
             self.properties.command_queue.zones_pending_refresh.add(zone)
 
             ## Refresh only if zone is powered on
-            await self.send_command("query_power", zone=zone)
+            await self.send_command("query_power", zone=zone, retry_on_fail=True)
             if not bool(self.properties.power.get(zone)):
                 return
 
