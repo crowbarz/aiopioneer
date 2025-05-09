@@ -52,7 +52,7 @@ class Power(CodeInverseBoolMap):
                 CommandItem("_delayed_query_basic", 2.5, queue_id=3),
             ]
             if zone not in properties.zones_initial_refresh:
-                _LOGGER.debug("queue initial refresh for zone %s", zone.full_name)
+                _LOGGER.debug("queuing initial refresh for zone %s", zone.full_name)
                 queue_commands.append(
                     CommandItem(
                         "_delayed_refresh_zone",
@@ -61,10 +61,11 @@ class Power(CodeInverseBoolMap):
                         skip_if_refreshing=True,
                     ),
                 )
-            if properties.power.get(zone) is not False:  ## zone is not off
-                return []
-
-            if zone is Zone.Z1 and params.get_param(PARAM_POWER_ON_VOLUME_BOUNCE):
+            if (
+                properties.power.get(zone) is False
+                and zone is Zone.Z1
+                and params.get_param(PARAM_POWER_ON_VOLUME_BOUNCE)
+            ):
                 _LOGGER.info("queueing volume workaround for Main Zone")
                 ## NOTE: volume bounce queues ahead of refresh
                 queue_commands.extend(
