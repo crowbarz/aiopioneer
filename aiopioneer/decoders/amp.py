@@ -47,10 +47,11 @@ class Power(CodeInverseBoolMap):
             """Power on."""
             zone = response.zone
             properties = response.properties
-
-            queue_commands = [
-                CommandItem("_delayed_query_basic", 2.5, queue_id=3),
-            ]
+            queue_commands = []
+            if properties.power.get(zone) is False:  ## zone has been turned on
+                queue_commands.append(
+                    CommandItem("_delayed_query_basic", 2.5, queue_id=3)
+                )
             if zone not in properties.zones_initial_refresh:
                 _LOGGER.debug("queuing initial refresh for zone %s", zone.full_name)
                 queue_commands.append(
@@ -82,11 +83,12 @@ class Power(CodeInverseBoolMap):
             """Power off."""
             zone = response.zone
             properties = response.properties
-            if properties.power.get(zone) is False:  ## zone is already off
-                return []
-            response.update(
-                queue_commands=[CommandItem("_delayed_query_basic", 4.5, queue_id=3)]
-            )
+            if properties.power.get(zone) is True:  ## zone has been turned off
+                response.update(
+                    queue_commands=[
+                        CommandItem("_delayed_query_basic", 4.5, queue_id=3)
+                    ]
+                )
             return [response]
 
         super().decode_response(response=response, params=params)
