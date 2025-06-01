@@ -422,6 +422,7 @@ class PioneerAVR(AVRConnection):
         ignore_error: bool | None = None,
         rate_limit: bool = True,
         wait_for_response: bool = None,
+        wait_for_command_queue: bool = False,
         retry_on_fail: bool = None,
     ) -> str | bool | None:
         """Send a command or request to the device."""
@@ -478,6 +479,8 @@ class PioneerAVR(AVRConnection):
                 await self.send_raw_command(command=raw_command, rate_limit=rate_limit)
                 return True
 
+            if wait_for_command_queue:
+                await self.properties.command_queue.wait()
             retry_count = 0
             if retry_on_fail or (retry_on_fail is None and command_item.retry_on_fail):
                 retry_count = self.params.get_param(PARAM_RETRY_COUNT)
