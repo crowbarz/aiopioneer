@@ -368,7 +368,8 @@ class AVRConnection:
             if not self._response_queue:
                 _LOGGER.debug(">> wait_for_response aborting on connection closed")
                 raise AVRUnavailableError
-            for response in self._response_queue:
+            while self._response_queue:
+                response = self._response_queue.pop(0)
                 if response.startswith(response_prefix):
                     if debug_command:
                         _LOGGER.debug(
@@ -377,7 +378,6 @@ class AVRConnection:
                     return response
                 if response.startswith("E") or response == "B00":
                     raise AVRCommandResponseError(command=command, response=response)
-            self._response_queue = []
 
     async def send_raw_request(
         self,
@@ -387,6 +387,11 @@ class AVRConnection:
         retry_count: int = 0,
     ) -> str:
         """Send a raw command to the AVR and return the response."""
+
+        def stop_response_queue():
+            self._queue_responses = False
+            self._response_queue = []
+
         async with self._request_lock:  ## Only send one request at a time
             self._response_queue = []
             ## Start queueing responses before sending command
@@ -400,18 +405,17 @@ class AVRConnection:
                         self._wait_for_response(command, response_prefix),
                         timeout=self._timeout,
                     )
-                    break
+                    stop_response_queue()
+                    return response
                 except TimeoutError as exc:  # response timer expired
+                    stop_response_queue()
                     raise AVRResponseTimeoutError(command=command) from exc
                 except AVRCommandResponseError as exc:
                     send_count += 1
                     if send_count > retry_count or exc.response not in ["E02", "B00"]:
+                        stop_response_queue()
                         raise
                     _LOGGER.warning(
                         "retrying failed command (%d): %s", send_count, command
                     )
                     await asyncio.sleep(1)
-
-            self._queue_responses = False
-            self._response_queue = []
-            return response
