@@ -421,6 +421,7 @@ class PioneerAVR(AVRConnection):
         suffix: str = None,
         ignore_error: bool | None = None,
         rate_limit: bool = True,
+        wait_for_response: bool = None,
         retry_on_fail: bool = None,
     ) -> str | bool | None:
         """Send a command or request to the device."""
@@ -469,12 +470,12 @@ class PioneerAVR(AVRConnection):
                     properties=self.properties,
                 )
 
-            if (response := command_item.get_avr_response(zone)) is None:
+            raw_command = (prefix or "") + avr_command + (suffix or "")
+            if (
+                response_prefix := command_item.get_avr_response(zone)
+            ) is None or wait_for_response is False:
                 ## Send raw command only
-                await self.send_raw_command(
-                    command=(prefix or "") + avr_command + (suffix or ""),
-                    rate_limit=rate_limit,
-                )
+                await self.send_raw_command(command=raw_command, rate_limit=rate_limit)
                 return True
 
             retry_count = 0
@@ -483,8 +484,8 @@ class PioneerAVR(AVRConnection):
 
             ## Send raw command, then wait for response
             response = await self.send_raw_request(
-                command=(prefix or "") + avr_command + (suffix or ""),
-                response_prefix=command_item.get_avr_response(zone),
+                command=raw_command,
+                response_prefix=response_prefix,
                 rate_limit=rate_limit,
                 retry_count=retry_count,
             )
