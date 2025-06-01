@@ -601,7 +601,9 @@ class PioneerAVR(AVRConnection):
 
     async def power_off(self, zone: Zone = Zone.Z1) -> None:
         """Power off the Pioneer AVR zone."""
-        await self.send_command("power_off", zone=self._check_zone(zone))
+        await self.send_command(
+            "power_off", zone=self._check_zone(zone), wait_for_command_queue=True
+        )
 
     async def select_source(self, source: str | int, zone: Zone = Zone.Z1) -> None:
         """Select input source."""
