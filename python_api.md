@@ -172,14 +172,19 @@ Return a list of the queued command names.
 
 ## Low level AVR command methods (inherited by `PioneerAVR`)
 
-_awaitable_ `AVRConnection.send_command(`_command_: **str**, _zone_: Zone = Zone.Z1, _prefix_: **str** = "", _suffix_: **str** = "", _ignore_erro* = **None**, _rate_limit_: **bool** = **True**`)` -> **bool** | **None**
+_awaitable_ `PioneerAVR.send_command(`_command_: **str**, \*_command_args_, _zone_: Zone = Zone.Z1, _prefix_: **str** = "", _suffix_: **str** = "", _ignore_error_ = **None**, _rate_limit_: **bool** = **True**, _wait_for_response_: **bool** = **None**, _wait_for_command_queue_: **bool** = **False**, _retry_on_fail_: **bool** = **None**`)` -> **str** | **bool** | **None**
 
-Send command _command_ for zone _zone_ to the AVR, prefixed with _prefix_ and/or suffixed with _suffix_ if specified. <br/>
-If _command_ does not generate a response, then returns **True** if the command was successfully sent.
+Send command _command_ for zone _zone_ to the AVR, prefixed with _prefix_ and/or suffixed with _suffix_ if specified. If _prefix_ and _suffix_ are **None**, they are determined by the command using the arguments \*_command_args_.<br/>
+If _command_ does not generate a response or _wait_for_response_ is **False**, then returns **True** if the command was successfully sent.
 Otherwise, returns the response received from the AVR, **None** if timed out, or **False** if an error response was received. <br/>
 If _ignore_error_ is **None** (default), then raise an exception on error. If _ignore_error_ is **True**, then log the error as level debug, otherwise log the error as level error. <br/>
 Raises `AVRUnavailable` if the AVR is disconnected, `AVRResponseTimeoutError` on timeout, and `AVRCommandError` if the request returned an error.<br/>
-If _rate_limit_ is **True**, then rate limit the commands sent to the AVR in accordance with the `command_delay` parameter.
+If _rate_limit_ is **True**, then rate limit the commands sent to the AVR in accordance with the `command_delay` parameter.<br/>
+If _wait_for_command_queue_ is **True**, then wait for the command queue to complete before sending the command.<br/>
+If _retry_on_fail_ is **True**, then retry the command if the AVR returns an error. If not specified, then the default for the command is used. This argument is ignored if no response is defined for the command, or _wait_for_response_ is **False**.
+
+> [!NOTE]
+> Changed in 0.9: _prefix_ and _suffix_ are deprecated. Use \*_command_args_ to specify the arguments for each command.
 
 _awaitable_ `AVRConnection.send_raw_command(`_command_: **str**, _rate_limit_: **bool** = True`)`
 
