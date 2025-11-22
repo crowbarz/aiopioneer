@@ -240,7 +240,7 @@ class AudioInformation(CodeMapSequence):
         AudioChannelActive("output", "SL"),  # [28]
         AudioChannelActive("output", "SR"),  # [29]
         AudioChannelActive("output", "SBL"),  # [30]
-        AudioChannelActive("output", "SB"),  # [31]
+        AudioChannelActive("output", "SBC"),  # [31]
         AudioChannelActive("output", "SBR"),  # [32]
     ]
     code_map_sequence_extra_1 = [
@@ -332,17 +332,17 @@ class SpeakerChannel(CodeStrMap):
         "SBC": "surround back center",
         "SBR": "surround back right",
         "LFE": "low freqeuency effects",
-        "LH": "front height left",
-        "RH": "front height right",
-        "LW": "front wide left",
-        "RW": "front wide right",
+        "FHL": "front height left",
+        "FHR": "front height right",
+        "FWL": "front wide left",
+        "FWR": "front wide right",
         "TML": "top middle left",
         "TMR": "top middle right",
-        "TFL": "top forward left",
-        "TFR": "top forward right",
+        "TFL": "top forward left",  # NOTE: not in AudioInformation
+        "TFR": "top forward right",  # NOTE: not in AudioInformation
         "TRL": "top backward left",
         "TRR": "top backward right",
-        "SW1": "subwoofer 1",
+        "SW": "subwoofer",
         "SW2": "subwoofer 2",
     }
 
