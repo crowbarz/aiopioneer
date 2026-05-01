@@ -6,6 +6,7 @@ import asyncio
 import logging
 import time
 import traceback
+import serialx
 
 from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DEFAULT_SCAN_INTERVAL
 from .exceptions import (
@@ -40,22 +41,29 @@ class AVRConnection:
     def __init__(  # pylint: disable=super-init-not-called
         self,
         params: AVRParams,
-        host: str,
-        port: int = DEFAULT_PORT,
+        url: str | None = None,
+        host: str | None = None,
+        port: int | None = None,
         timeout: float = DEFAULT_TIMEOUT,
         scan_interval: float = DEFAULT_SCAN_INTERVAL,
     ):
         """Initialise the Pioneer AVR connection."""
         _LOGGER.debug(
-            ">> AVRConnection.__init__(host=%s, port=%s, timeout=%s, scan_interval=%s)",
+            ">> AVRConnection.__init__(url=%s, host=%s, port=%s, timeout=%s, scan_interval=%s)",
+            repr(url),
             repr(host),
             repr(port),
             repr(timeout),
             repr(scan_interval),
         )
         self.params = params
-        self._host = host
-        self._port = port
+        if url is None and host is None and port is None:
+            raise ValueError("Either url or host and port must be provided")
+        if host is not None and port is None:
+            port = DEFAULT_PORT
+        if url is None:
+            url = f"socket://{host}:{port}"
+        self._url = url
         self._timeout = timeout
         self.scan_interval = scan_interval
 
@@ -91,13 +99,15 @@ class AVRConnection:
         async with self._connect_lock:
             _LOGGER.debug("opening AVR connection")
             try:
-                reader, writer = (
-                    await asyncio.wait_for(  # pylint: disable=unused-variable
-                        asyncio.open_connection(self._host, self._port),
-                        timeout=self._timeout,
-                    )
+                reader, writer = await serialx.open_serial_connection(
+                    url=self._url,
+                    timeout=self._timeout,
+                    baudrate=9600,
+                    parity=serialx.PARITY_NONE,
+                    stopbits=serialx.STOPBITS_ONE,
+                    bytesize=serialx.EIGHTBITS,
                 )
-            except TimeoutError as exc:
+            except serialx.SerialTimeoutException as exc:
                 raise AVRConnectTimeoutError(exc=exc) from exc
             except Exception as exc:  # pylint: disable=broad-except
                 raise AVRConnectError(exc=exc) from exc
