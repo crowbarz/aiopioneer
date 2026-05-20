@@ -65,8 +65,7 @@ class PioneerAVR(AVRConnection):
 
     def __init__(
         self,
-        host: str,
-        port: int = DEFAULT_PORT,
+        url: str,
         timeout: float = DEFAULT_TIMEOUT,
         scan_interval: float = DEFAULT_SCAN_INTERVAL,
         params: dict[str, str] = None,
@@ -80,8 +79,7 @@ class PioneerAVR(AVRConnection):
         )
         super().__init__(
             params=self.params,
-            host=host,
-            port=port,
+            url=url,
             timeout=timeout,
             scan_interval=scan_interval,
         )

@@ -6,6 +6,7 @@ import asyncio
 import logging
 import time
 import traceback
+import serialx
 
 from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DEFAULT_SCAN_INTERVAL
 from .exceptions import (
@@ -40,22 +41,19 @@ class AVRConnection:
     def __init__(  # pylint: disable=super-init-not-called
         self,
         params: AVRParams,
-        host: str,
-        port: int = DEFAULT_PORT,
+        url: str,
         timeout: float = DEFAULT_TIMEOUT,
         scan_interval: float = DEFAULT_SCAN_INTERVAL,
     ):
         """Initialise the Pioneer AVR connection."""
         _LOGGER.debug(
-            ">> AVRConnection.__init__(host=%s, port=%s, timeout=%s, scan_interval=%s)",
-            repr(host),
-            repr(port),
+            ">> AVRConnection.__init__(url=%s, timeout=%s, scan_interval=%s)",
+            repr(url),
             repr(timeout),
             repr(scan_interval),
         )
         self.params = params
-        self._host = host
-        self._port = port
+        self._url = url
         self._timeout = timeout
         self.scan_interval = scan_interval
 
@@ -91,13 +89,15 @@ class AVRConnection:
         async with self._connect_lock:
             _LOGGER.debug("opening AVR connection")
             try:
-                reader, writer = (
-                    await asyncio.wait_for(  # pylint: disable=unused-variable
-                        asyncio.open_connection(self._host, self._port),
-                        timeout=self._timeout,
-                    )
+                reader, writer = await serialx.open_serial_connection(
+                    url=self._url,
+                    timeout=self._timeout,
+                    baudrate=9600,
+                    parity=serialx.PARITY_NONE,
+                    stopbits=serialx.STOPBITS_ONE,
+                    bytesize=serialx.EIGHTBITS,
                 )
-            except TimeoutError as exc:
+            except (serialx.SerialTimeoutException, TimeoutError) as exc:
                 raise AVRConnectTimeoutError(exc=exc) from exc
             except Exception as exc:  # pylint: disable=broad-except
                 raise AVRConnectError(exc=exc) from exc

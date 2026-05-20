@@ -3,9 +3,13 @@
 
 The library exposes a Python API through the **PioneerAVR** class. The class methods are listed below:
 
-`PioneerAVR.__init__(`_host_: **str**, _port_ = DEFAULT_PORT, _timeout_: **float** = DEFAULT_TIMEOUT, _scan_interval_: **float** = DEFAULT_SCAN_INTERVAL, _params_: **dict[str, str]** = **None** `)`
+`PioneerAVR.__init__(`url: **str**, _timeout_: **float** = DEFAULT_TIMEOUT, _scan_interval_: **float** = DEFAULT_SCAN_INTERVAL, _params_: **dict[str, str]** = **None** `)`
 
 Constructor for the **PioneerAVR** class. The connection parameters are used when `PioneerAVR.connect` is called. After connection is established, the AVR will be polled every _scan_interval_ seconds. If the `always_poll` parameter is set, the poll timer is reset when a response from the AVR is received. Optional user parameters are provided via _params_.
+
+This library uses SerialX for its connection handling. The `url` parameter must be formatted according to the protocols supported by SerialX; for more details, refer to the [SerialX Quickstart documentation](https://puddly.github.io/serialx/quickstart.html). 
+
+To access your AVR using a standard TCP socket (as in previous versions), use the `socket://<ip>:<port>` URL format, replacing `<ip>` and `<port>` with your AVR's IP address and port number (e.g., `socket://192.168.1.100:8102`).
 
 ## Connection methods (inherited by `PioneerAVR`)
 
