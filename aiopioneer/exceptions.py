@@ -205,7 +205,17 @@ CommandResponseErrorFormatText = {
     "E03": "unsupported command",
     "E04": "unknown command",
     "E06": "invalid parameter",
+    "R": "command not supported by AVR",
 }
+
+
+def is_error_response(response: str) -> bool:
+    """Return True if a raw AVR response indicates a command error.
+
+    Some older AVRs (eg. VSX-823) reply with a bare "R" instead of E04 to
+    commands they do not support.
+    """
+    return response.startswith("E") or response in ("B00", "R")
 
 CommandUnavailableErrorFormatText = {
     "tuner": "AVR tuner is unavailable",

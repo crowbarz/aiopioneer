@@ -5,7 +5,7 @@ import logging
 from .const import Zone
 from .decoders.code_map import CodeMapBase
 from .decoders.response import Response
-from .exceptions import AVRResponseDecodeError
+from .exceptions import AVRResponseDecodeError, is_error_response
 from .params import AVRParams
 from .properties import AVRProperties
 from .property_registry import PROPERTY_REGISTRY
@@ -94,7 +94,7 @@ def process_raw_response(
     try:
         if not (match_resp := PROPERTY_REGISTRY.match_response(raw_resp=raw_resp)):
             ## No error handling as not all responses have been captured by aiopioneer.
-            if not (raw_resp.startswith("E") or raw_resp == "B00"):
+            if not is_error_response(raw_resp):
                 _LOGGER.debug("undecoded response: %s", raw_resp)
             return []
 
