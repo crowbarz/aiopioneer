@@ -17,6 +17,7 @@ from .exceptions import (
     AVRDisconnectError,
     AVRConnectTimeoutError,
     AVRResponseDecodeError,
+    is_error_response,
 )
 from .params import (
     AVRParams,
@@ -376,7 +377,7 @@ class AVRConnection:
                             "AVR command %s returned response: %s", command, response
                         )
                     return response
-                if response.startswith("E") or response == "B00":
+                if is_error_response(response):
                     raise AVRCommandResponseError(command=command, response=response)
 
     async def send_raw_request(
